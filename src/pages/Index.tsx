@@ -33,12 +33,11 @@ const Index = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section 
-        className="py-20 relative bg-cover bg-center bg-no-repeat min-h-[80vh] flex items-center" 
+        className="relative bg-cover bg-center bg-no-repeat h-screen flex items-center -mt-16 pt-16 z-[1]" 
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed'
+          backgroundPosition: 'center'
         }}
       >
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
