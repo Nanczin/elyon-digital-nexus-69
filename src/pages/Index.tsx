@@ -54,33 +54,7 @@ const Index = () => {
             Crie, venda e gerencie seus produtos digitais com facilidade.
           </p>
           
-          {user ? (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {isAdmin && (
-                <Button size="lg" className="flex items-center gap-2 bg-primary hover:bg-primary/90" asChild>
-                  <Link to="/admin/dashboard">
-                    Ir para Dashboard
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-              )}
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/20" asChild>
-                <Link to="/payments">Ver Meus Pagamentos</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-                <Link to="/auth/login">
-                  Fazer Login
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/20" asChild>
-                <Link to="/auth/register">Criar Conta</Link>
-              </Button>
-            </div>
-          )}
+          {/* Botões foram removidos conforme solicitado */}
         </div>
       </section>
 
@@ -129,12 +103,7 @@ const Index = () => {
               Junte-se a milhares de criadores que já confiam na Elyon 
               para vender seus produtos digitais
             </p>
-            <Button size="lg" className="flex items-center gap-2 mx-auto" asChild>
-              <Link to="/auth/register">
-                Criar Conta Gratuita
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
+            {/* Botão removido conforme solicitado */}
           </div>
         </section>
       )}
