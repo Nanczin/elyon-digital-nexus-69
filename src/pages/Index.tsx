@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, ArrowRight, Package, CreditCard, BarChart3, Users } from 'lucide-react';
+
 const Index = () => {
   const {
     user,
     isAdmin
   } = useAuth();
+  
   const features = [{
     icon: Package,
     title: 'Produtos Digitais',
@@ -26,7 +28,9 @@ const Index = () => {
     title: 'Gestão de Clientes',
     description: 'Mantenha relacionamento com seus compradores'
   }];
-  return <div className="min-h-screen">
+  
+  return (
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section 
         className="py-20 relative bg-cover bg-center bg-no-repeat min-h-[80vh] flex items-center" 
@@ -37,29 +41,36 @@ const Index = () => {
           backgroundAttachment: 'fixed'
         }}
       >
-        <div className="absolute inset-0 bg-elyon-dark/50"></div>
+        {/* Overlay darker in light mode, slightly lighter in dark mode */}
+        <div className="absolute inset-0 bg-black/70 dark:bg-elyon-dark/50"></div>
+        
         <div className="container mx-auto px-4 text-center relative z-10">
-          
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Bem-vindo à <span className="text-primary">Elyon</span>
           </h1>
-<p className="text-xl text-white mb-8 max-w-2xl mx-auto">
+          
+          <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
             A plataforma completa para criadores de infoprodutos. 
             Crie, venda e gerencie seus produtos digitais com facilidade.
           </p>
           
-{user ? <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {isAdmin && <Button size="lg" className="flex items-center gap-2 bg-primary hover:bg-primary/90" asChild>
+          {user ? (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {isAdmin && (
+                <Button size="lg" className="flex items-center gap-2 bg-primary hover:bg-primary/90" asChild>
                   <Link to="/admin/dashboard">
                     Ir para Dashboard
                     <ArrowRight className="w-4 h-4" />
                   </Link>
-                </Button>}
+                </Button>
+              )}
               <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/20" asChild>
                 <Link to="/payments">Ver Meus Pagamentos</Link>
               </Button>
-            </div> : <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="flex items-center gap-2 bg-primary hover:bg-primary/90" asChild>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
                 <Link to="/auth/login">
                   Fazer Login
                   <ArrowRight className="w-4 h-4" />
@@ -68,7 +79,8 @@ const Index = () => {
               <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/20" asChild>
                 <Link to="/auth/register">Criar Conta</Link>
               </Button>
-            </div>}
+            </div>
+          )}
         </div>
       </section>
 
@@ -87,8 +99,9 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map(feature => {
-            const IconComponent = feature.icon;
-            return <Card key={feature.title} className="text-center">
+              const IconComponent = feature.icon;
+              return (
+                <Card key={feature.title} className="text-center">
                   <CardHeader>
                     <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                       <IconComponent className="w-6 h-6 text-primary" />
@@ -98,14 +111,16 @@ const Index = () => {
                   <CardContent>
                     <p className="text-muted-foreground">{feature.description}</p>
                   </CardContent>
-                </Card>;
-          })}
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      {!user && <section className="bg-primary/5 py-20">
+      {!user && (
+        <section className="bg-primary/5 py-20">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Pronto para começar?
@@ -121,7 +136,10 @@ const Index = () => {
               </Link>
             </Button>
           </div>
-        </section>}
-    </div>;
+        </section>
+      )}
+    </div>
+  );
 };
+
 export default Index;
