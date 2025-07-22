@@ -1,0 +1,554 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
+  public: {
+    Tables: {
+      checkout_history: {
+        Row: {
+          action_type: string
+          changes: Json
+          checkout_id: string
+          created_at: string
+          description: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          changes?: Json
+          checkout_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          changes?: Json
+          checkout_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_history_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkouts: {
+        Row: {
+          created_at: string
+          form_fields: Json | null
+          id: string
+          integrations: Json | null
+          layout: string
+          order_bumps: Json | null
+          payment_methods: Json | null
+          price: number
+          product_id: string
+          promotional_price: number | null
+          styles: Json | null
+          support_contact: Json | null
+          timer: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          form_fields?: Json | null
+          id?: string
+          integrations?: Json | null
+          layout?: string
+          order_bumps?: Json | null
+          payment_methods?: Json | null
+          price: number
+          product_id: string
+          promotional_price?: number | null
+          styles?: Json | null
+          support_contact?: Json | null
+          timer?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          form_fields?: Json | null
+          id?: string
+          integrations?: Json | null
+          layout?: string
+          order_bumps?: Json | null
+          payment_methods?: Json | null
+          price?: number
+          product_id?: string
+          promotional_price?: number | null
+          styles?: Json | null
+          support_contact?: Json | null
+          timer?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkouts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          email: string
+          id: string
+          last_purchase: string | null
+          name: string
+          phone: string | null
+          purchase_count: number | null
+          status: string | null
+          total_spent: number | null
+          updated_at: string
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          last_purchase?: string | null
+          name: string
+          phone?: string | null
+          purchase_count?: number | null
+          status?: string | null
+          total_spent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_purchase?: string | null
+          name?: string
+          phone?: string | null
+          purchase_count?: number | null
+          status?: string | null
+          total_spent?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      integrations: {
+        Row: {
+          created_at: string
+          id: string
+          mercado_pago_access_token: string | null
+          mercado_pago_token_public: string | null
+          meta_pixel_id: string | null
+          smtp_config: Json | null
+          updated_at: string
+          user_id: string
+          utmify_code: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mercado_pago_access_token?: string | null
+          mercado_pago_token_public?: string | null
+          meta_pixel_id?: string | null
+          smtp_config?: Json | null
+          updated_at?: string
+          user_id: string
+          utmify_code?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mercado_pago_access_token?: string | null
+          mercado_pago_token_public?: string | null
+          meta_pixel_id?: string | null
+          smtp_config?: Json | null
+          updated_at?: string
+          user_id?: string
+          utmify_code?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          checkout_id: string
+          created_at: string
+          date: string
+          id: string
+          metadata: Json | null
+          mp_payment_id: string | null
+          mp_payment_status: string | null
+          payment_method: string | null
+          payment_url: string | null
+          qr_code: string | null
+          qr_code_base64: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          checkout_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          metadata?: Json | null
+          mp_payment_id?: string | null
+          mp_payment_status?: string | null
+          payment_method?: string | null
+          payment_url?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          checkout_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          metadata?: Json | null
+          mp_payment_id?: string | null
+          mp_payment_status?: string | null
+          payment_method?: string | null
+          payment_url?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          logo_url: string | null
+          member_area_link: string | null
+          name: string
+          price: number
+          price_original: number | null
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          logo_url?: string | null
+          member_area_link?: string | null
+          name: string
+          price: number
+          price_original?: number | null
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          logo_url?: string | null
+          member_area_link?: string | null
+          name?: string
+          price?: number
+          price_original?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          amount: number
+          checkout_id: string | null
+          commission_amount: number | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          net_amount: number | null
+          order_bumps: Json | null
+          payment_id: string | null
+          payment_method: string | null
+          product_id: string | null
+          product_name: string
+          quantity: number | null
+          selected_package: Json | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          checkout_id?: string | null
+          commission_amount?: number | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          net_amount?: number | null
+          order_bumps?: Json | null
+          payment_id?: string | null
+          payment_method?: string | null
+          product_id?: string | null
+          product_name: string
+          quantity?: number | null
+          selected_package?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          checkout_id?: string | null
+          commission_amount?: number | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          net_amount?: number | null
+          order_bumps?: Json | null
+          payment_id?: string | null
+          payment_method?: string | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number | null
+          selected_package?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

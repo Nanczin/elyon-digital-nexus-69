@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Elyon Design System */
+    --background: 0 0% 100%;
+    --foreground: 215 25% 27%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Elyon Golden Primary - #facc15 */
+    --primary: 48 96% 53%;
+    --primary-foreground: 215 25% 27%;
+
+    /* Success Green - #22c55e */
+    --secondary: 142 71% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Golden accent */
+    --accent: 48 96% 53%;
+    --accent-foreground: 215 25% 27%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 48 96% 53%;
+
+    --radius: 0.5rem;
+
+    /* Elyon specific colors */
+    --elyon-gold: 48 96% 53%;
+    --elyon-dark: 215 25% 27%;
+    --elyon-success: 142 71% 45%;
+    --elyon-slate: 215 25% 27%;
+    
+    /* Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(48 96% 53%), hsl(45 93% 47%));
+    --gradient-dark: linear-gradient(135deg, hsl(215 25% 27%), hsl(220 39% 11%));
+    --gradient-button: linear-gradient(135deg, hsl(48 96% 53%), hsl(45 93% 58%));
+    --gradient-button-hover: linear-gradient(135deg, hsl(45 93% 47%), hsl(42 90% 42%));
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 48 96% 53%;
+    --sidebar-primary-foreground: 215 25% 27%;
+    --sidebar-accent: 48 96% 96%;
+    --sidebar-accent-foreground: 215 25% 27%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 48 96% 53%;
+  }
+
+  .dark {
+    /* Dark mode - Elyon dark background #0f172a */
+    --background: 220 39% 11%;
+    --foreground: 0 0% 100%;
+
+    --card: 220 39% 11%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 220 39% 11%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Keep golden primary in dark mode */
+    --primary: 48 96% 53%;
+    --primary-foreground: 220 39% 11%;
+
+    /* Success green */
+    --secondary: 142 71% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 25% 20%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 48 96% 53%;
+    --accent-foreground: 220 39% 11%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    --ring: 48 96% 53%;
+
+    --sidebar-background: 220 39% 11%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 48 96% 53%;
+    --sidebar-primary-foreground: 220 39% 11%;
+    --sidebar-accent: 215 25% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 25% 18%;
+    --sidebar-ring: 48 96% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Responsive text truncation */
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  /* Smooth transitions */
+  .hover-scale {
+    @apply transition-transform duration-200 ease-in-out;
+  }
+  
+  .hover-scale:hover {
+    @apply scale-[1.02];
+  }
+  
+  /* Mobile-first responsive padding */
+  .responsive-padding {
+    @apply px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4;
+  }
+  
+  /* Responsive text sizes */
+  .text-responsive-xs {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .text-responsive-sm {
+    @apply text-sm sm:text-base;
+  }
+  
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  /* Mobile-optimized container */
+  .mobile-container {
+    @apply container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8;
+  }
+  
+  /* Animate fade in */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Custom Order Bump Checkbox - Circular Design */
+  .order-bump-checkbox {
+    @apply relative w-6 h-6 rounded-full border-2 border-gray-300 transition-all duration-300 cursor-pointer;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 
+      inset 0 1px 3px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .order-bump-checkbox:hover {
+    @apply scale-110;
+    box-shadow: 
+      inset 0 1px 3px rgba(0, 0, 0, 0.1),
+      0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Checked state - remove background gradient para permitir backgroundColor inline */
+  .order-bump-checkbox.checked {
+    @apply border-2;
+    background: none !important;
+  }
+
+  .order-bump-checkbox.checked:hover {
+    @apply scale-110;
+    filter: brightness(1.1);
+  }
+  
+  /* Custom Container Borders */
+  .order-bump-container {
+    @apply relative border-2 border-gray-200 rounded-2xl p-6 transition-all duration-300;
+    background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.06),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .order-bump-container::before {
+    content: '';
+    @apply absolute inset-0 rounded-2xl;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .order-bump-container:hover {
+    @apply transform scale-[1.01];
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.1),
+      0 3px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Package Container */
+  .package-container {
+    @apply relative border-2 border-gray-200 rounded-2xl p-6 cursor-pointer transition-all duration-300;
+    background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.06),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .package-container::before {
+    content: '';
+    @apply absolute inset-0 rounded-2xl;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .package-container:hover {
+    @apply transform scale-[1.01];
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.1),
+      0 3px 10px rgba(0, 0, 0, 0.05);
+  }
+}
