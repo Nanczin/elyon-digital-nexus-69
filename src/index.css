@@ -110,6 +110,15 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow-x: hidden;
   }
 
   body {

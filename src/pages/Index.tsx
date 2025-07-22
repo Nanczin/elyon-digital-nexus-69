@@ -30,16 +30,17 @@ const Index = () => {
   }];
   
   return (
-    <div className="min-h-screen">
+    <div>
       {/* Hero Section */}
       <section 
-        className="relative bg-cover bg-center bg-no-repeat h-screen flex items-center z-[1]" 
+        className="hero-section relative flex justify-center items-center z-[1]" 
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
           width: '100vw',
-          margin: '0',
+          height: '100vh',
           paddingTop: '80px',
           boxSizing: 'border-box'
         }}
@@ -47,7 +48,7 @@ const Index = () => {
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
         <div className="absolute inset-0 bg-black/70 dark:bg-elyon-dark/50"></div>
         
-        <div className="container mx-auto px-4 text-center relative z-10">
+        <div className="text-center relative z-10 w-full max-w-none px-0 mx-0">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Bem-vindo à <span className="text-primary">Elyon</span>
           </h1>
