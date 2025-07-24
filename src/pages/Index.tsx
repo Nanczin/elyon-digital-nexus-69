@@ -30,7 +30,7 @@ const Index = () => {
   }];
   
   return (
-    <div style={{ margin: 0, padding: 0, width: '100vw', height: '100vh', position: 'relative' }}>
+    <div>
       {/* Hero Section */}
       <section 
         className="hero-section relative flex justify-center items-center z-[1]" 
@@ -42,16 +42,11 @@ const Index = () => {
           width: '100vw',
           height: '100vh',
           paddingTop: '80px',
-          boxSizing: 'border-box',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          margin: 0,
-          padding: 0
+          boxSizing: 'border-box'
         }}
       >
-        {/* Overlay darker in light mode, no overlay in dark mode */}
-        <div className="absolute inset-0 bg-black/70 dark:bg-transparent"></div>
+        {/* Overlay darker in light mode, slightly lighter in dark mode */}
+        <div className="absolute inset-0 bg-black/70 dark:bg-elyon-dark/50"></div>
         
         <div className="text-center relative z-10 w-full max-w-none px-0 mx-0">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
