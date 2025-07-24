@@ -30,10 +30,10 @@ const Index = () => {
   }];
   
   return (
-    <>
+    <div>
       {/* Hero Section */}
       <section 
-        className="hero-section fixed top-0 left-0 flex justify-center items-center z-[1]" 
+        className="hero-section relative flex justify-center items-center z-[1]" 
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
@@ -41,8 +41,8 @@ const Index = () => {
           backgroundRepeat: 'no-repeat',
           width: '100vw',
           height: '100vh',
-          margin: '0',
-          padding: '0'
+          paddingTop: '80px',
+          boxSizing: 'border-box'
         }}
       >
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
@@ -63,7 +63,7 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20" style={{ marginTop: '100vh' }}>
+      <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -111,7 +111,7 @@ const Index = () => {
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 };
 
