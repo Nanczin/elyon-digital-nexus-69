@@ -30,22 +30,17 @@ const Index = () => {
   }];
   
   return (
-    <div style={{ margin: 0, padding: 0, width: '100vw', height: '100vh', position: 'relative' }}>
+    <div>
       {/* Hero Section */}
       <section 
         className="hero-section relative flex justify-center items-center z-[1]" 
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
-          position: 'absolute',
-          top: 0,
-          left: 0,
           width: '100vw',
           height: '100vh',
-          margin: 0,
-          padding: 0,
           paddingTop: '80px',
           boxSizing: 'border-box'
         }}
