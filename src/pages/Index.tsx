@@ -30,35 +30,37 @@ const Index = () => {
   }];
   
   return (
-    <div>
+    <div className="m-0 p-0 w-full min-h-screen">
       {/* Hero Section */}
-      <section 
-        className="hero-section relative flex justify-center items-center z-[1]" 
-        style={{ 
-          backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat',
-          width: '100vw',
-          height: '100vh',
-          paddingTop: '80px',
-          boxSizing: 'border-box'
-        }}
-      >
-        {/* Overlay darker in light mode, slightly lighter in dark mode */}
-        <div className="absolute inset-0 bg-black/70 dark:bg-elyon-dark/50"></div>
+      <section className="hero-section relative min-h-screen w-full m-0 p-0 grid grid-cols-1 lg:grid-cols-2 z-[1]">
+        {/* Image Column - Left Side */}
+        <div 
+          className="relative w-full h-screen lg:h-auto min-h-screen order-2 lg:order-1"
+          style={{ 
+            backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          {/* Overlay for mobile only */}
+          <div className="absolute inset-0 bg-black/70 lg:bg-transparent"></div>
+        </div>
         
-        <div className="text-center relative z-10 w-full max-w-none px-0 mx-0">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Bem-vindo à <span className="text-primary">Elyon</span>
-          </h1>
-          
-          <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
-            A plataforma completa para criadores de infoprodutos. 
-            Crie, venda e gerencie seus produtos digitais com facilidade.
-          </p>
-          
-          {/* Botões foram removidos conforme solicitado */}
+        {/* Content Column - Right Side */}
+        <div className="relative z-10 flex items-center justify-center p-8 lg:p-16 order-1 lg:order-2 bg-background/95 lg:bg-background">
+          <div className="text-center lg:text-left w-full max-w-lg">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground lg:text-foreground mb-6">
+              Bem-vindo à <span className="text-primary">Elyon</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-muted-foreground mb-8">
+              A plataforma completa para criadores de infoprodutos. 
+              Crie, venda e gerencie seus produtos digitais com facilidade.
+            </p>
+            
+            {/* Botões foram removidos conforme solicitado */}
+          </div>
         </div>
       </section>
 
