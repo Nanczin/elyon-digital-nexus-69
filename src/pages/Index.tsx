@@ -37,12 +37,14 @@ const Index = () => {
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center top',
+          backgroundPosition: 'left top',
           backgroundRepeat: 'no-repeat',
           width: '100vw',
           height: '100vh',
           paddingTop: '80px',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)'
         }}
       >
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
