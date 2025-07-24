@@ -33,25 +33,29 @@ const Index = () => {
     <div>
       {/* Hero Section */}
       <section 
-        className="hero-section fixed top-0 left-0 flex justify-center items-center z-[1]" 
+        className="hero-section relative flex justify-center items-center z-[1]" 
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'left top',
           backgroundRepeat: 'no-repeat',
           width: '100vw',
-          height: '100vh'
+          height: '100vh',
+          paddingTop: '80px',
+          boxSizing: 'border-box',
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)'
         }}
       >
-        {/* Overlay darker in light mode, no overlay in dark mode */}
-        <div className="absolute inset-0 bg-black/70 dark:bg-transparent"></div>
+        {/* Overlay darker in light mode, slightly lighter in dark mode */}
+        <div className="absolute inset-0 bg-black/70 dark:bg-elyon-dark/50"></div>
         
-        <div className="text-center relative z-10 w-full max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6">
+        <div className="text-center relative z-10 w-full max-w-none px-0 mx-0">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Bem-vindo à <span className="text-primary">Elyon</span>
           </h1>
           
-          <p className="text-lg sm:text-xl text-white mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+          <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
             A plataforma completa para criadores de infoprodutos. 
             Crie, venda e gerencie seus produtos digitais com facilidade.
           </p>
@@ -61,13 +65,13 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20" style={{ marginTop: '100vh' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Tudo que você precisa para vender online
             </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Nossa plataforma oferece todas as ferramentas necessárias 
               para o sucesso do seu negócio digital
             </p>
@@ -97,11 +101,11 @@ const Index = () => {
       {/* CTA Section */}
       {!user && (
         <section className="bg-primary/5 py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Pronto para começar?
             </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Junte-se a milhares de criadores que já confiam na Elyon 
               para vender seus produtos digitais
             </p>
