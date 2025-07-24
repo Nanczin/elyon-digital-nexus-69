@@ -65,19 +65,19 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode - Elyon dark background #0f172a */
-    --background: 220 39% 11%;
+    /* Dark mode - Black background */
+    --background: 0 0% 3%;
     --foreground: 0 0% 100%;
 
-    --card: 220 39% 11%;
+    --card: 0 0% 3%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 220 39% 11%;
+    --popover: 0 0% 3%;
     --popover-foreground: 0 0% 100%;
 
     /* Keep golden primary in dark mode */
     --primary: 48 96% 53%;
-    --primary-foreground: 220 39% 11%;
+    --primary-foreground: 0 0% 3%;
 
     /* Success green */
     --secondary: 142 71% 45%;
@@ -87,7 +87,7 @@ All colors MUST be HSL.
     --muted-foreground: 215 20% 65%;
 
     --accent: 48 96% 53%;
-    --accent-foreground: 220 39% 11%;
+    --accent-foreground: 0 0% 3%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 100%;
@@ -96,10 +96,10 @@ All colors MUST be HSL.
     --input: 215 25% 20%;
     --ring: 48 96% 53%;
 
-    --sidebar-background: 220 39% 11%;
+    --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 48 96% 53%;
-    --sidebar-primary-foreground: 220 39% 11%;
+    --sidebar-primary-foreground: 0 0% 3%;
     --sidebar-accent: 215 25% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 215 25% 18%;
