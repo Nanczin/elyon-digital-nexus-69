@@ -40,7 +40,7 @@ const Index = () => {
           backgroundPosition: 'left top',
           backgroundRepeat: 'no-repeat',
           width: '100vw',
-          height: '100vh',
+          height: '120vh',
           paddingTop: '80px',
           boxSizing: 'border-box',
           marginLeft: 'calc(-50vw + 50%)',
