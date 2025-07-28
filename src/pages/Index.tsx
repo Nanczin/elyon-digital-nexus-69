@@ -40,12 +40,13 @@ const Index = () => {
           backgroundPosition: 'top center',
           backgroundRepeat: 'no-repeat',
           width: '100vw',
-          height: '120vh',
-          marginTop: '0',
+          height: 'calc(100vh + 100px)',
+          marginTop: '-100px',
           paddingTop: '0',
           boxSizing: 'border-box',
           marginLeft: 'calc(-50vw + 50%)',
-          marginRight: 'calc(-50vw + 50%)'
+          marginRight: 'calc(-50vw + 50%)',
+          zIndex: 1
         }}
       >
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
