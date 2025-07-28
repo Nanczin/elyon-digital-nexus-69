@@ -41,7 +41,6 @@ const Index = () => {
           backgroundRepeat: 'no-repeat',
           width: '100vw',
           height: '100vh',
-          paddingTop: '80px',
           boxSizing: 'border-box',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)'
