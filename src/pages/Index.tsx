@@ -78,7 +78,7 @@ const Index = () => {
         }}
       >
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
-        <div className="absolute inset-0 bg-black/70 dark:bg-transparent"></div>
+        <div className="absolute inset-0"></div>
         
         <div className="text-center relative z-10 w-full max-w-none px-0 mx-0">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
