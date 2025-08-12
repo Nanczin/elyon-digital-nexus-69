@@ -33,11 +33,15 @@ const Index = () => {
   return (
     <div>
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <Sparkles className="w-8 h-8 text-primary" />
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/60aef8b0-cab0-4f83-87eb-eced18d89bff.png" 
+              alt="Logo Elyon" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-xl font-bold text-foreground">Elyon</span>
           </Link>
           
