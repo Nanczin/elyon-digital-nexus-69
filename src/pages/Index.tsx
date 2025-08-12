@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, ArrowRight, Package, CreditCard, BarChart3, Users } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Index = () => {
   const {
@@ -31,6 +32,30 @@ const Index = () => {
   
   return (
     <div>
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <Sparkles className="w-8 h-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">Elyon</span>
+          </Link>
+          
+          {/* Navigation */}
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            <div className="flex items-center space-x-2">
+              <Button variant="ghost" asChild>
+                <Link to="/login">Entrar</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/register">Criar conta</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section 
         className="hero-section relative flex justify-center items-center z-[1]" 
