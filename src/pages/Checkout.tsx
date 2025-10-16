@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCheckoutIntegrations } from '@/hooks/useCheckoutIntegrations';
 import { CheckoutData, CustomerData, OrderBump, PaymentMethods, FormFields } from '@/components/checkout/CheckoutLayoutProps';
+import { CardData } from '@/components/checkout/CreditCardForm';
 import HorizontalLayout from '@/components/checkout/HorizontalLayout';
 import MosaicLayout from '@/components/checkout/MosaicLayout';
 
@@ -25,6 +26,7 @@ const Checkout = () => {
   const [selectedOrderBumps, setSelectedOrderBumps] = useState<number[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [selectedPackage, setSelectedPackage] = useState<number>(1);
+  const [cardData, setCardData] = useState<CardData | null>(null);
 
   // Hook para integrações do checkout
   const {
@@ -213,6 +215,33 @@ const Checkout = () => {
       toast({ title: "Erro", description: "Selecione uma forma de pagamento", variant: "destructive" });
       return false;
     }
+
+    if (selectedPaymentMethod === 'creditCard') {
+      if (!cardData) {
+        toast({ title: "Erro", description: "Preencha os dados do cartão", variant: "destructive" });
+        return false;
+      }
+      
+      if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 13) {
+        toast({ title: "Erro", description: "Número do cartão inválido", variant: "destructive" });
+        return false;
+      }
+      
+      if (!cardData.cardholderName.trim()) {
+        toast({ title: "Erro", description: "Nome no cartão é obrigatório", variant: "destructive" });
+        return false;
+      }
+      
+      if (!cardData.expirationMonth || !cardData.expirationYear) {
+        toast({ title: "Erro", description: "Data de validade é obrigatória", variant: "destructive" });
+        return false;
+      }
+      
+      if (!cardData.securityCode || cardData.securityCode.length < 3) {
+        toast({ title: "Erro", description: "CVV inválido", variant: "destructive" });
+        return false;
+      }
+    }
     
     return true;
   };
@@ -234,7 +263,7 @@ const Checkout = () => {
     try {
       // Preparar dados do pagamento
       const totalAmount = Math.round(calculateTotal() * 100);
-      const paymentData = {
+      const paymentData: any = {
         checkoutId: checkoutId || '',
         amount: totalAmount,
         customerData: {
@@ -248,6 +277,18 @@ const Checkout = () => {
         selectedPackage: selectedPackage,
         paymentMethod: selectedPaymentMethod
       };
+
+      // Adicionar dados do cartão se for pagamento com cartão
+      if (selectedPaymentMethod === 'creditCard' && cardData) {
+        paymentData.cardData = {
+          cardNumber: cardData.cardNumber.replace(/\s/g, ''),
+          cardholderName: cardData.cardholderName,
+          expirationMonth: cardData.expirationMonth,
+          expirationYear: cardData.expirationYear,
+          securityCode: cardData.securityCode,
+          installments: cardData.installments
+        };
+      }
 
       console.log('Enviando dados para processamento:', paymentData);
 
@@ -393,7 +434,9 @@ const Checkout = () => {
     handleInputChange,
     handleOrderBumpToggle,
     setSelectedPaymentMethod,
-    handleSubmit
+    handleSubmit,
+    cardData,
+    setCardData
   };
 
   // Render appropriate layout based on configuration

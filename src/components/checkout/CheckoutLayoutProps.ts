@@ -1,4 +1,5 @@
 // Shared types for checkout layouts
+import { CardData } from './CreditCardForm';
 
 export interface OrderBump {
   id: number;
@@ -92,4 +93,6 @@ export interface CheckoutLayoutProps {
   handleOrderBumpToggle: (bumpId: number) => void;
   setSelectedPaymentMethod: (method: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
+  cardData: CardData | null;
+  setCardData: (cardData: CardData | null) => void;
 }

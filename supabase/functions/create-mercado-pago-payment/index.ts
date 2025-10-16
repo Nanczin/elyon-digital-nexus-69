@@ -20,6 +20,14 @@ interface PaymentRequest {
   orderBumps: number[];
   selectedPackage: number;
   paymentMethod: 'pix' | 'creditCard';
+  cardData?: {
+    cardNumber: string;
+    cardholderName: string;
+    expirationMonth: string;
+    expirationYear: string;
+    securityCode: string;
+    installments: number;
+  };
 }
 
 serve(async (req) => {
@@ -34,7 +42,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod }: PaymentRequest = await req.json();
+    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData }: PaymentRequest = await req.json();
 
     console.log('Payment request received:', { checkoutId, amount, paymentMethod, customerData });
 
@@ -110,32 +118,66 @@ serve(async (req) => {
     // Configure payment method
     if (paymentMethod === 'pix') {
       paymentData.payment_method_id = 'pix';
-    } else if (paymentMethod === 'creditCard') {
-      // Para cartão de crédito, vamos criar uma preference para checkout
-      paymentData = {
-        items: [{
-          title: `Pagamento Checkout ${checkoutId}`,
-          quantity: 1,
-          unit_price: amount / 100,
-          currency_id: 'BRL'
-        }],
-        payer: paymentData.payer,
-        back_urls: {
-          success: `${req.headers.get('origin') || 'https://seu-dominio.com'}/payment-success`,
-          failure: `${req.headers.get('origin') || 'https://seu-dominio.com'}/payment-failure`,
-          pending: `${req.headers.get('origin') || 'https://seu-dominio.com'}/payment-pending`
+    } else if (paymentMethod === 'creditCard' && cardData) {
+      // Para cartão de crédito, processar pagamento direto
+      paymentData.payment_method_id = 'credit_card';
+      paymentData.installments = cardData.installments;
+      paymentData.token = 'card_token_placeholder'; // Será substituído pelo token real
+      
+      // Adicionar dados do cartão para criar o token
+      paymentData.card = {
+        card_number: cardData.cardNumber,
+        cardholder: {
+          name: cardData.cardholderName,
+          identification: customerData.cpf ? {
+            type: 'CPF',
+            number: customerData.cpf.replace(/\D/g, '')
+          } : undefined
         },
-        auto_return: 'approved',
-        external_reference: checkoutId,
-        notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`,
-        metadata: paymentData.metadata
+        expiration_month: parseInt(cardData.expirationMonth),
+        expiration_year: parseInt(cardData.expirationYear),
+        security_code: cardData.securityCode
       };
     }
 
+    // Para cartão de crédito, primeiro criar o card token
+    let cardToken = null;
+    if (paymentMethod === 'creditCard' && cardData) {
+      const tokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          card_number: cardData.cardNumber,
+          cardholder: {
+            name: cardData.cardholderName,
+            identification: customerData.cpf ? {
+              type: 'CPF',
+              number: customerData.cpf.replace(/\D/g, '')
+            } : undefined
+          },
+          expiration_month: parseInt(cardData.expirationMonth),
+          expiration_year: parseInt(cardData.expirationYear),
+          security_code: cardData.securityCode
+        })
+      });
+
+      const tokenResult = await tokenResponse.json();
+      
+      if (!tokenResponse.ok) {
+        console.error('Card Token Error:', tokenResult);
+        throw new Error('Erro ao processar dados do cartão');
+      }
+
+      cardToken = tokenResult.id;
+      paymentData.token = cardToken;
+      delete paymentData.card; // Remover dados do cartão após criar o token
+    }
+
     // Make request to Mercado Pago API
-    const apiUrl = paymentMethod === 'creditCard' 
-      ? 'https://api.mercadopago.com/checkout/preferences'
-      : 'https://api.mercadopago.com/v1/payments';
+    const apiUrl = 'https://api.mercadopago.com/v1/payments';
     
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
@@ -162,14 +204,14 @@ serve(async (req) => {
         user_id: null, // Allow null for guest checkout
         amount: amount,
         payment_method: paymentMethod,
-        status: 'pending',
-        mp_payment_id: paymentMethod === 'creditCard' ? mpResult.id : mpResult.id.toString(),
+        status: mpResult.status === 'approved' ? 'completed' : 'pending',
+        mp_payment_id: mpResult.id.toString(),
         mp_payment_status: mpResult.status || 'pending',
         qr_code: paymentMethod === 'pix' ? (mpResult.point_of_interaction?.transaction_data?.qr_code || null) : null,
         qr_code_base64: paymentMethod === 'pix' ? (mpResult.point_of_interaction?.transaction_data?.qr_code_base64 || null) : null,
         payment_url: paymentMethod === 'pix' 
           ? (mpResult.point_of_interaction?.transaction_data?.ticket_url || null)
-          : (mpResult.init_point || null),
+          : null,
         metadata: {
           customer_data: customerData,
           order_bumps: orderBumps,
