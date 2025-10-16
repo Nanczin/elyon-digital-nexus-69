@@ -8,6 +8,9 @@ interface CreditCardFormProps {
   onCardDataChange: (cardData: CardData) => void;
   primaryColor: string;
   textColor: string;
+  maxInstallments?: number;
+  installmentsWithInterest?: boolean;
+  totalAmount: number;
 }
 
 export interface CardData {
@@ -19,7 +22,7 @@ export interface CardData {
   installments: number;
 }
 
-export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor }: CreditCardFormProps) => {
+export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor, maxInstallments = 12, installmentsWithInterest = false, totalAmount }: CreditCardFormProps) => {
   const [cardData, setCardData] = useState<CardData>({
     cardNumber: '',
     cardholderName: '',
@@ -138,15 +141,19 @@ export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor }: Cr
             value={String(cardData.installments)} 
             onValueChange={(value) => setCardData(prev => ({ ...prev, installments: parseInt(value) }))}
           >
-            <SelectTrigger id="installments">
+            <SelectTrigger id="installments" className="bg-white dark:bg-gray-800">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
-                <SelectItem key={num} value={String(num)}>
-                  {num}x sem juros
-                </SelectItem>
-              ))}
+            <SelectContent className="bg-white dark:bg-gray-800 z-50">
+              {Array.from({ length: maxInstallments }, (_, i) => i + 1).map(num => {
+                const installmentValue = totalAmount / num;
+                return (
+                  <SelectItem key={num} value={String(num)}>
+                    {num}x de R$ {installmentValue.toFixed(2).replace('.', ',')} 
+                    {installmentsWithInterest && num > 1 ? ' com juros' : ' sem juros'}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

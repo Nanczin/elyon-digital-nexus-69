@@ -80,7 +80,9 @@ const AdminCheckouts = () => {
     },
     paymentMethods: {
       pix: true,
-      creditCard: true
+      creditCard: true,
+      maxInstallments: 12,
+      installmentsWithInterest: false
     },
     integrations: {
       selectedMercadoPagoAccount: '',
@@ -252,7 +254,9 @@ const AdminCheckouts = () => {
       },
       paymentMethods: checkout.payment_methods || {
         pix: true,
-        creditCard: true
+        creditCard: true,
+        maxInstallments: 12,
+        installmentsWithInterest: false
       },
       integrations: checkout.integrations || {
         selectedMercadoPagoAccount: '',
@@ -977,15 +981,56 @@ const AdminCheckouts = () => {
                           </div>
                         </div>
                         
-                        <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                          <Checkbox id="creditCard" checked={checkoutData.paymentMethods.creditCard} onCheckedChange={checked => handleInputChange('paymentMethods.creditCard', checked)} />
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-5 w-5 text-blue-600" />
-                            <div>
-                              <Label htmlFor="creditCard" className="text-sm font-medium">Cartão de Crédito</Label>
-                              <p className="text-xs text-muted-foreground">Até 12x sem juros</p>
+                        <div className="space-y-3 p-4 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox id="creditCard" checked={checkoutData.paymentMethods.creditCard} onCheckedChange={checked => handleInputChange('paymentMethods.creditCard', checked)} />
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-5 w-5 text-blue-600" />
+                              <div>
+                                <Label htmlFor="creditCard" className="text-sm font-medium">Cartão de Crédito</Label>
+                                <p className="text-xs text-muted-foreground">Parcelamento disponível</p>
+                              </div>
                             </div>
                           </div>
+                          
+                          {checkoutData.paymentMethods.creditCard && (
+                            <div className="ml-8 space-y-3 pt-3 border-t">
+                              <div className="space-y-2">
+                                <Label htmlFor="maxInstallments" className="text-sm">Máximo de Parcelas</Label>
+                                <Select 
+                                  value={String(checkoutData.paymentMethods.maxInstallments || 12)} 
+                                  onValueChange={value => handleInputChange('paymentMethods.maxInstallments', parseInt(value))}
+                                >
+                                  <SelectTrigger id="maxInstallments">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-white dark:bg-gray-800 z-50">
+                                    {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                                      <SelectItem key={num} value={String(num)}>
+                                        {num}x
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="flex items-center space-x-3">
+                                <Checkbox 
+                                  id="installmentsWithInterest" 
+                                  checked={checkoutData.paymentMethods.installmentsWithInterest || false} 
+                                  onCheckedChange={checked => handleInputChange('paymentMethods.installmentsWithInterest', checked)} 
+                                />
+                                <Label htmlFor="installmentsWithInterest" className="text-sm">
+                                  Cobrar juros nas parcelas
+                                </Label>
+                              </div>
+                              <p className="text-xs text-muted-foreground ml-7">
+                                {checkoutData.paymentMethods.installmentsWithInterest 
+                                  ? "As taxas de juros serão aplicadas conforme a configuração do Mercado Pago"
+                                  : "Todas as parcelas serão sem juros"}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       

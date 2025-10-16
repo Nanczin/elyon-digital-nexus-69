@@ -343,6 +343,9 @@ const HorizontalLayout = ({
                         onCardDataChange={setCardData}
                         primaryColor={primaryColor}
                         textColor={textColor}
+                        maxInstallments={checkout.payment_methods?.maxInstallments || 12}
+                        installmentsWithInterest={checkout.payment_methods?.installmentsWithInterest || false}
+                        totalAmount={calculateTotal()}
                       />
                     )}
                   </div>

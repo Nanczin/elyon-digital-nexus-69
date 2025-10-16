@@ -19,6 +19,8 @@ export interface OrderBump {
 export interface PaymentMethods {
   pix?: boolean;
   creditCard?: boolean;
+  maxInstallments?: number;
+  installmentsWithInterest?: boolean;
 }
 
 export interface FormFields {
