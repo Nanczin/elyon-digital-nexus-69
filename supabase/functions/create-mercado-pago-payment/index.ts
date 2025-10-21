@@ -236,10 +236,9 @@ serve(async (req) => {
           mp_payment_id: paymentMethod === 'creditCard' ? mpResult.id : mpResult.id,
           status: mpResult.status || 'pending',
           qr_code: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code : null,
-          qr_code_base64: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code_base64 : null,
           payment_url: paymentMethod === 'pix' 
             ? mpResult.point_of_interaction?.transaction_data?.ticket_url
-            : mpResult.init_point,
+            : null,
           amount: amount / 100,
           payment_method: paymentMethod
         }

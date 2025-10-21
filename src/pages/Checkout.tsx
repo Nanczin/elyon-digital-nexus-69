@@ -341,7 +341,7 @@ const Checkout = () => {
         title: "Pagamento criado!",
         description: selectedPaymentMethod === 'pix' 
           ? "Redirecionando para o pagamento PIX..." 
-          : "Redirecionando para o pagamento..."
+          : "Processando pagamento no checkout..."
       });
 
       // Redirecionar para tela de pagamento

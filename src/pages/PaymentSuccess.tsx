@@ -141,12 +141,8 @@ const PaymentSuccess = () => {
           }
         }
         
-        // Se for cartão de crédito e ainda não foi processado, redirecionar
-        if (currentPaymentData?.paymentMethod === 'creditCard' && 
-            currentPaymentData?.payment?.payment_url && 
-            paymentStatus === 'pending') {
-          window.location.href = currentPaymentData.payment.payment_url;
-        }
+        // Não redirecionar para pagamento externo; manter processamento no checkout
+
         
       } catch (error) {
         console.error('Erro ao verificar status do pagamento:', error);
@@ -181,8 +177,8 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Se for cartão de crédito, mostrar loading enquanto redireciona
-  if (paymentData?.paymentMethod === 'creditCard') {
+  // Exibir status de processamento no próprio checkout para cartão de crédito
+  if (paymentData?.paymentMethod === 'creditCard' && paymentStatus === 'pending') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
         <div className="container mx-auto px-4 max-w-2xl">
@@ -192,10 +188,10 @@ const PaymentSuccess = () => {
                 <CreditCard className="h-8 w-8 text-blue-600 animate-pulse" />
               </div>
               <CardTitle className="text-2xl text-blue-700">
-                Redirecionando para o pagamento...
+                Processando pagamento...
               </CardTitle>
               <p className="text-muted-foreground">
-                Você será redirecionado para completar o pagamento com cartão de crédito
+                Estamos processando seu pagamento aqui no checkout. Aguarde a confirmação, sem redirecionamento externo.
               </p>
             </CardHeader>
           </Card>
