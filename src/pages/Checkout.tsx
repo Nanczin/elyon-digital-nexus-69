@@ -211,6 +211,12 @@ const Checkout = () => {
       return false;
     }
     
+    // Para pagamentos com cartão de crédito no Brasil, o CPF é obrigatório
+    if (selectedPaymentMethod === 'creditCard' && !customerData.cpf.trim()) {
+      toast({ title: "Erro", description: "Informe o CPF para pagamento com cartão de crédito", variant: "destructive" });
+      return false;
+    }
+    
     if (!selectedPaymentMethod) {
       toast({ title: "Erro", description: "Selecione uma forma de pagamento", variant: "destructive" });
       return false;
