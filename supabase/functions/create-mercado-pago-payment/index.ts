@@ -119,30 +119,32 @@ serve(async (req) => {
     if (paymentMethod === 'pix') {
       paymentData.payment_method_id = 'pix';
     } else if (paymentMethod === 'creditCard' && cardData) {
-      // Para cartão de crédito, processar pagamento direto
+      // Para cartão de crédito, processar pagamento direto (não usar preference)
+      // Remover campos desnecessários para pagamento direto
+      delete paymentData.notification_url;
+      delete paymentData.external_reference;
+      
       paymentData.payment_method_id = 'credit_card';
       paymentData.installments = cardData.installments;
-      paymentData.token = 'card_token_placeholder'; // Será substituído pelo token real
+      paymentData.statement_descriptor = 'CHECKOUT';
       
-      // Adicionar dados do cartão para criar o token
-      paymentData.card = {
-        card_number: cardData.cardNumber,
-        cardholder: {
-          name: cardData.cardholderName,
-          identification: customerData.cpf ? {
-            type: 'CPF',
-            number: customerData.cpf.replace(/\D/g, '')
-          } : undefined
-        },
-        expiration_month: parseInt(cardData.expirationMonth),
-        expiration_year: parseInt(cardData.expirationYear),
-        security_code: cardData.securityCode
+      // Dados adicionais necessários para aprovação
+      paymentData.additional_info = {
+        items: [{
+          id: checkoutId,
+          title: `Pagamento Checkout ${checkoutId}`,
+          description: paymentData.description,
+          quantity: 1,
+          unit_price: paymentData.transaction_amount
+        }]
       };
     }
 
     // Para cartão de crédito, primeiro criar o card token
     let cardToken = null;
     if (paymentMethod === 'creditCard' && cardData) {
+      console.log('Criando card token para o Mercado Pago...');
+      
       const tokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens', {
         method: 'POST',
         headers: {
@@ -150,7 +152,7 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          card_number: cardData.cardNumber,
+          card_number: cardData.cardNumber.replace(/\s/g, ''),
           cardholder: {
             name: cardData.cardholderName,
             identification: customerData.cpf ? {
@@ -158,22 +160,25 @@ serve(async (req) => {
               number: customerData.cpf.replace(/\D/g, '')
             } : undefined
           },
-          expiration_month: parseInt(cardData.expirationMonth),
-          expiration_year: parseInt(cardData.expirationYear),
+          expiration_month: cardData.expirationMonth,
+          expiration_year: cardData.expirationYear,
           security_code: cardData.securityCode
         })
       });
 
       const tokenResult = await tokenResponse.json();
+      console.log('Token response:', { ok: tokenResponse.ok, status: tokenResponse.status });
       
       if (!tokenResponse.ok) {
         console.error('Card Token Error:', tokenResult);
-        throw new Error('Erro ao processar dados do cartão');
+        throw new Error(tokenResult.message || 'Erro ao processar dados do cartão');
       }
 
       cardToken = tokenResult.id;
+      console.log('Card token criado com sucesso');
+      
+      // Adicionar o token ao paymentData
       paymentData.token = cardToken;
-      delete paymentData.card; // Remover dados do cartão após criar o token
     }
 
     // Make request to Mercado Pago API
@@ -190,11 +195,29 @@ serve(async (req) => {
     });
 
     const mpResult = await mpResponse.json();
+    
+    console.log('Mercado Pago Response:', { 
+      ok: mpResponse.ok, 
+      status: mpResponse.status,
+      paymentStatus: mpResult.status,
+      paymentId: mpResult.id 
+    });
 
     if (!mpResponse.ok) {
       console.error('Mercado Pago API Error:', mpResult);
-      throw new Error(mpResult.message || 'Erro ao criar pagamento');
+      const errorMessage = mpResult.message || mpResult.error || 'Erro ao criar pagamento';
+      throw new Error(errorMessage);
     }
+
+    // Determinar o status baseado na resposta do Mercado Pago
+    let paymentStatus = 'pending';
+    if (mpResult.status === 'approved') {
+      paymentStatus = 'completed';
+    } else if (mpResult.status === 'rejected' || mpResult.status === 'cancelled') {
+      paymentStatus = 'failed';
+    }
+
+    console.log('Salvando pagamento no banco com status:', paymentStatus);
 
     // Create payment record in database
     const { data: payment, error: paymentError } = await supabase
@@ -204,7 +227,7 @@ serve(async (req) => {
         user_id: null, // Allow null for guest checkout
         amount: amount,
         payment_method: paymentMethod,
-        status: mpResult.status === 'approved' ? 'completed' : 'pending',
+        status: paymentStatus,
         mp_payment_id: mpResult.id.toString(),
         mp_payment_status: mpResult.status || 'pending',
         qr_code: paymentMethod === 'pix' ? (mpResult.point_of_interaction?.transaction_data?.qr_code || null) : null,
