@@ -66,30 +66,24 @@ serve(async (req) => {
     // Buscar as configurações do Mercado Pago da tabela integrations
     const { data: mpConfig, error: mpConfigError } = await supabase
       .from('integrations')
-      .select('mercado_pago_access_token')
+      .select('mercado_pago_access_token, mercado_pago_token_public')
       .not('mercado_pago_access_token', 'is', null)
       .limit(1)
       .maybeSingle();
 
     console.log('MP Config from database:', { mpConfig, mpConfigError });
 
-    let accessToken;
-    if (mpConfig?.mercado_pago_access_token) {
-      accessToken = mpConfig.mercado_pago_access_token;
-      console.log('Using access token from database - token found');
-    } else {
-      console.log('No token found in database, checking env variable');
-      // Fallback para secret do Supabase caso não encontre na tabela
-      accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-      if (accessToken) {
-        console.log('Using access token from env variable');
-      }
-    }
-    
-    console.log('Access token configured:', !!accessToken);
+    const accessToken = (mpConfig?.mercado_pago_access_token as string) || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || '';
+    const publicKey = (mpConfig?.mercado_pago_token_public as string) || Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || '';
+
+    console.log('Access/Public keys configured:', { hasAccessToken: !!accessToken, hasPublicKey: !!publicKey });
     
     if (!accessToken) {
       throw new Error('Token do Mercado Pago não configurado. Configure nas integrações.');
+    }
+    
+    if (paymentMethod === 'creditCard' && !publicKey) {
+      throw new Error('Chave pública do Mercado Pago não configurada. Configure nas integrações.');
     }
 
     // Create payment data based on payment method
@@ -124,9 +118,9 @@ serve(async (req) => {
       delete paymentData.notification_url;
       delete paymentData.external_reference;
       
-      paymentData.payment_method_id = 'credit_card';
       paymentData.installments = cardData.installments;
       paymentData.statement_descriptor = 'CHECKOUT';
+      paymentData.capture = true;
       
       // Dados adicionais necessários para aprovação
       paymentData.additional_info = {
@@ -145,10 +139,9 @@ serve(async (req) => {
     if (paymentMethod === 'creditCard' && cardData) {
       console.log('Criando card token para o Mercado Pago...');
       
-      const tokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens', {
+      const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -160,8 +153,8 @@ serve(async (req) => {
               number: customerData.cpf.replace(/\D/g, '')
             } : undefined
           },
-          expiration_month: cardData.expirationMonth,
-          expiration_year: cardData.expirationYear,
+          expiration_month: Number(cardData.expirationMonth),
+          expiration_year: Number(cardData.expirationYear),
           security_code: cardData.securityCode
         })
       });
