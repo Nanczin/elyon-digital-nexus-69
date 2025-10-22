@@ -32,7 +32,8 @@ const PaymentSuccess = () => {
         return;
       }
       const { data, error } = await supabase.functions.invoke('verify-mercado-pago-payment', {
-        body: { mp_payment_id: mpId }
+        body: { mp_payment_id: mpId },
+        method: 'POST'
       });
       if (error || !data?.success) {
         throw new Error(error?.message || data?.error || 'Falha ao verificar pagamento');
