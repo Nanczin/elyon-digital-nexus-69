@@ -23,6 +23,34 @@ const PaymentSuccess = () => {
   const [productData, setProductData] = useState<any>(null);
   const [isChecking, setIsChecking] = useState(true);
 
+  const handleVerifyNow = async () => {
+    try {
+      setIsChecking(true);
+      const mpId = searchParams.get('payment_id') || paymentData?.payment?.mp_payment_id;
+      if (!mpId) {
+        toast({ title: 'Erro', description: 'ID do pagamento não encontrado', variant: 'destructive' });
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('verify-mercado-pago-payment', {
+        body: { mp_payment_id: mpId }
+      });
+      if (error || !data?.success) {
+        throw new Error(error?.message || data?.error || 'Falha ao verificar pagamento');
+      }
+      if (data.status === 'approved' || data.payment?.status === 'completed') {
+        setPaymentStatus('completed');
+        toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
+      } else {
+        toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}` });
+      }
+    } catch (err) {
+      console.error('Erro ao confirmar manualmente:', err);
+      toast({ title: 'Erro', description: err instanceof Error ? err.message : 'Falha na confirmação', variant: 'destructive' });
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
@@ -194,6 +222,11 @@ const PaymentSuccess = () => {
                 Estamos processando seu pagamento aqui no checkout. Aguarde a confirmação, sem redirecionamento externo.
               </p>
             </CardHeader>
+            <CardContent className="text-center">
+              <Button onClick={handleVerifyNow} variant="outline" disabled={isChecking}>
+                {isChecking ? 'Verificando...' : 'Confirmar agora'}
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -361,9 +394,12 @@ const PaymentSuccess = () => {
                 <h3 className="font-semibold text-gray-700 mb-2">
                   Aguardando confirmação do pagamento...
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mb-4">
                   Você será redirecionado automaticamente. Após a confirmação, o acesso é liberado e você receberá um e-mail com os detalhes.
                 </p>
+                <Button onClick={handleVerifyNow} variant="outline" disabled={isChecking}>
+                  {isChecking ? 'Verificando...' : 'Confirmar agora'}
+                </Button>
               </div>
             </CardContent>
           </Card>

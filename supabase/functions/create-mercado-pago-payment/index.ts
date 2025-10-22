@@ -113,16 +113,13 @@ serve(async (req) => {
     if (paymentMethod === 'pix') {
       paymentData.payment_method_id = 'pix';
     } else if (paymentMethod === 'creditCard' && cardData) {
-      // Para cartão de crédito, processar pagamento direto (não usar preference)
-      // Remover campos desnecessários para pagamento direto
-      delete paymentData.notification_url;
-      delete paymentData.external_reference;
-      
+      // Pagamento direto com cartão - manter notification_url e external_reference
+      // para garantir recebimento do webhook e reconciliação via external_reference
       paymentData.installments = cardData.installments;
       paymentData.statement_descriptor = 'CHECKOUT';
       paymentData.capture = true;
       
-      // Dados adicionais necessários para aprovação
+      // Dados adicionais (melhora aprovação e reconciliação)
       paymentData.additional_info = {
         items: [{
           id: checkoutId,

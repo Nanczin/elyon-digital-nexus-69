@@ -117,14 +117,121 @@ serve(async (req) => {
 
       console.log('Payment updated:', payment);
 
-      // Se o pagamento foi aprovado, podemos disparar outras ações aqui
+      // Se o pagamento foi aprovado, garantir ordem e acesso ao produto (idempotente)
       if (mpPayment.status === 'approved') {
-        console.log(`Payment ${paymentId} was approved!`);
-        
-        // Aqui você pode adicionar lógica para:
-        // - Enviar email de confirmação
-        // - Dar acesso ao produto
-        // - Registrar logs, etc.
+        console.log(`Payment ${paymentId} approved - ensuring order and product access.`);
+        try {
+          const email = (customerData as any)?.email || mpPayment.payer?.email || null;
+          let userId: string | null = null;
+
+          if (email) {
+            const { data: existingUser } = await supabase
+              .from('users')
+              .select('id')
+              .eq('email', email)
+              .maybeSingle();
+
+            if (existingUser?.id) {
+              userId = existingUser.id;
+            } else {
+              const { data: newUser, error: userErr } = await supabase
+                .from('users')
+                .insert({
+                  email,
+                  name: (customerData as any)?.name || mpPayment.payer?.first_name || 'Cliente',
+                  phone: (customerData as any)?.phone || null,
+                  cpf: (customerData as any)?.cpf || mpPayment.payer?.identification?.number || null
+                })
+                .select('id')
+                .single();
+              if (userErr) {
+                console.error('Error creating user record:', userErr);
+              } else {
+                userId = newUser?.id || null;
+              }
+            }
+          }
+
+          // Atualizar user_id no pagamento (se aplicável)
+          if (userId && !payment?.user_id) {
+            const { error: payUserErr } = await supabase
+              .from('payments')
+              .update({ user_id: userId })
+              .eq('mp_payment_id', paymentId.toString());
+            if (payUserErr) console.error('Error updating payment user_id:', payUserErr);
+          }
+
+          // Obter produto a partir do checkout
+          let productId: string | null = null;
+          if (checkoutId) {
+            const { data: checkoutRow } = await supabase
+              .from('checkouts')
+              .select('product_id')
+              .eq('id', checkoutId)
+              .maybeSingle();
+            productId = checkoutRow?.product_id || null;
+          }
+
+          // Criar ordem (idempotente)
+          const { data: existingOrder } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('mp_payment_id', paymentId.toString())
+            .maybeSingle();
+
+          if (!existingOrder) {
+            const { data: orderIns, error: orderErr } = await supabase
+              .from('orders')
+              .insert({
+                mp_payment_id: paymentId.toString(),
+                payment_id: payment?.id || null,
+                checkout_id: checkoutId || null,
+                user_id: userId,
+                product_id: productId,
+                amount: mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : payment?.amount,
+                status: 'paid',
+                metadata: {
+                  mp_status: mpPayment.status,
+                  source: 'webhook'
+                }
+              })
+              .select('id')
+              .single();
+            if (orderErr) console.error('Error inserting order:', orderErr);
+            else console.log('Order created:', orderIns);
+          } else {
+            console.log('Order already exists for this mp_payment_id:', existingOrder.id);
+          }
+
+          // Garantir acesso ao produto (idempotente)
+          if (userId && productId) {
+            const { data: existingAccess } = await supabase
+              .from('product_access')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('product_id', productId)
+              .maybeSingle();
+
+            if (!existingAccess) {
+              const { data: accessIns, error: accessErr } = await supabase
+                .from('product_access')
+                .insert({
+                  user_id: userId,
+                  product_id: productId,
+                  payment_id: payment?.id || null,
+                  source: 'purchase'
+                })
+                .select('id')
+                .single();
+              if (accessErr) console.error('Error creating product access:', accessErr);
+              else console.log('Product access granted:', accessIns);
+            } else {
+              console.log('Product access already exists:', existingAccess.id);
+            }
+          }
+        } catch (postProcessErr) {
+          console.error('Post-approval processing error:', postProcessErr);
+        }
       }
 
       return new Response('OK', { 
