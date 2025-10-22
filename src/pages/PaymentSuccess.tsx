@@ -42,25 +42,32 @@ const PaymentSuccess = () => {
         });
         data = res.data;
         invokeError = res.error || null;
+        console.log('invoke result', { data, error: invokeError });
       } catch (err) {
         invokeError = err;
+        console.error('invoke threw', err);
       }
 
-      // 2) Fallback direto (caso CORS/rede impeça o invoke)
-      if (!data || invokeError?.message?.includes('failed to send a request to the edge function')) {
+      // 2) Fallback direto (qualquer erro no invoke dispara)
+      if (!data || invokeError) {
         try {
           const DIRECT_URL = 'https://jgmwbovvydimvnmmkfpy.supabase.co/functions/v1/verify-mercado-pago-payment';
-          const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImV4cCI6MjA2ODE2NTc1Nn0.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k';
+          const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImV4cCI6MjA2ODE2NTc1Nn0.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k';
           const resp = await fetch(DIRECT_URL, {
             method: 'POST',
+            mode: 'cors',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': API_KEY
+              'apikey': ANON_KEY,
+              'Authorization': `Bearer ${ANON_KEY}`,
+              'x-client-info': 'custom-fallback/1.0'
             },
             body: JSON.stringify({ mp_payment_id: mpId })
           });
-          data = await resp.json();
-          if (!resp.ok) throw new Error(data?.error || 'Falha no fallback de verificação');
+          const json = await resp.json();
+          console.log('fallback result', { ok: resp.ok, status: resp.status, json });
+          if (!resp.ok) throw new Error(json?.error || 'Falha no fallback de verificação');
+          data = json;
         } catch (fallbackErr) {
           throw fallbackErr;
         }
