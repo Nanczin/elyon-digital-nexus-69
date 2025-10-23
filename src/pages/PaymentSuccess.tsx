@@ -51,16 +51,11 @@ const PaymentSuccess = () => {
       // 2) Fallback direto (qualquer erro no invoke dispara)
       if (!data || invokeError) {
         try {
-          const DIRECT_URL = 'https://jgmwbovvydimvnmmkfpy.supabase.co/functions/v1/verify-mercado-pago-payment';
-          const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImV4cCI6MjA2ODE2NTc1Nn0.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k';
+          const DIRECT_URL = 'https://jgmwbovvydimvnmmkfpy.functions.supabase.co/verify-mercado-pago-payment';
           const resp = await fetch(DIRECT_URL, {
             method: 'POST',
-            mode: 'cors',
             headers: {
-              'Content-Type': 'application/json',
-              'apikey': ANON_KEY,
-              'Authorization': `Bearer ${ANON_KEY}`,
-              'x-client-info': 'custom-fallback/1.0'
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({ mp_payment_id: mpId })
           });
