@@ -67,30 +67,56 @@ const PaymentSuccess = () => {
           console.log('fallback result', { ok: resp.ok, status: resp.status, json });
           if (!resp.ok) throw new Error(json?.error || 'Falha no fallback de verificação');
           data = json;
-        } catch (fallbackErr) {
-          throw fallbackErr;
+          } catch (fallbackErr) {
+            console.error('Fallback fetch failed:', fallbackErr);
+            // Último recurso: consultar diretamente o banco pelo mp_payment_id
+            try {
+              const { data: paymentRow, error: dbErr } = await supabase
+                .from('payments')
+                .select('status, mp_payment_status')
+                .eq('mp_payment_id', mpId.toString())
+                .maybeSingle();
+              if (dbErr) throw dbErr;
+              if (paymentRow) {
+                const calc = paymentRow.status === 'completed' || paymentRow.mp_payment_status === 'approved' ? 'completed'
+                  : paymentRow.status === 'failed' ? 'failed' : 'pending';
+                if (calc === 'completed') {
+                  setPaymentStatus('completed');
+                  toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
+                } else if (calc === 'failed') {
+                  setPaymentStatus('failed');
+                  toast({ title: 'Pagamento não aprovado', description: 'Tente novamente com outro cartão.', variant: 'destructive' });
+                } else {
+                  toast({ title: 'Ainda processando', description: `Status atual: ${paymentRow.mp_payment_status || paymentRow.status}` });
+                }
+                return; // Evita cair no throw abaixo
+              }
+              throw fallbackErr;
+            } catch (dbCheckErr) {
+              console.error('DB status check failed:', dbCheckErr);
+              throw fallbackErr;
+            }
+          }
         }
-      }
 
-      if (!data?.success) {
-        throw new Error(invokeError?.message || data?.error || 'Falha ao verificar pagamento');
-      }
+        if (!data?.success) {
+          throw new Error(invokeError?.message || data?.error || 'Falha ao verificar pagamento');
+        }
 
-      if (data.status === 'approved' || data.payment?.status === 'completed') {
-        setPaymentStatus('completed');
-        toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
-      } else {
-        toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}` });
+        if (data.status === 'approved' || data.payment?.status === 'completed') {
+          setPaymentStatus('completed');
+          toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
+        } else {
+          toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}` });
+        }
+      } catch (err) {
+        console.error('Erro ao confirmar manualmente:', err);
+        const msg = err instanceof Error ? err.message : 'Falha na confirmação';
+        toast({ title: 'Erro', description: msg, variant: 'destructive' });
+      } finally {
+        setIsChecking(false);
       }
-    } catch (err) {
-      console.error('Erro ao confirmar manualmente:', err);
-      const msg = err instanceof Error ? err.message : 'Falha na confirmação';
-      toast({ title: 'Erro', description: msg, variant: 'destructive' });
-    } finally {
-      setIsChecking(false);
-    }
-  };
-
+    };
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
