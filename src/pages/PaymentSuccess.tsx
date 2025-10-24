@@ -107,7 +107,7 @@ const PaymentSuccess = () => {
           setPaymentStatus('completed');
           toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
         } else {
-          toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}` });
+          toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}${data.status_detail ? ` (${data.status_detail})` : ''}` });
         }
       } catch (err) {
         console.error('Erro ao confirmar manualmente:', err);

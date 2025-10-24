@@ -156,7 +156,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, status: status, payment }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
+    return new Response(JSON.stringify({ success: true, status: status, status_detail: mpPayment.status_detail, payment }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
   } catch (error) {
     console.error('Verify function error:', error);
     return new Response(JSON.stringify({ success: false, error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
