@@ -187,6 +187,31 @@ const PaymentSuccess = () => {
           return;
         }
         
+        // Se não foi aprovado ainda, tentar verificação ativa no MP
+        if (paymentStatus === 'pending') {
+          const mpIdToCheck = paymentId || currentPaymentData?.payment?.mp_payment_id;
+          if (mpIdToCheck) {
+            try {
+              const res = await supabase.functions.invoke('verify-mercado-pago-payment', {
+                body: { mp_payment_id: mpIdToCheck },
+                method: 'POST'
+              });
+              const data = res.data;
+              if (data?.success) {
+                if (data.status === 'approved' || data.payment?.status === 'completed') {
+                  setPaymentStatus('completed');
+                } else if (data.status === 'rejected' || data.payment?.status === 'failed') {
+                  setPaymentStatus('failed');
+                } else {
+                  setLastDetail(data.status_detail || null);
+                }
+              }
+            } catch (activeErr) {
+              console.warn('Active verify failed', activeErr);
+            }
+          }
+        }
+
         // Se não foi aprovado ainda, mas temos dados do payment, verificar status no banco
         if (currentPaymentData?.payment?.id) {
           console.log('Verificando status no banco para payment ID:', currentPaymentData.payment.id);

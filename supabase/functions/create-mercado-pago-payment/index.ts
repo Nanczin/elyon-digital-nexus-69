@@ -189,7 +189,28 @@ serve(async (req) => {
           console.warn('Could not resolve payment method from BIN:', pmJson);
         }
       } catch (pmErr) {
-        console.error('Error resolving payment method by BIN:', pmErr);
+        console.error('Error resolving payment method by BIN (installments):', pmErr);
+      }
+
+      // Fallback: tentar endpoint de search quando ainda não tiver payment_method_id
+      if (!paymentData.payment_method_id) {
+        try {
+          const searchUrl = `https://api.mercadopago.com/v1/payment_methods/search?bin=${cardData.cardNumber.replace(/\s/g, '').slice(0, 6)}`;
+          const searchResp = await fetch(searchUrl, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+          const searchJson = await searchResp.json();
+          const methodId = searchJson?.results?.[0]?.payment_method?.id;
+          const issuerId = searchJson?.results?.[0]?.issuer?.id;
+          if (methodId) paymentData.payment_method_id = methodId;
+          if (issuerId) paymentData.issuer_id = issuerId;
+          console.log('Resolved via search:', { payment_method_id: paymentData.payment_method_id, issuer_id: paymentData.issuer_id });
+        } catch (searchErr) {
+          console.error('Error resolving payment method by BIN (search):', searchErr);
+        }
+      }
+
+      // Garantir que temos um payment_method_id antes de enviar
+      if (!paymentData.payment_method_id) {
+        console.warn('payment_method_id não resolvido; enviando apenas token');
       }
     }
 
