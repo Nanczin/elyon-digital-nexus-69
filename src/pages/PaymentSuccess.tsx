@@ -22,6 +22,7 @@ const PaymentSuccess = () => {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
   const [productData, setProductData] = useState<any>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [lastDetail, setLastDetail] = useState<string | null>(null);
 
   const handleVerifyNow = async () => {
     try {
@@ -73,13 +74,15 @@ const PaymentSuccess = () => {
             try {
               const { data: paymentRow, error: dbErr } = await supabase
                 .from('payments')
-                .select('status, mp_payment_status')
+                .select('status, mp_payment_status, metadata')
                 .eq('mp_payment_id', mpId.toString())
                 .maybeSingle();
               if (dbErr) throw dbErr;
               if (paymentRow) {
                 const calc = paymentRow.status === 'completed' || paymentRow.mp_payment_status === 'approved' ? 'completed'
                   : paymentRow.status === 'failed' ? 'failed' : 'pending';
+                const meta: any = (paymentRow as any)?.metadata;
+                const detail = meta?.mp_verify_data?.status_detail || meta?.mp_webhook_data?.status_detail || null;
                 if (calc === 'completed') {
                   setPaymentStatus('completed');
                   toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
@@ -87,7 +90,8 @@ const PaymentSuccess = () => {
                   setPaymentStatus('failed');
                   toast({ title: 'Pagamento não aprovado', description: 'Tente novamente com outro cartão.', variant: 'destructive' });
                 } else {
-                  toast({ title: 'Ainda processando', description: `Status atual: ${paymentRow.mp_payment_status || paymentRow.status}` });
+                  setLastDetail(detail);
+                  toast({ title: 'Ainda processando', description: `Status atual: ${paymentRow.mp_payment_status || paymentRow.status}${detail ? ` (${detail})` : ''}` });
                 }
                 return; // Evita cair no throw abaixo
               }
@@ -107,6 +111,7 @@ const PaymentSuccess = () => {
           setPaymentStatus('completed');
           toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
         } else {
+          setLastDetail(data.status_detail || null);
           toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}${data.status_detail ? ` (${data.status_detail})` : ''}` });
         }
       } catch (err) {
@@ -292,6 +297,9 @@ const PaymentSuccess = () => {
               <Button onClick={handleVerifyNow} variant="outline" disabled={isChecking}>
                 {isChecking ? 'Verificando...' : 'Confirmar agora'}
               </Button>
+              <p className="text-sm text-muted-foreground mt-2">
+                Status atual: {paymentStatus}{lastDetail ? ` (${lastDetail})` : ''}
+              </p>
             </CardContent>
           </Card>
         </div>
