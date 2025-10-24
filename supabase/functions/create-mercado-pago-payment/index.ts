@@ -118,6 +118,8 @@ serve(async (req) => {
       paymentData.installments = cardData.installments;
       paymentData.statement_descriptor = 'CHECKOUT';
       paymentData.capture = true;
+      // Forçar decisão imediata (aprovado/rejeitado) evitando "pending/in_process"
+      paymentData.binary_mode = true;
       
       // Dados adicionais (melhora aprovação e reconciliação)
       paymentData.additional_info = {
@@ -169,6 +171,26 @@ serve(async (req) => {
       
       // Adicionar o token ao paymentData
       paymentData.token = cardToken;
+
+      // Resolver automaticamente o payment_method_id e issuer a partir do BIN
+      try {
+        const bin = cardData.cardNumber.replace(/\s/g, '').slice(0, 6);
+        const installmentsUrl = `https://api.mercadopago.com/v1/payment_methods/installments?amount=${paymentData.transaction_amount}&bin=${bin}`;
+        const pmResp = await fetch(installmentsUrl, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const pmJson = await pmResp.json();
+        if (pmResp.ok && Array.isArray(pmJson) && pmJson.length > 0) {
+          const pm = pmJson[0];
+          if (pm?.payment_method_id) paymentData.payment_method_id = pm.payment_method_id;
+          if (pm?.issuer?.id) paymentData.issuer_id = pm.issuer.id;
+          console.log('Resolved payment method:', { payment_method_id: paymentData.payment_method_id, issuer_id: paymentData.issuer_id });
+        } else {
+          console.warn('Could not resolve payment method from BIN:', pmJson);
+        }
+      } catch (pmErr) {
+        console.error('Error resolving payment method by BIN:', pmErr);
+      }
     }
 
     // Make request to Mercado Pago API
@@ -179,7 +201,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `${checkoutId}-${Date.now()}`
+        'X-Idempotency-Key': `chk:${checkoutId}|email:${customerData.email}`
       },
       body: JSON.stringify(paymentData)
     });
@@ -190,6 +212,7 @@ serve(async (req) => {
       ok: mpResponse.ok, 
       status: mpResponse.status,
       paymentStatus: mpResult.status,
+      status_detail: mpResult.status_detail,
       paymentId: mpResult.id 
     });
 
@@ -248,6 +271,7 @@ serve(async (req) => {
           id: payment.id,
           mp_payment_id: paymentMethod === 'creditCard' ? mpResult.id : mpResult.id,
           status: mpResult.status || 'pending',
+          status_detail: mpResult.status_detail || null,
           qr_code: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code : null,
           payment_url: paymentMethod === 'pix' 
             ? mpResult.point_of_interaction?.transaction_data?.ticket_url
