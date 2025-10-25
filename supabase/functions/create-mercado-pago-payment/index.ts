@@ -216,12 +216,17 @@ serve(async (req) => {
     // Make request to Mercado Pago API
     const apiUrl = 'https://api.mercadopago.com/v1/payments';
     
+    const idempotencyKeyBase = `chk:${checkoutId}|email:${customerData.email}`;
+    const idempotencyKey = paymentMethod === 'creditCard'
+      ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
+      : idempotencyKeyBase;
+    
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `chk:${checkoutId}|email:${customerData.email}`
+        'X-Idempotency-Key': idempotencyKey
       },
       body: JSON.stringify(paymentData)
     });

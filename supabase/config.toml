@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.verify-mercado-pago-payment]
 verify_jwt = false
+
+[functions.create-mercado-pago-payment]
+verify_jwt = false
