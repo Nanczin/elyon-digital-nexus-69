@@ -49,7 +49,7 @@ serve(async (req) => {
     // Get the checkout to find the selected Mercado Pago account
     const { data: checkout, error: checkoutError } = await supabase
       .from('checkouts')
-      .select('integrations')
+      .select('integrations, user_id')
       .eq('id', checkoutId)
       .single();
 
@@ -67,8 +67,7 @@ serve(async (req) => {
     const { data: mpConfig, error: mpConfigError } = await supabase
       .from('integrations')
       .select('mercado_pago_access_token, mercado_pago_token_public')
-      .not('mercado_pago_access_token', 'is', null)
-      .limit(1)
+      .eq('user_id', checkout.user_id)
       .maybeSingle();
 
     console.log('MP Config from database:', { mpConfig, mpConfigError });
