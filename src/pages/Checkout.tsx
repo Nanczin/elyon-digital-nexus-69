@@ -163,9 +163,12 @@ const Checkout = () => {
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
       basePrice = selectedPkg ? (Number(selectedPkg.price) || 0) : 0;
+      console.log('Checkout Debug: Package selected:', selectedPkg);
+      console.log('Checkout Debug: Base price from package (in Reais):', basePrice);
     } else {
       // If no packages or selected package has 0 price, use the main checkout price
       basePrice = (Number(checkout.promotional_price) || Number(checkout.price) || 0) / 100;
+      console.log('Checkout Debug: Base price from main checkout (in Reais):', basePrice);
     }
 
     let totalInReais = basePrice;
@@ -258,7 +261,7 @@ const Checkout = () => {
       // Quando usando Secure Fields do Mercado Pago, a validação dos dados sensíveis ocorre no SDK
       if (mpPublicKey) {
         if (!cardData.cardholderName.trim()) {
-          toast({ title: "Erro", description: "Nome no cartão é obrigatório", variant: "destructive" });
+          toast({ title: "Erro", description: "Nome no cartão é obrigação", variant: "destructive" });
           return false;
         }
       } else {
@@ -293,7 +296,7 @@ const Checkout = () => {
     
     try {
       const totalAmount = toCents(calculateTotal()); // Convert to cents
-      console.log('Checkout Debug: Total amount in cents being sent to Edge Function:', totalAmount);
+      console.log('Checkout Debug: Total amount (in cents) BEFORE validation:', totalAmount); // NEW LOG
 
       if (totalAmount <= 0) {
         toast({ title: "Erro", description: "O valor total do pagamento deve ser maior que zero.", variant: "destructive" });

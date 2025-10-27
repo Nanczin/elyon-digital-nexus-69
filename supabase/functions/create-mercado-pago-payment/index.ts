@@ -50,7 +50,7 @@ serve(async (req) => {
     // Desestruturar com a interface definida
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
-    console.log('Edge Function: Raw amount received (in cents):', amount); // NEW LOG
+    console.log('Edge Function: Type of amount received:', typeof amount, 'Value:', amount); // NEW LOG
     console.log('Edge Function: Payment request parsed:', { checkoutId, amount, paymentMethod, customerData, cardToken: cardToken ? '***' : 'N/A' });
 
     // Get the checkout to find the selected Mercado Pago account
