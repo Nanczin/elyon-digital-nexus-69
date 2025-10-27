@@ -35,9 +35,10 @@ const AdminProducts = () => {
     price: '',
     banner: null as File | null,
     logo: null as File | null,
-    deliveryType: 'link' as 'link' | 'upload',
+    deliveryType: 'link' as 'link' | 'upload' | 'deliverableLink', // Added 'deliverableLink'
     memberAreaLink: '',
     deliverable: null as File | null,
+    deliverableLink: '', // New field for deliverable link
     orderBumps: [{
       id: 1,
       name: '',
@@ -168,6 +169,15 @@ const AdminProducts = () => {
       return;
     }
 
+    if (formData.deliveryType === 'deliverableLink' && !formData.deliverableLink) {
+      toast({
+        title: "Erro",
+        description: "Link do entregável é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       let bannerUrl = null;
@@ -187,6 +197,8 @@ const AdminProducts = () => {
       // Upload deliverable if exists
       if (formData.deliverable) {
         fileUrl = await uploadFile(formData.deliverable, 'deliverables');
+      } else if (formData.deliveryType === 'deliverableLink') {
+        fileUrl = formData.deliverableLink;
       }
 
       // Create product in database
@@ -198,7 +210,7 @@ const AdminProducts = () => {
           price: parseInt(formData.price) * 100, // Convert to cents
           banner_url: bannerUrl,
           logo_url: logoUrl,
-          file_url: fileUrl,
+          file_url: fileUrl, // Save deliverable link here
           member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null
         });
 
@@ -219,6 +231,7 @@ const AdminProducts = () => {
         deliveryType: 'link',
         memberAreaLink: '',
         deliverable: null,
+        deliverableLink: '',
         orderBumps: [{
           id: 1,
           name: '',
@@ -250,9 +263,10 @@ const AdminProducts = () => {
       price: (product.price / 100).toString(),
       banner: null,
       logo: null,
-      deliveryType: product.member_area_link ? 'link' : 'upload',
+      deliveryType: product.member_area_link ? 'link' : (product.file_url && !product.file_url.startsWith('http') ? 'upload' : (product.file_url ? 'deliverableLink' : 'link')), // Determine delivery type
       memberAreaLink: product.member_area_link || '',
       deliverable: null,
+      deliverableLink: product.file_url && product.file_url.startsWith('http') ? product.file_url : '', // Load deliverable link
       orderBumps: [{
         id: 1,
         name: '',
@@ -301,11 +315,39 @@ const AdminProducts = () => {
       return;
     }
 
+    if (formData.deliveryType === 'link' && !formData.memberAreaLink) {
+      toast({
+        title: "Erro",
+        description: "Link da área de membros é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (formData.deliveryType === 'upload' && !formData.deliverable) {
+      toast({
+        title: "Erro",
+        description: "Arquivo entregável é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.deliveryType === 'deliverableLink' && !formData.deliverableLink) {
+      toast({
+        title: "Erro",
+        description: "Link do entregável é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       let bannerUrl = editingProduct.banner_url;
       let logoUrl = editingProduct.logo_url;
       let fileUrl = editingProduct.file_url;
+      let memberAreaLink = editingProduct.member_area_link;
 
       // Upload new files if provided
       if (formData.banner) {
@@ -316,9 +358,20 @@ const AdminProducts = () => {
         logoUrl = await uploadFile(formData.logo, 'logos');
       }
 
-      if (formData.deliverable) {
+      if (formData.deliveryType === 'upload' && formData.deliverable) {
         fileUrl = await uploadFile(formData.deliverable, 'deliverables');
+        memberAreaLink = null; // Clear member area link if uploading
+      } else if (formData.deliveryType === 'deliverableLink') {
+        fileUrl = formData.deliverableLink;
+        memberAreaLink = null; // Clear member area link if using deliverable link
+      } else if (formData.deliveryType === 'link') {
+        memberAreaLink = formData.memberAreaLink;
+        fileUrl = null; // Clear file url if using member area link
+      } else {
+        fileUrl = null;
+        memberAreaLink = null;
       }
+
 
       // Update product in database
       const { error } = await supabase
@@ -329,8 +382,8 @@ const AdminProducts = () => {
           price: parseInt(formData.price) * 100,
           banner_url: bannerUrl,
           logo_url: logoUrl,
-          file_url: fileUrl,
-          member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null
+          file_url: fileUrl, // Save deliverable link here
+          member_area_link: memberAreaLink
         })
         .eq('id', editingProduct.id);
 
@@ -352,6 +405,7 @@ const AdminProducts = () => {
         deliveryType: 'link',
         memberAreaLink: '',
         deliverable: null,
+        deliverableLink: '',
         orderBumps: [{
           id: 1,
           name: '',
@@ -397,6 +451,7 @@ const AdminProducts = () => {
               deliveryType: 'link',
               memberAreaLink: '',
               deliverable: null,
+              deliverableLink: '',
               orderBumps: [{
                 id: 1,
                 name: '',
@@ -419,6 +474,7 @@ const AdminProducts = () => {
                 deliveryType: 'link',
                 memberAreaLink: '',
                 deliverable: null,
+                deliverableLink: '',
                 orderBumps: [{
                   id: 1,
                   name: '',
@@ -540,6 +596,13 @@ const AdminProducts = () => {
                           Upload do Entregável
                         </Label>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="deliverableLink" id="deliverableLink" />
+                        <Label htmlFor="deliverableLink" className="flex items-center gap-2">
+                          <Link className="h-4 w-4" />
+                          Link Direto do Entregável
+                        </Label>
+                      </div>
                     </RadioGroup>
 
                     {formData.deliveryType === 'link' && <div className="space-y-2">
@@ -550,6 +613,11 @@ const AdminProducts = () => {
                     {formData.deliveryType === 'upload' && <div className="space-y-2">
                         <Label htmlFor="deliverable">Arquivo Entregável *</Label>
                         <Input id="deliverable" type="file" onChange={e => handleFileChange('deliverable', e.target.files?.[0] || null)} required />
+                      </div>}
+
+                    {formData.deliveryType === 'deliverableLink' && <div className="space-y-2">
+                        <Label htmlFor="deliverableLink">Link Direto do Entregável *</Label>
+                        <Input id="deliverableLink" type="url" value={formData.deliverableLink} onChange={e => handleInputChange('deliverableLink', e.target.value)} placeholder="https://exemplo.com/meu-ebook.pdf" required />
                       </div>}
                   </div>
                 </TabsContent>

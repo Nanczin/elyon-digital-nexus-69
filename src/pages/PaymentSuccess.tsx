@@ -527,7 +527,7 @@ const PaymentSuccess = () => {
                         </Button>
                       )}
                       
-                      {productData.file_url && (
+                      {productData.file_url && ( // Display download button if file_url exists
                         <Button 
                           variant="outline"
                           className="w-full border-green-600 text-green-600 hover:bg-green-50"
@@ -676,7 +676,7 @@ const PaymentSuccess = () => {
               
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-semibold text-green-800 mb-2">Próximos passos:</h3>
-                <ul className="text-sm text-green-700 space-y-1">
+                <ul className="text-sm text-green-700 space-y-1 text-left">
                   <li>• Verifique seu e-mail (incluindo spam)</li>
                   <li>• Acesse o produto através do link enviado</li>
                   <li>• Entre em contato conosco se tiver dúvidas</li>
