@@ -21,13 +21,14 @@ const PaymentSuccess = () => {
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
   const [productData, setProductData] = useState<any>(null);
-  const [checkoutDeliverable, setCheckoutDeliverable] = useState<any>(null); // New state for checkout deliverable
+  const [checkoutDeliverable, setCheckoutDeliverable] = useState<any>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
 
   const handleVerifyNow = async () => {
     try {
       setIsChecking(true);
+      // Priorizar payment_id da URL, depois do localStorage
       const mpId = searchParams.get('payment_id') || paymentData?.payment?.mp_payment_id;
       if (!mpId) {
         toast({ title: 'Erro', description: 'ID do pagamento não encontrado', variant: 'destructive' });
@@ -137,19 +138,18 @@ const PaymentSuccess = () => {
           setPaymentData(currentPaymentData);
         }
 
-        // Verificar status da URL
+        // Priorizar status e payment_id da URL (vindo do Mercado Pago Standard Checkout)
+        const urlPaymentId = searchParams.get('payment_id');
         const urlStatus = searchParams.get('status');
-        const paymentId = searchParams.get('payment_id');
-        const mpStatus = searchParams.get('payment_status');
         
-        console.log('Verificando status:', { urlStatus, paymentId, mpStatus });
+        console.log('Verificando status:', { urlStatus, urlPaymentId });
         
         // Se veio com status approved na URL, marcar como completado imediatamente
-        if (urlStatus === 'approved' || mpStatus === 'approved' || urlStatus === 'completed') {
+        if (urlStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
           
-          // Buscar dados do produto e do checkout se tiver payment_id
-          if (paymentId) {
+          // Buscar dados do produto e do checkout se tiver payment_id da URL
+          if (urlPaymentId) {
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -159,7 +159,7 @@ const PaymentSuccess = () => {
                   products (*)
                 )
               `)
-              .eq('mp_payment_id', paymentId)
+              .eq('mp_payment_id', urlPaymentId)
               .maybeSingle();
               
             if (payment?.checkouts?.products) {
@@ -168,7 +168,7 @@ const PaymentSuccess = () => {
             if (payment?.checkouts?.form_fields?.deliverable) {
               setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
             }
-          } else if (currentPaymentData?.payment?.id) {
+          } else if (currentPaymentData?.payment?.id) { // Fallback para payment_id do localStorage
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -195,7 +195,7 @@ const PaymentSuccess = () => {
         
         // Se está pendente, verificar status no banco ou na API
         if (paymentStatus === 'pending') {
-          const mpIdToCheck = paymentId || currentPaymentData?.payment?.mp_payment_id;
+          const mpIdToCheck = urlPaymentId || currentPaymentData?.payment?.mp_payment_id;
           
           if (mpIdToCheck) {
             // Tentar verificar na API do Mercado Pago
@@ -656,6 +656,58 @@ const PaymentSuccess = () => {
             </CardHeader>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+      <div className="container mx-auto px-4 max-w-2xl">
+        <Card className="border-green-200">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl text-green-700">
+              Pagamento Processado!
+            </CardTitle>
+            <p className="text-muted-foreground">
+              Seu pedido foi processado com sucesso
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center space-y-4">
+              <p className="text-lg">
+                Obrigado pela sua compra! Você receberá um e-mail com os detalhes do seu pedido e instruções de acesso.
+              </p>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-semibold text-green-800 mb-2">Próximos passos:</h3>
+                <ul className="text-sm text-green-700 space-y-1 text-left">
+                  <li>• Verifique seu e-mail (incluindo spam)</li>
+                  <li>• Acesse o produto através do link enviado</li>
+                  <li>• Entre em contato conosco se tiver dúvidas</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                className="flex-1"
+                onClick={() => navigate('/')}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Voltar ao início
+              </Button>
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
+              <p>
+                Precisa de ajuda? Entre em contato conosco através do WhatsApp ou e-mail.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

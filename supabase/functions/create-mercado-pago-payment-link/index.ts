@@ -79,12 +79,13 @@ serve(async (req) => {
           { id: "ticket" } // Excluir boleto se não for desejado
         ]
       },
+      // Redirecionar diretamente para a página de sucesso, passando os parâmetros do MP
       back_urls: {
-        success: `${supabaseUrl}/functions/v1/mercado-pago-webhook?checkout_id=${checkoutId}&status=approved`,
-        failure: `${supabaseUrl}/functions/v1/mercado-pago-webhook?checkout_id=${checkoutId}&status=failure`,
-        pending: `${supabaseUrl}/functions/v1/mercado-pago-webhook?checkout_id=${checkoutId}&status=pending`,
+        success: `${Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'}/payment-success?payment_id={collection_id}&status={collection_status}`,
+        failure: `${Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'}/payment-success?payment_id={collection_id}&status={collection_status}`,
+        pending: `${Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'}/payment-success?payment_id={collection_id}&status={collection_status}`,
       },
-      notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`,
+      notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`, // Webhook continua para notificações assíncronas
       auto_return: 'approved',
       external_reference: checkoutId,
       metadata: {
