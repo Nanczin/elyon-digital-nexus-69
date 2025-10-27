@@ -7,6 +7,31 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Definindo a interface PaymentRequest para a função Edge
+interface PaymentRequest {
+  checkoutId: string;
+  amount: number;
+  customerData: {
+    name: string;
+    email: string;
+    phone?: string;
+    cpf?: string;
+  };
+  selectedMercadoPagoAccount?: string;
+  orderBumps?: any[]; // Pode ser mais específico se tivermos a estrutura
+  selectedPackage?: number;
+  paymentMethod: string;
+  cardData?: {
+    cardNumber?: string;
+    cardholderName: string;
+    expirationMonth?: string;
+    expirationYear?: string;
+    securityCode?: string;
+    installments: number;
+  };
+  cardToken?: string; // Token gerado no frontend, se aplicável
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,9 +47,10 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Edge Function: Raw request body received:', JSON.stringify(requestBody, null, 2));
 
-    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData }: PaymentRequest = requestBody;
+    // Desestruturar com a interface definida
+    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
-    console.log('Edge Function: Payment request parsed:', { checkoutId, amount, paymentMethod, customerData });
+    console.log('Edge Function: Payment request parsed:', { checkoutId, amount, paymentMethod, customerData, cardToken: cardToken ? '***' : 'N/A' });
 
     // Get the checkout to find the selected Mercado Pago account
     const { data: checkout, error: checkoutError } = await supabase
@@ -93,7 +119,7 @@ serve(async (req) => {
       notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`,
       external_reference: checkoutId,
       metadata: {
-        checkout_id: checkoutId,
+        customer_data: customerData,
         order_bumps: orderBumps,
         selected_package: selectedPackage,
         payment_method: paymentMethod
@@ -122,7 +148,7 @@ serve(async (req) => {
       };
 
       // Se veio token do frontend, usa diretamente
-      if (typeof (cardToken as any) === 'string' && cardToken) {
+      if (cardToken) { // Usar o cardToken desestruturado
         console.log('Edge Function: Usando card token recebido do frontend');
         paymentData.token = cardToken;
       } else if (cardData) {
