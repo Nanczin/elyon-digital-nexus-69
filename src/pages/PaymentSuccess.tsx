@@ -282,7 +282,7 @@ const PaymentSuccess = () => {
                       </Button>
 
                       {/* Botão opcional para abrir a página do banco (ticket_url) */}
-                      {paymentData.payment?.payment_url && (
+                      {/* REMOVIDO: paymentData.payment?.payment_url && (
                         <Button 
                           onClick={() => window.open(paymentData.payment.payment_url, '_blank')}
                           variant="outline"
@@ -291,7 +291,7 @@ const PaymentSuccess = () => {
                           Abrir página do banco para pagar
                           <ExternalLink className="ml-2 h-4 w-4" />
                         </Button>
-                      )}
+                      )*/}
                       
                       {/* Alerta fixo de segurança */}
                       <Alert className="bg-yellow-50 border-yellow-200">
