@@ -254,6 +254,13 @@ serve(async (req) => {
     const mpResult = await mpResponse.json();
     
     console.log('CREATE_MP_PAYMENT_DEBUG: 15. Mercado Pago Full Response:', JSON.stringify(mpResult, null, 2));
+    if (paymentMethod === 'pix') {
+      console.log('CREATE_MP_PAYMENT_DEBUG: 15.1. PIX Specific Data from MP Response:', {
+        qr_code: mpResult.point_of_interaction?.transaction_data?.qr_code,
+        qr_code_base64: mpResult.point_of_interaction?.transaction_data?.qr_code_base64,
+        ticket_url: mpResult.point_of_interaction?.transaction_data?.ticket_url,
+      });
+    }
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 16. Mercado Pago Response Summary:', { 
       ok: mpResponse.ok, 
@@ -307,23 +314,28 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+    console.log('CREATE_MP_PAYMENT_DEBUG: 19. Payment saved to DB:', JSON.stringify(payment, null, 2));
+
+    const responsePayload = {
+      success: true,
+      payment: {
+        id: payment.id,
+        mp_payment_id: mpResult.id,
+        status: mpResult.status || 'pending',
+        status_detail: mpResult.status_detail || null,
+        qr_code: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code : null,
+        qr_code_base64: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code_base64 : null,
+        payment_url: paymentMethod === 'pix' 
+          ? mpResult.point_of_interaction?.transaction_data?.ticket_url
+          : null,
+        amount: transactionAmountInReais, // Return amount in reais
+        payment_method: paymentMethod
+      }
+    };
+    console.log('CREATE_MP_PAYMENT_DEBUG: 20. Response payload sent to frontend:', JSON.stringify(responsePayload, null, 2));
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        payment: {
-          id: payment.id,
-          mp_payment_id: mpResult.id,
-          status: mpResult.status || 'pending',
-          status_detail: mpResult.status_detail || null,
-          qr_code: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code : null,
-          payment_url: paymentMethod === 'pix' 
-            ? mpResult.point_of_interaction?.transaction_data?.ticket_url
-            : null,
-          amount: transactionAmountInReais, // Return amount in reais
-          payment_method: paymentMethod
-        }
-      }),
+      JSON.stringify(responsePayload),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -331,7 +343,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('CREATE_MP_PAYMENT_DEBUG: 19. Error creating payment:', error);
+    console.error('CREATE_MP_PAYMENT_DEBUG: 21. Error creating payment:', error);
     return new Response(
       JSON.stringify({
         success: false,
