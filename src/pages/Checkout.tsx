@@ -7,6 +7,7 @@ import { CheckoutData, CustomerData, OrderBump, PaymentMethods, FormFields } fro
 import { CardData } from '@/components/checkout/CreditCardForm';
 import HorizontalLayout from '@/components/checkout/HorizontalLayout';
 import MosaicLayout from '@/components/checkout/MosaicLayout';
+import { createCardToken } from '@mercadopago/sdk-react';
 
 const Checkout = () => {
   const { checkoutId } = useParams();
@@ -27,6 +28,7 @@ const Checkout = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [selectedPackage, setSelectedPackage] = useState<number>(1);
   const [cardData, setCardData] = useState<CardData | null>(null);
+  const [mpPublicKey, setMpPublicKey] = useState<string | null>(null);
 
   // Hook para integrações do checkout
   const {
@@ -80,6 +82,18 @@ const Checkout = () => {
         }
       }
 
+      // Buscar public key do Mercado Pago do dono do checkout
+      try {
+        const { data: mpRow } = await supabase
+          .from('integrations')
+          .select('mercado_pago_token_public')
+          .eq('user_id', data.user_id)
+          .maybeSingle();
+        setMpPublicKey(mpRow?.mercado_pago_token_public || null);
+      } catch (e) {
+        console.warn('Não foi possível carregar a chave pública do Mercado Pago:', e);
+      }
+
       const transformedData: CheckoutData = {
         id: data.id,
         product_id: data.product_id,
@@ -100,7 +114,7 @@ const Checkout = () => {
       console.log('Timer no objeto transformado:', transformedData.timer);
       
       setCheckout(transformedData);
-      
+
       // Set default payment method
       if (transformedData.payment_methods?.pix) {
         setSelectedPaymentMethod('pix');
@@ -227,28 +241,33 @@ const Checkout = () => {
         toast({ title: "Erro", description: "Preencha os dados do cartão", variant: "destructive" });
         return false;
       }
-      
-      if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 13) {
-        toast({ title: "Erro", description: "Número do cartão inválido", variant: "destructive" });
-        return false;
-      }
-      
-      if (!cardData.cardholderName.trim()) {
-        toast({ title: "Erro", description: "Nome no cartão é obrigatório", variant: "destructive" });
-        return false;
-      }
-      
-      if (!cardData.expirationMonth || !cardData.expirationYear) {
-        toast({ title: "Erro", description: "Data de validade é obrigatória", variant: "destructive" });
-        return false;
-      }
-      
-      if (!cardData.securityCode || cardData.securityCode.length < 3) {
-        toast({ title: "Erro", description: "CVV inválido", variant: "destructive" });
-        return false;
+
+      // Quando usando Secure Fields do Mercado Pago, a validação dos dados sensíveis ocorre no SDK
+      if (mpPublicKey) {
+        if (!cardData.cardholderName.trim()) {
+          toast({ title: "Erro", description: "Nome no cartão é obrigatório", variant: "destructive" });
+          return false;
+        }
+      } else {
+        if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 13) {
+          toast({ title: "Erro", description: "Número do cartão inválido", variant: "destructive" });
+          return false;
+        }
+        if (!cardData.cardholderName.trim()) {
+          toast({ title: "Erro", description: "Nome no cartão é obrigatório", variant: "destructive" });
+          return false;
+        }
+        if (!cardData.expirationMonth || !cardData.expirationYear) {
+          toast({ title: "Erro", description: "Data de validade é obrigatória", variant: "destructive" });
+          return false;
+        }
+        if (!cardData.securityCode || cardData.securityCode.length < 3) {
+          toast({ title: "Erro", description: "CVV inválido", variant: "destructive" });
+          return false;
+        }
       }
     }
-    
+
     return true;
   };
 
@@ -286,14 +305,31 @@ const Checkout = () => {
 
       // Adicionar dados do cartão se for pagamento com cartão
       if (selectedPaymentMethod === 'creditCard' && cardData) {
-        paymentData.cardData = {
-          cardNumber: cardData.cardNumber.replace(/\s/g, ''),
-          cardholderName: cardData.cardholderName,
-          expirationMonth: cardData.expirationMonth,
-          expirationYear: cardData.expirationYear,
-          securityCode: cardData.securityCode,
-          installments: cardData.installments
-        };
+        if (mpPublicKey) {
+          try {
+            const token = await createCardToken({
+              cardholderName: cardData.cardholderName,
+              identificationType: 'CPF',
+              identificationNumber: customerData.cpf.replace(/\D/g, '')
+            });
+            if (!token?.id) throw new Error('Falha ao gerar token do cartão');
+            paymentData.cardToken = token.id;
+            paymentData.cardData = { installments: cardData.installments };
+          } catch (tokErr) {
+            console.error('Erro ao tokenizar cartão no frontend:', tokErr);
+            toast({ title: 'Erro', description: 'Não foi possível validar os dados do cartão', variant: 'destructive' });
+            return;
+          }
+        } else {
+          paymentData.cardData = {
+            cardNumber: cardData.cardNumber.replace(/\s/g, ''),
+            cardholderName: cardData.cardholderName,
+            expirationMonth: cardData.expirationMonth,
+            expirationYear: cardData.expirationYear,
+            securityCode: cardData.securityCode,
+            installments: cardData.installments
+          };
+        }
       }
 
       console.log('Enviando dados para processamento:', paymentData);
@@ -476,7 +512,8 @@ const Checkout = () => {
     setSelectedPaymentMethod,
     handleSubmit,
     cardData,
-    setCardData
+    setCardData,
+    mpPublicKey: mpPublicKey || undefined
   };
 
   // Render appropriate layout based on configuration

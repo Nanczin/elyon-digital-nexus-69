@@ -20,12 +20,13 @@ interface PaymentRequest {
   orderBumps: number[];
   selectedPackage: number;
   paymentMethod: 'pix' | 'creditCard';
+  cardToken?: string; // Token gerado no frontend pelo SDK (opcional)
   cardData?: {
-    cardNumber: string;
-    cardholderName: string;
-    expirationMonth: string;
-    expirationYear: string;
-    securityCode: string;
+    cardNumber?: string;
+    cardholderName?: string;
+    expirationMonth?: string;
+    expirationYear?: string;
+    securityCode?: string;
     installments: number;
   };
 }
@@ -111,15 +112,13 @@ serve(async (req) => {
     // Configure payment method
     if (paymentMethod === 'pix') {
       paymentData.payment_method_id = 'pix';
-    } else if (paymentMethod === 'creditCard' && cardData) {
+    } else if (paymentMethod === 'creditCard') {
       // Pagamento direto com cartão - manter notification_url e external_reference
-      // para garantir recebimento do webhook e reconciliação via external_reference
-      paymentData.installments = cardData.installments;
       paymentData.statement_descriptor = 'CHECKOUT';
       paymentData.capture = true;
-      // Forçar decisão imediata (aprovado/rejeitado) evitando "pending/in_process"
-      paymentData.binary_mode = true;
-      
+      paymentData.binary_mode = true; // força decisão imediata
+      paymentData.installments = cardData?.installments || 1;
+
       // Dados adicionais (melhora aprovação e reconciliação)
       paymentData.additional_info = {
         items: [{
@@ -130,97 +129,51 @@ serve(async (req) => {
           unit_price: paymentData.transaction_amount
         }]
       };
-    }
 
-    // Para cartão de crédito, primeiro criar o card token
-    let cardToken = null;
-    if (paymentMethod === 'creditCard' && cardData) {
-      console.log('Criando card token para o Mercado Pago...');
-      
-      const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          card_number: cardData.cardNumber.replace(/\s/g, ''),
-          cardholder: {
-            name: cardData.cardholderName,
-            identification: customerData.cpf ? {
-              type: 'CPF',
-              number: customerData.cpf.replace(/\D/g, '')
-            } : undefined
-          },
-          expiration_month: Number(cardData.expirationMonth),
-          expiration_year: Number(cardData.expirationYear),
-          security_code: cardData.securityCode
-        })
-      });
-
-      const tokenResult = await tokenResponse.json();
-      console.log('Token response:', { ok: tokenResponse.ok, status: tokenResponse.status });
-      
-      if (!tokenResponse.ok) {
-        console.error('Card Token Error:', tokenResult);
-        throw new Error(tokenResult.message || 'Erro ao processar dados do cartão');
-      }
-
-      cardToken = tokenResult.id;
-      console.log('Card token criado com sucesso');
-      
-      // Adicionar o token ao paymentData
-      paymentData.token = cardToken;
-
-      // Resolver automaticamente o payment_method_id e issuer a partir do BIN
-      try {
-        const bin = cardData.cardNumber.replace(/\s/g, '').slice(0, 6);
-        const installmentsUrl = `https://api.mercadopago.com/v1/payment_methods/installments?amount=${paymentData.transaction_amount}&bin=${bin}`;
-        const pmResp = await fetch(installmentsUrl, {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
+      // Se veio token do frontend, usa diretamente
+      if (typeof (cardToken as any) === 'string' && cardToken) {
+        console.log('Usando card token recebido do frontend');
+        paymentData.token = cardToken;
+      } else if (cardData) {
+        // Fallback: criar token no backend (menos recomendado)
+        console.log('Criando card token no backend (fallback)');
+        const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            card_number: cardData.cardNumber?.replace(/\s/g, ''),
+            cardholder: {
+              name: cardData.cardholderName,
+              identification: customerData.cpf ? { type: 'CPF', number: customerData.cpf.replace(/\D/g, '') } : undefined
+            },
+            expiration_month: cardData.expirationMonth ? Number(cardData.expirationMonth) : undefined,
+            expiration_year: cardData.expirationYear ? Number(cardData.expirationYear) : undefined,
+            security_code: cardData.securityCode
+          })
         });
-        const pmJson = await pmResp.json();
-        if (pmResp.ok && Array.isArray(pmJson) && pmJson.length > 0) {
-          const pm = pmJson[0];
-          if (pm?.payment_method_id) paymentData.payment_method_id = pm.payment_method_id;
-          if (pm?.issuer?.id) paymentData.issuer_id = pm.issuer.id;
-          console.log('Resolved payment method:', { payment_method_id: paymentData.payment_method_id, issuer_id: paymentData.issuer_id });
-        } else {
-          console.warn('Could not resolve payment method from BIN:', pmJson);
+        const tokenResult = await tokenResponse.json();
+        if (!tokenResponse.ok) {
+          console.error('Card Token Error:', tokenResult);
+          throw new Error(tokenResult.message || 'Erro ao processar dados do cartão');
         }
-      } catch (pmErr) {
-        console.error('Error resolving payment method by BIN (installments):', pmErr);
+        paymentData.token = tokenResult.id;
+        console.log('Card token criado com sucesso');
       }
 
-      // Fallback: tentar endpoint de search quando ainda não tiver payment_method_id
-      if (!paymentData.payment_method_id) {
-        try {
-          const searchUrl = `https://api.mercadopago.com/v1/payment_methods/search?bin=${cardData.cardNumber.replace(/\s/g, '').slice(0, 6)}`;
-          const searchResp = await fetch(searchUrl, { headers: { 'Authorization': `Bearer ${accessToken}` } });
-          const searchJson = await searchResp.json();
-          const methodId = searchJson?.results?.[0]?.payment_method?.id;
-          const issuerId = searchJson?.results?.[0]?.issuer?.id;
-          if (methodId) paymentData.payment_method_id = methodId;
-          if (issuerId) paymentData.issuer_id = issuerId;
-          console.log('Resolved via search:', { payment_method_id: paymentData.payment_method_id, issuer_id: paymentData.issuer_id });
-        } catch (searchErr) {
-          console.error('Error resolving payment method by BIN (search):', searchErr);
-        }
-      }
-
-      // Garantir que temos um payment_method_id antes de enviar
-      if (!paymentData.payment_method_id) {
-        console.warn('payment_method_id não resolvido; enviando apenas token');
-      }
+      // Observação: sem PAN não conseguimos resolver BIN/issuer aqui.
+      // O MP consegue inferir o payment_method_id a partir do token.
     }
 
     // Make request to Mercado Pago API
     const apiUrl = 'https://api.mercadopago.com/v1/payments';
-    
+
     const idempotencyKeyBase = `chk:${checkoutId}|email:${customerData.email}`;
     const idempotencyKey = paymentMethod === 'creditCard'
       ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
       : idempotencyKeyBase;
-    
+
+    console.log('Enviando payload para MP:', { ...paymentData, token: paymentData.token ? '***' : undefined });
+
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {

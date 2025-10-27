@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard } from 'lucide-react';
+import { initMercadoPago, CardNumber, ExpirationDate, SecurityCode } from '@mercadopago/sdk-react';
 
 interface CreditCardFormProps {
   onCardDataChange: (cardData: CardData) => void;
@@ -11,6 +12,8 @@ interface CreditCardFormProps {
   maxInstallments?: number;
   installmentsWithInterest?: boolean;
   totalAmount: number;
+  useMPFields?: boolean;
+  mpPublicKey?: string;
 }
 
 export interface CardData {
@@ -22,7 +25,7 @@ export interface CardData {
   installments: number;
 }
 
-export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor, maxInstallments = 12, installmentsWithInterest = false, totalAmount }: CreditCardFormProps) => {
+export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor, maxInstallments = 12, installmentsWithInterest = false, totalAmount, useMPFields = false, mpPublicKey }: CreditCardFormProps) => {
   const [cardData, setCardData] = useState<CardData>({
     cardNumber: '',
     cardholderName: '',
@@ -32,9 +35,20 @@ export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor, maxI
     installments: 1
   });
 
-  useEffect(() => {
-    onCardDataChange(cardData);
-  }, [cardData]);
+useEffect(() => {
+  onCardDataChange(cardData);
+}, [cardData, onCardDataChange]);
+
+// Inicializa o SDK do Mercado Pago quando necessário
+useEffect(() => {
+  if (useMPFields && mpPublicKey) {
+    try {
+      initMercadoPago(mpPublicKey, { locale: 'pt-BR' });
+    } catch (e) {
+      console.warn('Mercado Pago já inicializado ou chave inválida:', e);
+    }
+  }
+}, [useMPFields, mpPublicKey]);
 
   const formatCardNumber = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -66,14 +80,20 @@ export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor, maxI
       <div className="space-y-3">
         <div>
           <Label htmlFor="cardNumber" style={{ color: textColor }}>Número do Cartão</Label>
-          <Input
-            id="cardNumber"
-            placeholder="1234 5678 9012 3456"
-            value={cardData.cardNumber}
-            onChange={handleCardNumberChange}
-            maxLength={19}
-            required
-          />
+          {useMPFields ? (
+            <div className="border rounded-md p-3 bg-white dark:bg-gray-900">
+              <CardNumber placeholder="1234 1234 1234 1234" />
+            </div>
+          ) : (
+            <Input
+              id="cardNumber"
+              placeholder="1234 5678 9012 3456"
+              value={cardData.cardNumber}
+              onChange={handleCardNumberChange}
+              maxLength={19}
+              required
+            />
+          )}
         </div>
 
         <div>
@@ -87,53 +107,70 @@ export const CreditCardForm = ({ onCardDataChange, primaryColor, textColor, maxI
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label htmlFor="expirationMonth" style={{ color: textColor }}>Mês</Label>
-            <Select 
-              value={cardData.expirationMonth} 
-              onValueChange={(value) => setCardData(prev => ({ ...prev, expirationMonth: value }))}
-            >
-              <SelectTrigger id="expirationMonth">
-                <SelectValue placeholder="MM" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map(month => (
-                  <SelectItem key={month} value={month}>{month}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {useMPFields ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label style={{ color: textColor }}>Validade</Label>
+              <div className="border rounded-md p-3 bg-white dark:bg-gray-900">
+                <ExpirationDate placeholder="MM/YYYY" />
+              </div>
+            </div>
+            <div>
+              <Label style={{ color: textColor }}>CVV</Label>
+              <div className="border rounded-md p-3 bg-white dark:bg-gray-900">
+                <SecurityCode placeholder="123" />
+              </div>
+            </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label htmlFor="expirationMonth" style={{ color: textColor }}>Mês</Label>
+              <Select 
+                value={cardData.expirationMonth} 
+                onValueChange={(value) => setCardData(prev => ({ ...prev, expirationMonth: value }))}
+              >
+                <SelectTrigger id="expirationMonth">
+                  <SelectValue placeholder="MM" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map(month => (
+                    <SelectItem key={month} value={month}>{month}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div>
-            <Label htmlFor="expirationYear" style={{ color: textColor }}>Ano</Label>
-            <Select 
-              value={cardData.expirationYear} 
-              onValueChange={(value) => setCardData(prev => ({ ...prev, expirationYear: value }))}
-            >
-              <SelectTrigger id="expirationYear">
-                <SelectValue placeholder="AAAA" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map(year => (
-                  <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div>
+              <Label htmlFor="expirationYear" style={{ color: textColor }}>Ano</Label>
+              <Select 
+                value={cardData.expirationYear} 
+                onValueChange={(value) => setCardData(prev => ({ ...prev, expirationYear: value }))}
+              >
+                <SelectTrigger id="expirationYear">
+                  <SelectValue placeholder="AAAA" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map(year => (
+                    <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div>
-            <Label htmlFor="securityCode" style={{ color: textColor }}>CVV</Label>
-            <Input
-              id="securityCode"
-              placeholder="123"
-              value={cardData.securityCode}
-              onChange={handleSecurityCodeChange}
-              maxLength={4}
-              required
-            />
+            <div>
+              <Label htmlFor="securityCode" style={{ color: textColor }}>CVV</Label>
+              <Input
+                id="securityCode"
+                placeholder="123"
+                value={cardData.securityCode}
+                onChange={handleSecurityCodeChange}
+                maxLength={4}
+                required
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           <Label htmlFor="installments" style={{ color: textColor }}>Parcelas</Label>
