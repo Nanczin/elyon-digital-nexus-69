@@ -45,19 +45,19 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const requestBody = await req.json();
-    console.log('Edge Function: Raw request body received:', JSON.stringify(requestBody, null, 2));
+    console.log('CREATE_MP_PAYMENT_DEBUG: 1. Raw request body received:', JSON.stringify(requestBody, null, 2));
 
     // Desestruturar com a interface definida
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
-    console.log('MP_PAYMENT_DEBUG: 1. Raw amount received from requestBody:', amount, typeof amount);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 2. Raw amount received from requestBody:', amount, typeof amount);
 
     // Aplicar a conversão robusta sugerida para o 'amount' (que está em centavos)
     const numericAmountInCents = Number((amount || 0).toString().replace(",", "."));
-    console.log('MP_PAYMENT_DEBUG: 2. numericAmountInCents after robust conversion:', numericAmountInCents, typeof numericAmountInCents);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 3. numericAmountInCents after robust conversion:', numericAmountInCents, typeof numericAmountInCents);
 
     if (isNaN(numericAmountInCents) || numericAmountInCents <= 0) {
-      console.error('MP_PAYMENT_DEBUG: ERROR: Invalid numericAmountInCents after robust conversion:', numericAmountInCents, 'from raw:', amount);
+      console.error('CREATE_MP_PAYMENT_DEBUG: ERROR: Invalid numericAmountInCents after robust conversion:', numericAmountInCents, 'from raw:', amount);
       return new Response(
         JSON.stringify({ success: false, error: 'Valor do pagamento inválido ou ausente. O valor deve ser um número positivo.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -66,10 +66,10 @@ serve(async (req) => {
 
     // Converter para reais e garantir duas casas decimais
     const transactionAmountInReais = parseFloat((numericAmountInCents / 100).toFixed(2));
-    console.log('MP_PAYMENT_DEBUG: 3. transactionAmountInReais after final formatting (float):', transactionAmountInReais, typeof transactionAmountInReais);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 4. transactionAmountInReais after final formatting (float):', transactionAmountInReais, typeof transactionAmountInReais);
 
     if (isNaN(transactionAmountInReais) || transactionAmountInReais <= 0) {
-      console.error('MP_PAYMENT_DEBUG: ERROR: Invalid transaction_amount detected after final formatting:', transactionAmountInReais);
+      console.error('CREATE_MP_PAYMENT_DEBUG: ERROR: Invalid transaction_amount detected after final formatting:', transactionAmountInReais);
       return new Response(
         JSON.stringify({ success: false, error: 'Valor inválido ou ausente para transaction_amount. O valor deve ser um número positivo.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -83,10 +83,10 @@ serve(async (req) => {
       .eq('id', checkoutId)
       .single();
 
-    console.log('Edge Function: Checkout data from DB:', checkout);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 5. Checkout data from DB:', checkout);
 
     if (checkoutError || !checkout) {
-      console.error('Edge Function: Checkout error:', checkoutError);
+      console.error('CREATE_MP_PAYMENT_DEBUG: 5.1. Checkout error:', checkoutError);
       return new Response(
         JSON.stringify({ success: false, error: 'Checkout não encontrado' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
@@ -100,16 +100,16 @@ serve(async (req) => {
       .eq('user_id', checkout.user_id)
       .maybeSingle();
 
-    console.log('Edge Function: MP Config from database:', { mpConfig, mpConfigError });
+    console.log('CREATE_MP_PAYMENT_DEBUG: 6. MP Config from database:', { mpConfig, mpConfigError });
 
     const accessToken = (mpConfig?.mercado_pago_access_token as string) || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || '';
     const publicKey = (mpConfig?.mercado_pago_token_public as string) || Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || '';
 
-    console.log('Edge Function: Access Token (first 10 chars):', accessToken.substring(0, 10) + '...');
-    console.log('Edge Function: Public Key (first 10 chars):', publicKey.substring(0, 10) + '...');
+    console.log('CREATE_MP_PAYMENT_DEBUG: 7. Access Token (length):', accessToken.length);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 8. Public Key (length):', publicKey.length);
     
     if (!accessToken) {
-      console.error('Edge Function: Access Token is empty or not configured.');
+      console.error('CREATE_MP_PAYMENT_DEBUG: 8.1. Access Token is empty or not configured.');
       return new Response(
         JSON.stringify({ success: false, error: 'Token do Mercado Pago não configurado. Configure nas integrações.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -117,7 +117,7 @@ serve(async (req) => {
     }
     
     if (paymentMethod === 'creditCard' && !publicKey) {
-      console.error('Edge Function: Public Key is empty or not configured for credit card payment.');
+      console.error('CREATE_MP_PAYMENT_DEBUG: 8.2. Public Key is empty or not configured for credit card payment.');
       return new Response(
         JSON.stringify({ success: false, error: 'Chave pública do Mercado Pago não configurada. Configure nas integrações.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -167,40 +167,48 @@ serve(async (req) => {
       };
 
       if (cardToken) {
-        console.log('Edge Function: Usando card token recebido do frontend');
+        console.log('CREATE_MP_PAYMENT_DEBUG: 9. Usando card token recebido do frontend');
         mpRequestBody.token = cardToken;
       } else if (cardData) {
-        console.log('Edge Function: Criando card token no backend (fallback)');
-        const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            card_number: cardData.cardNumber?.replace(/\s/g, ''),
-            cardholder: {
-              name: cardData.cardholderName,
-              identification: customerData.cpf ? { type: 'CPF', number: customerData.cpf.replace(/\D/g, '') } : undefined
-            },
-            expiration_month: cardData.expirationMonth ? Number(cardData.expirationMonth) : undefined,
-            expiration_year: cardData.expirationYear ? Number(cardData.expirationYear) : undefined,
-            security_code: cardData.securityCode
-          })
-        });
-        const tokenResult = await tokenResponse.json();
-        if (!tokenResponse.ok) {
-          console.error('Edge Function: Card Token Error:', tokenResult);
+        console.log('CREATE_MP_PAYMENT_DEBUG: 10. Criando card token no backend (fallback)');
+        try {
+          const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              card_number: cardData.cardNumber?.replace(/\s/g, ''),
+              cardholder: {
+                name: cardData.cardholderName,
+                identification: customerData.cpf ? { type: 'CPF', number: customerData.cpf.replace(/\D/g, '') } : undefined
+              },
+              expiration_month: cardData.expirationMonth ? Number(cardData.expirationMonth) : undefined,
+              expiration_year: cardData.expirationYear ? Number(cardData.expirationYear) : undefined,
+              security_code: cardData.securityCode
+            })
+          });
+          const tokenResult = await tokenResponse.json();
+          if (!tokenResponse.ok) {
+            console.error('CREATE_MP_PAYMENT_DEBUG: 10.1. Card Token Error:', tokenResult);
+            return new Response(
+              JSON.stringify({ success: false, error: tokenResult.message || 'Erro ao processar dados do cartão' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            );
+          }
+          mpRequestBody.token = tokenResult.id;
+          console.log('CREATE_MP_PAYMENT_DEBUG: 10.2. Card token criado com sucesso');
+        } catch (tokenCreationError) {
+          console.error('CREATE_MP_PAYMENT_DEBUG: 10.3. Exception during card token creation:', tokenCreationError);
           return new Response(
-            JSON.stringify({ success: false, error: tokenResult.message || 'Erro ao processar dados do cartão' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            JSON.stringify({ success: false, error: `Erro ao criar token do cartão: ${tokenCreationError.message}` }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
           );
         }
-        mpRequestBody.token = tokenResult.id;
-        console.log('Edge Function: Card token criado com sucesso');
       }
     }
 
     // Verificação de tipo antes da requisição fetch
-    console.log("MP_PAYMENT_DEBUG: 4. Final mpRequestBody sent to Mercado Pago (excluding token):", { ...mpRequestBody, token: mpRequestBody.token ? '***' : undefined });
-    console.log("MP_PAYMENT_DEBUG: 5. Final transaction_amount in payload:", mpRequestBody.transaction_amount, typeof mpRequestBody.transaction_amount);
+    console.log("CREATE_MP_PAYMENT_DEBUG: 11. Final mpRequestBody sent to Mercado Pago (excluding token):", { ...mpRequestBody, token: mpRequestBody.token ? '***' : undefined });
+    console.log("CREATE_MP_PAYMENT_DEBUG: 12. Final transaction_amount in payload:", mpRequestBody.transaction_amount, typeof mpRequestBody.transaction_amount);
 
     // Requisição ao endpoint do Mercado Pago
     const apiUrl = 'https://api.mercadopago.com/v1/payments';
@@ -210,7 +218,7 @@ serve(async (req) => {
       ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
       : idempotencyKeyBase;
 
-    console.log('Edge Function: Enviando payload para MP:', { ...mpRequestBody, token: mpRequestBody.token ? '***' : undefined });
+    console.log('CREATE_MP_PAYMENT_DEBUG: 13. Enviando payload para MP:', { ...mpRequestBody, token: mpRequestBody.token ? '***' : undefined });
 
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
@@ -225,7 +233,7 @@ serve(async (req) => {
     // Tratamento de erro amigável
     if (!mpResponse.ok) {
       const errorBody = await mpResponse.text();
-      console.error('Edge Function: Mercado Pago API Error:', errorBody);
+      console.error('CREATE_MP_PAYMENT_DEBUG: 14. Mercado Pago API Error:', errorBody);
       // Tentar parsear o erro para uma mensagem mais amigável, se for JSON
       try {
         const errorJson = JSON.parse(errorBody);
@@ -245,9 +253,9 @@ serve(async (req) => {
 
     const mpResult = await mpResponse.json();
     
-    console.log('Edge Function: Mercado Pago Full Response:', JSON.stringify(mpResult, null, 2));
+    console.log('CREATE_MP_PAYMENT_DEBUG: 15. Mercado Pago Full Response:', JSON.stringify(mpResult, null, 2));
 
-    console.log('Edge Function: Mercado Pago Response Summary:', { 
+    console.log('CREATE_MP_PAYMENT_DEBUG: 16. Mercado Pago Response Summary:', { 
       ok: mpResponse.ok, 
       status: mpResponse.status,
       paymentStatus: mpResult.status,
@@ -263,7 +271,7 @@ serve(async (req) => {
       paymentStatus = 'failed';
     }
 
-    console.log('Edge Function: Salvando pagamento no banco com status:', paymentStatus);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 17. Salvando pagamento no banco com status:', paymentStatus);
 
     // Create payment record in database
     const { data: payment, error: paymentError } = await supabase
@@ -293,7 +301,7 @@ serve(async (req) => {
       .single();
 
     if (paymentError) {
-      console.error('Edge Function: Database Error:', paymentError);
+      console.error('CREATE_MP_PAYMENT_DEBUG: 18. Database Error:', paymentError);
       return new Response(
         JSON.stringify({ success: false, error: 'Erro ao salvar pagamento no banco de dados' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -323,7 +331,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Edge Function: Error creating payment:', error);
+    console.error('CREATE_MP_PAYMENT_DEBUG: 19. Error creating payment:', error);
     return new Response(
       JSON.stringify({
         success: false,
