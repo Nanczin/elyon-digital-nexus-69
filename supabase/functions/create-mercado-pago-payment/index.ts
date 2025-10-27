@@ -108,7 +108,7 @@ serve(async (req) => {
 
     // Create payment data based on payment method
     let paymentData: any = {
-      transaction_amount: numericAmount / 100, // Use the numericAmount here
+      transaction_amount: parseFloat((numericAmount / 100).toFixed(2)), // Ensure two decimal places and convert back to float
       description: `Pagamento Checkout ${checkoutId}`,
       payer: {
         email: customerData.email,
@@ -128,7 +128,7 @@ serve(async (req) => {
         payment_method: paymentMethod
       }
     };
-    console.log('Edge Function: transaction_amount after conversion (in Reais):', paymentData.transaction_amount); // Refined log
+    console.log('Edge Function: transaction_amount after conversion (in Reais, fixed 2 decimals):', paymentData.transaction_amount); // Refined log
 
     // NEW CHECK: Ensure transaction_amount is valid before sending to MP
     if (isNaN(paymentData.transaction_amount) || paymentData.transaction_amount <= 0) {
@@ -205,6 +205,7 @@ serve(async (req) => {
       ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
       : idempotencyKeyBase;
 
+    console.log('Edge Function: FINAL payload transaction_amount sent to MP:', paymentData.transaction_amount); // NEW LOG
     console.log('Edge Function: Enviando payload para MP:', { ...paymentData, token: paymentData.token ? '***' : undefined });
 
     const mpResponse = await fetch(apiUrl, {
