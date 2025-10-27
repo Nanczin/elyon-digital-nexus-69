@@ -297,8 +297,8 @@ const Checkout = () => {
     
     try {
       const totalAmount = toCents(calculateTotal()); // Convert to cents
-      console.log('Checkout Debug: Calculated total (Reais):', calculateTotal()); // NEW LOG
-      console.log('Checkout Debug: Total amount (cents) sent to Edge Function:', totalAmount); // NEW LOG
+      console.log('CHECKOUT_FRONTEND_DEBUG: Calculated total (Reais):', calculateTotal(), typeof calculateTotal());
+      console.log('CHECKOUT_FRONTEND_DEBUG: Total amount (cents) sent to Edge Function:', totalAmount, typeof totalAmount);
 
       if (totalAmount <= 0) {
         toast({ title: "Erro", description: "O valor total do pagamento deve ser maior que zero.", variant: "destructive" });
@@ -354,7 +354,7 @@ const Checkout = () => {
         paymentMethod: selectedPaymentMethod
       };
 
-      console.log('Checkout Debug: Full paymentData sent to Edge Function:', JSON.stringify(paymentData, null, 2)); // NEW LOG HERE
+      console.log('CHECKOUT_FRONTEND_DEBUG: Full paymentData sent to Edge Function:', JSON.stringify(paymentData, null, 2)); // NEW LOG HERE
 
       // Chamar edge function do Mercado Pago
       const { data: mpResponse, error: mpError } = await supabase.functions.invoke(
