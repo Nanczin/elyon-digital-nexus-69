@@ -316,6 +316,9 @@ const Checkout = () => {
 
       console.log('Pagamento criado com sucesso:', mpResponse);
 
+      const paymentStatus = mpResponse.payment?.status;
+      const statusDetail = mpResponse.payment?.status_detail;
+
       // Disparar evento de compra
       if (hasIntegrations) {
         trackPurchaseEvent({
@@ -343,15 +346,46 @@ const Checkout = () => {
         }
       }));
 
-      toast({
-        title: "Pagamento criado!",
-        description: selectedPaymentMethod === 'pix' 
-          ? "Redirecionando para o pagamento PIX..." 
-          : "Processando pagamento no checkout..."
-      });
-
-      // Redirecionar para tela de pagamento
-      navigate('/payment-success');
+      // Fluxo de redirecionamento baseado no status do pagamento
+      if (paymentStatus === 'approved') {
+        // Pagamento aprovado - redirecionar direto para página de obrigado
+        toast({
+          title: "Pagamento Aprovado! ✅",
+          description: "Redirecionando para a página de confirmação..."
+        });
+        setTimeout(() => {
+          navigate('/payment-success?status=approved');
+        }, 1500);
+      } else if (paymentStatus === 'pending' && selectedPaymentMethod === 'pix') {
+        // PIX pendente - mostrar QR code
+        toast({
+          title: "PIX Gerado!",
+          description: "Redirecionando para o pagamento PIX..."
+        });
+        navigate('/payment-success');
+      } else if (paymentStatus === 'pending' && selectedPaymentMethod === 'creditCard') {
+        // Cartão pendente - aguardar processamento
+        toast({
+          title: "Processando Pagamento...",
+          description: "Aguardando confirmação do pagamento."
+        });
+        navigate('/payment-success');
+      } else if (paymentStatus === 'rejected' || paymentStatus === 'cancelled') {
+        // Pagamento rejeitado
+        throw new Error(
+          statusDetail === 'cc_rejected_insufficient_amount' ? 'Cartão sem saldo suficiente' :
+          statusDetail === 'cc_rejected_bad_filled_security_code' ? 'CVV inválido' :
+          statusDetail === 'cc_rejected_bad_filled_date' ? 'Data de validade inválida' :
+          statusDetail === 'cc_rejected_bad_filled_card_number' ? 'Número do cartão inválido' :
+          statusDetail === 'cc_rejected_blacklist' ? 'Cartão bloqueado' :
+          statusDetail === 'cc_rejected_call_for_authorize' ? 'Pagamento não autorizado pelo banco' :
+          statusDetail === 'cc_rejected_card_disabled' ? 'Cartão desabilitado' :
+          'Pagamento recusado. Tente outro cartão ou forma de pagamento.'
+        );
+      } else {
+        // Status desconhecido
+        navigate('/payment-success');
+      }
 
     } catch (error) {
       console.error('Erro ao processar pedido:', error);

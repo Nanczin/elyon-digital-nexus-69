@@ -127,7 +127,7 @@ const PaymentSuccess = () => {
       try {
         setIsChecking(true);
         
-        // Primeiro tentar pegar do localStorage
+        // Pegar dados do localStorage
         const savedPaymentData = localStorage.getItem('paymentData');
         let currentPaymentData = null;
         
@@ -136,20 +136,20 @@ const PaymentSuccess = () => {
           setPaymentData(currentPaymentData);
         }
 
-        // Verificar se foi aprovado pelo Mercado Pago (vem da URL)
-        const status = searchParams.get('status');
+        // Verificar status da URL
+        const urlStatus = searchParams.get('status');
         const paymentId = searchParams.get('payment_id');
         const mpStatus = searchParams.get('payment_status');
         
-        console.log('Verificando status do pagamento:', { status, paymentId, mpStatus });
+        console.log('Verificando status:', { urlStatus, paymentId, mpStatus });
         
-        if (status === 'approved' || mpStatus === 'approved' || status === 'completed') {
+        // Se veio com status approved na URL, marcar como completado imediatamente
+        if (urlStatus === 'approved' || mpStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
           
-          // Se temos o payment_id, buscar dados do produto
+          // Buscar dados do produto se tiver payment_id
           if (paymentId) {
-            console.log('Buscando pagamento pelo MP ID:', paymentId);
-            const { data: payment, error } = await supabase
+            const { data: payment } = await supabase
               .from('payments')
               .select(`
                 *,
@@ -159,14 +159,12 @@ const PaymentSuccess = () => {
                 )
               `)
               .eq('mp_payment_id', paymentId)
-              .single();
+              .maybeSingle();
               
-            console.log('Payment found:', payment, 'Error:', error);
             if (payment?.checkouts?.products) {
               setProductData(payment.checkouts.products);
             }
           } else if (currentPaymentData?.payment?.id) {
-            // Fallback: buscar pelo ID do pagamento local
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -177,96 +175,72 @@ const PaymentSuccess = () => {
                 )
               `)
               .eq('id', currentPaymentData.payment.id)
-              .single();
+              .maybeSingle();
               
             if (payment?.checkouts?.products) {
               setProductData(payment.checkouts.products);
             }
           }
           
-          return;
+          setIsChecking(false);
+          return; // Não continuar verificando
         }
         
-        // Se não foi aprovado ainda, tentar verificação ativa no MP
+        // Se está pendente, verificar status no banco ou na API
         if (paymentStatus === 'pending') {
           const mpIdToCheck = paymentId || currentPaymentData?.payment?.mp_payment_id;
+          
           if (mpIdToCheck) {
+            // Tentar verificar na API do Mercado Pago
             try {
               const res = await supabase.functions.invoke('verify-mercado-pago-payment', {
                 body: { mp_payment_id: mpIdToCheck },
                 method: 'POST'
               });
-              const data = res.data;
-              if (data?.success) {
-                if (data.status === 'approved' || data.payment?.status === 'completed') {
+              
+              if (res.data?.success) {
+                if (res.data.status === 'approved' || res.data.payment?.status === 'completed') {
                   setPaymentStatus('completed');
-                } else if (data.status === 'rejected' || data.payment?.status === 'failed') {
+                  window.history.replaceState({}, '', '/payment-success?status=approved');
+                } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
                   setPaymentStatus('failed');
                 } else {
-                  setLastDetail(data.status_detail || null);
+                  setLastDetail(res.data.status_detail || null);
                 }
               }
-            } catch (activeErr) {
-              console.warn('Active verify failed', activeErr);
+            } catch (err) {
+              console.warn('Erro ao verificar status:', err);
             }
           }
-        }
-
-        // Se não foi aprovado ainda, mas temos dados do payment, verificar status no banco
-        if (currentPaymentData?.payment?.id) {
-          console.log('Verificando status no banco para payment ID:', currentPaymentData.payment.id);
-          const { data: payment } = await supabase
-            .from('payments')
-            .select(`
-              status,
-              mp_payment_status,
-              mp_payment_id,
-              checkouts (
-                *,
-                products (*)
-              )
-            `)
-            .eq('id', currentPaymentData.payment.id)
-            .single();
-            
-          console.log('Status do pagamento no banco:', payment);
-          if (payment) {
-            if (payment.status === 'completed' || payment.mp_payment_status === 'approved') {
-              setPaymentStatus('completed');
-              if (payment.checkouts?.products) {
-                setProductData(payment.checkouts.products);
+          
+          // Fallback: verificar no banco
+          if (currentPaymentData?.payment?.id) {
+            const { data: payment } = await supabase
+              .from('payments')
+              .select(`
+                status,
+                mp_payment_status,
+                checkouts (
+                  *,
+                  products (*)
+                )
+              `)
+              .eq('id', currentPaymentData.payment.id)
+              .maybeSingle();
+              
+            if (payment) {
+              if (payment.status === 'completed' || payment.mp_payment_status === 'approved') {
+                setPaymentStatus('completed');
+                window.history.replaceState({}, '', '/payment-success?status=approved');
+                if (payment.checkouts?.products) {
+                  setProductData(payment.checkouts.products);
+                }
+              } else if (payment.status === 'failed') {
+                setPaymentStatus('failed');
               }
-            } else if (payment.status === 'failed') {
-              setPaymentStatus('failed');
             }
           }
         }
-        
-        // Verificar se não temos paymentId na URL mas temos no localStorage
-        if (!paymentId && currentPaymentData?.payment?.mp_payment_id) {
-          console.log('Usando MP ID do localStorage:', currentPaymentData.payment.mp_payment_id);
-          const { data: payment } = await supabase
-            .from('payments')
-            .select(`
-              *,
-              checkouts (
-                *,
-                products (*)
-              )
-            `)
-            .eq('mp_payment_id', currentPaymentData.payment.mp_payment_id)
-            .single();
-            
-          if (payment && (payment.status === 'completed' || payment.mp_payment_status === 'approved')) {
-            setPaymentStatus('completed');
-            if (payment.checkouts?.products) {
-              setProductData(payment.checkouts.products);
-            }
-          }
-        }
-        
-        // Não redirecionar para pagamento externo; manter processamento no checkout
-
         
       } catch (error) {
         console.error('Erro ao verificar status do pagamento:', error);
@@ -277,7 +251,7 @@ const PaymentSuccess = () => {
 
     checkPaymentStatus();
     
-    // Verificar status a cada 5 segundos se ainda estiver pendente
+    // Verificar a cada 5 segundos apenas se estiver pendente
     const interval = setInterval(() => {
       if (paymentStatus === 'pending') {
         checkPaymentStatus();
