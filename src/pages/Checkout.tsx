@@ -163,24 +163,24 @@ const Checkout = () => {
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
       // selectedPkg.price is already in reais from the form data
-      totalInReais = selectedPkg ? selectedPkg.price : 0;
+      totalInReais = selectedPkg ? (Number(selectedPkg.price) || 0) : 0;
     } 
     
     // If no packages are defined or selected, or selected package has 0 price,
     // use the main checkout price (converted from cents).
     if (totalInReais === 0) {
-        totalInReais = (checkout.promotional_price || checkout.price) / 100;
+        totalInReais = (Number(checkout.promotional_price) || Number(checkout.price) || 0) / 100;
     }
 
     selectedOrderBumps.forEach(bumpId => {
       const bump = checkout.order_bumps.find(b => b.id === bumpId);
       if (bump && bump.enabled) {
         // bump.price is from DB, which is in cents, so divide by 100.
-        totalInReais += bump.price / 100;
+        totalInReais += (Number(bump.price) || 0) / 100;
       }
     });
     
-    return totalInReais; // This total is in reais.
+    return Math.max(0, totalInReais); // Ensure total is not negative
   };
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {
@@ -205,7 +205,7 @@ const Checkout = () => {
       if (bump) {
         trackAddToCartEvent({
           product_id: bump.selectedProduct || 'order-bump-' + bumpId,
-          price: toCents(bump.price / 100) // Converter para centavos
+          price: toCents((Number(bump.price) || 0) / 100) // Converter para centavos
         });
       }
     }
@@ -295,6 +295,12 @@ const Checkout = () => {
     try {
       const totalAmount = toCents(calculateTotal()); // Convert to cents
       console.log('Checkout Debug: Total amount in cents being sent to Edge Function:', totalAmount);
+
+      if (totalAmount <= 0) {
+        toast({ title: "Erro", description: "O valor total do pagamento deve ser maior que zero.", variant: "destructive" });
+        setProcessing(false);
+        return;
+      }
       
       if (selectedPaymentMethod === 'standardCheckout') {
         // Call new Edge Function for Standard Checkout
@@ -540,13 +546,13 @@ const Checkout = () => {
     const packages = (checkout.form_fields as any)?.packages;
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-      if (selectedPkg && selectedPkg.originalPrice > selectedPkg.price) {
-        return selectedPkg.originalPrice - selectedPkg.price;
+      if (selectedPkg && (Number(selectedPkg.originalPrice) || 0) > (Number(selectedPkg.price) || 0)) {
+        return (Number(selectedPkg.originalPrice) || 0) - (Number(selectedPkg.price) || 0);
       }
     }
     
-    if (checkout.price > (checkout.promotional_price || checkout.price)) {
-      return (checkout.price - (checkout.promotional_price || checkout.price)) / 100;
+    if ((Number(checkout.price) || 0) > (Number(checkout.promotional_price) || Number(checkout.price) || 0)) {
+      return ((Number(checkout.price) || 0) - (Number(checkout.promotional_price) || Number(checkout.price) || 0)) / 100;
     }
     
     return 0;
