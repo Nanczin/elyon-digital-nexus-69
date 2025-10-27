@@ -54,7 +54,7 @@ const Checkout = () => {
         .from('checkouts')
         .select(`
           *,
-          products (id, name, description, banner_url, logo_url)
+          products (id, name, description, banner_url, logo_url, member_area_link, file_url)
         `)
         .eq('id', checkoutId)
         .single();
@@ -112,8 +112,8 @@ const Checkout = () => {
         products: data.products
       };
       
-      console.log('Timer carregado do banco:', data.timer);
-      console.log('Timer no objeto transformado:', transformedData.timer);
+      console.log('Checkout Debug: Timer carregado do banco:', data.timer);
+      console.log('Checkout Debug: Timer no objeto transformado:', transformedData.timer);
       
       setCheckout(transformedData);
 
@@ -130,7 +130,7 @@ const Checkout = () => {
       setSelectedInstallments(transformedData.payment_methods?.maxInstallments || 1);
 
     } catch (error) {
-      console.error('Erro ao carregar checkout:', error);
+      console.error('Checkout Debug: Erro ao carregar checkout:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar a página de checkout",
@@ -306,16 +306,17 @@ const Checkout = () => {
         );
 
         if (mpLinkError) {
-          console.error('Erro na edge function create-mercado-pago-payment-link:', mpLinkError);
+          console.error('Checkout Debug: Erro na edge function create-mercado-pago-payment-link:', mpLinkError);
           throw new Error(mpLinkError.message || 'Erro ao gerar link de pagamento do Mercado Pago');
         }
 
         if (!mpLinkResponse?.success || !mpLinkResponse?.init_point) {
-          console.error('Resposta de erro do MP Link:', mpLinkResponse);
+          console.error('Checkout Debug: Resposta de erro do MP Link:', mpLinkResponse);
           throw new Error(mpLinkResponse?.error || 'Erro ao gerar link de pagamento do Mercado Pago');
         }
 
         // Redirect to Mercado Pago Standard Checkout
+        console.log('Checkout Debug: Redirecting to Mercado Pago Standard Checkout:', mpLinkResponse.init_point);
         window.location.href = mpLinkResponse.init_point;
         return; // Exit function as redirection is handled
       }
@@ -349,7 +350,7 @@ const Checkout = () => {
             paymentData.cardToken = token.id;
             paymentData.cardData = { installments: cardData.installments };
           } catch (tokErr) {
-            console.error('Erro ao tokenizar cartão no frontend:', tokErr);
+            console.error('Checkout Debug: Erro ao tokenizar cartão no frontend:', tokErr);
             toast({ title: 'Erro', description: 'Não foi possível validar os dados do cartão', variant: 'destructive' });
             return;
           }
@@ -365,7 +366,7 @@ const Checkout = () => {
         }
       }
 
-      console.log('Enviando dados para processamento:', paymentData);
+      console.log('Checkout Debug: Enviando dados para processamento:', paymentData);
 
       // Chamar edge function do Mercado Pago
       const { data: mpResponse, error: mpError } = await supabase.functions.invoke(
@@ -374,16 +375,16 @@ const Checkout = () => {
       );
 
       if (mpError) {
-        console.error('Erro na edge function:', mpError);
+        console.error('Checkout Debug: Erro na edge function:', mpError);
         throw new Error(mpError.message || 'Erro ao processar pagamento');
       }
 
       if (!mpResponse?.success) {
-        console.error('Resposta de erro do MP:', mpResponse);
+        console.error('Checkout Debug: Resposta de erro do MP:', mpResponse);
         throw new Error(mpResponse?.error || 'Erro ao criar pagamento no Mercado Pago');
       }
 
-      console.log('Pagamento criado com sucesso:', mpResponse);
+      console.log('Checkout Debug: Pagamento criado com sucesso:', mpResponse);
 
       const paymentStatus = mpResponse.payment?.status;
       const statusDetail = mpResponse.payment?.status_detail;
@@ -425,12 +426,15 @@ const Checkout = () => {
           ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
           : productData?.member_area_link || productData?.file_url;
 
+        console.log('Checkout Debug: Final deliverable link (after approval):', finalDeliverableLink);
+
         if (finalDeliverableLink) {
           toast({
             title: "Pagamento Aprovado! ✅",
             description: "Redirecionando para o seu produto..."
           });
           setTimeout(() => {
+            console.log('Checkout Debug: Redirecting to:', finalDeliverableLink);
             window.location.href = finalDeliverableLink;
           }, 1500);
         } else {
@@ -474,7 +478,7 @@ const Checkout = () => {
       }
 
     } catch (error) {
-      console.error('Erro ao processar pedido:', error);
+      console.error('Checkout Debug: Erro ao processar pedido:', error);
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Não foi possível processar o pedido",

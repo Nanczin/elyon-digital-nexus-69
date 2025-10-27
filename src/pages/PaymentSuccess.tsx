@@ -43,16 +43,14 @@ const PaymentSuccess = () => {
         const urlPaymentId = searchParams.get('payment_id');
         const urlStatus = searchParams.get('status');
         
-        console.log('Verificando status:', { urlStatus, urlPaymentId });
+        console.log('PaymentSuccess Debug: Verificando status:', { urlStatus, urlPaymentId, currentPaymentData });
         
         // Se veio com status approved na URL, marcar como completado imediatamente
         if (urlStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
           
           // Buscar dados do produto e do checkout se tiver payment_id da URL
-          let currentProductData = null;
-          let currentCheckoutDeliverable = null;
-
+          let fetchedPayment = null;
           if (urlPaymentId) {
             const { data: payment } = await supabase
               .from('payments')
@@ -65,15 +63,7 @@ const PaymentSuccess = () => {
               `)
               .eq('mp_payment_id', urlPaymentId)
               .maybeSingle();
-              
-            if (payment?.checkouts?.products) {
-              currentProductData = payment.checkouts.products;
-              setProductData(currentProductData);
-            }
-            if (payment?.checkouts?.form_fields?.deliverable) {
-              currentCheckoutDeliverable = payment.checkouts.form_fields.deliverable;
-              setCheckoutDeliverable(currentCheckoutDeliverable);
-            }
+            fetchedPayment = payment;
           } else if (currentPaymentData?.payment?.id) { // Fallback para payment_id do localStorage
             const { data: payment } = await supabase
               .from('payments')
@@ -86,21 +76,24 @@ const PaymentSuccess = () => {
               `)
               .eq('id', currentPaymentData.payment.id)
               .maybeSingle();
-              
-            if (payment?.checkouts?.products) {
-              currentProductData = payment.checkouts.products;
-              setProductData(currentProductData);
-            }
-            if (payment?.checkouts?.form_fields?.deliverable) {
-              currentCheckoutDeliverable = payment.checkouts.form_fields.deliverable;
-              setCheckoutDeliverable(currentCheckoutDeliverable);
-            }
+            fetchedPayment = payment;
           }
 
+          console.log('PaymentSuccess Debug: Fetched payment for redirect:', fetchedPayment);
+
+          if (fetchedPayment?.checkouts?.products) {
+            setProductData(fetchedPayment.checkouts.products);
+          }
+          if (fetchedPayment?.checkouts?.form_fields?.deliverable) {
+            setCheckoutDeliverable(fetchedPayment.checkouts.form_fields.deliverable);
+          }
+          
           // Determine final deliverable link
-          const finalDeliverableLink = currentCheckoutDeliverable?.type !== 'none' && (currentCheckoutDeliverable?.link || currentCheckoutDeliverable?.fileUrl)
-            ? (currentCheckoutDeliverable.link || currentCheckoutDeliverable.fileUrl)
-            : currentProductData?.member_area_link || currentProductData?.file_url;
+          const finalDeliverableLink = (fetchedPayment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (fetchedPayment?.checkouts?.form_fields?.deliverable?.link || fetchedPayment?.checkouts?.form_fields?.deliverable?.fileUrl))
+            ? (fetchedPayment.checkouts.form_fields.deliverable.link || fetchedPayment.checkouts.form_fields.deliverable.fileUrl)
+            : fetchedPayment?.checkouts?.products?.member_area_link || fetchedPayment?.checkouts?.products?.file_url;
+
+          console.log('PaymentSuccess Debug: Final deliverable link (initial check):', finalDeliverableLink);
 
           if (finalDeliverableLink) {
             toast({
@@ -108,6 +101,7 @@ const PaymentSuccess = () => {
               description: "Redirecionando para o seu produto..."
             });
             setTimeout(() => {
+              console.log('PaymentSuccess Debug: Redirecting to:', finalDeliverableLink);
               window.location.href = finalDeliverableLink;
             }, 1500);
             return; // Exit early after redirect
@@ -129,10 +123,51 @@ const PaymentSuccess = () => {
                 method: 'POST'
               });
               
+              console.log('PaymentSuccess Debug: Verify MP payment response:', res);
+
               if (res.data?.success) {
                 if (res.data.status === 'approved' || res.data.payment?.status === 'completed') {
                   setPaymentStatus('completed');
                   window.history.replaceState({}, '', '/payment-success?status=approved');
+                  // Re-fetch product and deliverable data if status changed to completed
+                  const { data: payment } = await supabase
+                    .from('payments')
+                    .select(`
+                      *,
+                      checkouts (
+                        *,
+                        products (*)
+                      )
+                    `)
+                    .eq('mp_payment_id', mpIdToCheck)
+                    .maybeSingle();
+                  
+                  if (payment?.checkouts?.products) {
+                    setProductData(payment.checkouts.products);
+                  }
+                  if (payment?.checkouts?.form_fields?.deliverable) {
+                    setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+                  }
+
+                  // Determine final deliverable link after status change
+                  const finalDeliverableLinkAfterCheck = (payment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (payment?.checkouts?.form_fields?.deliverable?.link || payment?.checkouts?.form_fields?.deliverable?.fileUrl))
+                    ? (payment.checkouts.form_fields.deliverable.link || payment.checkouts.form_fields.deliverable.fileUrl)
+                    : payment?.checkouts?.products?.member_area_link || payment?.checkouts?.products?.file_url;
+
+                  console.log('PaymentSuccess Debug: Final deliverable link (after status check):', finalDeliverableLinkAfterCheck);
+
+                  if (finalDeliverableLinkAfterCheck) {
+                    toast({
+                      title: "Pagamento Aprovado! ✅",
+                      description: "Redirecionando para o seu produto..."
+                    });
+                    setTimeout(() => {
+                      console.log('PaymentSuccess Debug: Redirecting to (after status check):', finalDeliverableLinkAfterCheck);
+                      window.location.href = finalDeliverableLinkAfterCheck;
+                    }, 1500);
+                    return; // Exit early after redirect
+                  }
+
                 } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
                   setPaymentStatus('failed');
                 } else {
@@ -140,12 +175,12 @@ const PaymentSuccess = () => {
                 }
               }
             } catch (err) {
-              console.warn('Erro ao verificar status:', err);
+              console.warn('PaymentSuccess Debug: Erro ao verificar status:', err);
             }
           }
           
-          // Fallback: verificar no banco
-          if (currentPaymentData?.payment?.id) {
+          // Fallback: verificar no banco (se não foi verificado pela API ou se a API falhou)
+          if (currentPaymentData?.payment?.id && paymentStatus === 'pending') { // Only if still pending
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -159,6 +194,8 @@ const PaymentSuccess = () => {
               .eq('id', currentPaymentData.payment.id)
               .maybeSingle();
               
+            console.log('PaymentSuccess Debug: Fallback DB payment check:', payment);
+
             if (payment) {
               if (payment.status === 'completed' || payment.mp_payment_status === 'approved') {
                 setPaymentStatus('completed');
@@ -169,6 +206,7 @@ const PaymentSuccess = () => {
                 if (payment?.checkouts?.form_fields?.deliverable) {
                   setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
                 }
+                // No direct redirect here, as the main logic above handles it if status changes.
               } else if (payment.status === 'failed') {
                 setPaymentStatus('failed');
               }
@@ -177,7 +215,7 @@ const PaymentSuccess = () => {
         }
         
       } catch (error) {
-        console.error('Erro ao verificar status do pagamento:', error);
+        console.error('PaymentSuccess Debug: Erro geral ao verificar status do pagamento:', error);
       } finally {
         setIsChecking(false);
       }
@@ -188,6 +226,7 @@ const PaymentSuccess = () => {
     // Verificar a cada 5 segundos apenas se estiver pendente
     const interval = setInterval(() => {
       if (paymentStatus === 'pending') {
+        console.log('PaymentSuccess Debug: Re-checking payment status...');
         checkPaymentStatus();
       }
     }, 5000);
@@ -210,6 +249,7 @@ const PaymentSuccess = () => {
   };
 
   // Determine the final deliverable link/file
+  // This is used for rendering the "Acessar Entregável" button, not for direct redirect
   const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
     ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
     : productData?.member_area_link || productData?.file_url;
@@ -232,7 +272,6 @@ const PaymentSuccess = () => {
               </p>
             </CardHeader>
             <CardContent className="text-center">
-              {/* Botão "Confirmar agora" removido */}
               <p className="text-sm text-muted-foreground mt-2">
                 Status atual: {paymentStatus}{lastDetail ? ` (${lastDetail})` : ''}
               </p>
@@ -301,18 +340,6 @@ const PaymentSuccess = () => {
                      >
                        Copiar Código PIX
                       </Button>
-
-                      {/* Botão opcional para abrir a página do banco (ticket_url) */}
-                      {/* REMOVIDO: paymentData.payment?.payment_url && (
-                        <Button 
-                          onClick={() => window.open(paymentData.payment.payment_url, '_blank')}
-                          variant="outline"
-                          className="w-full py-3"
-                        >
-                          Abrir página do banco para pagar
-                          <ExternalLink className="ml-2 h-4 w-4" />
-                        </Button>
-                      )*/}
                       
                       {/* Alerta fixo de segurança */}
                       <Alert className="bg-yellow-50 border-yellow-200">
@@ -407,7 +434,6 @@ const PaymentSuccess = () => {
                 <p className="text-sm text-gray-600 mb-4">
                   Você será redirecionado automaticamente. Após a confirmação, o acesso é liberado e você receberá um e-mail com os detalhes.
                 </p>
-                {/* Botão "Confirmar agora" removido */}
               </div>
             </CardContent>
           </Card>
