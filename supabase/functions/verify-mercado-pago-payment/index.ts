@@ -131,102 +131,118 @@ serve(async (req) => {
             console.log('VERIFY_MP_DEBUG: Perfil encontrado, userId:', userId);
           } else {
             // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
-            console.log('VERIFY_MP_DEBUG: Perfil não encontrado, criando novo usuário...');
-            const customerName = existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente';
-            const customerPhone = existingPayment?.metadata?.customer_data?.phone || null;
-            const customerCpf = existingPayment?.metadata?.customer_data?.cpf || mpPayment?.payer?.identification?.number || null;
-
-            // Gerar uma senha aleatória para o usuário
-            const generatedPassword = Math.random().toString(36).slice(-8); 
-
-            const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
-              email,
-              password: generatedPassword, // Senha temporária
-              email_confirm: true, // Confirmar email automaticamente
-              user_metadata: { 
-                name: customerName,
-                first_name: customerName.split(' ')[0],
-                last_name: customerName.split(' ').slice(1).join(' ') || '',
-                phone: customerPhone,
-                cpf: customerCpf
-              }
-            });
-
-            if (userAuthErr) {
-              console.error('VERIFY_MP_DEBUG: Erro ao criar usuário auth.users:', userAuthErr);
+            console.log('VERIFY_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário auth.users...');
+            
+            // Basic email validation before attempting to create user
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                console.error('VERIFY_MP_DEBUG: ERROR: Email inválido para criação de usuário:', email);
+                // Continue without userId, as payment might still be valid
             } else {
-              userId = newUserAuth?.user?.id || null;
-              console.log('VERIFY_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
+                const customerName = existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente';
+                const customerPhone = existingPayment?.metadata?.customer_data?.phone || null;
+                const customerCpf = existingPayment?.metadata?.customer_data?.cpf || mpPayment?.payer?.identification?.number || null;
+
+                // Gerar uma senha aleatória para o usuário
+                const generatedPassword = Math.random().toString(36).slice(-8); 
+
+                const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
+                  email,
+                  password: generatedPassword, // Senha temporária
+                  email_confirm: true, // Confirmar email automaticamente
+                  user_metadata: { 
+                    name: customerName,
+                    first_name: customerName.split(' ')[0],
+                    last_name: customerName.split(' ').slice(1).join(' ') || '',
+                    phone: customerPhone,
+                    cpf: customerCpf
+                  }
+                });
+
+                if (userAuthErr) {
+                  console.error('VERIFY_MP_DEBUG: Erro ao criar usuário auth.users:', userAuthErr.message, userAuthErr);
+                  // If user creation fails, userId remains null, which is handled by subsequent checks
+                } else {
+                  userId = newUserAuth?.user?.id || null;
+                  console.log('VERIFY_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
+                }
             }
           }
         }
 
-        if (userId && !payment?.user_id) {
+        // Update payment user_id if a userId was resolved/created and payment exists and user_id is not already set
+        if (userId && payment?.id && !payment?.user_id) { 
           const { error: payUserErr } = await supabase.from('payments').update({ user_id: userId }).eq('id', payment.id);
           if (payUserErr) console.error('VERIFY_MP_DEBUG: Erro ao atualizar payment user_id:', payUserErr);
           else console.log('VERIFY_MP_DEBUG: Payment user_id atualizado para:', userId);
         }
 
-        // Criar ordem (idempotente)
-        const { data: existingOrder, error: orderExistsError } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('mp_payment_id', mp_payment_id.toString())
-          .maybeSingle();
-        
-        if (orderExistsError) console.error('VERIFY_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
+        // Criar ordem (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
+        if (userId && productId) {
+            const { data: existingOrder, error: orderExistsError } = await supabase
+                .from('orders')
+                .select('id')
+                .eq('mp_payment_id', mp_payment_id.toString())
+                .maybeSingle();
+            
+            if (orderExistsError) console.error('VERIFY_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
 
-        if (!existingOrder) {
-          const { data: orderIns, error: orderErr } = await supabase
-            .from('orders')
-            .insert({
-              mp_payment_id: mp_payment_id.toString(),
-              payment_id: payment?.id || null,
-              checkout_id: checkoutId || null,
-              user_id: userId,
-              product_id: productId,
-              amount: mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : payment?.amount,
-              status: 'paid',
-              metadata: {
-                mp_status: status,
-                source: 'manual-verify'
-              }
-            })
-            .select('id')
-            .single();
-          if (orderErr) console.error('VERIFY_MP_DEBUG: Erro ao inserir ordem:', orderErr);
-          else console.log('VERIFY_MP_DEBUG: Ordem criada:', orderIns);
+            if (!existingOrder) {
+                const { data: orderIns, error: orderErr } = await supabase
+                    .from('orders')
+                    .insert({
+                        mp_payment_id: mp_payment_id.toString(),
+                        payment_id: payment?.id || null,
+                        checkout_id: checkoutId || null,
+                        user_id: userId, // Agora garantido como não nulo aqui
+                        product_id: productId,
+                        amount: mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : payment?.amount,
+                        status: 'paid',
+                        metadata: {
+                            mp_status: status,
+                            source: 'manual-verify'
+                        }
+                    })
+                    .select('id')
+                    .single();
+                if (orderErr) console.error('VERIFY_MP_DEBUG: Erro ao inserir ordem:', orderErr);
+                else console.log('VERIFY_MP_DEBUG: Ordem criada:', orderIns);
+            } else {
+                console.log('VERIFY_MP_DEBUG: Ordem já existe para este mp_payment_id:', existingOrder.id);
+            }
         } else {
-          console.log('VERIFY_MP_DEBUG: Ordem já existe para este mp_payment_id:', existingOrder.id);
+            console.log('VERIFY_MP_DEBUG: Pulando criação de ordem: userId ou productId ausente. userId:', userId, 'productId:', productId);
         }
 
-        // Garantir acesso ao produto (idempotente)
-        if (userId && productId) {
-          const { data: existingAccess, error: accessExistsError } = await supabase
-            .from('product_access')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('product_id', productId)
-            .maybeSingle();
-          
-          if (accessExistsError) console.error('VERIFY_MP_DEBUG: Erro ao buscar acesso existente:', accessExistsError);
 
-          if (!existingAccess) {
-            const { data: accessIns, error: accessErr } = await supabase
-              .from('product_access')
-              .insert({
-                user_id: userId,
-                product_id: productId,
-                payment_id: payment?.id || null,
-                source: 'purchase'
-              })
-              .select('id')
-              .single();
-            if (accessErr) console.error('VERIFY_MP_DEBUG: Erro ao criar acesso ao produto:', accessErr);
-            else console.log('VERIFY_MP_DEBUG: Acesso ao produto concedido:', accessIns);
-          } else {
-            console.log('VERIFY_MP_DEBUG: Acesso ao produto já existe:', existingAccess.id);
-          }
+        // Garantir acesso ao produto (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
+        if (userId && productId) {
+            const { data: existingAccess, error: accessExistsError } = await supabase
+                .from('product_access')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('product_id', productId)
+                .maybeSingle();
+            
+            if (accessExistsError) console.error('VERIFY_MP_DEBUG: Erro ao buscar acesso existente:', accessExistsError);
+
+            if (!existingAccess) {
+                const { data: accessIns, error: accessErr } = await supabase
+                    .from('product_access')
+                    .insert({
+                        user_id: userId, // Agora garantido como não nulo aqui
+                        product_id: productId,
+                        payment_id: payment?.id || null,
+                        source: 'purchase'
+                    })
+                    .select('id')
+                    .single();
+                if (accessErr) console.error('VERIFY_MP_DEBUG: Erro ao criar acesso ao produto:', accessErr);
+                else console.log('VERIFY_MP_DEBUG: Acesso ao produto concedido:', accessIns);
+            } else {
+                console.log('VERIFY_MP_DEBUG: Acesso ao produto já existe:', existingAccess.id);
+            }
+        } else {
+            console.log('VERIFY_MP_DEBUG: Pulando criação de acesso ao produto: userId ou productId ausente. userId:', userId, 'productId:', productId);
         }
       } catch (postProcessErr) {
         console.error('VERIFY_MP_DEBUG: Erro no pós-processamento (após aprovação):', postProcessErr);
