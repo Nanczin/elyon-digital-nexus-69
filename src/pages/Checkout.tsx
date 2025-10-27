@@ -415,17 +415,22 @@ const Checkout = () => {
         });
         navigate('/payment-success');
       } else if (paymentStatus === 'rejected' || paymentStatus === 'cancelled') {
-        // Pagamento rejeitado
-        throw new Error(
-          statusDetail === 'cc_rejected_insufficient_amount' ? 'Cartão sem saldo suficiente' :
-          statusDetail === 'cc_rejected_bad_filled_security_code' ? 'CVV inválido' :
-          statusDetail === 'cc_rejected_bad_filled_date' ? 'Data de validade inválida' :
-          statusDetail === 'cc_rejected_bad_filled_card_number' ? 'Número do cartão inválido' :
-          statusDetail === 'cc_rejected_blacklist' ? 'Cartão bloqueado' :
-          statusDetail === 'cc_rejected_call_for_authorize' ? 'Pagamento não autorizado pelo banco' :
-          statusDetail === 'cc_rejected_card_disabled' ? 'Cartão desabilitado' :
-          'Pagamento recusado. Tente outro cartão ou forma de pagamento.'
-        );
+        let errorMessage = 'Pagamento recusado. Tente novamente.'; // Mensagem genérica padrão
+
+        if (selectedPaymentMethod === 'pix') {
+          errorMessage = 'Pagamento PIX recusado ou falhou. Por favor, tente novamente.';
+          // Poderíamos adicionar mais detalhes específicos do PIX se o Mercado Pago os fornecer em statusDetail
+        } else if (selectedPaymentMethod === 'creditCard') {
+          errorMessage = statusDetail === 'cc_rejected_insufficient_amount' ? 'Cartão sem saldo suficiente' :
+                         statusDetail === 'cc_rejected_bad_filled_security_code' ? 'CVV inválido' :
+                         statusDetail === 'cc_rejected_bad_filled_date' ? 'Data de validade inválida' :
+                         statusDetail === 'cc_rejected_bad_filled_card_number' ? 'Número do cartão inválido' :
+                         statusDetail === 'cc_rejected_blacklist' ? 'Cartão bloqueado' :
+                         statusDetail === 'cc_rejected_call_for_authorize' ? 'Pagamento não autorizado pelo banco' :
+                         statusDetail === 'cc_rejected_card_disabled' ? 'Cartão desabilitado' :
+                         'Pagamento com cartão recusado. Tente outro cartão ou forma de pagamento.';
+        }
+        throw new Error(errorMessage);
       } else {
         // Status desconhecido
         navigate('/payment-success');
