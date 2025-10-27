@@ -19,9 +19,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData }: PaymentRequest = await req.json();
+    const requestBody = await req.json();
+    console.log('Edge Function: Raw request body received:', JSON.stringify(requestBody, null, 2));
 
-    console.log('Payment request received:', { checkoutId, amount, paymentMethod, customerData });
+    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData }: PaymentRequest = requestBody;
+
+    console.log('Edge Function: Payment request parsed:', { checkoutId, amount, paymentMethod, customerData });
 
     // Get the checkout to find the selected Mercado Pago account
     const { data: checkout, error: checkoutError } = await supabase
@@ -30,10 +33,10 @@ serve(async (req) => {
       .eq('id', checkoutId)
       .single();
 
-    console.log('Checkout data:', checkout);
+    console.log('Edge Function: Checkout data from DB:', checkout);
 
     if (checkoutError || !checkout) {
-      console.error('Checkout error:', checkoutError);
+      console.error('Edge Function: Checkout error:', checkoutError);
       return new Response(
         JSON.stringify({ success: false, error: 'Checkout não encontrado' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
@@ -41,7 +44,7 @@ serve(async (req) => {
     }
 
     const integrations = checkout.integrations as any;
-    console.log('Checkout integrations:', integrations);
+    console.log('Edge Function: Checkout integrations:', integrations);
 
     // Buscar as configurações do Mercado Pago da tabela integrations
     const { data: mpConfig, error: mpConfigError } = await supabase
@@ -50,14 +53,16 @@ serve(async (req) => {
       .eq('user_id', checkout.user_id)
       .maybeSingle();
 
-    console.log('MP Config from database:', { mpConfig, mpConfigError });
+    console.log('Edge Function: MP Config from database:', { mpConfig, mpConfigError });
 
     const accessToken = (mpConfig?.mercado_pago_access_token as string) || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || '';
     const publicKey = (mpConfig?.mercado_pago_token_public as string) || Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || '';
 
-    console.log('Access/Public keys configured:', { hasAccessToken: !!accessToken, hasPublicKey: !!publicKey });
+    console.log('Edge Function: Access Token (first 10 chars):', accessToken.substring(0, 10) + '...');
+    console.log('Edge Function: Public Key (first 10 chars):', publicKey.substring(0, 10) + '...');
     
     if (!accessToken) {
+      console.error('Edge Function: Access Token is empty or not configured.');
       return new Response(
         JSON.stringify({ success: false, error: 'Token do Mercado Pago não configurado. Configure nas integrações.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -65,6 +70,7 @@ serve(async (req) => {
     }
     
     if (paymentMethod === 'creditCard' && !publicKey) {
+      console.error('Edge Function: Public Key is empty or not configured for credit card payment.');
       return new Response(
         JSON.stringify({ success: false, error: 'Chave pública do Mercado Pago não configurada. Configure nas integrações.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -117,11 +123,11 @@ serve(async (req) => {
 
       // Se veio token do frontend, usa diretamente
       if (typeof (cardToken as any) === 'string' && cardToken) {
-        console.log('Usando card token recebido do frontend');
+        console.log('Edge Function: Usando card token recebido do frontend');
         paymentData.token = cardToken;
       } else if (cardData) {
         // Fallback: criar token no backend (menos recomendado)
-        console.log('Criando card token no backend (fallback)');
+        console.log('Edge Function: Criando card token no backend (fallback)');
         const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -138,14 +144,14 @@ serve(async (req) => {
         });
         const tokenResult = await tokenResponse.json();
         if (!tokenResponse.ok) {
-          console.error('Card Token Error:', tokenResult);
+          console.error('Edge Function: Card Token Error:', tokenResult);
           return new Response(
             JSON.stringify({ success: false, error: tokenResult.message || 'Erro ao processar dados do cartão' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
           );
         }
         paymentData.token = tokenResult.id;
-        console.log('Card token criado com sucesso');
+        console.log('Edge Function: Card token criado com sucesso');
       }
 
       // Observação: sem PAN não conseguimos resolver BIN/issuer aqui.
@@ -160,7 +166,7 @@ serve(async (req) => {
       ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
       : idempotencyKeyBase;
 
-    console.log('Enviando payload para MP:', { ...paymentData, token: paymentData.token ? '***' : undefined });
+    console.log('Edge Function: Enviando payload para MP:', { ...paymentData, token: paymentData.token ? '***' : undefined });
 
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
@@ -174,9 +180,9 @@ serve(async (req) => {
 
     const mpResult = await mpResponse.json();
     
-    console.log('Mercado Pago Full Response for PIX:', JSON.stringify(mpResult, null, 2));
+    console.log('Edge Function: Mercado Pago Full Response for PIX:', JSON.stringify(mpResult, null, 2));
 
-    console.log('Mercado Pago Response:', { 
+    console.log('Edge Function: Mercado Pago Response Summary:', { 
       ok: mpResponse.ok, 
       status: mpResponse.status,
       paymentStatus: mpResult.status,
@@ -185,7 +191,7 @@ serve(async (req) => {
     });
 
     if (!mpResponse.ok) {
-      console.error('Mercado Pago API Error:', mpResult);
+      console.error('Edge Function: Mercado Pago API Error:', mpResult);
       const errorMessage = mpResult.message || mpResult.error || 'Erro ao criar pagamento';
       return new Response(
         JSON.stringify({ success: false, error: errorMessage }),
@@ -201,7 +207,7 @@ serve(async (req) => {
       paymentStatus = 'failed';
     }
 
-    console.log('Salvando pagamento no banco com status:', paymentStatus);
+    console.log('Edge Function: Salvando pagamento no banco com status:', paymentStatus);
 
     // Create payment record in database
     const { data: payment, error: paymentError } = await supabase
@@ -231,7 +237,7 @@ serve(async (req) => {
       .single();
 
     if (paymentError) {
-      console.error('Database Error:', paymentError);
+      console.error('Edge Function: Database Error:', paymentError);
       return new Response(
         JSON.stringify({ success: false, error: 'Erro ao salvar pagamento no banco de dados' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -261,7 +267,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error creating payment:', error);
+    console.error('Edge Function: Error creating payment:', error);
     return new Response(
       JSON.stringify({
         success: false,
