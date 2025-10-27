@@ -125,6 +125,7 @@ serve(async (req) => {
         payment_method: paymentMethod
       }
     };
+    console.log('Edge Function: transaction_amount after conversion:', paymentData.transaction_amount);
 
     // Configure payment method
     if (paymentMethod === 'pix') {
@@ -293,7 +294,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Edge Function: Error creating payment:', error); // Log the error to console
+    console.error('Edge Function: Error creating payment:', error);
     return new Response(
       JSON.stringify({
         success: false,

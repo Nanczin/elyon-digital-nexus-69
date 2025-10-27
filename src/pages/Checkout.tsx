@@ -157,24 +157,30 @@ const Checkout = () => {
   const calculateTotal = () => {
     if (!checkout) return 0;
     
+    let totalInReais = 0;
     const packages = (checkout.form_fields as any)?.packages;
-    let total = 0;
-    
+
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-      total = selectedPkg ? selectedPkg.price : (checkout.promotional_price || checkout.price) / 100;
-    } else {
-      total = (checkout.promotional_price || checkout.price) / 100;
-    }
+      // selectedPkg.price is already in reais from the form data
+      totalInReais = selectedPkg ? selectedPkg.price : 0;
+    } 
     
+    // If no packages are defined or selected, or selected package has 0 price,
+    // use the main checkout price (converted from cents).
+    if (totalInReais === 0) {
+        totalInReais = (checkout.promotional_price || checkout.price) / 100;
+    }
+
     selectedOrderBumps.forEach(bumpId => {
       const bump = checkout.order_bumps.find(b => b.id === bumpId);
       if (bump && bump.enabled) {
-        total += bump.price / 100;
+        // bump.price is from DB, which is in cents, so divide by 100.
+        totalInReais += bump.price / 100;
       }
     });
     
-    return total;
+    return totalInReais; // This total is in reais.
   };
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {
@@ -288,6 +294,7 @@ const Checkout = () => {
     
     try {
       const totalAmount = toCents(calculateTotal()); // Convert to cents
+      console.log('Checkout Debug: Total amount in cents being sent to Edge Function:', totalAmount);
       
       if (selectedPaymentMethod === 'standardCheckout') {
         // Call new Edge Function for Standard Checkout

@@ -863,14 +863,26 @@ const AdminCheckouts = () => {
                         </div>
                         <div className="space-y-2">
                           <Label>Preço (R$)</Label>
-                           <Input type="number" value={pkg.price} onChange={e => updatePackage(pkg.id, 'price', Number(e.target.value))} placeholder="0,00" step="0.01" />
+                           <Input 
+                             type="number" 
+                             value={pkg.price} 
+                             onChange={e => updatePackage(pkg.id, 'price', Math.max(0, Number(e.target.value)))} 
+                             placeholder="0,00" 
+                             step="0.01" 
+                           />
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="space-y-2">
                           <Label>Preço Original (R$)</Label>
-                           <Input type="number" value={pkg.originalPrice} onChange={e => updatePackage(pkg.id, 'originalPrice', Number(e.target.value))} placeholder="0,00" step="0.01" />
+                           <Input 
+                             type="number" 
+                             value={pkg.originalPrice} 
+                             onChange={e => updatePackage(pkg.id, 'originalPrice', Math.max(0, Number(e.target.value)))} 
+                             placeholder="0,00" 
+                             step="0.01" 
+                           />
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch 
@@ -966,11 +978,23 @@ const AdminCheckouts = () => {
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>Preço (R$)</Label>
-                               <Input type="number" value={bump.price} onChange={e => updateOrderBump(bump.id, 'price', Number(e.target.value))} placeholder="0,00" step="0.01" />
+                               <Input 
+                                 type="number" 
+                                 value={bump.price} 
+                                 onChange={e => updateOrderBump(bump.id, 'price', Math.max(0, Number(e.target.value)))} 
+                                 placeholder="0,00" 
+                                 step="0.01" 
+                               />
                             </div>
                             <div className="space-y-2">
                               <Label>Preço Original (R$)</Label>
-                               <Input type="number" value={bump.originalPrice || 0} onChange={e => updateOrderBump(bump.id, 'originalPrice', Number(e.target.value))} placeholder="0,00" step="0.01" />
+                               <Input 
+                                 type="number" 
+                                 value={bump.originalPrice || 0} 
+                                 onChange={e => updateOrderBump(bump.id, 'originalPrice', Math.max(0, Number(e.target.value)))} 
+                                 placeholder="0,00" 
+                                 step="0.01" 
+                               />
                              <p className="text-xs text-muted-foreground">
                                Deixe 0 para não mostrar desconto
                              </p>
