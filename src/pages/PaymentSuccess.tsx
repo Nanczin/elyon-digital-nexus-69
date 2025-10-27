@@ -25,105 +25,8 @@ const PaymentSuccess = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
 
-  const handleVerifyNow = async () => {
-    try {
-      setIsChecking(true);
-      // Priorizar payment_id da URL, depois do localStorage
-      const mpId = searchParams.get('payment_id') || paymentData?.payment?.mp_payment_id;
-      if (!mpId) {
-        toast({ title: 'Erro', description: 'ID do pagamento não encontrado', variant: 'destructive' });
-        return;
-      }
+  // A função handleVerifyNow foi removida para automatizar o processo.
 
-      // 1) Tenta via SDK oficial (método recomendado)
-      let data: any | null = null;
-      let invokeError: any | null = null;
-      try {
-        const res = await supabase.functions.invoke('verify-mercado-pago-payment', {
-          body: { mp_payment_id: mpId },
-          method: 'POST'
-        });
-        data = res.data;
-        invokeError = res.error || null;
-        console.log('invoke result', { data, error: invokeError });
-      } catch (err) {
-        invokeError = err;
-        console.error('invoke threw', err);
-      }
-
-      // 2) Fallback direto (qualquer erro no invoke dispara)
-      if (!data || invokeError) {
-        try {
-          const DIRECT_URL = 'https://jgmwbovvydimvnmmkfpy.supabase.co/functions/v1/verify-mercado-pago-payment';
-          const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImV4cCI6MjA2ODE2NTc1Nn0.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k';
-          const resp = await fetch(DIRECT_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': ANON_KEY,
-              'Authorization': `Bearer ${ANON_KEY}`,
-              'x-client-info': 'payment-success-fallback/1.1'
-            },
-            body: JSON.stringify({ mp_payment_id: mpId })
-          });
-          const json = await resp.json();
-          console.log('fallback result', { ok: resp.ok, status: resp.status, json });
-          if (!resp.ok) throw new Error(json?.error || 'Falha no fallback de verificação');
-          data = json;
-          } catch (fallbackErr) {
-            console.error('Fallback fetch failed:', fallbackErr);
-            // Último recurso: consultar diretamente o banco pelo mp_payment_id
-            try {
-              const { data: paymentRow, error: dbErr } = await supabase
-                .from('payments')
-                .select('status, mp_payment_status, metadata')
-                .eq('mp_payment_id', mpId.toString())
-                .maybeSingle();
-              if (dbErr) throw dbErr;
-              if (paymentRow) {
-                const calc = paymentRow.status === 'completed' || paymentRow.mp_payment_status === 'approved' ? 'completed'
-                  : paymentRow.status === 'failed' ? 'failed' : 'pending';
-                const meta: any = (paymentRow as any)?.metadata;
-                const detail = meta?.mp_verify_data?.status_detail || meta?.mp_webhook_data?.status_detail || null;
-                if (calc === 'completed') {
-                  setPaymentStatus('completed');
-                  toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
-                } else if (calc === 'failed') {
-                  setPaymentStatus('failed');
-                  toast({ title: 'Pagamento não aprovado', description: 'Tente novamente com outro cartão.', variant: 'destructive' });
-                } else {
-                  setLastDetail(detail);
-                  toast({ title: 'Ainda processando', description: `Status atual: ${paymentRow.mp_payment_status || paymentRow.status}${detail ? ` (${detail})` : ''}` });
-                }
-                return; // Evita cair no throw abaixo
-              }
-              throw fallbackErr;
-            } catch (dbCheckErr) {
-              console.error('DB status check failed:', dbCheckErr);
-              throw fallbackErr;
-            }
-          }
-        }
-
-        if (!data?.success) {
-          throw new Error(invokeError?.message || data?.error || 'Falha ao verificar pagamento');
-        }
-
-        if (data.status === 'approved' || data.payment?.status === 'completed') {
-          setPaymentStatus('completed');
-          toast({ title: 'Pagamento confirmado', description: 'Acesso liberado com sucesso.' });
-        } else {
-          setLastDetail(data.status_detail || null);
-          toast({ title: 'Ainda processando', description: `Status atual: ${data.status || data.payment?.mp_payment_status}${data.status_detail ? ` (${data.status_detail})` : ''}` });
-        }
-      } catch (err) {
-        console.error('Erro ao confirmar manualmente:', err);
-        const msg = err instanceof Error ? err.message : 'Falha na confirmação';
-        toast({ title: 'Erro', description: msg, variant: 'destructive' });
-      } finally {
-        setIsChecking(false);
-      }
-    };
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
@@ -308,9 +211,7 @@ const PaymentSuccess = () => {
               </p>
             </CardHeader>
             <CardContent className="text-center">
-              <Button onClick={handleVerifyNow} variant="outline" disabled={isChecking}>
-                {isChecking ? 'Verificando...' : 'Confirmar agora'}
-              </Button>
+              {/* Botão "Confirmar agora" removido */}
               <p className="text-sm text-muted-foreground mt-2">
                 Status atual: {paymentStatus}{lastDetail ? ` (${lastDetail})` : ''}
               </p>
@@ -485,9 +386,7 @@ const PaymentSuccess = () => {
                 <p className="text-sm text-gray-600 mb-4">
                   Você será redirecionado automaticamente. Após a confirmação, o acesso é liberado e você receberá um e-mail com os detalhes.
                 </p>
-                <Button onClick={handleVerifyNow} variant="outline" disabled={isChecking}>
-                  {isChecking ? 'Verificando...' : 'Confirmar agora'}
-                </Button>
+                {/* Botão "Confirmar agora" removido */}
               </div>
             </CardContent>
           </Card>
