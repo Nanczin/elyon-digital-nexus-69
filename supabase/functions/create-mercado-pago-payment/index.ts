@@ -214,12 +214,14 @@ serve(async (req) => {
     // Requisição ao endpoint do Mercado Pago
     const apiUrl = 'https://api.mercadopago.com/v1/payments';
 
-    const idempotencyKeyBase = `chk:${checkoutId}|email:${customerData.email}`;
-    const idempotencyKey = paymentMethod === 'creditCard'
-      ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
-      : idempotencyKeyBase;
+    // Gerar uma chave de idempotência única para cada tentativa de pagamento PIX
+    // Para cartão de crédito, o token já garante a unicidade da requisição
+    const idempotencyKey = paymentMethod === 'pix'
+      ? `pix-chk:${checkoutId}|email:${customerData.email}|${(crypto as any).randomUUID()}`
+      : `cc-chk:${checkoutId}|email:${customerData.email}|${(crypto as any).randomUUID()}`;
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 13. Enviando payload para MP:', { ...mpRequestBody, token: mpRequestBody.token ? '***' : undefined });
+    console.log('CREATE_MP_PAYMENT_DEBUG: 13.1. Idempotency Key:', idempotencyKey);
 
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
