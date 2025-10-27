@@ -20,31 +20,36 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const webhookData = await req.json();
-    console.log('Webhook received:', webhookData);
+    console.log('WEBHOOK_MP_DEBUG: Webhook received:', webhookData);
 
     // Verificar se é uma notificação de pagamento
     if (webhookData.type === 'payment') {
       const paymentId = webhookData.data?.id;
       
       if (!paymentId) {
-        console.error('No payment ID in webhook');
+        console.error('WEBHOOK_MP_DEBUG: No payment ID in webhook');
         return new Response('No payment ID', { headers: corsHeaders, status: 400 });
       }
+      console.log('WEBHOOK_MP_DEBUG: Payment ID from webhook:', paymentId);
 
       // Buscar as configurações do Mercado Pago
-      const { data: mpConfig } = await supabase
+      const { data: mpConfig, error: mpConfigError } = await supabase
         .from('integrations')
         .select('mercado_pago_access_token')
         .not('mercado_pago_access_token', 'is', null)
         .limit(1)
         .maybeSingle();
 
+      if (mpConfigError) {
+        console.error('WEBHOOK_MP_DEBUG: Erro ao buscar mpConfig:', mpConfigError);
+      }
       let accessToken = mpConfig?.mercado_pago_access_token || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
       
       if (!accessToken) {
-        console.error('No access token available');
+        console.error('WEBHOOK_MP_DEBUG: No access token available');
         return new Response('No access token', { headers: corsHeaders, status: 500 });
       }
+      console.log('WEBHOOK_MP_DEBUG: Access token obtido (primeiros 10 chars):', accessToken.substring(0, 10));
 
       // Buscar detalhes do pagamento no Mercado Pago
       const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
@@ -54,10 +59,10 @@ serve(async (req) => {
       });
 
       const mpPayment = await mpResponse.json();
-      console.log('MP Payment details:', mpPayment);
+      console.log('WEBHOOK_MP_DEBUG: MP Payment details:', mpPayment);
 
       if (!mpResponse.ok) {
-        console.error('Error fetching payment from MP:', mpPayment);
+        console.error('WEBHOOK_MP_DEBUG: Error fetching payment from MP:', mpPayment);
         return new Response('Error fetching payment', { headers: corsHeaders, status: 400 });
       }
 
@@ -67,11 +72,13 @@ serve(async (req) => {
       
       // Try to get customer data from the checkout or create default
       if (checkoutId) {
-        const { data: checkoutData } = await supabase
+        const { data: checkoutData, error: checkoutDataError } = await supabase
           .from('checkouts')
           .select('*')
           .eq('id', checkoutId)
           .single();
+        
+        if (checkoutDataError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar checkoutData:', checkoutDataError);
 
         // Create customer data from MP payment info
         customerData = {
@@ -85,13 +92,17 @@ serve(async (req) => {
           cpf: mpPayment.payer?.identification?.number || null
         };
       }
+      console.log('WEBHOOK_MP_DEBUG: Customer Data extraído:', customerData);
 
       // Get existing payment to preserve metadata
-      const { data: existingPayment } = await supabase
+      const { data: existingPayment, error: existingPaymentError } = await supabase
         .from('payments')
         .select('metadata')
         .eq('mp_payment_id', paymentId.toString())
         .single();
+      
+      if (existingPaymentError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar pagamento existente:', existingPaymentError);
+      console.log('WEBHOOK_MP_DEBUG: Pagamento existente no DB:', existingPayment);
 
       // Atualizar o pagamento no banco de dados
       const { data: payment, error: updateError } = await supabase
@@ -102,7 +113,7 @@ serve(async (req) => {
                  mpPayment.status === 'rejected' ? 'failed' : 'pending',
           metadata: {
             ...existingPayment?.metadata || {},
-            mp_webhook_data: mpPayment,
+            mp_webhook_data: webhookData, // Use webhookData directly here
             customer_data: customerData
           }
         })
@@ -111,43 +122,63 @@ serve(async (req) => {
         .single();
 
       if (updateError) {
-        console.error('Error updating payment:', updateError);
+        console.error('WEBHOOK_MP_DEBUG: Error updating payment:', updateError);
         return new Response('Error updating payment', { headers: corsHeaders, status: 500 });
       }
 
-      console.log('Payment updated:', payment);
+      console.log('WEBHOOK_MP_DEBUG: Payment updated:', payment);
 
       // Se o pagamento foi aprovado, garantir ordem e acesso ao produto (idempotente)
       if (mpPayment.status === 'approved') {
-        console.log(`Payment ${paymentId} approved - ensuring order and product access.`);
+        console.log(`WEBHOOK_MP_DEBUG: Payment ${paymentId} approved - ensuring order and product access.`);
         try {
           const email = (customerData as any)?.email || mpPayment.payer?.email || null;
           let userId: string | null = null;
+          console.log('WEBHOOK_MP_DEBUG: Email do cliente para pós-processamento:', email);
 
           if (email) {
-            const { data: existingUser } = await supabase
-              .from('users')
-              .select('id')
+            // Tentar encontrar o perfil existente pelo email
+            const { data: profileRow, error: profileError } = await supabase
+              .from('profiles')
+              .select('user_id')
               .eq('email', email)
               .maybeSingle();
+            
+            if (profileError) {
+              console.error('WEBHOOK_MP_DEBUG: Erro ao buscar perfil por email:', profileError);
+            }
 
-            if (existingUser?.id) {
-              userId = existingUser.id;
+            if (profileRow?.user_id) {
+              userId = profileRow.user_id;
+              console.log('WEBHOOK_MP_DEBUG: Perfil encontrado, userId:', userId);
             } else {
-              const { data: newUser, error: userErr } = await supabase
-                .from('users')
-                .insert({
-                  email,
-                  name: (customerData as any)?.name || mpPayment.payer?.first_name || 'Cliente',
-                  phone: (customerData as any)?.phone || null,
-                  cpf: (customerData as any)?.cpf || mpPayment.payer?.identification?.number || null
-                })
-                .select('id')
-                .single();
-              if (userErr) {
-                console.error('Error creating user record:', userErr);
+              // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
+              console.log('WEBHOOK_MP_DEBUG: Perfil não encontrado, criando novo usuário...');
+              const customerName = (customerData as any)?.name || mpPayment.payer?.first_name || 'Cliente';
+              const customerPhone = (customerData as any)?.phone || null;
+              const customerCpf = (customerData as any)?.cpf || mpPayment.payer?.identification?.number || null;
+
+              // Gerar uma senha aleatória para o usuário
+              const generatedPassword = Math.random().toString(36).slice(-8); 
+
+              const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
+                email,
+                password: generatedPassword, // Senha temporária
+                email_confirm: true, // Confirmar email automaticamente
+                user_metadata: { 
+                  name: customerName,
+                  first_name: customerName.split(' ')[0],
+                  last_name: customerName.split(' ').slice(1).join(' ') || '',
+                  phone: customerPhone,
+                  cpf: customerCpf
+                }
+              });
+
+              if (userAuthErr) {
+                console.error('WEBHOOK_MP_DEBUG: Erro ao criar usuário auth.users:', userAuthErr);
               } else {
-                userId = newUser?.id || null;
+                userId = newUserAuth?.user?.id || null;
+                console.log('WEBHOOK_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
               }
             }
           }
@@ -158,26 +189,31 @@ serve(async (req) => {
               .from('payments')
               .update({ user_id: userId })
               .eq('mp_payment_id', paymentId.toString());
-            if (payUserErr) console.error('Error updating payment user_id:', payUserErr);
+            if (payUserErr) console.error('WEBHOOK_MP_DEBUG: Error updating payment user_id:', payUserErr);
+            else console.log('WEBHOOK_MP_DEBUG: Payment user_id atualizado para:', userId);
           }
 
           // Obter produto a partir do checkout
           let productId: string | null = null;
           if (checkoutId) {
-            const { data: checkoutRow } = await supabase
+            const { data: checkoutRow, error: checkoutRowError } = await supabase
               .from('checkouts')
               .select('product_id')
               .eq('id', checkoutId)
               .maybeSingle();
+            if (checkoutRowError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar product_id do checkout:', checkoutRowError);
             productId = checkoutRow?.product_id || null;
           }
+          console.log('WEBHOOK_MP_DEBUG: Product ID para ordem/acesso:', productId);
 
           // Criar ordem (idempotente)
-          const { data: existingOrder } = await supabase
+          const { data: existingOrder, error: orderExistsError } = await supabase
             .from('orders')
             .select('id')
             .eq('mp_payment_id', paymentId.toString())
             .maybeSingle();
+          
+          if (orderExistsError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
 
           if (!existingOrder) {
             const { data: orderIns, error: orderErr } = await supabase
@@ -197,20 +233,22 @@ serve(async (req) => {
               })
               .select('id')
               .single();
-            if (orderErr) console.error('Error inserting order:', orderErr);
-            else console.log('Order created:', orderIns);
+            if (orderErr) console.error('WEBHOOK_MP_DEBUG: Error inserting order:', orderErr);
+            else console.log('WEBHOOK_MP_DEBUG: Ordem criada:', orderIns);
           } else {
-            console.log('Order already exists for this mp_payment_id:', existingOrder.id);
+            console.log('WEBHOOK_MP_DEBUG: Ordem já existe para este mp_payment_id:', existingOrder.id);
           }
 
           // Garantir acesso ao produto (idempotente)
           if (userId && productId) {
-            const { data: existingAccess } = await supabase
+            const { data: existingAccess, error: accessExistsError } = await supabase
               .from('product_access')
               .select('id')
               .eq('user_id', userId)
               .eq('product_id', productId)
               .maybeSingle();
+            
+            if (accessExistsError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar acesso existente:', accessExistsError);
 
             if (!existingAccess) {
               const { data: accessIns, error: accessErr } = await supabase
@@ -223,14 +261,14 @@ serve(async (req) => {
                 })
                 .select('id')
                 .single();
-              if (accessErr) console.error('Error creating product access:', accessErr);
-              else console.log('Product access granted:', accessIns);
+              if (accessErr) console.error('WEBHOOK_MP_DEBUG: Erro ao criar acesso ao produto:', accessErr);
+              else console.log('WEBHOOK_MP_DEBUG: Acesso ao produto concedido:', accessIns);
             } else {
-              console.log('Product access already exists:', existingAccess.id);
+              console.log('WEBHOOK_MP_DEBUG: Acesso ao produto já existe:', existingAccess.id);
             }
           }
         } catch (postProcessErr) {
-          console.error('Post-approval processing error:', postProcessErr);
+          console.error('WEBHOOK_MP_DEBUG: Post-approval processing error:', postProcessErr);
         }
       }
 
@@ -246,7 +284,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('WEBHOOK_MP_DEBUG: Webhook error:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Erro interno do servidor' }),
       {

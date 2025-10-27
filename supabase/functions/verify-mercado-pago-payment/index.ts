@@ -19,21 +19,28 @@ serve(async (req) => {
 
     const { mp_payment_id } = await req.json();
     if (!mp_payment_id) {
+      console.error('VERIFY_MP_DEBUG: mp_payment_id ausente na requisição.');
       return new Response(JSON.stringify({ success: false, error: 'mp_payment_id ausente' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
     }
+    console.log('VERIFY_MP_DEBUG: mp_payment_id recebido:', mp_payment_id);
 
     // Buscar access token
-    const { data: mpConfig } = await supabase
+    const { data: mpConfig, error: mpConfigError } = await supabase
       .from('integrations')
       .select('mercado_pago_access_token')
       .not('mercado_pago_access_token', 'is', null)
       .limit(1)
       .maybeSingle();
 
+    if (mpConfigError) {
+      console.error('VERIFY_MP_DEBUG: Erro ao buscar mpConfig:', mpConfigError);
+    }
     const accessToken = mpConfig?.mercado_pago_access_token || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
     if (!accessToken) {
+      console.error('VERIFY_MP_DEBUG: Access token do Mercado Pago não configurado.');
       return new Response(JSON.stringify({ success: false, error: 'Access token do Mercado Pago não configurado. Verifique as integrações ou variáveis de ambiente.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
     }
+    console.log('VERIFY_MP_DEBUG: Access token obtido (primeiros 10 chars):', accessToken.substring(0, 10));
 
     // Consultar status diretamente no MP
     const resp = await fetch(`https://api.mercadopago.com/v1/payments/${mp_payment_id}`, {
@@ -41,18 +48,24 @@ serve(async (req) => {
     });
     const mpPayment = await resp.json();
     if (!resp.ok) {
-      console.error('MP verify error:', mpPayment);
+      console.error('VERIFY_MP_DEBUG: Erro ao consultar pagamento no MP:', mpPayment);
       return new Response(JSON.stringify({ success: false, error: 'Erro ao consultar pagamento no MP' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
     }
+    console.log('VERIFY_MP_DEBUG: Detalhes do pagamento do MP:', mpPayment);
 
     const status = mpPayment.status as string;
 
     // Buscar pagamento existente para preservar metadata
-    const { data: existingPayment } = await supabase
+    const { data: existingPayment, error: existingPaymentError } = await supabase
       .from('payments')
       .select('*')
       .eq('mp_payment_id', mp_payment_id.toString())
       .maybeSingle();
+    
+    if (existingPaymentError) {
+      console.error('VERIFY_MP_DEBUG: Erro ao buscar pagamento existente:', existingPaymentError);
+    }
+    console.log('VERIFY_MP_DEBUG: Pagamento existente no DB:', existingPayment);
 
     // Atualizar pagamento
     const calcStatus = status === 'approved' ? 'completed' : (status === 'rejected' ? 'failed' : 'pending');
@@ -71,94 +84,158 @@ serve(async (req) => {
       .single();
 
     if (updateError) {
-      console.error('Erro ao atualizar pagamento:', updateError);
+      console.error('VERIFY_MP_DEBUG: Erro ao atualizar pagamento no DB:', updateError);
       return new Response(JSON.stringify({ success: false, error: 'Falha ao atualizar pagamento' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
     }
+    console.log('VERIFY_MP_DEBUG: Pagamento atualizado no DB:', payment);
 
     // Se aprovado, garantir criação de order e acesso (idempotente)
     if (status === 'approved') {
+      console.log('VERIFY_MP_DEBUG: Pagamento aprovado, iniciando pós-processamento.');
       try {
         const checkoutId = mpPayment.external_reference || existingPayment?.checkout_id || (existingPayment?.metadata as any)?.checkout_id;
+        console.log('VERIFY_MP_DEBUG: Checkout ID para pós-processamento:', checkoutId);
 
         // Obter product_id
         let productId: string | null = null;
         if (checkoutId) {
-          const { data: chk } = await supabase
+          const { data: chk, error: chkError } = await supabase
             .from('checkouts')
             .select('product_id')
             .eq('id', checkoutId)
             .maybeSingle();
+          if (chkError) console.error('VERIFY_MP_DEBUG: Erro ao buscar product_id do checkout:', chkError);
           productId = chk?.product_id || null;
         }
+        console.log('VERIFY_MP_DEBUG: Product ID para pós-processamento:', productId);
 
         // Resolver usuário por email
         const email = existingPayment?.metadata?.customer_data?.email || mpPayment?.payer?.email || null;
         let userId: string | null = existingPayment?.user_id || null;
+        console.log('VERIFY_MP_DEBUG: Email do cliente:', email, 'User ID existente:', userId);
+
         if (!userId && email) {
-          const { data: userRow } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
-          if (userRow?.id) userId = userRow.id;
-          else {
-            const { data: newUser } = await supabase
-              .from('users')
-              .insert({
-                email,
-                name: existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente',
-                phone: existingPayment?.metadata?.customer_data?.phone || null,
-                cpf: existingPayment?.metadata?.customer_data?.cpf || mpPayment?.payer?.identification?.number || null
-              })
-              .select('id')
-              .single();
-            userId = newUser?.id || null;
+          // Tentar encontrar o perfil existente pelo email
+          const { data: profileRow, error: profileError } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('VERIFY_MP_DEBUG: Erro ao buscar perfil por email:', profileError);
+          }
+
+          if (profileRow?.user_id) {
+            userId = profileRow.user_id;
+            console.log('VERIFY_MP_DEBUG: Perfil encontrado, userId:', userId);
+          } else {
+            // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
+            console.log('VERIFY_MP_DEBUG: Perfil não encontrado, criando novo usuário...');
+            const customerName = existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente';
+            const customerPhone = existingPayment?.metadata?.customer_data?.phone || null;
+            const customerCpf = existingPayment?.metadata?.customer_data?.cpf || mpPayment?.payer?.identification?.number || null;
+
+            // Gerar uma senha aleatória para o usuário
+            const generatedPassword = Math.random().toString(36).slice(-8); 
+
+            const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
+              email,
+              password: generatedPassword, // Senha temporária
+              email_confirm: true, // Confirmar email automaticamente
+              user_metadata: { 
+                name: customerName,
+                first_name: customerName.split(' ')[0],
+                last_name: customerName.split(' ').slice(1).join(' ') || '',
+                phone: customerPhone,
+                cpf: customerCpf
+              }
+            });
+
+            if (userAuthErr) {
+              console.error('VERIFY_MP_DEBUG: Erro ao criar usuário auth.users:', userAuthErr);
+            } else {
+              userId = newUserAuth?.user?.id || null;
+              console.log('VERIFY_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
+            }
           }
         }
 
         if (userId && !payment?.user_id) {
-          await supabase.from('payments').update({ user_id: userId }).eq('id', payment.id);
+          const { error: payUserErr } = await supabase.from('payments').update({ user_id: userId }).eq('id', payment.id);
+          if (payUserErr) console.error('VERIFY_MP_DEBUG: Erro ao atualizar payment user_id:', payUserErr);
+          else console.log('VERIFY_MP_DEBUG: Payment user_id atualizado para:', userId);
         }
 
-        // Criar ordem se não existir
-        const { data: orderExists } = await supabase
+        // Criar ordem (idempotente)
+        const { data: existingOrder, error: orderExistsError } = await supabase
           .from('orders')
           .select('id')
           .eq('mp_payment_id', mp_payment_id.toString())
           .maybeSingle();
-        if (!orderExists) {
-          await supabase
+        
+        if (orderExistsError) console.error('VERIFY_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
+
+        if (!existingOrder) {
+          const { data: orderIns, error: orderErr } = await supabase
             .from('orders')
             .insert({
               mp_payment_id: mp_payment_id.toString(),
-              payment_id: payment.id,
+              payment_id: payment?.id || null,
               checkout_id: checkoutId || null,
               user_id: userId,
               product_id: productId,
-              amount: payment.amount,
+              amount: mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : payment?.amount,
               status: 'paid',
-              metadata: { mp_status: status, source: 'manual-verify' }
-            });
+              metadata: {
+                mp_status: status,
+                source: 'manual-verify'
+              }
+            })
+            .select('id')
+            .single();
+          if (orderErr) console.error('VERIFY_MP_DEBUG: Erro ao inserir ordem:', orderErr);
+          else console.log('VERIFY_MP_DEBUG: Ordem criada:', orderIns);
+        } else {
+          console.log('VERIFY_MP_DEBUG: Ordem já existe para este mp_payment_id:', existingOrder.id);
         }
 
-        // Garantir acesso
+        // Garantir acesso ao produto (idempotente)
         if (userId && productId) {
-          const { data: accessExists } = await supabase
+          const { data: existingAccess, error: accessExistsError } = await supabase
             .from('product_access')
             .select('id')
             .eq('user_id', userId)
             .eq('product_id', productId)
             .maybeSingle();
-          if (!accessExists) {
-            await supabase
+          
+          if (accessExistsError) console.error('VERIFY_MP_DEBUG: Erro ao buscar acesso existente:', accessExistsError);
+
+          if (!existingAccess) {
+            const { data: accessIns, error: accessErr } = await supabase
               .from('product_access')
-              .insert({ user_id: userId, product_id: productId, payment_id: payment.id, source: 'purchase' });
+              .insert({
+                user_id: userId,
+                product_id: productId,
+                payment_id: payment?.id || null,
+                source: 'purchase'
+              })
+              .select('id')
+              .single();
+            if (accessErr) console.error('VERIFY_MP_DEBUG: Erro ao criar acesso ao produto:', accessErr);
+            else console.log('VERIFY_MP_DEBUG: Acesso ao produto concedido:', accessIns);
+          } else {
+            console.log('VERIFY_MP_DEBUG: Acesso ao produto já existe:', existingAccess.id);
           }
         }
-      } catch (postErr) {
-        console.error('Erro pós-aprovação (verify):', postErr);
+      } catch (postProcessErr) {
+        console.error('VERIFY_MP_DEBUG: Erro no pós-processamento (após aprovação):', postProcessErr);
       }
     }
 
     return new Response(JSON.stringify({ success: true, status: status, status_detail: mpPayment.status_detail, payment }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
   } catch (error) {
-    console.error('Verify function error:', error);
+    console.error('VERIFY_MP_DEBUG: Erro geral na função verify-mercado-pago-payment:', error);
     return new Response(JSON.stringify({ success: false, error: error.message || 'Erro interno do servidor' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 });
