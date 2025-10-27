@@ -157,30 +157,29 @@ const Checkout = () => {
   const calculateTotal = () => {
     if (!checkout) return 0;
     
-    let totalInReais = 0;
+    let basePrice = 0;
     const packages = (checkout.form_fields as any)?.packages;
 
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-      // selectedPkg.price is already in reais from the form data
-      totalInReais = selectedPkg ? (Number(selectedPkg.price) || 0) : 0;
-    } 
-    
-    // If no packages are defined or selected, or selected package has 0 price,
-    // use the main checkout price (converted from cents).
-    if (totalInReais === 0) {
-        totalInReais = (Number(checkout.promotional_price) || Number(checkout.price) || 0) / 100;
+      basePrice = selectedPkg ? (Number(selectedPkg.price) || 0) : 0;
+    } else {
+      // If no packages or selected package has 0 price, use the main checkout price
+      basePrice = (Number(checkout.promotional_price) || Number(checkout.price) || 0) / 100;
     }
+
+    let totalInReais = basePrice;
 
     selectedOrderBumps.forEach(bumpId => {
       const bump = checkout.order_bumps.find(b => b.id === bumpId);
       if (bump && bump.enabled) {
-        // bump.price is from DB, which is in cents, so divide by 100.
         totalInReais += (Number(bump.price) || 0) / 100;
       }
     });
     
-    return Math.max(0, totalInReais); // Ensure total is not negative
+    const finalTotal = Math.max(0, totalInReais);
+    console.log('Checkout Debug: Final calculated total (in Reais):', finalTotal);
+    return finalTotal;
   };
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {

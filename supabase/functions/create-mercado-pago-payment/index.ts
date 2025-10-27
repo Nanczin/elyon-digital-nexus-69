@@ -50,6 +50,7 @@ serve(async (req) => {
     // Desestruturar com a interface definida
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
+    console.log('Edge Function: Raw amount received (in cents):', amount); // NEW LOG
     console.log('Edge Function: Payment request parsed:', { checkoutId, amount, paymentMethod, customerData, cardToken: cardToken ? '***' : 'N/A' });
 
     // Get the checkout to find the selected Mercado Pago account
@@ -105,7 +106,7 @@ serve(async (req) => {
 
     // Create payment data based on payment method
     let paymentData: any = {
-      transaction_amount: amount / 100, // Convert from cents to reais
+      transaction_amount: Number(amount) / 100, // Ensure amount is a number before division
       description: `Pagamento Checkout ${checkoutId}`,
       payer: {
         email: customerData.email,
@@ -125,7 +126,16 @@ serve(async (req) => {
         payment_method: paymentMethod
       }
     };
-    console.log('Edge Function: transaction_amount after conversion:', paymentData.transaction_amount);
+    console.log('Edge Function: transaction_amount after conversion (in Reais):', paymentData.transaction_amount); // Refined log
+
+    // NEW CHECK: Ensure transaction_amount is valid before sending to MP
+    if (isNaN(paymentData.transaction_amount) || paymentData.transaction_amount <= 0) {
+      console.error('Edge Function: Invalid transaction_amount detected before MP API call:', paymentData.transaction_amount);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Valor do pagamento inválido. O valor deve ser um número positivo.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     // Configure payment method
     if (paymentMethod === 'pix') {
