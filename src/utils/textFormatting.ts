@@ -80,6 +80,7 @@ export const formatCurrency = (value: number | string): string => {
  * Converte valor em reais para centavos
  */
 export const toCents = (value: number): number => {
+  // Arredonda para o número inteiro mais próximo para evitar problemas de ponto flutuante
   return Math.round(value * 100);
 };
 

@@ -180,9 +180,10 @@ const Checkout = () => {
       }
     });
     
-    const finalTotal = Math.max(0.01, totalInReais); // Ensure total is at least 0.01 for Mercado Pago
-    console.log('Checkout Debug: Final calculated total (in Reais):', finalTotal);
-    return finalTotal;
+    // Fixar em 2 casas decimais antes de passar para toCents
+    const finalTotal = parseFloat(totalInReais.toFixed(2));
+    console.log('Checkout Debug: Final calculated total (in Reais, fixed 2 decimals):', finalTotal);
+    return Math.max(0.01, finalTotal); // Ensure total is at least 0.01 for Mercado Pago
   };
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {

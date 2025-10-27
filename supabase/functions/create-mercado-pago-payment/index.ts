@@ -50,8 +50,10 @@ serve(async (req) => {
     // Desestruturar com a interface definida
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
-    console.log('Edge Function: Type of amount received:', typeof amount, 'Value:', amount); // NEW LOG
-    console.log('Edge Function: Payment request parsed:', { checkoutId, amount, paymentMethod, customerData, cardToken: cardToken ? '***' : 'N/A' });
+    console.log('Edge Function: Raw amount received (in cents):', amount);
+    const numericAmount = Number(amount); // Ensure amount is a number
+    console.log('Edge Function: Numeric amount after Number() conversion (in cents):', numericAmount); // NEW LOG
+    console.log('Edge Function: Payment request parsed:', { checkoutId, amount: numericAmount, paymentMethod, customerData, cardToken: cardToken ? '***' : 'N/A' });
 
     // Get the checkout to find the selected Mercado Pago account
     const { data: checkout, error: checkoutError } = await supabase
@@ -106,7 +108,7 @@ serve(async (req) => {
 
     // Create payment data based on payment method
     let paymentData: any = {
-      transaction_amount: Number(amount) / 100, // Ensure amount is a number before division
+      transaction_amount: numericAmount / 100, // Use the numericAmount here
       description: `Pagamento Checkout ${checkoutId}`,
       payer: {
         email: customerData.email,
@@ -252,7 +254,7 @@ serve(async (req) => {
       .insert({
         checkout_id: checkoutId,
         user_id: null, // Allow null for guest checkout
-        amount: amount,
+        amount: numericAmount, // Use the numericAmount here
         payment_method: paymentMethod,
         status: paymentStatus,
         mp_payment_id: mpResult.id.toString(),
@@ -293,7 +295,7 @@ serve(async (req) => {
           payment_url: paymentMethod === 'pix' 
             ? mpResult.point_of_interaction?.transaction_data?.ticket_url
             : null,
-          amount: amount / 100,
+          amount: numericAmount / 100, // Use the numericAmount here
           payment_method: paymentMethod
         }
       }),
