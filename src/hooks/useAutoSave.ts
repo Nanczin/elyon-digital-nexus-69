@@ -83,7 +83,8 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
   };
 
   const loadData = (newData: T) => {
-    setData(JSON.parse(JSON.stringify(newData)));
+    // Garantir que os dados carregados sejam mesclados com a estrutura inicial
+    setData(deepMerge(initialData, JSON.parse(JSON.stringify(newData))));
   };
 
   const forceLoad = () => {
@@ -108,10 +109,12 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
     if (typeof newData === 'function') {
       setData(prev => {
         const result = (newData as Function)(prev);
-        return JSON.parse(JSON.stringify(result));
+        // Aplicar deepMerge com initialData para garantir a estrutura completa
+        return deepMerge(initialData, JSON.parse(JSON.stringify(result)));
       });
     } else {
-      setData(JSON.parse(JSON.stringify(newData)));
+      // Aplicar deepMerge com initialData para garantir a estrutura completa
+      setData(deepMerge(initialData, JSON.parse(JSON.stringify(newData))));
     }
   };
 
