@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Remove bun.lockb from .gitignore
+# bun.lockb
