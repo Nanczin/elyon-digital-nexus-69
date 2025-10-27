@@ -21,6 +21,7 @@ const PaymentSuccess = () => {
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
   const [productData, setProductData] = useState<any>(null);
+  const [checkoutDeliverable, setCheckoutDeliverable] = useState<any>(null); // New state for checkout deliverable
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
 
@@ -147,7 +148,7 @@ const PaymentSuccess = () => {
         if (urlStatus === 'approved' || mpStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
           
-          // Buscar dados do produto se tiver payment_id
+          // Buscar dados do produto e do checkout se tiver payment_id
           if (paymentId) {
             const { data: payment } = await supabase
               .from('payments')
@@ -164,6 +165,9 @@ const PaymentSuccess = () => {
             if (payment?.checkouts?.products) {
               setProductData(payment.checkouts.products);
             }
+            if (payment?.checkouts?.form_fields?.deliverable) {
+              setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+            }
           } else if (currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
@@ -179,6 +183,9 @@ const PaymentSuccess = () => {
               
             if (payment?.checkouts?.products) {
               setProductData(payment.checkouts.products);
+            }
+            if (payment?.checkouts?.form_fields?.deliverable) {
+              setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
             }
           }
           
@@ -235,6 +242,9 @@ const PaymentSuccess = () => {
                 if (payment.checkouts?.products) {
                   setProductData(payment.checkouts.products);
                 }
+                if (payment?.checkouts?.form_fields?.deliverable) {
+                  setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+                }
               } else if (payment.status === 'failed') {
                 setPaymentStatus('failed');
               }
@@ -274,6 +284,11 @@ const PaymentSuccess = () => {
       copyToClipboard(paymentData.payment.qr_code);
     }
   };
+
+  // Determine the final deliverable link/file
+  const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
+    ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
+    : productData?.member_area_link || productData?.file_url;
 
   // Exibir status de processamento no próprio checkout para cartão de crédito
   if (paymentData?.paymentMethod === 'creditCard' && paymentStatus === 'pending') {
@@ -517,28 +532,20 @@ const PaymentSuccess = () => {
                     )}
                     
                     <div className="space-y-3">
-                      {productData.member_area_link && (
+                      {finalDeliverableLink && (
                         <Button 
                           className="w-full bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => window.open(productData.member_area_link, '_blank')}
+                          onClick={() => window.open(finalDeliverableLink, '_blank')}
                         >
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          Acessar Área de Membros
+                          {checkoutDeliverable?.type === 'link' || productData?.member_area_link
+                            ? 'Acessar Entregável'
+                            : 'Fazer Download'
+                          }
                         </Button>
                       )}
                       
-                      {productData.file_url && ( // Display download button if file_url exists
-                        <Button 
-                          variant="outline"
-                          className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                          onClick={() => window.open(productData.file_url, '_blank')}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Fazer Download
-                        </Button>
-                      )}
-                      
-                      {!productData.member_area_link && !productData.file_url && (
+                      {!finalDeliverableLink && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <p className="text-yellow-800 text-sm">
                             O acesso ao produto será enviado por e-mail em breve.

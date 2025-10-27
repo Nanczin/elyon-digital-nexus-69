@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,6 +107,12 @@ const AdminCheckouts = () => {
       duration: 15,
       color: '#dc2626',
       text: 'Oferta por tempo limitado'
+    },
+    deliverable: { // New deliverable field
+      type: 'none' as 'none' | 'link' | 'upload',
+      link: '',
+      file: null as File | null,
+      fileUrl: ''
     }
   };
   // Usar uma chave única por checkout ou "new" para novos
@@ -198,6 +204,24 @@ const AdminCheckouts = () => {
     }
   };
 
+  const uploadFile = async (file: File, folder: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${folder}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('products') // Using 'products' bucket, but a specific folder
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
 
   const loadOriginalCheckoutData = (checkout: any) => {
     // Converter preços de centavos para reais
@@ -282,6 +306,12 @@ const AdminCheckouts = () => {
         duration: 15,
         color: '#dc2626',
         text: 'Oferta por tempo limitado'
+      },
+      deliverable: checkout.form_fields?.deliverable || { // Load deliverable data
+        type: 'none',
+        link: '',
+        file: null,
+        fileUrl: ''
       }
     };
   };
@@ -405,6 +435,18 @@ const AdminCheckouts = () => {
       return newData;
     });
   };
+
+  const handleFileChange = (file: File | null) => {
+    setCheckoutData(prev => ({
+      ...prev,
+      deliverable: {
+        ...prev.deliverable,
+        file: file,
+        fileUrl: file ? prev.deliverable.fileUrl : '' // Clear fileUrl if file is removed
+      }
+    }));
+  };
+
   const addPackage = () => {
     const newPackages = [...checkoutData.packages, {
       id: Date.now(),
@@ -519,6 +561,16 @@ const AdminCheckouts = () => {
     setIsLoading(true);
     try {
       console.log('Timer sendo salvo:', checkoutData.timer);
+
+      let deliverableFileUrl = checkoutData.deliverable.fileUrl;
+      if (checkoutData.deliverable.type === 'upload' && checkoutData.deliverable.file) {
+        deliverableFileUrl = await uploadFile(checkoutData.deliverable.file, 'checkout-deliverables');
+      } else if (checkoutData.deliverable.type === 'link') {
+        deliverableFileUrl = checkoutData.deliverable.link;
+      } else {
+        deliverableFileUrl = ''; // Clear if type is 'none'
+      }
+
       const checkoutPayload = {
         product_id: checkoutData.selectedProduct,
         price: checkoutData.packages[0]?.price * 100 || 0,
@@ -528,7 +580,12 @@ const AdminCheckouts = () => {
           ...checkoutData.customerFields,
           packages: checkoutData.packages,
           guarantee: checkoutData.guarantee,
-          reservedRights: checkoutData.reservedRights
+          reservedRights: checkoutData.reservedRights,
+          deliverable: { // Save deliverable data
+            type: checkoutData.deliverable.type,
+            link: checkoutData.deliverable.type === 'link' ? checkoutData.deliverable.link : null,
+            fileUrl: deliverableFileUrl // This will be the uploaded URL or the provided link
+          }
         },
         payment_methods: checkoutData.paymentMethods,
         order_bumps: checkoutData.orderBumps.map(bump => ({
@@ -672,7 +729,7 @@ const AdminCheckouts = () => {
             
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-1 h-auto p-1">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1">
                   <TabsTrigger value="basic" onClick={() => setCurrentTab('basic')} className="text-xs sm:text-sm py-2">
                     Básico
                   </TabsTrigger>
@@ -699,6 +756,9 @@ const AdminCheckouts = () => {
                   </TabsTrigger>
                   <TabsTrigger value="styles" onClick={() => setCurrentTab('styles')} className="text-xs sm:text-sm py-2">
                     Visual
+                  </TabsTrigger>
+                  <TabsTrigger value="deliverable" onClick={() => setCurrentTab('deliverable')} className="text-xs sm:text-sm py-2">
+                    Entregável
                   </TabsTrigger>
                 </TabsList>
 
@@ -1328,6 +1388,77 @@ const AdminCheckouts = () => {
                      </div>
                    </div>
                  </TabsContent>
+
+                <TabsContent value="deliverable" className="space-y-4">
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Upload className="h-5 w-5" />
+                      Entregável do Checkout
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Configure um arquivo ou link que será disponibilizado na página de sucesso do pagamento.
+                      Isso sobrescreve o entregável do produto base, se houver.
+                    </p>
+
+                    <div className="space-y-4">
+                      <Label>Tipo de Entregável</Label>
+                      <Select 
+                        value={checkoutData.deliverable.type} 
+                        onValueChange={value => handleInputChange('deliverable.type', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de entregável" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhum</SelectItem>
+                          <SelectItem value="link">Link Direto</SelectItem>
+                          <SelectItem value="upload">Upload de Arquivo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {checkoutData.deliverable.type === 'link' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="deliverableLink">Link do Entregável *</Label>
+                        <Input 
+                          id="deliverableLink" 
+                          type="url" 
+                          value={checkoutData.deliverable.link} 
+                          onChange={e => handleInputChange('deliverable.link', e.target.value)} 
+                          placeholder="https://exemplo.com/meu-ebook.pdf" 
+                          required 
+                        />
+                      </div>
+                    )}
+
+                    {checkoutData.deliverable.type === 'upload' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="deliverableFile">Arquivo Entregável *</Label>
+                        <Input 
+                          id="deliverableFile" 
+                          type="file" 
+                          onChange={e => handleFileChange(e.target.files?.[0] || null)} 
+                          required={!checkoutData.deliverable.fileUrl} // Required only if no file is already uploaded
+                        />
+                        {checkoutData.deliverable.fileUrl && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Link className="h-4 w-4" />
+                            <span>Arquivo atual: <a href={checkoutData.deliverable.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleInputChange('deliverable.fileUrl', '')} // Clear fileUrl
+                              className="h-6 px-2 text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Remover
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
 
 
               </Tabs>
