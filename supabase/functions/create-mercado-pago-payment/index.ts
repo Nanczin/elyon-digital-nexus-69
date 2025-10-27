@@ -174,9 +174,7 @@ serve(async (req) => {
 
     const mpResult = await mpResponse.json();
     
-    // --- NOVO LOG AQUI ---
     console.log('Mercado Pago Full Response for PIX:', JSON.stringify(mpResult, null, 2));
-    // --- FIM DO NOVO LOG ---
 
     console.log('Mercado Pago Response:', { 
       ok: mpResponse.ok, 
