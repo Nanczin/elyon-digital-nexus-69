@@ -97,7 +97,7 @@ serve(async (req) => {
       // Get existing payment to preserve metadata
       const { data: existingPayment, error: existingPaymentError } = await supabase
         .from('payments')
-        .select('metadata')
+        .select('metadata, user_id, checkout_id, amount') // Also select user_id and amount
         .eq('mp_payment_id', paymentId.toString())
         .single();
       
@@ -133,17 +133,15 @@ serve(async (req) => {
         console.log(`WEBHOOK_MP_DEBUG: Payment ${paymentId} approved - ensuring order and product access.`);
         try {
           const email = (customerData as any)?.email || mpPayment.payer?.email || null;
-          let userId: string | null = null;
-          console.log('WEBHOOK_MP_DEBUG: Email do cliente para pós-processamento:', email);
+          let userId: string | null = existingPayment?.user_id || null; // Prioritize existing user_id from payment
+          console.log('WEBHOOK_MP_DEBUG: Email do cliente para pós-processamento:', email, 'User ID existente no pagamento:', userId);
 
-          if (email) {
-            // Basic email validation before attempting to create user
+          if (!userId && email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!email || !emailRegex.test(email)) {
                 console.error('WEBHOOK_MP_DEBUG: ERROR: Email inválido para criação de usuário:', email);
-                // Continue without userId, as payment might still be valid
             } else {
-                // Tentar encontrar o perfil existente pelo email
+                console.log('WEBHOOK_MP_DEBUG: Buscando perfil por email:', email);
                 const { data: profileRow, error: profileError } = await supabase
                   .from('profiles')
                   .select('user_id')
@@ -158,13 +156,10 @@ serve(async (req) => {
                   userId = profileRow.user_id;
                   console.log('WEBHOOK_MP_DEBUG: Perfil encontrado, userId:', userId);
                 } else {
-                  // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
                   console.log('WEBHOOK_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário...');
                   const customerName = (customerData as any)?.name || mpPayment.payer?.first_name || 'Cliente';
                   const customerPhone = (customerData as any)?.phone || null;
                   const customerCpf = (customerData as any)?.cpf || mpPayment.payer?.identification?.number || null;
-
-                  // Gerar uma senha aleatória para o usuário
                   const generatedPassword = Math.random().toString(36).slice(-8); 
 
                   const userMetadata = { 
@@ -174,18 +169,17 @@ serve(async (req) => {
                     phone: customerPhone,
                     cpf: customerCpf
                   };
-                  console.log('WEBHOOK_MP_DEBUG: Attempting to create new auth.users user with email:', email, 'and user_metadata:', JSON.stringify(userMetadata));
+                  console.log('WEBHOOK_MP_DEBUG: Dados para criar novo usuário auth.users:', { email, userMetadata });
 
                   const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
                     email,
-                    password: generatedPassword, // Senha temporária
-                    email_confirm: true, // Confirmar email automaticamente
+                    password: generatedPassword,
+                    email_confirm: true,
                     user_metadata: userMetadata
                   });
 
                   if (userAuthErr) {
                     console.error('WEBHOOK_MP_DEBUG: CRITICAL ERROR creating auth.users user:', userAuthErr.message, JSON.stringify(userAuthErr));
-                    // If user creation fails, userId remains null, which is handled by subsequent checks
                   } else {
                     userId = newUserAuth?.user?.id || null;
                     console.log('WEBHOOK_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
@@ -194,7 +188,7 @@ serve(async (req) => {
             }
           }
 
-          console.log('WEBHOOK_MP_DEBUG: Payment object before user_id update check:', payment);
+          console.log('WEBHOOK_MP_DEBUG: Verificando se payment.user_id precisa ser atualizado. Current payment.user_id:', payment?.user_id, 'Resolved userId:', userId);
           // Atualizar user_id no pagamento (se aplicável)
           if (userId && payment?.id && !payment?.user_id) {
             const { error: payUserErr } = await supabase
@@ -208,6 +202,7 @@ serve(async (req) => {
           // Obter produto a partir do checkout
           let productId: string | null = null;
           if (checkoutId) {
+            console.log('WEBHOOK_MP_DEBUG: Buscando product_id para checkoutId:', checkoutId);
             const { data: checkoutRow, error: checkoutRowError } = await supabase
               .from('checkouts')
               .select('product_id')
@@ -220,40 +215,48 @@ serve(async (req) => {
 
           console.log('WEBHOOK_MP_DEBUG: Final userId for order/access:', userId, 'Final productId for order/access:', productId);
           // Criar ordem (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
-          const { data: existingOrder, error: orderExistsError } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('mp_payment_id', paymentId.toString())
-            .maybeSingle();
-          
-          if (orderExistsError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
-
-          if (!existingOrder) {
-            const { data: orderIns, error: orderErr } = await supabase
+          if (userId && productId) {
+            console.log('WEBHOOK_MP_DEBUG: Tentando criar ordem...');
+            const { data: existingOrder, error: orderExistsError } = await supabase
               .from('orders')
-              .insert({
-                mp_payment_id: paymentId.toString(),
-                payment_id: payment?.id || null,
-                checkout_id: checkoutId || null,
-                user_id: userId, // Agora garantido como não nulo aqui
-                product_id: productId,
-                amount: payment?.amount || (mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : 0), // Prioriza payment.amount (cents), senão converte mpPayment.transaction_amount (reais)
-                status: 'paid',
-                metadata: {
-                  mp_status: mpPayment.status,
-                  source: 'webhook'
-                }
-              })
               .select('id')
-              .single();
-            if (orderErr) console.error('WEBHOOK_MP_DEBUG: Error inserting order:', orderErr);
-            else console.log('WEBHOOK_MP_DEBUG: Ordem criada:', orderIns);
+              .eq('mp_payment_id', paymentId.toString())
+              .maybeSingle();
+            
+            if (orderExistsError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
+
+            if (!existingOrder) {
+                const orderAmount = payment?.amount || (mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : 0);
+                console.log('WEBHOOK_MP_DEBUG: Inserindo nova ordem com amount (cents):', orderAmount);
+                const { data: orderIns, error: orderErr } = await supabase
+                    .from('orders')
+                    .insert({
+                        mp_payment_id: paymentId.toString(),
+                        payment_id: payment?.id || null,
+                        checkout_id: checkoutId || null,
+                        user_id: userId,
+                        product_id: productId,
+                        amount: orderAmount,
+                        status: 'paid',
+                        metadata: {
+                          mp_status: mpPayment.status,
+                          source: 'webhook'
+                        }
+                    })
+                    .select('id')
+                    .single();
+                if (orderErr) console.error('WEBHOOK_MP_DEBUG: Error inserting order:', orderErr);
+                else console.log('WEBHOOK_MP_DEBUG: Ordem criada:', orderIns);
+            } else {
+                console.log('WEBHOOK_MP_DEBUG: Ordem já existe para este mp_payment_id:', existingOrder.id);
+            }
           } else {
-            console.log('WEBHOOK_MP_DEBUG: Ordem já existe para este mp_payment_id:', existingOrder.id);
+            console.log('WEBHOOK_MP_DEBUG: Pulando criação de ordem: userId ou productId ausente. userId:', userId, 'productId:', productId);
           }
 
           // Garantir acesso ao produto (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
           if (userId && productId) {
+            console.log('WEBHOOK_MP_DEBUG: Tentando criar acesso ao produto...');
             const { data: existingAccess, error: accessExistsError } = await supabase
               .from('product_access')
               .select('id')
@@ -264,26 +267,29 @@ serve(async (req) => {
             if (accessExistsError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar acesso existente:', accessExistsError);
 
             if (!existingAccess) {
-              const { data: accessIns, error: accessErr } = await supabase
-                .from('product_access')
-                .insert({
-                  user_id: userId, // Agora garantido como não nulo aqui
-                  product_id: productId,
-                  payment_id: payment?.id || null,
-                  source: 'purchase'
-                })
-                .select('id')
-                .single();
-              if (accessErr) console.error('WEBHOOK_MP_DEBUG: Erro ao criar acesso ao produto:', accessErr);
-              else console.log('WEBHOOK_MP_DEBUG: Acesso ao produto concedido:', accessIns);
+                console.log('WEBHOOK_MP_DEBUG: Inserindo novo acesso ao produto.');
+                const { data: accessIns, error: accessErr } = await supabase
+                    .from('product_access')
+                    .insert({
+                        user_id: userId,
+                        product_id: productId,
+                        payment_id: payment?.id || null,
+                        source: 'purchase'
+                    })
+                    .select('id')
+                    .single();
+                if (accessErr) console.error('WEBHOOK_MP_DEBUG: Error creating product access:', accessErr);
+                else console.log('WEBHOOK_MP_DEBUG: Acesso ao produto concedido:', accessIns);
             } else {
-              console.log('WEBHOOK_MP_DEBUG: Acesso ao produto já existe:', existingAccess.id);
+                console.log('WEBHOOK_MP_DEBUG: Acesso ao produto já existe:', existingAccess.id);
             }
           } else {
             console.log('WEBHOOK_MP_DEBUG: Pulando criação de acesso ao produto: userId ou productId ausente. userId:', userId, 'productId:', productId);
           }
         } catch (postProcessErr) {
           console.error('WEBHOOK_MP_DEBUG: Post-approval processing error:', postProcessErr);
+          // Re-throw to ensure the main catch block handles it and returns 500
+          throw postProcessErr; 
         }
       }
 
