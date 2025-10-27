@@ -57,7 +57,17 @@ serve(async (req) => {
       );
     }
 
-    const transactionAmount = amount / 100; // Convert cents to reais
+    // Convert cents to reais and ensure two decimal places
+    const transactionAmount = parseFloat((Number(amount) / 100).toFixed(2)); 
+    console.log('Edge Function (create-mercado-pago-payment-link): Final transaction_amount sent to MP:', transactionAmount, typeof transactionAmount);
+
+    if (isNaN(transactionAmount) || transactionAmount <= 0) {
+      console.error('Edge Function (create-mercado-pago-payment-link): Invalid transaction_amount detected:', transactionAmount);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Valor do pagamento inválido. O valor deve ser um número positivo.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'; // Use APP_BASE_URL env var
 
