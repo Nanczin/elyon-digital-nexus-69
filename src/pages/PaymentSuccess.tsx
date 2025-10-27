@@ -709,58 +709,6 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
-      <div className="container mx-auto px-4 max-w-2xl">
-        <Card className="border-green-200">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <CardTitle className="text-2xl text-green-700">
-              Pagamento Processado!
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Seu pedido foi processado com sucesso
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="text-center space-y-4">
-              <p className="text-lg">
-                Obrigado pela sua compra! Você receberá um e-mail com os detalhes do seu pedido e instruções de acesso.
-              </p>
-              
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-800 mb-2">Próximos passos:</h3>
-                <ul className="text-sm text-green-700 space-y-1 text-left">
-                  <li>• Verifique seu e-mail (incluindo spam)</li>
-                  <li>• Acesse o produto através do link enviado</li>
-                  <li>• Entre em contato conosco se tiver dúvidas</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                className="flex-1"
-                onClick={() => navigate('/')}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Voltar ao início
-              </Button>
-            </div>
-
-            <div className="text-center text-sm text-muted-foreground">
-              <p>
-                Precisa de ajuda? Entre em contato conosco através do WhatsApp ou e-mail.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
