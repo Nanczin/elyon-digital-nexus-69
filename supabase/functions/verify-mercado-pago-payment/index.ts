@@ -9,7 +9,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders, status: 200 }); // Explicitly set status 200
   }
 
   try {
@@ -19,7 +19,7 @@ serve(async (req) => {
 
     const { mp_payment_id } = await req.json();
     if (!mp_payment_id) {
-      return new Response(JSON.stringify({ success: false, error: 'mp_payment_id ausente' }), { headers: corsHeaders, status: 400 });
+      return new Response(JSON.stringify({ success: false, error: 'mp_payment_id ausente' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
     }
 
     // Buscar access token
@@ -32,7 +32,7 @@ serve(async (req) => {
 
     const accessToken = mpConfig?.mercado_pago_access_token || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
     if (!accessToken) {
-      return new Response(JSON.stringify({ success: false, error: 'Access token não configurado' }), { headers: corsHeaders, status: 500 });
+      return new Response(JSON.stringify({ success: false, error: 'Access token do Mercado Pago não configurado. Verifique as integrações ou variáveis de ambiente.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
     }
 
     // Consultar status diretamente no MP
@@ -42,7 +42,7 @@ serve(async (req) => {
     const mpPayment = await resp.json();
     if (!resp.ok) {
       console.error('MP verify error:', mpPayment);
-      return new Response(JSON.stringify({ success: false, error: 'Erro ao consultar pagamento no MP' }), { headers: corsHeaders, status: 400 });
+      return new Response(JSON.stringify({ success: false, error: 'Erro ao consultar pagamento no MP' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
     }
 
     const status = mpPayment.status as string;
@@ -72,7 +72,7 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Erro ao atualizar pagamento:', updateError);
-      return new Response(JSON.stringify({ success: false, error: 'Falha ao atualizar pagamento' }), { headers: corsHeaders, status: 500 });
+      return new Response(JSON.stringify({ success: false, error: 'Falha ao atualizar pagamento' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
     }
 
     // Se aprovado, garantir criação de order e acesso (idempotente)
@@ -159,6 +159,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, status: status, status_detail: mpPayment.status_detail, payment }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
   } catch (error) {
     console.error('Verify function error:', error);
-    return new Response(JSON.stringify({ success: false, error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+    return new Response(JSON.stringify({ success: false, error: error.message || 'Erro interno do servidor' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 });

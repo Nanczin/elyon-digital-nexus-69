@@ -7,34 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-interface PaymentRequest {
-  checkoutId: string;
-  amount: number;
-  customerData: {
-    name: string;
-    email: string;
-    phone?: string;
-    cpf?: string;
-  };
-  selectedMercadoPagoAccount: string;
-  orderBumps: number[];
-  selectedPackage: number;
-  paymentMethod: 'pix' | 'creditCard';
-  cardToken?: string; // Token gerado no frontend pelo SDK (opcional)
-  cardData?: {
-    cardNumber?: string;
-    cardholderName?: string;
-    expirationMonth?: string;
-    expirationYear?: string;
-    securityCode?: string;
-    installments: number;
-  };
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders, status: 200 }); // Explicitly set status 200
   }
 
   try {
@@ -58,7 +34,10 @@ serve(async (req) => {
 
     if (checkoutError || !checkout) {
       console.error('Checkout error:', checkoutError);
-      throw new Error('Checkout não encontrado');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Checkout não encontrado' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
     }
 
     const integrations = checkout.integrations as any;
@@ -79,11 +58,17 @@ serve(async (req) => {
     console.log('Access/Public keys configured:', { hasAccessToken: !!accessToken, hasPublicKey: !!publicKey });
     
     if (!accessToken) {
-      throw new Error('Token do Mercado Pago não configurado. Configure nas integrações.');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token do Mercado Pago não configurado. Configure nas integrações.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
     
     if (paymentMethod === 'creditCard' && !publicKey) {
-      throw new Error('Chave pública do Mercado Pago não configurada. Configure nas integrações.');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Chave pública do Mercado Pago não configurada. Configure nas integrações.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     // Create payment data based on payment method
@@ -154,7 +139,10 @@ serve(async (req) => {
         const tokenResult = await tokenResponse.json();
         if (!tokenResponse.ok) {
           console.error('Card Token Error:', tokenResult);
-          throw new Error(tokenResult.message || 'Erro ao processar dados do cartão');
+          return new Response(
+            JSON.stringify({ success: false, error: tokenResult.message || 'Erro ao processar dados do cartão' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          );
         }
         paymentData.token = tokenResult.id;
         console.log('Card token criado com sucesso');
@@ -197,7 +185,10 @@ serve(async (req) => {
     if (!mpResponse.ok) {
       console.error('Mercado Pago API Error:', mpResult);
       const errorMessage = mpResult.message || mpResult.error || 'Erro ao criar pagamento';
-      throw new Error(errorMessage);
+      return new Response(
+        JSON.stringify({ success: false, error: errorMessage }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     // Determinar o status baseado na resposta do Mercado Pago
@@ -239,7 +230,10 @@ serve(async (req) => {
 
     if (paymentError) {
       console.error('Database Error:', paymentError);
-      throw new Error('Erro ao salvar pagamento no banco de dados');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao salvar pagamento no banco de dados' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     return new Response(
@@ -273,7 +267,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 500,
       }
     );
   }

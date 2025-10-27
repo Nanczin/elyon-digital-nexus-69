@@ -7,18 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-interface PaymentLinkRequest {
-  checkoutId: string;
-  amount: number; // in cents
-  installments: number;
-  customerEmail: string;
-  customerName?: string;
-  productName: string;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders, status: 200 }); // Explicitly set status 200
   }
 
   try {
@@ -29,7 +20,10 @@ serve(async (req) => {
     const { checkoutId, amount, installments, customerEmail, customerName, productName }: PaymentLinkRequest = await req.json();
 
     if (!checkoutId || !amount || !installments || !customerEmail || !productName) {
-      return new Response(JSON.stringify({ success: false, error: 'Dados obrigatórios ausentes' }), { headers: corsHeaders, status: 400 });
+      return new Response(
+        JSON.stringify({ success: false, error: 'Dados obrigatórios ausentes' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     // Get the checkout to find the user_id
@@ -41,7 +35,10 @@ serve(async (req) => {
 
     if (checkoutError || !checkout) {
       console.error('Checkout not found:', checkoutError);
-      throw new Error('Checkout não encontrado');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Checkout não encontrado' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
     }
 
     // Fetch Mercado Pago access token for the checkout's user
@@ -54,10 +51,15 @@ serve(async (req) => {
     const accessToken = (mpConfig?.mercado_pago_access_token as string) || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || '';
     
     if (!accessToken) {
-      throw new Error('Token do Mercado Pago não configurado para este usuário. Configure nas integrações.');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token do Mercado Pago não configurado para este usuário. Configure nas integrações ou variáveis de ambiente.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     const transactionAmount = amount / 100; // Convert cents to reais
+
+    const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'; // Use APP_BASE_URL env var
 
     const preferencePayload = {
       items: [
@@ -81,9 +83,9 @@ serve(async (req) => {
       },
       // Redirecionar diretamente para a página de sucesso, passando os parâmetros do MP
       back_urls: {
-        success: `${Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'}/payment-success?payment_id={collection_id}&status={collection_status}`,
-        failure: `${Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'}/payment-success?payment_id={collection_id}&status={collection_status}`,
-        pending: `${Deno.env.get('APP_BASE_URL') || 'http://localhost:8080'}/payment-success?payment_id={collection_id}&status={collection_status}`,
+        success: `${appBaseUrl}/payment-success?payment_id={collection_id}&status={collection_status}`,
+        failure: `${appBaseUrl}/payment-success?payment_id={collection_id}&status={collection_status}`,
+        pending: `${appBaseUrl}/payment-success?payment_id={collection_id}&status={collection_status}`,
       },
       notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`, // Webhook continua para notificações assíncronas
       auto_return: 'approved',
@@ -113,7 +115,10 @@ serve(async (req) => {
 
     if (!mpResponse.ok) {
       console.error('Mercado Pago API Error creating preference:', mpResult);
-      throw new Error(mpResult.message || mpResult.error || 'Erro ao criar preferência de pagamento');
+      return new Response(
+        JSON.stringify({ success: false, error: mpResult.message || mpResult.error || 'Erro ao criar preferência de pagamento' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     // Return the init_point (payment link)
@@ -139,7 +144,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 500,
       }
     );
   }

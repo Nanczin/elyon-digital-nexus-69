@@ -10,7 +10,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders, status: 200 }); // Explicitly set status 200
   }
 
   try {
@@ -28,7 +28,7 @@ serve(async (req) => {
       
       if (!paymentId) {
         console.error('No payment ID in webhook');
-        return new Response('No payment ID', { status: 400 });
+        return new Response('No payment ID', { headers: corsHeaders, status: 400 });
       }
 
       // Buscar as configurações do Mercado Pago
@@ -43,7 +43,7 @@ serve(async (req) => {
       
       if (!accessToken) {
         console.error('No access token available');
-        return new Response('No access token', { status: 500 });
+        return new Response('No access token', { headers: corsHeaders, status: 500 });
       }
 
       // Buscar detalhes do pagamento no Mercado Pago
@@ -58,7 +58,7 @@ serve(async (req) => {
 
       if (!mpResponse.ok) {
         console.error('Error fetching payment from MP:', mpPayment);
-        return new Response('Error fetching payment', { status: 400 });
+        return new Response('Error fetching payment', { headers: corsHeaders, status: 400 });
       }
 
       // Extract customer data from Mercado Pago payment
@@ -112,7 +112,7 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Error updating payment:', updateError);
-        return new Response('Error updating payment', { status: 500 });
+        return new Response('Error updating payment', { headers: corsHeaders, status: 500 });
       }
 
       console.log('Payment updated:', payment);
@@ -248,7 +248,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Webhook error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Erro interno do servidor' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
