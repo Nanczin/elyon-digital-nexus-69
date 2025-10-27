@@ -8,6 +8,7 @@ import { CardData } from '@/components/checkout/CreditCardForm';
 import HorizontalLayout from '@/components/checkout/HorizontalLayout';
 import MosaicLayout from '@/components/checkout/MosaicLayout';
 import { createCardToken } from '@mercadopago/sdk-react';
+import { toCents } from '@/utils/textFormatting';
 
 const Checkout = () => {
   const { checkoutId } = useParams();
@@ -29,6 +30,7 @@ const Checkout = () => {
   const [selectedPackage, setSelectedPackage] = useState<number>(1);
   const [cardData, setCardData] = useState<CardData | null>(null);
   const [mpPublicKey, setMpPublicKey] = useState<string | null>(null);
+  const [selectedInstallments, setSelectedInstallments] = useState<number>(1); // New state for installments
 
   // Hook para integrações do checkout
   const {
@@ -120,7 +122,13 @@ const Checkout = () => {
         setSelectedPaymentMethod('pix');
       } else if (transformedData.payment_methods?.creditCard) {
         setSelectedPaymentMethod('creditCard');
+      } else if (transformedData.payment_methods?.standardCheckout) {
+        setSelectedPaymentMethod('standardCheckout');
       }
+      
+      // Set default installments
+      setSelectedInstallments(transformedData.payment_methods?.maxInstallments || 1);
+
     } catch (error) {
       console.error('Erro ao carregar checkout:', error);
       toast({
@@ -140,7 +148,7 @@ const Checkout = () => {
       const total = calculateTotal();
       trackInitiateCheckoutEvent({
         product_id: checkout.product_id,
-        total: total * 100, // Converter para centavos
+        total: toCents(total), // Converter para centavos
         checkout_id: checkout.id
       });
     }
@@ -191,7 +199,7 @@ const Checkout = () => {
       if (bump) {
         trackAddToCartEvent({
           product_id: bump.selectedProduct || 'order-bump-' + bumpId,
-          price: bump.price * 100 // Converter para centavos
+          price: toCents(bump.price / 100) // Converter para centavos
         });
       }
     }
@@ -226,7 +234,7 @@ const Checkout = () => {
     }
     
     // Para pagamentos com cartão de crédito no Brasil, o CPF é obrigatório
-    if (selectedPaymentMethod === 'creditCard' && !customerData.cpf.trim()) {
+    if ((selectedPaymentMethod === 'creditCard' || selectedPaymentMethod === 'standardCheckout') && !customerData.cpf.trim()) {
       toast({ title: "Erro", description: "Informe o CPF para pagamento com cartão de crédito", variant: "destructive" });
       return false;
     }
@@ -271,13 +279,6 @@ const Checkout = () => {
     return true;
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value / 100);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -286,8 +287,40 @@ const Checkout = () => {
     setProcessing(true);
     
     try {
-      // Preparar dados do pagamento
-      const totalAmount = Math.round(calculateTotal() * 100);
+      const totalAmount = toCents(calculateTotal()); // Convert to cents
+      
+      if (selectedPaymentMethod === 'standardCheckout') {
+        // Call new Edge Function for Standard Checkout
+        const { data: mpLinkResponse, error: mpLinkError } = await supabase.functions.invoke(
+          'create-mercado-pago-payment-link',
+          {
+            body: {
+              checkoutId: checkoutId,
+              amount: totalAmount,
+              installments: selectedInstallments,
+              customerEmail: customerData.email,
+              customerName: customerData.name,
+              productName: checkout?.products.name || 'Produto Digital'
+            }
+          }
+        );
+
+        if (mpLinkError) {
+          console.error('Erro na edge function create-mercado-pago-payment-link:', mpLinkError);
+          throw new Error(mpLinkError.message || 'Erro ao gerar link de pagamento do Mercado Pago');
+        }
+
+        if (!mpLinkResponse?.success || !mpLinkResponse?.init_point) {
+          console.error('Resposta de erro do MP Link:', mpLinkResponse);
+          throw new Error(mpLinkResponse?.error || 'Erro ao gerar link de pagamento do Mercado Pago');
+        }
+
+        // Redirect to Mercado Pago Standard Checkout
+        window.location.href = mpLinkResponse.init_point;
+        return; // Exit function as redirection is handled
+      }
+
+      // Existing logic for direct PIX/Credit Card
       const paymentData: any = {
         checkoutId: checkoutId || '',
         amount: totalAmount,
@@ -303,7 +336,7 @@ const Checkout = () => {
         paymentMethod: selectedPaymentMethod
       };
 
-      // Adicionar dados do cartão se for pagamento com cartão
+      // Add card data if credit card payment
       if (selectedPaymentMethod === 'creditCard' && cardData) {
         if (mpPublicKey) {
           try {
@@ -513,7 +546,9 @@ const Checkout = () => {
     handleSubmit,
     cardData,
     setCardData,
-    mpPublicKey: mpPublicKey || undefined
+    mpPublicKey: mpPublicKey || undefined,
+    selectedInstallments,
+    setSelectedInstallments
   };
 
   // Render appropriate layout based on configuration

@@ -19,6 +19,7 @@ export interface OrderBump {
 export interface PaymentMethods {
   pix?: boolean;
   creditCard?: boolean;
+  standardCheckout?: boolean; // Added for Mercado Pago Standard Checkout
   maxInstallments?: number;
   installmentsWithInterest?: boolean;
 }
@@ -29,6 +30,7 @@ export interface FormFields {
   requireEmailConfirm?: boolean;
   requirePhone?: boolean;
   requireCpf?: boolean;
+  packages?: any[]; // Assuming packages can be part of form_fields
 }
 
 export interface CheckoutData {
@@ -97,4 +99,7 @@ export interface CheckoutLayoutProps {
   handleSubmit: (e: React.FormEvent) => void;
   cardData: CardData | null;
   setCardData: (cardData: CardData | null) => void;
+  mpPublicKey?: string;
+  selectedInstallments: number; // Added for standard checkout
+  setSelectedInstallments: (installments: number) => void; // Added for standard checkout
 }

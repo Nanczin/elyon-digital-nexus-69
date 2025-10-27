@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Shield, CheckCircle, CreditCard, Star, ChevronDown, ChevronUp, Heart, ArrowRight, Clock } from 'lucide-react';
+import { Shield, CheckCircle, CreditCard, Star, ChevronDown, ChevronUp, Heart, ArrowRight, Clock, ShoppingBag } from 'lucide-react';
 import { CheckoutLayoutProps } from './CheckoutLayoutProps';
 import { getOrderBumpPrefix } from '@/utils/orderBumpUtils';
 import { processHeadlineText, formatCurrency } from '@/utils/textFormatting';
@@ -14,6 +14,7 @@ import PackageSelector from './PackageSelector';
 import SecuritySection from './SecuritySection';
 import CountdownTimer from './CountdownTimer';
 import { CreditCardForm } from './CreditCardForm';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useState } from 'react';
 
@@ -38,7 +39,10 @@ const HorizontalLayout = ({
   setSelectedPaymentMethod,
   handleSubmit,
   cardData,
-  setCardData
+  setCardData,
+  mpPublicKey,
+  selectedInstallments,
+  setSelectedInstallments
 }: CheckoutLayoutProps) => {
   const [openPackages, setOpenPackages] = useState<Record<number, boolean>>({1: true});
 
@@ -346,7 +350,62 @@ const HorizontalLayout = ({
                         maxInstallments={checkout.payment_methods?.maxInstallments || 12}
                         installmentsWithInterest={checkout.payment_methods?.installmentsWithInterest || false}
                         totalAmount={calculateTotal()}
+                        mpPublicKey={mpPublicKey}
                       />
+                    )}
+                  </div>
+                )}
+
+                {checkout.payment_methods?.standardCheckout && (
+                  <div className="space-y-4">
+                    <div
+                      onClick={() => setSelectedPaymentMethod('standardCheckout')}
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedPaymentMethod === 'standardCheckout' ? 'border-current shadow-lg' : 'border-gray-200'
+                      }`}
+                      style={{ borderColor: selectedPaymentMethod === 'standardCheckout' ? primaryColor : undefined }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          selectedPaymentMethod === 'standardCheckout' ? 'border-current' : 'border-gray-300'
+                        }`} style={{ borderColor: selectedPaymentMethod === 'standardCheckout' ? primaryColor : undefined }}>
+                          {selectedPaymentMethod === 'standardCheckout' && (
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }}></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <ShoppingBag className="h-5 w-5" />
+                            <span className="font-semibold">Mercado Pago Checkout Padrão</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Pague com PIX, Cartão ou Boleto no ambiente seguro do Mercado Pago</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedPaymentMethod === 'standardCheckout' && (
+                      <div className="space-y-3 p-4 border rounded-lg" style={{ borderColor: `${primaryColor}40` }}>
+                        <Label htmlFor="installments" style={{ color: textColor }}>Parcelas</Label>
+                        <Select 
+                          value={String(selectedInstallments)} 
+                          onValueChange={(value) => setSelectedInstallments(parseInt(value))}
+                        >
+                          <SelectTrigger id="installments" className="bg-white dark:bg-gray-800">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white dark:bg-gray-800 z-50">
+                            {Array.from({ length: checkout.payment_methods?.maxInstallments || 12 }, (_, i) => i + 1).map(num => {
+                              const installmentValue = calculateTotal() / num;
+                              return (
+                                <SelectItem key={num} value={String(num)}>
+                                  {num}x de R$ {installmentValue.toFixed(2).replace('.', ',')} 
+                                  {checkout.payment_methods?.installmentsWithInterest && num > 1 ? ' com juros' : ' sem juros'}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
                   </div>
                 )}
@@ -437,7 +496,9 @@ const HorizontalLayout = ({
                 <span className="text-center">
                   {selectedPaymentMethod === 'pix' 
                     ? 'Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.'
-                    : 'Pagamento via Cartão de Crédito processado pelo Mercado Pago. Ambiente 100% seguro.'}
+                    : selectedPaymentMethod === 'creditCard'
+                      ? 'Pagamento via Cartão de Crédito processado pelo Mercado Pago. Ambiente 100% seguro.'
+                      : 'Pagamento processado pelo Mercado Pago. Ambiente 100% seguro.'}
                 </span>
               </div>
 

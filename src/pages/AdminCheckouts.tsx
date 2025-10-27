@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +81,7 @@ const AdminCheckouts = () => {
     paymentMethods: {
       pix: true,
       creditCard: true,
+      standardCheckout: true, // Added for Mercado Pago Standard Checkout
       maxInstallments: 12,
       installmentsWithInterest: false
     },
@@ -255,6 +256,7 @@ const AdminCheckouts = () => {
       paymentMethods: checkout.payment_methods || {
         pix: true,
         creditCard: true,
+        standardCheckout: true, // Default to true for new checkouts
         maxInstallments: 12,
         installmentsWithInterest: false
       },
@@ -540,7 +542,7 @@ const AdminCheckouts = () => {
           textColor: checkoutData.styles?.textColor || '#000000',
           headlineText: checkoutData.styles?.headlineText || 'Sua transformação começa agora!',
           headlineColor: checkoutData.styles?.headlineColor || '#000000',
-          highlightColor: checkoutData.styles?.highlightColor || checkoutData.styles?.primaryColor || '#3b82f6',
+          highlightColor: checkoutData.styles?.highlightColor || checkout.styles?.primaryColor || '#3b82f6',
           description: checkoutData.styles?.description || '',
           gradientColor: checkoutData.styles?.gradientColor || '#60a5fa'
         },
@@ -1032,9 +1034,20 @@ const AdminCheckouts = () => {
                             </div>
                           )}
                         </div>
+
+                        <div className="flex items-center space-x-3 p-4 border rounded-lg">
+                          <Checkbox id="standardCheckout" checked={checkoutData.paymentMethods.standardCheckout} onCheckedChange={checked => handleInputChange('paymentMethods.standardCheckout', checked)} />
+                          <div className="flex items-center gap-2">
+                            <ShoppingBag className="h-5 w-5 text-purple-600" />
+                            <div>
+                              <Label htmlFor="standardCheckout" className="text-sm font-medium">Mercado Pago Checkout Padrão</Label>
+                              <p className="text-xs text-muted-foreground">Redireciona para o ambiente do Mercado Pago</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       
-                      {!checkoutData.paymentMethods.pix && !checkoutData.paymentMethods.creditCard && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      {!checkoutData.paymentMethods.pix && !checkoutData.paymentMethods.creditCard && !checkoutData.paymentMethods.standardCheckout && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <p className="text-sm text-yellow-800">
                             ⚠️ Selecione pelo menos uma forma de pagamento
                           </p>
