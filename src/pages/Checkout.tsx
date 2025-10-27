@@ -162,12 +162,12 @@ const Checkout = () => {
 
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-      basePrice = selectedPkg ? (Number(selectedPkg.price) || 0) : 0;
+      basePrice = selectedPkg ? (parseFloat(selectedPkg.price) || 0) : 0;
       console.log('Checkout Debug: Package selected:', selectedPkg);
       console.log('Checkout Debug: Base price from package (in Reais):', basePrice);
     } else {
       // If no packages or selected package has 0 price, use the main checkout price
-      basePrice = (Number(checkout.promotional_price) || Number(checkout.price) || 0) / 100;
+      basePrice = (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0) / 100;
       console.log('Checkout Debug: Base price from main checkout (in Reais):', basePrice);
     }
 
@@ -176,11 +176,11 @@ const Checkout = () => {
     selectedOrderBumps.forEach(bumpId => {
       const bump = checkout.order_bumps.find(b => b.id === bumpId);
       if (bump && bump.enabled) {
-        totalInReais += (Number(bump.price) || 0) / 100;
+        totalInReais += (parseFloat(String(bump.price)) || 0) / 100;
       }
     });
     
-    const finalTotal = Math.max(0, totalInReais);
+    const finalTotal = Math.max(0.01, totalInReais); // Ensure total is at least 0.01 for Mercado Pago
     console.log('Checkout Debug: Final calculated total (in Reais):', finalTotal);
     return finalTotal;
   };
@@ -207,7 +207,7 @@ const Checkout = () => {
       if (bump) {
         trackAddToCartEvent({
           product_id: bump.selectedProduct || 'order-bump-' + bumpId,
-          price: toCents((Number(bump.price) || 0) / 100) // Converter para centavos
+          price: toCents((parseFloat(String(bump.price)) || 0) / 100) // Converter para centavos
         });
       }
     }
@@ -548,13 +548,13 @@ const Checkout = () => {
     const packages = (checkout.form_fields as any)?.packages;
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-      if (selectedPkg && (Number(selectedPkg.originalPrice) || 0) > (Number(selectedPkg.price) || 0)) {
-        return (Number(selectedPkg.originalPrice) || 0) - (Number(selectedPkg.price) || 0);
+      if (selectedPkg && (parseFloat(String(selectedPkg.originalPrice)) || 0) > (parseFloat(String(selectedPkg.price)) || 0)) {
+        return (parseFloat(String(selectedPkg.originalPrice)) || 0) - (parseFloat(String(selectedPkg.price)) || 0);
       }
     }
     
-    if ((Number(checkout.price) || 0) > (Number(checkout.promotional_price) || Number(checkout.price) || 0)) {
-      return ((Number(checkout.price) || 0) - (Number(checkout.promotional_price) || Number(checkout.price) || 0)) / 100;
+    if ((parseFloat(String(checkout.price)) || 0) > (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0)) {
+      return ((parseFloat(String(checkout.price)) || 0) - (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0)) / 100;
     }
     
     return 0;
