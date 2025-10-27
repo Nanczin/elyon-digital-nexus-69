@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"; // Updated Deno version
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"; // Updated Supabase JS version
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -102,8 +102,9 @@ serve(async (req) => {
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 6. MP Config from database:', { mpConfig, mpConfigError });
 
-    const accessToken = (mpConfig?.mercado_pago_access_token as string) || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || '';
-    const publicKey = (mpConfig?.mercado_pago_token_public as string) || Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || '';
+    // Priorize a variável de ambiente se existir, caso contrário, use a do banco de dados
+    const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || (mpConfig?.mercado_pago_access_token as string) || '';
+    const publicKey = Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || (mpConfig?.mercado_pago_token_public as string) || '';
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 7. Access Token (length):', accessToken.length);
     console.log('CREATE_MP_PAYMENT_DEBUG: 8. Public Key (length):', publicKey.length);
