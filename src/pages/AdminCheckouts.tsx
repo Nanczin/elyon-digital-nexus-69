@@ -727,7 +727,7 @@ const AdminCheckouts = () => {
             
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-1 h-auto p-1">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1 h-auto p-1">
                   <TabsTrigger value="basic" onClick={() => setCurrentTab('basic')} className="text-xs sm:text-sm py-2">
                     Básico
                   </TabsTrigger>
@@ -756,7 +756,8 @@ const AdminCheckouts = () => {
                     Visual
                   </TabsTrigger>
                   <TabsTrigger value="deliverable" onClick={() => setCurrentTab('deliverable')} className="text-xs sm:text-sm py-2">
-                    Entregável
+                    <span className="hidden sm:inline">Entregável</span>
+                    <span className="sm:hidden">Entreg.</span>
                   </TabsTrigger>
                 </TabsList>
 
