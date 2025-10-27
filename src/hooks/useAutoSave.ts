@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from './use-toast';
+import { deepMerge } from '@/lib/utils'; // Import deepMerge
 
 interface AutoSaveOptions {
   key: string;
@@ -7,7 +8,7 @@ interface AutoSaveOptions {
   showToast?: boolean;
 }
 
-export const useAutoSave = <T>(
+export const useAutoSave = <T extends object>( // Adicionado 'extends object' para compatibilidade com deepMerge
   initialData: T,
   options: AutoSaveOptions
 ) => {
@@ -16,12 +17,16 @@ export const useAutoSave = <T>(
     const savedData = localStorage.getItem(options.key);
     if (savedData) {
       try {
-        // Fazer cópia profunda para evitar mutações compartilhadas
-        return JSON.parse(JSON.stringify(JSON.parse(savedData)));
+        const parsedSavedData = JSON.parse(savedData);
+        // Usar deepMerge para garantir que todos os campos de initialData existam,
+        // preenchendo com os valores salvos se disponíveis.
+        return deepMerge(initialData, parsedSavedData);
       } catch {
+        // Se o parsing falhar (dados corrompidos), retorna initialData
         return JSON.parse(JSON.stringify(initialData));
       }
     }
+    // Se não houver dados salvos, retorna initialData
     return JSON.parse(JSON.stringify(initialData));
   });
   
@@ -86,7 +91,8 @@ export const useAutoSave = <T>(
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        setData(JSON.parse(JSON.stringify(parsedData)));
+        // Usar deepMerge aqui também para garantir a estrutura completa
+        setData(deepMerge(initialData, parsedData));
         setHasSavedData(true);
         return true;
       } catch {
