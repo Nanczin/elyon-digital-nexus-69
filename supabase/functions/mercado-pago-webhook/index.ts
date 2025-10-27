@@ -137,35 +137,43 @@ serve(async (req) => {
           console.log('WEBHOOK_MP_DEBUG: Email do cliente para pós-processamento:', email);
 
           if (email) {
-            // Tentar encontrar o perfil existente pelo email
-            const { data: profileRow, error: profileError } = await supabase
-              .from('profiles')
-              .select('user_id')
-              .eq('email', email)
-              .maybeSingle();
-            
-            if (profileError) {
-              console.error('WEBHOOK_MP_DEBUG: Erro ao buscar perfil por email:', profileError);
-            }
-
-            if (profileRow?.user_id) {
-              userId = profileRow.user_id;
-              console.log('WEBHOOK_MP_DEBUG: Perfil encontrado, userId:', userId);
+            // Basic email validation before attempting to create user
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                console.error('WEBHOOK_MP_DEBUG: ERROR: Email inválido para criação de usuário:', email);
+                // Continue without userId, as payment might still be valid
             } else {
-              // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
-              console.log('WEBHOOK_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário...');
-              
-              // Basic email validation before attempting to create user
-              if (!email || !email.includes('@') || !email.includes('.')) {
-                  console.error('WEBHOOK_MP_DEBUG: ERROR: Email inválido para criação de usuário:', email);
-                  // Continue without userId, as payment might still be valid
-              } else {
+                // Tentar encontrar o perfil existente pelo email
+                const { data: profileRow, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('user_id')
+                  .eq('email', email)
+                  .maybeSingle();
+                
+                if (profileError) {
+                  console.error('WEBHOOK_MP_DEBUG: Erro ao buscar perfil por email:', profileError);
+                }
+
+                if (profileRow?.user_id) {
+                  userId = profileRow.user_id;
+                  console.log('WEBHOOK_MP_DEBUG: Perfil encontrado, userId:', userId);
+                } else {
+                  // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
+                  console.log('WEBHOOK_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário...');
                   const customerName = (customerData as any)?.name || mpPayment.payer?.first_name || 'Cliente';
                   const customerPhone = (customerData as any)?.phone || null;
                   const customerCpf = (customerData as any)?.cpf || mpPayment.payer?.identification?.number || null;
 
                   // Gerar uma senha aleatória para o usuário
                   const generatedPassword = Math.random().toString(36).slice(-8); 
+
+                  console.log('WEBHOOK_MP_DEBUG: Attempting to create new auth.users user with email:', email, 'and user_metadata:', { 
+                    name: customerName,
+                    first_name: customerName.split(' ')[0],
+                    last_name: customerName.split(' ').slice(1).join(' ') || '',
+                    phone: customerPhone,
+                    cpf: customerCpf
+                  });
 
                   const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
                     email,
@@ -187,10 +195,11 @@ serve(async (req) => {
                     userId = newUserAuth?.user?.id || null;
                     console.log('WEBHOOK_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
                   }
-              }
+                }
             }
           }
 
+          console.log('WEBHOOK_MP_DEBUG: Payment object before user_id update check:', payment);
           // Atualizar user_id no pagamento (se aplicável)
           if (userId && payment?.id && !payment?.user_id) {
             const { error: payUserErr } = await supabase
@@ -214,6 +223,7 @@ serve(async (req) => {
           }
           console.log('WEBHOOK_MP_DEBUG: Product ID para ordem/acesso:', productId);
 
+          console.log('WEBHOOK_MP_DEBUG: Final userId for order/access:', userId, 'Final productId for order/access:', productId);
           // Criar ordem (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
           const { data: existingOrder, error: orderExistsError } = await supabase
             .from('orders')
@@ -232,7 +242,7 @@ serve(async (req) => {
                 checkout_id: checkoutId || null,
                 user_id: userId, // Agora garantido como não nulo aqui
                 product_id: productId,
-                amount: mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : payment?.amount,
+                amount: payment?.amount || (mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : 0), // Prioriza payment.amount (cents), senão converte mpPayment.transaction_amount (reais)
                 status: 'paid',
                 metadata: {
                   mp_status: mpPayment.status,

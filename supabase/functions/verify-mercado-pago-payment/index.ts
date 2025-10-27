@@ -115,35 +115,43 @@ serve(async (req) => {
         console.log('VERIFY_MP_DEBUG: Email do cliente:', email, 'User ID existente:', userId);
 
         if (!userId && email) {
-          // Tentar encontrar o perfil existente pelo email
-          const { data: profileRow, error: profileError } = await supabase
-            .from('profiles')
-            .select('user_id')
-            .eq('email', email)
-            .maybeSingle();
-
-          if (profileError) {
-            console.error('VERIFY_MP_DEBUG: Erro ao buscar perfil por email:', profileError);
-          }
-
-          if (profileRow?.user_id) {
-            userId = profileRow.user_id;
-            console.log('VERIFY_MP_DEBUG: Perfil encontrado, userId:', userId);
+          // Basic email validation before attempting to create user
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!email || !emailRegex.test(email)) {
+              console.error('VERIFY_MP_DEBUG: ERROR: Email inválido para criação de usuário:', email);
+              // Continue without userId, as payment might still be valid
           } else {
-            // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
-            console.log('VERIFY_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário auth.users...');
-            
-            // Basic email validation before attempting to create user
-            if (!email || !email.includes('@') || !email.includes('.')) {
-                console.error('VERIFY_MP_DEBUG: ERROR: Email inválido para criação de usuário:', email);
-                // Continue without userId, as payment might still be valid
-            } else {
+              // Tentar encontrar o perfil existente pelo email
+              const { data: profileRow, error: profileError } = await supabase
+                .from('profiles')
+                .select('user_id')
+                .eq('email', email)
+                .maybeSingle();
+
+              if (profileError) {
+                console.error('VERIFY_MP_DEBUG: Erro ao buscar perfil por email:', profileError);
+              }
+
+              if (profileRow?.user_id) {
+                userId = profileRow.user_id;
+                console.log('VERIFY_MP_DEBUG: Perfil encontrado, userId:', userId);
+              } else {
+                // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
+                console.log('VERIFY_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário auth.users...');
                 const customerName = existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente';
                 const customerPhone = existingPayment?.metadata?.customer_data?.phone || null;
                 const customerCpf = existingPayment?.metadata?.customer_data?.cpf || mpPayment?.payer?.identification?.number || null;
 
                 // Gerar uma senha aleatória para o usuário
                 const generatedPassword = Math.random().toString(36).slice(-8); 
+
+                console.log('VERIFY_MP_DEBUG: Attempting to create new auth.users user with email:', email, 'and user_metadata:', { 
+                  name: customerName,
+                  first_name: customerName.split(' ')[0],
+                  last_name: customerName.split(' ').slice(1).join(' ') || '',
+                  phone: customerPhone,
+                  cpf: customerCpf
+                });
 
                 const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
                   email,
@@ -165,10 +173,11 @@ serve(async (req) => {
                   userId = newUserAuth?.user?.id || null;
                   console.log('VERIFY_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
                 }
-            }
+              }
           }
         }
 
+        console.log('VERIFY_MP_DEBUG: Payment object before user_id update check:', payment);
         // Update payment user_id if a userId was resolved/created and payment exists and user_id is not already set
         if (userId && payment?.id && !payment?.user_id) { 
           const { error: payUserErr } = await supabase.from('payments').update({ user_id: userId }).eq('id', payment.id);
@@ -176,6 +185,7 @@ serve(async (req) => {
           else console.log('VERIFY_MP_DEBUG: Payment user_id atualizado para:', userId);
         }
 
+        console.log('VERIFY_MP_DEBUG: Final userId for order/access:', userId, 'Final productId for order/access:', productId);
         // Criar ordem (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
         if (userId && productId) {
             const { data: existingOrder, error: orderExistsError } = await supabase
@@ -195,7 +205,7 @@ serve(async (req) => {
                         checkout_id: checkoutId || null,
                         user_id: userId, // Agora garantido como não nulo aqui
                         product_id: productId,
-                        amount: mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : payment?.amount,
+                        amount: payment?.amount || (mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : 0), // Prioriza payment.amount (cents), senão converte mpPayment.transaction_amount (reais)
                         status: 'paid',
                         metadata: {
                             mp_status: status,
