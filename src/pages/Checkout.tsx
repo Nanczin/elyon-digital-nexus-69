@@ -297,7 +297,8 @@ const Checkout = () => {
     
     try {
       const totalAmount = toCents(calculateTotal()); // Convert to cents
-      console.log('Checkout Debug: Total amount (in cents) BEFORE validation:', totalAmount); // NEW LOG
+      console.log('Checkout Debug: Calculated total (Reais):', calculateTotal()); // NEW LOG
+      console.log('Checkout Debug: Total amount (cents) sent to Edge Function:', totalAmount); // NEW LOG
 
       if (totalAmount <= 0) {
         toast({ title: "Erro", description: "O valor total do pagamento deve ser maior que zero.", variant: "destructive" });
@@ -353,36 +354,7 @@ const Checkout = () => {
         paymentMethod: selectedPaymentMethod
       };
 
-      // Add card data if credit card payment
-      if (selectedPaymentMethod === 'creditCard' && cardData) {
-        if (mpPublicKey) {
-          try {
-            const token = await createCardToken({
-              cardholderName: cardData.cardholderName,
-              identificationType: 'CPF',
-              identificationNumber: customerData.cpf.replace(/\D/g, '')
-            });
-            if (!token?.id) throw new Error('Falha ao gerar token do cartão');
-            paymentData.cardToken = token.id;
-            paymentData.cardData = { installments: cardData.installments };
-          } catch (tokErr) {
-            console.error('Checkout Debug: Erro ao tokenizar cartão no frontend:', tokErr);
-            toast({ title: 'Erro', description: 'Não foi possível validar os dados do cartão', variant: 'destructive' });
-            return;
-          }
-        } else {
-          paymentData.cardData = {
-            cardNumber: cardData.cardNumber.replace(/\s/g, ''),
-            cardholderName: cardData.cardholderName,
-            expirationMonth: cardData.expirationMonth,
-            expirationYear: cardData.expirationYear,
-            securityCode: cardData.securityCode,
-            installments: cardData.installments
-          };
-        }
-      }
-
-      console.log('Checkout Debug: Enviando dados para processamento:', paymentData);
+      console.log('Checkout Debug: Full paymentData sent to Edge Function:', JSON.stringify(paymentData, null, 2)); // NEW LOG HERE
 
       // Chamar edge function do Mercado Pago
       const { data: mpResponse, error: mpError } = await supabase.functions.invoke(

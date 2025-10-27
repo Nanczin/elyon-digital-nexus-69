@@ -50,16 +50,26 @@ serve(async (req) => {
     // Desestruturar com a interface definida
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
-    // 1. Conversão explícita de valor:
-    // O 'amount' recebido do frontend já deve estar em centavos (inteiro).
-    // Convertemos para reais e garantimos 2 casas decimais para o Mercado Pago.
-    const transactionAmountInReais = parseFloat((Number(amount) / 100).toFixed(2));
+    console.log('Edge Function: Raw amount received from requestBody:', amount, typeof amount);
+
+    // Aplicar a conversão robusta sugerida para o 'amount' (que está em centavos)
+    const numericAmountInCents = Number((amount || 0).toString().replace(",", "."));
+
+    if (isNaN(numericAmountInCents) || numericAmountInCents <= 0) {
+      console.error('Edge Function: Invalid numericAmountInCents after robust conversion:', numericAmountInCents, 'from raw:', amount);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Valor do pagamento inválido ou ausente. O valor deve ser um número positivo.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Converter para reais e garantir duas casas decimais
+    const transactionAmountInReais = parseFloat((numericAmountInCents / 100).toFixed(2));
     
-    console.log('Edge Function: Original amount (cents):', amount);
     console.log('Edge Function: Converted transaction_amount (reais, fixed 2 decimals):', transactionAmountInReais);
 
     if (isNaN(transactionAmountInReais) || transactionAmountInReais <= 0) {
-      console.error('Edge Function: Invalid transaction_amount detected:', transactionAmountInReais);
+      console.error('Edge Function: Invalid transaction_amount detected after final formatting:', transactionAmountInReais);
       return new Response(
         JSON.stringify({ success: false, error: 'Valor inválido ou ausente para transaction_amount. O valor deve ser um número positivo.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -189,7 +199,7 @@ serve(async (req) => {
     }
 
     // Verificação de tipo antes da requisição fetch
-    console.log("Valor enviado para MP (transaction_amount):", mpRequestBody.transaction_amount, typeof mpRequestBody.transaction_amount);
+    console.log("Edge Function: Valor enviado para MP (transaction_amount):", mpRequestBody.transaction_amount, typeof mpRequestBody.transaction_amount);
 
     // Requisição ao endpoint do Mercado Pago
     const apiUrl = 'https://api.mercadopago.com/v1/payments';
@@ -260,7 +270,7 @@ serve(async (req) => {
       .insert({
         checkout_id: checkoutId,
         user_id: null, // Allow null for guest checkout
-        amount: amount, // Use the original amount in cents for DB storage
+        amount: numericAmountInCents, // Use the original amount in cents for DB storage
         payment_method: paymentMethod,
         status: paymentStatus,
         mp_payment_id: mpResult.id.toString(),
