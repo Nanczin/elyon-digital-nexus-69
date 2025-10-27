@@ -415,16 +415,33 @@ const Checkout = () => {
         }
       }));
 
-      // Fluxo de redirecionamento baseado no status do pagamento
+      // --- MODIFIED REDIRECTION LOGIC ---
       if (paymentStatus === 'approved') {
-        // Pagamento aprovado - redirecionar direto para página de obrigado
-        toast({
-          title: "Pagamento Aprovado! ✅",
-          description: "Redirecionando para a página de confirmação..."
-        });
-        setTimeout(() => {
-          navigate('/payment-success?status=approved');
-        }, 1500);
+        // Determine the final deliverable link/file
+        const productData = checkout?.products;
+        const checkoutDeliverable = checkout?.form_fields?.deliverable;
+
+        const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
+          ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
+          : productData?.member_area_link || productData?.file_url;
+
+        if (finalDeliverableLink) {
+          toast({
+            title: "Pagamento Aprovado! ✅",
+            description: "Redirecionando para o seu produto..."
+          });
+          setTimeout(() => {
+            window.location.href = finalDeliverableLink;
+          }, 1500);
+        } else {
+          toast({
+            title: "Pagamento Aprovado! ✅",
+            description: "Redirecionando para a página de confirmação..."
+          });
+          setTimeout(() => {
+            navigate('/payment-success?status=approved');
+          }, 1500);
+        }
       } else if (paymentStatus === 'pending' && selectedPaymentMethod === 'pix') {
         // PIX pendente - mostrar QR code
         toast({

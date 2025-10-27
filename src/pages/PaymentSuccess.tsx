@@ -25,8 +25,6 @@ const PaymentSuccess = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
 
-  // A função handleVerifyNow foi removida para automatizar o processo.
-
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
@@ -52,6 +50,9 @@ const PaymentSuccess = () => {
           setPaymentStatus('completed');
           
           // Buscar dados do produto e do checkout se tiver payment_id da URL
+          let currentProductData = null;
+          let currentCheckoutDeliverable = null;
+
           if (urlPaymentId) {
             const { data: payment } = await supabase
               .from('payments')
@@ -66,10 +67,12 @@ const PaymentSuccess = () => {
               .maybeSingle();
               
             if (payment?.checkouts?.products) {
-              setProductData(payment.checkouts.products);
+              currentProductData = payment.checkouts.products;
+              setProductData(currentProductData);
             }
             if (payment?.checkouts?.form_fields?.deliverable) {
-              setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+              currentCheckoutDeliverable = payment.checkouts.form_fields.deliverable;
+              setCheckoutDeliverable(currentCheckoutDeliverable);
             }
           } else if (currentPaymentData?.payment?.id) { // Fallback para payment_id do localStorage
             const { data: payment } = await supabase
@@ -85,11 +88,29 @@ const PaymentSuccess = () => {
               .maybeSingle();
               
             if (payment?.checkouts?.products) {
-              setProductData(payment.checkouts.products);
+              currentProductData = payment.checkouts.products;
+              setProductData(currentProductData);
             }
             if (payment?.checkouts?.form_fields?.deliverable) {
-              setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+              currentCheckoutDeliverable = payment.checkouts.form_fields.deliverable;
+              setCheckoutDeliverable(currentCheckoutDeliverable);
             }
+          }
+
+          // Determine final deliverable link
+          const finalDeliverableLink = currentCheckoutDeliverable?.type !== 'none' && (currentCheckoutDeliverable?.link || currentCheckoutDeliverable?.fileUrl)
+            ? (currentCheckoutDeliverable.link || currentCheckoutDeliverable.fileUrl)
+            : currentProductData?.member_area_link || currentProductData?.file_url;
+
+          if (finalDeliverableLink) {
+            toast({
+              title: "Pagamento Aprovado! ✅",
+              description: "Redirecionando para o seu produto..."
+            });
+            setTimeout(() => {
+              window.location.href = finalDeliverableLink;
+            }, 1500);
+            return; // Exit early after redirect
           }
           
           setIsChecking(false);
