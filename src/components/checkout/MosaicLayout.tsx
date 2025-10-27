@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Shield, CheckCircle, CreditCard, Star, Heart, ArrowRight, Clock, ShoppingBag } from 'lucide-react';
+import { Shield, CheckCircle, CreditCard, Star, Heart, ArrowRight, Clock, ShoppingBag, QrCode } from 'lucide-react';
 import { CheckoutLayoutProps } from './CheckoutLayoutProps';
 import { getOrderBumpPrefix } from '@/utils/orderBumpUtils';
 import { processHeadlineText, formatCurrency } from '@/utils/textFormatting';
@@ -269,7 +269,7 @@ const MosaicLayout = ({
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <CreditCard className="h-5 w-5" />
+                          <QrCode className="h-5 w-5" />
                           <span className="font-semibold">PIX</span>
                         </div>
                         <p className="text-sm text-gray-600">Aprovação instantânea</p>
