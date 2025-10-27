@@ -19,7 +19,6 @@ export interface OrderBump {
 export interface PaymentMethods {
   pix?: boolean;
   creditCard?: boolean;
-  standardCheckout?: boolean; // Added for Mercado Pago Standard Checkout
   maxInstallments?: number;
   installmentsWithInterest?: boolean;
 }

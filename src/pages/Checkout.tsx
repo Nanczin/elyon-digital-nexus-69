@@ -122,8 +122,6 @@ const Checkout = () => {
         setSelectedPaymentMethod('pix');
       } else if (transformedData.payment_methods?.creditCard) {
         setSelectedPaymentMethod('creditCard');
-      } else if (transformedData.payment_methods?.standardCheckout) {
-        setSelectedPaymentMethod('standardCheckout');
       }
       
       // Set default installments
@@ -243,7 +241,7 @@ const Checkout = () => {
     }
     
     // Para pagamentos com cartão de crédito no Brasil, o CPF é obrigatório
-    if ((selectedPaymentMethod === 'creditCard' || selectedPaymentMethod === 'standardCheckout') && !customerData.cpf.trim()) {
+    if (selectedPaymentMethod === 'creditCard' && !customerData.cpf.trim()) {
       toast({ title: "Erro", description: "Informe o CPF para pagamento com cartão de crédito", variant: "destructive" });
       return false;
     }
@@ -306,38 +304,6 @@ const Checkout = () => {
         return;
       }
       
-      if (selectedPaymentMethod === 'standardCheckout') {
-        // Call new Edge Function for Standard Checkout
-        const { data: mpLinkResponse, error: mpLinkError } = await supabase.functions.invoke(
-          'create-mercado-pago-payment-link',
-          {
-            body: {
-              checkoutId: checkoutId,
-              amount: totalAmount,
-              installments: selectedInstallments,
-              customerEmail: customerData.email,
-              customerName: customerData.name,
-              productName: checkout?.products.name || 'Produto Digital'
-            }
-          }
-        );
-
-        if (mpLinkError) {
-          console.error('Checkout Debug: Erro na edge function create-mercado-pago-payment-link:', mpLinkError);
-          throw new Error(mpLinkError.message || 'Erro ao gerar link de pagamento do Mercado Pago');
-        }
-
-        if (!mpLinkResponse?.success || !mpLinkResponse?.init_point) {
-          console.error('Checkout Debug: Resposta de erro do MP Link:', mpLinkResponse);
-          throw new Error(mpLinkResponse?.error || 'Erro ao gerar link de pagamento do Mercado Pago');
-        }
-
-        // Redirect to Mercado Pago Standard Checkout
-        console.log('Checkout Debug: Redirecting to Mercado Pago Standard Checkout:', mpLinkResponse.init_point);
-        window.location.href = mpLinkResponse.init_point;
-        return; // Exit function as redirection is handled
-      }
-
       // Existing logic for direct PIX/Credit Card
       const paymentData: any = {
         checkoutId: checkoutId || '',

@@ -81,7 +81,6 @@ const AdminCheckouts = () => {
     paymentMethods: {
       pix: true,
       creditCard: true,
-      standardCheckout: true, // Added for Mercado Pago Standard Checkout
       maxInstallments: 12,
       installmentsWithInterest: false
     },
@@ -280,7 +279,6 @@ const AdminCheckouts = () => {
       paymentMethods: checkout.payment_methods || {
         pix: true,
         creditCard: true,
-        standardCheckout: true, // Default to true for new checkouts
         maxInstallments: 12,
         installmentsWithInterest: false
       },
@@ -729,7 +727,7 @@ const AdminCheckouts = () => {
             
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-1 h-auto p-1">
                   <TabsTrigger value="basic" onClick={() => setCurrentTab('basic')} className="text-xs sm:text-sm py-2">
                     Básico
                   </TabsTrigger>
@@ -1118,20 +1116,9 @@ const AdminCheckouts = () => {
                             </div>
                           )}
                         </div>
-
-                        <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                          <Checkbox id="standardCheckout" checked={checkoutData.paymentMethods.standardCheckout} onCheckedChange={checked => handleInputChange('paymentMethods.standardCheckout', checked)} />
-                          <div className="flex items-center gap-2">
-                            <ShoppingBag className="h-5 w-5 text-purple-600" />
-                            <div>
-                              <Label htmlFor="standardCheckout" className="text-sm font-medium">Mercado Pago Checkout Padrão</Label>
-                              <p className="text-xs text-muted-foreground">Redireciona para o ambiente do Mercado Pago</p>
-                            </div>
-                          </div>
-                        </div>
                       </div>
                       
-                      {!checkoutData.paymentMethods.pix && !checkoutData.paymentMethods.creditCard && !checkoutData.paymentMethods.standardCheckout && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      {!checkoutData.paymentMethods.pix && !checkoutData.paymentMethods.creditCard && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <p className="text-sm text-yellow-800">
                             ⚠️ Selecione pelo menos uma forma de pagamento
                           </p>

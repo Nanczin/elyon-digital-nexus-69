@@ -355,60 +355,6 @@ const HorizontalLayout = ({
                     )}
                   </div>
                 )}
-
-                {checkout.payment_methods?.standardCheckout && (
-                  <div className="space-y-4">
-                    <div
-                      onClick={() => setSelectedPaymentMethod('standardCheckout')}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedPaymentMethod === 'standardCheckout' ? 'border-current shadow-lg' : 'border-gray-200'
-                      }`}
-                      style={{ borderColor: selectedPaymentMethod === 'standardCheckout' ? primaryColor : undefined }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          selectedPaymentMethod === 'standardCheckout' ? 'border-current' : 'border-gray-300'
-                        }`} style={{ borderColor: selectedPaymentMethod === 'standardCheckout' ? primaryColor : undefined }}>
-                          {selectedPaymentMethod === 'standardCheckout' && (
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }}></div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <ShoppingBag className="h-5 w-5" />
-                            <span className="font-semibold">Mercado Pago Checkout Padrão</span>
-                          </div>
-                          <p className="text-sm text-gray-600">Pague com PIX, Cartão ou Boleto no ambiente seguro do Mercado Pago</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {selectedPaymentMethod === 'standardCheckout' && (
-                      <div className="space-y-3 p-4 border rounded-lg" style={{ borderColor: `${primaryColor}40` }}>
-                        <Label htmlFor="installments" style={{ color: textColor }}>Parcelas</Label>
-                        <Select 
-                          value={String(selectedInstallments)} 
-                          onValueChange={(value) => setSelectedInstallments(parseInt(value))}
-                        >
-                          <SelectTrigger id="installments" className="bg-white dark:bg-gray-800">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white dark:bg-gray-800 z-50">
-                            {Array.from({ length: checkout.payment_methods?.maxInstallments || 12 }, (_, i) => i + 1).map(num => {
-                              const installmentValue = calculateTotal() / num;
-                              return (
-                                <SelectItem key={num} value={String(num)}>
-                                  {num}x de R$ {installmentValue.toFixed(2).replace('.', ',')} 
-                                  {checkout.payment_methods?.installmentsWithInterest && num > 1 ? ' com juros' : ' sem juros'}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
