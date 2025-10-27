@@ -40,7 +40,7 @@ serve(async (req) => {
       console.error('VERIFY_MP_DEBUG: Access token do Mercado Pago não configurado.');
       return new Response(JSON.stringify({ success: false, error: 'Access token do Mercado Pago não configurado. Verifique as integrações ou variáveis de ambiente.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
     }
-    console.log('VERIFY_MP_DEBUG: Access token obtido (primeiros 10 chars):', accessToken.substring(0, 10));
+    console.log('VERIFY_MP_DEBUG: Access token obtido (length):', accessToken.length);
 
     // Consultar status diretamente no MP
     const resp = await fetch(`https://api.mercadopago.com/v1/payments/${mp_payment_id}`, {
@@ -145,29 +145,24 @@ serve(async (req) => {
                 // Gerar uma senha aleatória para o usuário
                 const generatedPassword = Math.random().toString(36).slice(-8); 
 
-                console.log('VERIFY_MP_DEBUG: Attempting to create new auth.users user with email:', email, 'and user_metadata:', { 
+                const userMetadata = { 
                   name: customerName,
                   first_name: customerName.split(' ')[0],
                   last_name: customerName.split(' ').slice(1).join(' ') || '',
                   phone: customerPhone,
                   cpf: customerCpf
-                });
+                };
+                console.log('VERIFY_MP_DEBUG: Attempting to create new auth.users user with email:', email, 'and user_metadata:', JSON.stringify(userMetadata));
 
                 const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
                   email,
                   password: generatedPassword, // Senha temporária
                   email_confirm: true, // Confirmar email automaticamente
-                  user_metadata: { 
-                    name: customerName,
-                    first_name: customerName.split(' ')[0],
-                    last_name: customerName.split(' ').slice(1).join(' ') || '',
-                    phone: customerPhone,
-                    cpf: customerCpf
-                  }
+                  user_metadata: userMetadata
                 });
 
                 if (userAuthErr) {
-                  console.error('VERIFY_MP_DEBUG: Erro ao criar usuário auth.users:', userAuthErr.message, userAuthErr);
+                  console.error('VERIFY_MP_DEBUG: CRITICAL ERROR creating auth.users user:', userAuthErr.message, JSON.stringify(userAuthErr));
                   // If user creation fails, userId remains null, which is handled by subsequent checks
                 } else {
                   userId = newUserAuth?.user?.id || null;
