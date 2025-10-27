@@ -293,7 +293,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Edge Function: Error creating payment:', error);
+    console.error('Edge Function: Error creating payment:', error); // Log the error to console
     return new Response(
       JSON.stringify({
         success: false,
