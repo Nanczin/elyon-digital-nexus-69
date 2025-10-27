@@ -10,7 +10,7 @@ const corsHeaders = {
 // Definindo a interface PaymentRequest para a função Edge
 interface PaymentRequest {
   checkoutId: string;
-  amount: number;
+  amount: number; // Valor em centavos
   customerData: {
     name: string;
     email: string;
@@ -50,10 +50,21 @@ serve(async (req) => {
     // Desestruturar com a interface definida
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
 
-    console.log('Edge Function: Raw amount received (in cents):', amount);
-    const numericAmount = Number(amount); // Ensure amount is a number
-    console.log('Edge Function: Numeric amount after Number() conversion (in cents):', numericAmount); // NEW LOG
-    console.log('Edge Function: Payment request parsed:', { checkoutId, amount: numericAmount, paymentMethod, customerData, cardToken: cardToken ? '***' : 'N/A' });
+    // 1. Conversão explícita de valor:
+    // O 'amount' recebido do frontend já deve estar em centavos (inteiro).
+    // Convertemos para reais e garantimos 2 casas decimais para o Mercado Pago.
+    const transactionAmountInReais = parseFloat((Number(amount) / 100).toFixed(2));
+    
+    console.log('Edge Function: Original amount (cents):', amount);
+    console.log('Edge Function: Converted transaction_amount (reais, fixed 2 decimals):', transactionAmountInReais);
+
+    if (isNaN(transactionAmountInReais) || transactionAmountInReais <= 0) {
+      console.error('Edge Function: Invalid transaction_amount detected:', transactionAmountInReais);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Valor inválido ou ausente para transaction_amount. O valor deve ser um número positivo.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     // Get the checkout to find the selected Mercado Pago account
     const { data: checkout, error: checkoutError } = await supabase
@@ -71,9 +82,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
-
-    const integrations = checkout.integrations as any;
-    console.log('Edge Function: Checkout integrations:', integrations);
 
     // Buscar as configurações do Mercado Pago da tabela integrations
     const { data: mpConfig, error: mpConfigError } = await supabase
@@ -106,9 +114,9 @@ serve(async (req) => {
       );
     }
 
-    // Create payment data based on payment method
-    let paymentData: any = {
-      transaction_amount: parseFloat((numericAmount / 100).toFixed(2)), // Ensure two decimal places and convert back to float
+    // Construir o body da requisição para o Mercado Pago
+    let mpRequestBody: any = {
+      transaction_amount: transactionAmountInReais,
       description: `Pagamento Checkout ${checkoutId}`,
       payer: {
         email: customerData.email,
@@ -128,44 +136,30 @@ serve(async (req) => {
         payment_method: paymentMethod
       }
     };
-    console.log('Edge Function: transaction_amount after conversion (in Reais, fixed 2 decimals):', paymentData.transaction_amount); // Refined log
 
-    // NEW CHECK: Ensure transaction_amount is valid before sending to MP
-    if (isNaN(paymentData.transaction_amount) || paymentData.transaction_amount <= 0) {
-      console.error('Edge Function: Invalid transaction_amount detected before MP API call:', paymentData.transaction_amount);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Valor do pagamento inválido. O valor deve ser um número positivo.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    // Configure payment method
+    // Configurar método de pagamento
     if (paymentMethod === 'pix') {
-      paymentData.payment_method_id = 'pix';
+      mpRequestBody.payment_method_id = 'pix';
     } else if (paymentMethod === 'creditCard') {
-      // Pagamento direto com cartão - manter notification_url e external_reference
-      paymentData.statement_descriptor = 'CHECKOUT';
-      paymentData.capture = true;
-      paymentData.binary_mode = true; // força decisão imediata
-      paymentData.installments = cardData?.installments || 1;
+      mpRequestBody.statement_descriptor = 'CHECKOUT';
+      mpRequestBody.capture = true;
+      mpRequestBody.binary_mode = true; // força decisão imediata
+      mpRequestBody.installments = cardData?.installments || 1;
 
-      // Dados adicionais (melhora aprovação e reconciliação)
-      paymentData.additional_info = {
+      mpRequestBody.additional_info = {
         items: [{
           id: checkoutId,
           title: `Pagamento Checkout ${checkoutId}`,
-          description: paymentData.description,
+          description: mpRequestBody.description,
           quantity: 1,
-          unit_price: paymentData.transaction_amount
+          unit_price: mpRequestBody.transaction_amount
         }]
       };
 
-      // Se veio token do frontend, usa diretamente
-      if (cardToken) { // Usar o cardToken desestruturado
+      if (cardToken) {
         console.log('Edge Function: Usando card token recebido do frontend');
-        paymentData.token = cardToken;
+        mpRequestBody.token = cardToken;
       } else if (cardData) {
-        // Fallback: criar token no backend (menos recomendado)
         console.log('Edge Function: Criando card token no backend (fallback)');
         const tokenResponse = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
           method: 'POST',
@@ -189,15 +183,15 @@ serve(async (req) => {
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
           );
         }
-        paymentData.token = tokenResult.id;
+        mpRequestBody.token = tokenResult.id;
         console.log('Edge Function: Card token criado com sucesso');
       }
-
-      // Observação: sem PAN não conseguimos resolver BIN/issuer aqui.
-      // O MP consegue inferir o payment_method_id a partir do token.
     }
 
-    // Make request to Mercado Pago API
+    // Verificação de tipo antes da requisição fetch
+    console.log("Valor enviado para MP (transaction_amount):", mpRequestBody.transaction_amount, typeof mpRequestBody.transaction_amount);
+
+    // Requisição ao endpoint do Mercado Pago
     const apiUrl = 'https://api.mercadopago.com/v1/payments';
 
     const idempotencyKeyBase = `chk:${checkoutId}|email:${customerData.email}`;
@@ -205,8 +199,7 @@ serve(async (req) => {
       ? `${idempotencyKeyBase}|attempt:${(crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString()}`
       : idempotencyKeyBase;
 
-    console.log('Edge Function: FINAL payload transaction_amount sent to MP:', paymentData.transaction_amount); // NEW LOG
-    console.log('Edge Function: Enviando payload para MP:', { ...paymentData, token: paymentData.token ? '***' : undefined });
+    console.log('Edge Function: Enviando payload para MP:', { ...mpRequestBody, token: mpRequestBody.token ? '***' : undefined });
 
     const mpResponse = await fetch(apiUrl, {
       method: 'POST',
@@ -215,12 +208,33 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'X-Idempotency-Key': idempotencyKey
       },
-      body: JSON.stringify(paymentData)
+      body: JSON.stringify(mpRequestBody)
     });
+
+    // Tratamento de erro amigável
+    if (!mpResponse.ok) {
+      const errorBody = await mpResponse.text();
+      console.error('Edge Function: Mercado Pago API Error:', errorBody);
+      // Tentar parsear o erro para uma mensagem mais amigável, se for JSON
+      try {
+        const errorJson = JSON.parse(errorBody);
+        const errorMessage = errorJson.message || errorJson.error || `Erro ao criar pagamento: ${mpResponse.status}`;
+        return new Response(
+          JSON.stringify({ success: false, error: errorMessage, mp_error_details: errorJson }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: mpResponse.status }
+        );
+      } catch {
+        // Se não for JSON, retornar o texto bruto
+        return new Response(
+          JSON.stringify({ success: false, error: `Erro ao criar pagamento: ${mpResponse.status}`, mp_error_raw: errorBody }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: mpResponse.status }
+        );
+      }
+    }
 
     const mpResult = await mpResponse.json();
     
-    console.log('Edge Function: Mercado Pago Full Response for PIX:', JSON.stringify(mpResult, null, 2));
+    console.log('Edge Function: Mercado Pago Full Response:', JSON.stringify(mpResult, null, 2));
 
     console.log('Edge Function: Mercado Pago Response Summary:', { 
       ok: mpResponse.ok, 
@@ -229,15 +243,6 @@ serve(async (req) => {
       status_detail: mpResult.status_detail,
       paymentId: mpResult.id 
     });
-
-    if (!mpResponse.ok) {
-      console.error('Edge Function: Mercado Pago API Error:', mpResult);
-      const errorMessage = mpResult.message || mpResult.error || 'Erro ao criar pagamento';
-      return new Response(
-        JSON.stringify({ success: false, error: errorMessage }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
 
     // Determinar o status baseado na resposta do Mercado Pago
     let paymentStatus = 'pending';
@@ -255,7 +260,7 @@ serve(async (req) => {
       .insert({
         checkout_id: checkoutId,
         user_id: null, // Allow null for guest checkout
-        amount: numericAmount, // Use the numericAmount here
+        amount: amount, // Use the original amount in cents for DB storage
         payment_method: paymentMethod,
         status: paymentStatus,
         mp_payment_id: mpResult.id.toString(),
@@ -289,14 +294,14 @@ serve(async (req) => {
         success: true,
         payment: {
           id: payment.id,
-          mp_payment_id: paymentMethod === 'creditCard' ? mpResult.id : mpResult.id,
+          mp_payment_id: mpResult.id,
           status: mpResult.status || 'pending',
           status_detail: mpResult.status_detail || null,
           qr_code: paymentMethod === 'pix' ? mpResult.point_of_interaction?.transaction_data?.qr_code : null,
           payment_url: paymentMethod === 'pix' 
             ? mpResult.point_of_interaction?.transaction_data?.ticket_url
             : null,
-          amount: numericAmount / 100, // Use the numericAmount here
+          amount: transactionAmountInReais, // Return amount in reais
           payment_method: paymentMethod
         }
       }),
