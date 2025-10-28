@@ -1,4 +1,4 @@
-import React from 'react'; // Import React for Fragment
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
@@ -84,48 +84,46 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-20" : "w-64"} // Largura ajustada para os estados recolhido e expandido
+      className={isCollapsed ? "w-20" : "w-64"}
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
+        {/* Movido SidebarGroupLabel para fora de SidebarGroup */}
+        <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-4 pb-2"}>
+          Menu Principal
+        </SidebarGroupLabel>
         <SidebarGroup>
-          <React.Fragment> {/* Envolvendo os filhos de SidebarGroup em um Fragment */}
-            <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-4 pb-2"}> {/* Ajustado padding-top e adicionado padding-bottom */}
-              Menu Principal
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
-                {adminNavItems.map((item) => {
-                  // Show all items to admin, only payments to regular users
-                  if (!isAdmin && item.href !== '/payments') {
-                    return null;
-                  }
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {adminNavItems.map((item) => {
+                if (!isAdmin && item.href !== '/payments') {
+                  return null;
+                }
 
-                  const IconComponent = item.icon;
-                  return (
-                    <SidebarMenuItem key={item.href} asChild>
-                      <NavLink 
-                        to={item.href} 
-                        className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
-                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
-                          }`
-                        }
-                        title={isCollapsed ? item.label : undefined}
-                      >
-                        <span className="flex items-center gap-3">
-                          <IconComponent className="h-4 w-4 flex-shrink-0" />
-                          {!isCollapsed && (
-                            <span className="truncate text-base">{item.label}</span>
-                          )}
-                        </span>
-                      </NavLink>
-                    </SidebarMenuItem>
-                  );
-                }).filter(Boolean)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </React.Fragment>
+                const IconComponent = item.icon;
+                return (
+                  <SidebarMenuItem key={item.href} asChild>
+                    <NavLink 
+                      to={item.href} 
+                      className={({ isActive }) => 
+                        `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
+                          isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
+                        }`
+                      }
+                      title={isCollapsed ? item.label : undefined}
+                    >
+                      <span className="flex items-center gap-3">
+                        <IconComponent className="h-4 w-4 flex-shrink-0" />
+                        {!isCollapsed && (
+                          <span className="truncate text-base">{item.label}</span>
+                        )}
+                      </span>
+                    </NavLink>
+                  </SidebarMenuItem>
+                );
+              }).filter(Boolean)}
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
