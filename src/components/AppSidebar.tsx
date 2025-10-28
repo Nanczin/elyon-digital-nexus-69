@@ -88,7 +88,7 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
-        {/* Removido SidebarTrigger daqui */}
+        {/* Sidebar Trigger no topo da sidebar */}
         <div className={`flex items-center h-12 sm:h-14 lg:h-16 px-4 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
           {/* O SidebarTrigger agora está no componente Layout */}
         </div>
@@ -118,7 +118,7 @@ export function AppSidebar() {
                         }
                         title={isCollapsed ? item.label : undefined}
                       >
-                        <IconComponent className="h-5 w-5 flex-shrink-0" />
+                        <IconComponent className="h-4 w-4 flex-shrink-0" /> {/* Alterado de h-5 w-5 para h-4 w-4 */}
                         {!isCollapsed && (
                           <span className="truncate text-base">{item.label}</span>
                         )}
