@@ -214,7 +214,7 @@ const PaymentSuccess = () => {
 
   const getDeliverableButtonText = (link: string | null) => {
     if (!link) return 'Acessar Produto';
-    const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
+    const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pp3', '.mp3', '.mp4', '.mov', '.avi'];
     const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
     return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
   };
@@ -587,8 +587,6 @@ const PaymentSuccess = () => {
                 </ul>
               </div>
             </div>
-
-            {/* O botão "Voltar ao início" foi removido daqui */}
 
             <div className="text-center text-sm text-muted-foreground">
               <p>
