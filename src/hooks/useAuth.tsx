@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom'; // Importar useNavigate
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate(); // Inicializar useNavigate
 
   useEffect(() => {
     // Set up auth state listener
@@ -116,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
+    navigate('/'); // Redirecionar para a página inicial após o logout
   };
 
   const value = {
