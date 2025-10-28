@@ -272,7 +272,7 @@ const AdminCheckouts = () => {
       reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.reservedRights, // Usar initialFormData default e cast
       paymentMethods: checkout.payment_methods || initialFormData.paymentMethods,
       integrations: checkout.integrations || initialFormData.integrations,
-      support_contact: checkout.support_contact || initialFormData.support_contact, // FIXED TYPO HERE
+      support_contact: checkout.support_contact || initialFormData.support_contact,
       styles: checkout.styles || initialFormData.styles,
       timer: checkout.timer || initialFormData.timer,
       deliverable: {
@@ -563,7 +563,11 @@ const AdminCheckouts = () => {
         promotional_price: checkoutData.packages[0]?.originalPrice ? checkoutData.packages[0].originalPrice * 100 : null,
         form_fields: {
           ...checkoutData.customerFields,
-          packages: checkoutData.packages,
+          packages: checkoutData.packages.map(pkg => ({ // Convert package prices to cents
+            ...pkg,
+            price: pkg.price * 100,
+            originalPrice: (pkg.originalPrice || 0) * 100
+          })),
           guarantee: checkoutData.guarantee,
           reservedRights: checkoutData.reservedRights,
           deliverable: { // Save deliverable data
