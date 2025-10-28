@@ -49,7 +49,7 @@ const AdminCheckouts = () => {
   const initialFormData = {
     name: '',
     selectedProduct: '',
-    layout: 'horizontal' as string,
+    layout: 'horizontal' as string, // Layout fixo como 'horizontal'
     customerFields: {
       requireName: true,
       requireCpf: true,
@@ -258,7 +258,7 @@ const AdminCheckouts = () => {
     return {
       name: checkout.products?.name || '',
       selectedProduct: checkout.product_id || '',
-      layout: checkout.layout || 'horizontal',
+      layout: 'horizontal', // Layout fixo como 'horizontal'
       customerFields: {
         requireName: checkout.form_fields?.requireName ?? true,
         requireCpf: checkout.form_fields?.requireCpf ?? true,
@@ -597,7 +597,7 @@ const AdminCheckouts = () => {
           description: checkoutData.styles?.description || '',
           gradientColor: checkoutData.styles?.gradientColor || '#60a5fa'
         },
-        layout: checkoutData.layout || 'horizontal',
+        layout: 'horizontal', // Layout fixo como 'horizontal'
         support_contact: {
           email: checkoutData.support_contact?.email || ''
         },
@@ -1249,7 +1249,8 @@ const AdminCheckouts = () => {
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold">Personalização Visual</h3>
                     
-                    <div className="space-y-2">
+                    {/* Removido o seletor de layout */}
+                    {/* <div className="space-y-2">
                       <Label>Layout do Checkout</Label>
                       <Select value={checkoutData.layout || 'horizontal'} onValueChange={value => handleInputChange('layout', value)}>
                         <SelectTrigger>
@@ -1260,7 +1261,7 @@ const AdminCheckouts = () => {
                           <SelectItem value="mosaic">Mosaico</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div> */}
 
                     <Separator />
 
