@@ -427,4 +427,8 @@ const MosaicLayout = ({
             primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
           />
         </div>
-      </div>
+    </div>
+  );
+};
+
+export default MosaicLayout;
