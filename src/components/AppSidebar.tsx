@@ -88,10 +88,8 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
-        {/* O espaço reservado para o cabeçalho foi removido daqui para que o conteúdo comece no topo */}
-
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-0"}> {/* Alterado 'pt-0' para 'py-0' para remover qualquer padding vertical */}
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}> {/* Adicionado px-4 e py-2 para espaçamento */}
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -105,12 +103,12 @@ export function AppSidebar() {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild className="w-full h-8">
+                    <SidebarMenuButton asChild className="w-full"> {/* Removido h-8 */}
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md ${ // Alterado 'items-start' para 'items-center'
-                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-0 pr-3'
+                          `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${ // Adicionado py-2 para altura e espaçamento
+                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3' // Alterado pl-0 para pl-4
                           }`
                         }
                         title={isCollapsed ? item.label : undefined}
