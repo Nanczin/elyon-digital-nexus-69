@@ -22,7 +22,7 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig, FormFields } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
+import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig, FormFields e os novos tipos
 
 const AdminCheckouts = () => {
   const {
@@ -43,9 +43,10 @@ const AdminCheckouts = () => {
   const [checkouts, setCheckouts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [currentTab, setCurrentTab] = useState('basic');
+  
   const initialFormData = {
     name: '',
-    description: '',
+    description: '', // Agora parte de FormFields, mas mantido aqui para o estado local
     selectedProduct: '',
     layout: 'horizontal' as string,
     customerFields: {
@@ -63,7 +64,7 @@ const AdminCheckouts = () => {
       price: 0,
       originalPrice: 0,
       mostSold: false
-    }],
+    }] as PackageConfig[], // Tipado explicitamente
     orderBumps: [{
       id: 1,
       selectedProduct: '',
@@ -75,11 +76,11 @@ const AdminCheckouts = () => {
       enabled: true,
       days: 7,
       description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
-    },
+    } as GuaranteeConfig, // Tipado explicitamente
     reservedRights: {
       enabled: true,
       text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
-    },
+    } as ReservedRightsConfig, // Tipado explicitamente
     paymentMethods: {
       pix: true,
       creditCard: true,
@@ -230,88 +231,50 @@ const AdminCheckouts = () => {
     const promotionalPriceInReais = checkout.promotional_price ? checkout.promotional_price / 100 : 0;
     
     // Converter order bumps de centavos para reais
-    const orderBumpsInReais = Array.isArray(checkout.order_bumps) ? checkout.order_bumps.map(bump => ({
+    const orderBumpsInReais = Array.isArray(checkout.order_bumps) ? checkout.order_bumps.map((bump: any) => ({
       ...bump,
       price: bump.price ? bump.price / 100 : 0,
       originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0,
       selectedProduct: bump.selectedProduct || ''
-    })) : [{
-      id: 1,
-      selectedProduct: '',
-      price: 0,
-      originalPrice: 0,
-      enabled: false
-    }];
+    })) : initialFormData.orderBumps; // Use initialFormData default
     
+    const packagesFromDb = (checkout.form_fields as FormFields)?.packages;
+    const packagesConfig: PackageConfig[] = Array.isArray(packagesFromDb) ? packagesFromDb.map((pkg: any) => ({ // Cast pkg to any
+      id: pkg.id || Date.now(), // Ensure ID exists
+      name: pkg.name || '',
+      description: pkg.description || '',
+      topics: Array.isArray(pkg.topics) ? pkg.topics.filter((t: any) => typeof t === 'string') : [''],
+      price: pkg.price ? pkg.price / 100 : priceInReais,
+      originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
+      mostSold: pkg.mostSold ?? false
+    })) : initialFormData.packages; // Use initialFormData default
+
     return {
       name: checkout.products?.name || '',
-      description: (checkout.form_fields as FormFields)?.description || '', // Cast para FormFields
+      description: checkout.form_fields?.description || '', // Corrigido: acessar de form_fields
       selectedProduct: checkout.product_id || '',
       layout: checkout.layout || 'horizontal',
       customerFields: {
-        requireName: (checkout.form_fields as FormFields)?.requireName ?? true,
-        requireCpf: (checkout.form_fields as FormFields)?.requireCpf ?? true,
-        requirePhone: (checkout.form_fields as FormFields)?.requirePhone ?? true,
-        requireEmail: (checkout.form_fields as FormFields)?.requireEmail ?? true,
-        requireEmailConfirm: (checkout.form_fields as FormFields)?.requireEmailConfirm ?? true
+        requireName: checkout.form_fields?.requireName ?? true,
+        requireCpf: checkout.form_fields?.requireCpf ?? true,
+        requirePhone: checkout.form_fields?.requirePhone ?? true,
+        requireEmail: checkout.form_fields?.requireEmail ?? true,
+        requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true
       },
-      packages: (checkout.form_fields as FormFields)?.packages?.map(pkg => ({
-        ...pkg,
-        price: pkg.price || priceInReais,
-        originalPrice: pkg.originalPrice || promotionalPriceInReais
-      })) || [{
-        id: 1,
-        name: '',
-        description: '',
-        topics: [''],
-        price: priceInReais,
-        originalPrice: promotionalPriceInReais,
-        mostSold: false
-      }],
+      packages: packagesConfig, // Usar os pacotes processados
       orderBumps: orderBumpsInReais,
-      guarantee: (checkout.form_fields as FormFields)?.guarantee || {
-        enabled: true,
-        days: 7,
-        description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
-      },
-      reservedRights: (checkout.form_fields as FormFields)?.reservedRights || {
-        enabled: true,
-        text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
-      },
-      paymentMethods: checkout.payment_methods || {
-        pix: true,
-        creditCard: true,
-        maxInstallments: 12,
-        installmentsWithInterest: false
-      },
-      integrations: checkout.integrations || {
-        selectedMercadoPagoAccount: '',
-        selectedMetaPixel: ''
-      },
-      support_contact: checkout.support_contact || {
-        email: ''
-      },
-      styles: checkout.styles || {
-        backgroundColor: '#ffffff',
-        primaryColor: '#3b82f6',
-        textColor: '#000000',
-        headlineText: 'Sua transformação começa agora!',
-        headlineColor: '#000000',
-        highlightColor: checkout.styles?.highlightColor || checkout.styles?.primaryColor || '#3b82f6', // Corrigido aqui
-        description: '',
-        gradientColor: '#60a5fa'
-      },
-      timer: checkout.timer || {
-        enabled: false,
-        duration: 15,
-        color: '#dc2626',
-        text: 'Oferta por tempo limitado'
-      },
-      deliverable: (checkout.form_fields as FormFields)?.deliverable || { // Load deliverable data
-        type: 'none',
-        link: '',
-        file: null,
-        fileUrl: ''
+      guarantee: checkout.form_fields?.guarantee || initialFormData.guarantee, // Usar initialFormData default
+      reservedRights: checkout.form_fields?.reservedRights || initialFormData.reservedRights, // Usar initialFormData default
+      paymentMethods: checkout.payment_methods || initialFormData.paymentMethods,
+      integrations: checkout.integrations || initialFormData.integrations,
+      support_contact: checkout.support_contact || initialFormData.support_contact,
+      styles: checkout.styles || initialFormData.styles,
+      timer: checkout.timer || initialFormData.timer,
+      deliverable: {
+        type: checkout.form_fields?.deliverable?.type || 'none',
+        link: checkout.form_fields?.deliverable?.link || '',
+        file: null, // Always null when loading from DB, as files are not stored in state
+        fileUrl: checkout.form_fields?.deliverable?.fileUrl || ''
       }
     };
   };
@@ -456,7 +419,7 @@ const AdminCheckouts = () => {
       price: 0,
       originalPrice: 0,
       mostSold: false
-    }];
+    }] as PackageConfig[]; // Tipado explicitamente
     handleInputChange('packages', newPackages);
   };
   const removePackage = (id: number) => {
@@ -577,7 +540,7 @@ const AdminCheckouts = () => {
         price: checkoutData.packages[0]?.price * 100 || 0,
         promotional_price: checkoutData.packages[0]?.originalPrice ? checkoutData.packages[0].originalPrice * 100 : null,
         form_fields: {
-          description: checkoutData.description,
+          description: checkoutData.description, // Isso agora está corretamente tipado em FormFields
           ...checkoutData.customerFields,
           packages: checkoutData.packages,
           guarantee: checkoutData.guarantee,

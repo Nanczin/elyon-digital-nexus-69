@@ -12,16 +12,41 @@ export type DeliverableConfig = {
   fileUrl?: string | null;
 };
 
+// Novo tipo para a configuração de um pacote
+export type PackageConfig = {
+  id: number;
+  name: string;
+  description: string;
+  topics: string[];
+  price: number;
+  originalPrice: number;
+  mostSold: boolean;
+};
+
+// Novo tipo para a configuração de garantia
+export type GuaranteeConfig = {
+  enabled: boolean;
+  days: number;
+  description: string;
+};
+
+// Novo tipo para a configuração de direitos reservados
+export type ReservedRightsConfig = {
+  enabled: boolean;
+  text: string;
+};
+
 export type FormFields = {
   requireName?: boolean;
   requireEmail?: boolean;
   requireEmailConfirm?: boolean;
   requirePhone?: boolean;
   requireCpf?: boolean;
-  packages?: Json[];
-  guarantee?: Json;
-  reservedRights?: Json;
+  packages?: PackageConfig[]; // Usar o novo tipo PackageConfig[]
+  guarantee?: GuaranteeConfig; // Usar o novo tipo GuaranteeConfig
+  reservedRights?: ReservedRightsConfig; // Usar o novo tipo ReservedRightsConfig
   deliverable?: DeliverableConfig | null; // Adicionado tipo DeliverableConfig
+  description?: string; // Adicionado descrição ao FormFields
 };
 
 export type Database = {
