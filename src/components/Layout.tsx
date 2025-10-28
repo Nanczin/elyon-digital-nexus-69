@@ -90,16 +90,16 @@ const Layout: React.FC<LayoutProps> = ({
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <header className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0">
-          <SidebarTrigger className="mr-2 sm:mr-4 flex-shrink-0" />
-          <Link to="/" className="flex items-center space-x-2 mr-auto min-w-0">
+        <header className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0 gap-2 sm:gap-4">
+          <SidebarTrigger className="flex-shrink-0" />
+          <Link to="/" className="flex items-center space-x-2 min-w-0">
             <img 
               src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
               alt="Elyon Logo" 
               className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
             />
           </Link>
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 ml-auto">
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
