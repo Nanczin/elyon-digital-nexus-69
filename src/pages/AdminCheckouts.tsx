@@ -114,7 +114,9 @@ const AdminCheckouts = () => {
       type: 'none' as 'none' | 'link' | 'upload',
       link: '',
       file: null as File | null,
-      fileUrl: ''
+      fileUrl: '',
+      name: '', // Adicionado nome para o entregável
+      description: '' // Adicionado descrição para o entregável
     } as DeliverableConfig & { file: File | null } // Explicitly type deliverable
   };
   // Usar uma chave única por checkout ou "new" para novos
@@ -251,7 +253,7 @@ const AdminCheckouts = () => {
 
     return {
       name: checkout.products?.name || '',
-      description: checkout.form_fields?.description || '', // Corrigido: acessar de form_fields
+      description: (checkout.form_fields as FormFields)?.description || '', // Corrigido: acessar de form_fields
       selectedProduct: checkout.product_id || '',
       layout: checkout.layout || 'horizontal',
       customerFields: {
@@ -263,8 +265,8 @@ const AdminCheckouts = () => {
       },
       packages: packagesConfig, // Usar os pacotes processados
       orderBumps: orderBumpsInReais,
-      guarantee: checkout.form_fields?.guarantee || initialFormData.guarantee, // Usar initialFormData default
-      reservedRights: checkout.form_fields?.reservedRights || initialFormData.reservedRights, // Usar initialFormData default
+      guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initialFormData.guarantee, // Usar initialFormData default e cast
+      reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.reservedRights, // Usar initialFormData default e cast
       paymentMethods: checkout.payment_methods || initialFormData.paymentMethods,
       integrations: checkout.integrations || initialFormData.integrations,
       support_contact: checkout.support_contact || initialFormData.support_contact,
@@ -274,7 +276,9 @@ const AdminCheckouts = () => {
         type: checkout.form_fields?.deliverable?.type || 'none',
         link: checkout.form_fields?.deliverable?.link || '',
         file: null, // Always null when loading from DB, as files are not stored in state
-        fileUrl: checkout.form_fields?.deliverable?.fileUrl || ''
+        fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
+        name: checkout.form_fields?.deliverable?.name || '', // Novo campo
+        description: checkout.form_fields?.deliverable?.description || '' // Novo campo
       }
     };
   };
@@ -548,7 +552,9 @@ const AdminCheckouts = () => {
           deliverable: { // Save deliverable data
             type: checkoutData.deliverable.type,
             link: checkoutData.deliverable.type === 'link' ? checkoutData.deliverable.link : null,
-            fileUrl: deliverableFileUrl // This will be the uploaded URL or the provided link
+            fileUrl: deliverableFileUrl, // This will be the uploaded URL or the provided link
+            name: checkoutData.deliverable.name || null, // Novo campo
+            description: checkoutData.deliverable.description || null // Novo campo
           }
         },
         payment_methods: checkoutData.paymentMethods,
@@ -1394,6 +1400,30 @@ const AdminCheckouts = () => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {checkoutData.deliverable.type !== 'none' && ( // Mostrar nome/descrição se não for 'none'
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="deliverableName">Nome do Entregável</Label>
+                          <Input 
+                            id="deliverableName" 
+                            value={checkoutData.deliverable.name || ''} 
+                            onChange={e => handleInputChange('deliverable.name', e.target.value)} 
+                            placeholder="Ex: E-book Exclusivo" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="deliverableDescription">Descrição do Entregável</Label>
+                          <Textarea 
+                            id="deliverableDescription" 
+                            value={checkoutData.deliverable.description || ''} 
+                            onChange={e => handleInputChange('deliverable.description', e.target.value)} 
+                            placeholder="Uma breve descrição do que o cliente receberá." 
+                            rows={3}
+                          />
+                        </div>
+                      </>
+                    )}
 
                     {checkoutData.deliverable.type === 'link' && (
                       <div className="space-y-2">

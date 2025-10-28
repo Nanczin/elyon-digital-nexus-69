@@ -109,13 +109,13 @@ const PaymentSuccess = () => {
         }
         
         if (fetchedPaymentFromDb) {
-          setProductData(fetchedPaymentFromDb.checkouts?.products || null);
-          setCheckoutDeliverable(fetchedPaymentFromDb.checkouts?.form_fields?.deliverable || null);
+          const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
+          const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
+
+          setProductData(currentProduct || null); // Manter productData para fallback
+          setCheckoutDeliverable(currentDeliverable || null); // Definir a configuração específica do entregável
 
           let determinedLink: string | null = null;
-          const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
-          const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
-
           if (currentDeliverable?.type !== 'none' && (currentDeliverable?.link || currentDeliverable?.fileUrl)) {
             determinedLink = currentDeliverable.link || currentDeliverable.fileUrl;
           } else if (currentProduct?.member_area_link || currentProduct?.file_url) {
@@ -209,15 +209,15 @@ const PaymentSuccess = () => {
                   Parabéns! Agora você tem acesso completo ao seu produto.
                 </p>
                 
-                {productData && (
+                {productData && ( // Ainda verifica productData como um fallback geral
                   <div className="bg-white border border-green-200 rounded-lg p-6 space-y-4">
                     <h3 className="font-semibold text-lg text-gray-800">
-                      {productData.name}
+                      {checkoutDeliverable?.name || productData.name}
                     </h3>
                     
-                    {productData.description && (
+                    {(checkoutDeliverable?.description || productData.description) && (
                       <p className="text-gray-600 text-sm">
-                        {productData.description}
+                        {checkoutDeliverable?.description || productData.description}
                       </p>
                     )}
                     

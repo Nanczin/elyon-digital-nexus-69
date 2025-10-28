@@ -10,6 +10,8 @@ export type DeliverableConfig = {
   type: 'none' | 'link' | 'upload';
   link?: string | null;
   fileUrl?: string | null;
+  name?: string | null; // Adicionado nome para o entregável
+  description?: string | null; // Adicionado descrição para o entregável
 };
 
 // Novo tipo para a configuração de um pacote
