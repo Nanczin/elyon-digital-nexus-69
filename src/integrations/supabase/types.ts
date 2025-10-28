@@ -6,6 +6,24 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type DeliverableConfig = {
+  type: 'none' | 'link' | 'upload';
+  link?: string | null;
+  fileUrl?: string | null;
+};
+
+export type FormFields = {
+  requireName?: boolean;
+  requireEmail?: boolean;
+  requireEmailConfirm?: boolean;
+  requirePhone?: boolean;
+  requireCpf?: boolean;
+  packages?: Json[];
+  guarantee?: Json;
+  reservedRights?: Json;
+  deliverable?: DeliverableConfig | null; // Adicionado tipo DeliverableConfig
+};
+
 export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -61,7 +79,7 @@ export type Database = {
       checkouts: {
         Row: {
           created_at: string
-          form_fields: Json | null
+          form_fields: FormFields | null // Usar o tipo FormFields mais específico
           id: string
           integrations: Json | null
           layout: string
@@ -78,7 +96,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          form_fields?: Json | null
+          form_fields?: FormFields | null // Usar o tipo FormFields mais específico
           id?: string
           integrations?: Json | null
           layout?: string
@@ -95,7 +113,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          form_fields?: Json | null
+          form_fields?: FormFields | null // Usar o tipo FormFields mais específico
           id?: string
           integrations?: Json | null
           layout?: string

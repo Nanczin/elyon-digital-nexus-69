@@ -9,6 +9,7 @@ import HorizontalLayout from '@/components/checkout/HorizontalLayout';
 import MosaicLayout from '@/components/checkout/MosaicLayout';
 import { createCardToken } from '@mercadopago/sdk-react';
 import { toCents } from '@/utils/textFormatting';
+import { DeliverableConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig
 
 const Checkout = () => {
   const { checkoutId } = useParams();
@@ -30,9 +31,8 @@ const Checkout = () => {
   const [selectedPackage, setSelectedPackage] = useState<number>(1);
   const [cardData, setCardData] = useState<CardData | null>(null);
   const [mpPublicKey, setMpPublicKey] = useState<string | null>(null);
-  const [selectedInstallments, setSelectedInstallments] = useState<number>(1); // New state for installments
+  const [selectedInstallments, setSelectedInstallments] = useState<number>(1);
 
-  // Hook para integrações do checkout
   const {
     selectedMPAccount,
     selectedPixel,
@@ -61,7 +61,6 @@ const Checkout = () => {
 
       if (error) throw error;
       
-      // Fetch order bump products
       let orderBumpsWithProducts = [];
       if (data.order_bumps && Array.isArray(data.order_bumps)) {
         const orderBumps = data.order_bumps as unknown as OrderBump[];
@@ -84,7 +83,6 @@ const Checkout = () => {
         }
       }
 
-      // Buscar public key do Mercado Pago do dono do checkout
       try {
         const { data: mpRow } = await supabase
           .from('integrations')
@@ -109,7 +107,7 @@ const Checkout = () => {
         support_contact: data.support_contact || {},
         integrations: data.integrations || {},
         timer: data.timer as CheckoutData['timer'] || undefined,
-        products: data.products
+        products: data.products as CheckoutData['products'] // Cast para o tipo correto
       };
       
       console.log('Checkout Debug: Timer carregado do banco:', data.timer);
@@ -117,14 +115,12 @@ const Checkout = () => {
       
       setCheckout(transformedData);
 
-      // Set default payment method
       if (transformedData.payment_methods?.pix) {
         setSelectedPaymentMethod('pix');
       } else if (transformedData.payment_methods?.creditCard) {
         setSelectedPaymentMethod('creditCard');
       }
       
-      // Set default installments
       setSelectedInstallments(transformedData.payment_methods?.maxInstallments || 1);
 
     } catch (error) {
@@ -140,13 +136,12 @@ const Checkout = () => {
     }
   };
 
-  // Disparar evento de início do checkout quando os dados estiverem carregados
   useEffect(() => {
     if (checkout && hasIntegrations) {
       const total = calculateTotal();
       trackInitiateCheckoutEvent({
         product_id: checkout.product_id,
-        total: toCents(total), // Converter para centavos
+        total: toCents(total),
         checkout_id: checkout.id
       });
     }
@@ -164,7 +159,6 @@ const Checkout = () => {
       console.log('Checkout Debug: Package selected:', selectedPkg);
       console.log('Checkout Debug: Base price from package (in Reais):', basePrice);
     } else {
-      // If no packages or selected package has 0 price, use the main checkout price
       basePrice = (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0) / 100;
       console.log('Checkout Debug: Base price from main checkout (in Reais):', basePrice);
     }
@@ -178,10 +172,9 @@ const Checkout = () => {
       }
     });
     
-    // Fixar em 2 casas decimais antes de passar para toCents
     const finalTotal = parseFloat(totalInReais.toFixed(2));
     console.log('Checkout Debug: Final calculated total (in Reais, fixed 2 decimals):', finalTotal);
-    return Math.max(0.01, finalTotal); // Ensure total is at least 0.01 for Mercado Pago
+    return Math.max(0.01, finalTotal);
   };
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {
@@ -200,13 +193,12 @@ const Checkout = () => {
         : [...prev, bumpId]
     );
 
-    // Disparar evento de AddToCart quando adicionar order bump
     if (isAdding && hasIntegrations) {
       const bump = checkout?.order_bumps.find(b => b.id === bumpId);
       if (bump) {
         trackAddToCartEvent({
           product_id: bump.selectedProduct || 'order-bump-' + bumpId,
-          price: toCents((parseFloat(String(bump.price)) || 0) / 100) // Converter para centavos
+          price: toCents((parseFloat(String(bump.price)) || 0) / 100)
         });
       }
     }
@@ -240,7 +232,6 @@ const Checkout = () => {
       return false;
     }
     
-    // Para pagamentos com cartão de crédito no Brasil, o CPF é obrigatório
     if (selectedPaymentMethod === 'creditCard' && !customerData.cpf.trim()) {
       toast({ title: "Erro", description: "Informe o CPF para pagamento com cartão de crédito", variant: "destructive" });
       return false;
@@ -257,7 +248,6 @@ const Checkout = () => {
         return false;
       }
 
-      // Quando usando Secure Fields do Mercado Pago, a validação dos dados sensíveis ocorre no SDK
       if (mpPublicKey) {
         if (!cardData.cardholderName.trim()) {
           toast({ title: "Erro", description: "Nome no cartão é obrigação", variant: "destructive" });
@@ -294,7 +284,7 @@ const Checkout = () => {
     setProcessing(true);
     
     try {
-      const totalAmount = toCents(calculateTotal()); // Convert to cents
+      const totalAmount = toCents(calculateTotal());
       console.log('CHECKOUT_FRONTEND_DEBUG: Calculated total (Reais):', calculateTotal(), typeof calculateTotal());
       console.log('CHECKOUT_FRONTEND_DEBUG: Total amount (cents) sent to Edge Function:', totalAmount, typeof totalAmount);
 
@@ -304,7 +294,6 @@ const Checkout = () => {
         return;
       }
       
-      // Existing logic for direct PIX/Credit Card
       const paymentData: any = {
         checkoutId: checkoutId || '',
         amount: totalAmount,
@@ -320,9 +309,8 @@ const Checkout = () => {
         paymentMethod: selectedPaymentMethod
       };
 
-      console.log('CHECKOUT_FRONTEND_DEBUG: Full paymentData sent to Edge Function:', JSON.stringify(paymentData, null, 2)); // NEW LOG HERE
+      console.log('CHECKOUT_FRONTEND_DEBUG: Full paymentData sent to Edge Function:', JSON.stringify(paymentData, null, 2));
 
-      // Chamar edge function do Mercado Pago
       const { data: mpResponse, error: mpError } = await supabase.functions.invoke(
         'create-mercado-pago-payment',
         { body: paymentData }
@@ -343,7 +331,6 @@ const Checkout = () => {
       const paymentStatus = mpResponse.payment?.status;
       const statusDetail = mpResponse.payment?.status_detail;
 
-      // Disparar evento de compra
       if (hasIntegrations) {
         trackPurchaseEvent({
           amount: totalAmount,
@@ -354,17 +341,15 @@ const Checkout = () => {
         });
       }
 
-      // Determine the final deliverable link/file
       const productData = checkout?.products;
       const checkoutDeliverable = checkout?.form_fields?.deliverable;
 
       const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
         ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-        : productData?.member_area_link || productData?.file_url;
+        : (productData as any)?.member_area_link || (productData as any)?.file_url; // Cast para any aqui
 
       console.log('Checkout Debug: Final deliverable link (after approval):', finalDeliverableLink);
 
-      // Armazenar informações do pagamento no localStorage para mostrar na tela de sucesso
       localStorage.setItem('paymentData', JSON.stringify({
         payment: mpResponse.payment,
         customerData,
@@ -378,12 +363,10 @@ const Checkout = () => {
           headlineColor,
           gradientColor
         },
-        deliverableLink: finalDeliverableLink // Adiciona o link do entregável aqui
+        deliverableLink: finalDeliverableLink
       }));
 
-      // --- MODIFIED REDIRECTION LOGIC ---
       if (paymentStatus === 'approved') {
-        // Sempre redirecionar para payment-success, a página de sucesso irá lidar com a exibição do entregável
         toast({
           title: "Pagamento Aprovado! ✅",
           description: "Redirecionando para a página de confirmação..."
@@ -392,25 +375,22 @@ const Checkout = () => {
           navigate('/payment-success?status=approved');
         }, 1500);
       } else if (paymentStatus === 'pending' && selectedPaymentMethod === 'pix') {
-        // PIX pendente - mostrar QR code
         toast({
           title: "PIX Gerado!",
           description: "Redirecionando para o pagamento PIX..."
         });
         navigate('/payment-success');
       } else if (paymentStatus === 'pending' && selectedPaymentMethod === 'creditCard') {
-        // Cartão pendente - aguardar processamento
         toast({
           title: "Processando Pagamento...",
           description: "Aguardando confirmação do pagamento."
         });
         navigate('/payment-success');
       } else if (paymentStatus === 'rejected' || paymentStatus === 'cancelled') {
-        let errorMessage = 'Pagamento recusado. Tente novamente.'; // Mensagem genérica padrão
+        let errorMessage = 'Pagamento recusado. Tente novamente.';
 
         if (selectedPaymentMethod === 'pix') {
           errorMessage = 'Pagamento PIX recusado ou falhou. Por favor, tente novamente.';
-          // Poderíamos adicionar mais detalhes específicos do PIX se o Mercado Pago os fornecer em statusDetail
         } else if (selectedPaymentMethod === 'creditCard') {
           errorMessage = statusDetail === 'cc_rejected_insufficient_amount' ? 'Cartão sem saldo suficiente' :
                          statusDetail === 'cc_rejected_bad_filled_security_code' ? 'CVV inválido' :
@@ -423,7 +403,6 @@ const Checkout = () => {
         }
         throw new Error(errorMessage);
       } else {
-        // Status desconhecido
         navigate('/payment-success');
       }
 
@@ -466,7 +445,6 @@ const Checkout = () => {
     );
   }
 
-  // Extract styles from configuration
   const styles = checkout.styles || {};
   const backgroundColor = styles.backgroundColor || '#ffffff';
   const primaryColor = styles.primaryColor || '#ec4899';
@@ -522,11 +500,9 @@ const Checkout = () => {
     setSelectedInstallments
   };
 
-  // Render appropriate layout based on configuration
   if (checkout.layout === 'mosaic') {
     return <MosaicLayout {...layoutProps} />;
   } else {
-    // Default to horizontal layout
     return <HorizontalLayout {...layoutProps} />;
   }
 };

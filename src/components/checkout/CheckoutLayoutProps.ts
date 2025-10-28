@@ -1,5 +1,6 @@
 // Shared types for checkout layouts
 import { CardData } from './CreditCardForm';
+import { DeliverableConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig
 
 export interface OrderBump {
   id: number;
@@ -30,6 +31,7 @@ export interface FormFields {
   requirePhone?: boolean;
   requireCpf?: boolean;
   packages?: any[]; // Assuming packages can be part of form_fields
+  deliverable?: DeliverableConfig; // Usar o tipo DeliverableConfig
 }
 
 export interface CheckoutData {
@@ -65,6 +67,8 @@ export interface CheckoutData {
     description: string;
     banner_url: string;
     logo_url: string;
+    member_area_link?: string | null; // Adicionado
+    file_url?: string | null; // Adicionado
   };
 }
 

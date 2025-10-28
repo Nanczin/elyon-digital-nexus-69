@@ -22,6 +22,8 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
+import { DeliverableConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig
+
 const AdminCheckouts = () => {
   const {
     user,
@@ -112,7 +114,7 @@ const AdminCheckouts = () => {
       link: '',
       file: null as File | null,
       fileUrl: ''
-    }
+    } as DeliverableConfig & { file: File | null } // Explicitly type deliverable
   };
   // Usar uma chave única por checkout ou "new" para novos
   // Manter a chave consistente mesmo quando o componente remonta
@@ -411,8 +413,8 @@ const AdminCheckouts = () => {
       const newData = {
         ...prev
       };
-      let current = newData;
-      let oldCurrent = prev;
+      let current: any = newData;
+      let oldCurrent: any = prev;
       
       // Get old value for history
       for (let i = 0; i < keys.length - 1; i++) {
@@ -570,6 +572,7 @@ const AdminCheckouts = () => {
       }
 
       const checkoutPayload = {
+        user_id: user?.id, // Adicionar user_id
         product_id: checkoutData.selectedProduct,
         price: checkoutData.packages[0]?.price * 100 || 0,
         promotional_price: checkoutData.packages[0]?.originalPrice ? checkoutData.packages[0].originalPrice * 100 : null,
@@ -597,7 +600,7 @@ const AdminCheckouts = () => {
           textColor: checkoutData.styles?.textColor || '#000000',
           headlineText: checkoutData.styles?.headlineText || 'Sua transformação começa agora!',
           headlineColor: checkoutData.styles?.headlineColor || '#000000',
-          highlightColor: checkoutData.styles?.highlightColor || checkout.styles?.primaryColor || '#3b82f6',
+          highlightColor: checkoutData.styles?.highlightColor || checkoutData.styles?.primaryColor || '#3b82f6', // Corrigido aqui
           description: checkoutData.styles?.description || '',
           gradientColor: checkoutData.styles?.gradientColor || '#60a5fa'
         },
@@ -1435,7 +1438,7 @@ const AdminCheckouts = () => {
                         <Input 
                           id="deliverableLink" 
                           type="url" 
-                          value={checkoutData.deliverable.link} 
+                          value={checkoutData.deliverable.link || ''} 
                           onChange={e => handleInputChange('deliverable.link', e.target.value)} 
                           placeholder="https://exemplo.com/meu-ebook.pdf" 
                           required 
@@ -1450,7 +1453,7 @@ const AdminCheckouts = () => {
                           id="deliverableFile" 
                           type="file" 
                           onChange={e => handleFileChange(e.target.files?.[0] || null)} 
-                          required={!checkoutData.deliverable.fileUrl} // Required only if no file is already uploaded
+                          required={!checkoutData.deliverable.fileUrl}
                         />
                         {checkoutData.deliverable.fileUrl && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -1460,7 +1463,7 @@ const AdminCheckouts = () => {
                               type="button" 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => handleInputChange('deliverable.fileUrl', '')} // Clear fileUrl
+                              onClick={() => handleInputChange('deliverable.fileUrl', '')}
                               className="h-6 px-2 text-destructive hover:text-destructive"
                             >
                               <XCircle className="h-3 w-3 mr-1" /> Remover

@@ -12,6 +12,7 @@ import nubankLogo from '@/assets/banks/nubank-logo.png';
 import itauLogo from '@/assets/banks/itau-logo.png';
 import bradescoLogo from '@/assets/banks/bradesco-logo.png';
 import santanderLogo from '@/assets/banks/santander-logo.png';
+import { DeliverableConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const PaymentSuccess = () => {
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
   const [productData, setProductData] = useState<any>(null);
-  const [checkoutDeliverable, setCheckoutDeliverable] = useState<any>(null);
+  const [checkoutDeliverable, setCheckoutDeliverable] = useState<DeliverableConfig | null>(null); // Usar DeliverableConfig
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
   const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null);
@@ -85,13 +86,13 @@ const PaymentSuccess = () => {
             setProductData(fetchedPayment.checkouts.products);
           }
           if (fetchedPayment?.checkouts?.form_fields?.deliverable) {
-            setCheckoutDeliverable(fetchedPayment.checkouts.form_fields.deliverable);
+            setCheckoutDeliverable(fetchedPayment.checkouts.form_fields.deliverable as DeliverableConfig); // Cast aqui
           }
 
           if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (fetchedPayment?.checkouts?.form_fields?.deliverable?.link || fetchedPayment?.checkouts?.form_fields?.deliverable?.fileUrl))) {
             setDeliverableLinkToDisplay(fetchedPayment.checkouts.form_fields.deliverable.link || fetchedPayment.checkouts.form_fields.deliverable.fileUrl);
-          } else if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.products?.member_area_link || fetchedPayment?.checkouts?.products?.file_url)) {
-            setDeliverableLinkToDisplay(fetchedPayment.checkouts.products.member_area_link || fetchedPayment.checkouts.products.file_url);
+          } else if (!deliverableLinkToDisplay && ((fetchedPayment?.checkouts?.products as any)?.member_area_link || (fetchedPayment?.checkouts?.products as any)?.file_url)) { // Cast para any aqui
+            setDeliverableLinkToDisplay((fetchedPayment?.checkouts?.products as any)?.member_area_link || (fetchedPayment?.checkouts?.products as any)?.file_url); // Cast para any aqui
           }
           
           setIsChecking(false);
@@ -130,13 +131,13 @@ const PaymentSuccess = () => {
                     setProductData(payment.checkouts.products);
                   }
                   if (payment?.checkouts?.form_fields?.deliverable) {
-                    setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+                    setCheckoutDeliverable(payment.checkouts.form_fields.deliverable as DeliverableConfig); // Cast aqui
                   }
 
                   if (!deliverableLinkToDisplay && (payment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (payment?.checkouts?.form_fields?.deliverable?.link || payment?.checkouts?.form_fields?.deliverable?.fileUrl))) {
                     setDeliverableLinkToDisplay(payment.checkouts.form_fields.deliverable.link || payment.checkouts.form_fields.deliverable.fileUrl);
-                  } else if (!deliverableLinkToDisplay && (payment?.checkouts?.products?.member_area_link || payment?.checkouts?.products?.file_url)) {
-                    setDeliverableLinkToDisplay(payment.checkouts.products.member_area_link || payment.checkouts.products.file_url);
+                  } else if (!deliverableLinkToDisplay && ((payment?.checkouts?.products as any)?.member_area_link || (payment?.checkouts?.products as any)?.file_url)) { // Cast para any aqui
+                    setDeliverableLinkToDisplay((payment?.checkouts?.products as any)?.member_area_link || (payment?.checkouts?.products as any)?.file_url); // Cast para any aqui
                   }
 
                 } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
@@ -174,7 +175,7 @@ const PaymentSuccess = () => {
                   setProductData(payment.checkouts.products);
                 }
                 if (payment?.checkouts?.form_fields?.deliverable) {
-                  setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
+                  setCheckoutDeliverable(payment.checkouts.form_fields.deliverable as DeliverableConfig); // Cast aqui
                 }
               } else if (payment.status === 'failed') {
                 setPaymentStatus('failed');
