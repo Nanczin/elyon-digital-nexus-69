@@ -24,37 +24,32 @@ const PaymentSuccess = () => {
   const [checkoutDeliverable, setCheckoutDeliverable] = useState<any>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
-  const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null); // Novo estado para o link do entregável
+  const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null);
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
         setIsChecking(true);
         
-        // Pegar dados do localStorage
         const savedPaymentData = localStorage.getItem('paymentData');
         let currentPaymentData = null;
         
         if (savedPaymentData) {
           currentPaymentData = JSON.parse(savedPaymentData);
           setPaymentData(currentPaymentData);
-          // Extrair deliverableLink do savedPaymentData
           if (currentPaymentData.deliverableLink) {
             setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
           }
         }
 
-        // Priorizar status e payment_id da URL (vindo do Mercado Pago Standard Checkout)
         const urlPaymentId = searchParams.get('payment_id');
         const urlStatus = searchParams.get('status');
         
         console.log('PaymentSuccess Debug: Verificando status:', { urlStatus, urlPaymentId, currentPaymentData });
         
-        // Se veio com status approved na URL, marcar como completado imediatamente
         if (urlStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
           
-          // Buscar dados do produto e do checkout se tiver payment_id da URL
           let fetchedPayment = null;
           if (urlPaymentId) {
             const { data: payment } = await supabase
@@ -69,7 +64,7 @@ const PaymentSuccess = () => {
               .eq('mp_payment_id', urlPaymentId)
               .maybeSingle();
             fetchedPayment = payment;
-          } else if (currentPaymentData?.payment?.id) { // Fallback para payment_id do localStorage
+          } else if (currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -92,8 +87,7 @@ const PaymentSuccess = () => {
           if (fetchedPayment?.checkouts?.form_fields?.deliverable) {
             setCheckoutDeliverable(fetchedPayment.checkouts.form_fields.deliverable);
           }
-          
-          // Re-avaliar finalDeliverableLink a partir dos dados buscados se não estiver definido pelo localStorage
+
           if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (fetchedPayment?.checkouts?.form_fields?.deliverable?.link || fetchedPayment?.checkouts?.form_fields?.deliverable?.fileUrl))) {
             setDeliverableLinkToDisplay(fetchedPayment.checkouts.form_fields.deliverable.link || fetchedPayment.checkouts.form_fields.deliverable.fileUrl);
           } else if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.products?.member_area_link || fetchedPayment?.checkouts?.products?.file_url)) {
@@ -101,15 +95,13 @@ const PaymentSuccess = () => {
           }
           
           setIsChecking(false);
-          return; // Não continuar verificando
+          return;
         }
         
-        // Se está pendente, verificar status no banco ou na API
         if (paymentStatus === 'pending') {
           const mpIdToCheck = urlPaymentId || currentPaymentData?.payment?.mp_payment_id;
           
           if (mpIdToCheck) {
-            // Tentar verificar na API do Mercado Pago
             try {
               const res = await supabase.functions.invoke('verify-mercado-pago-payment', {
                 body: { mp_payment_id: mpIdToCheck },
@@ -122,7 +114,6 @@ const PaymentSuccess = () => {
                 if (res.data.status === 'approved' || res.data.payment?.status === 'completed') {
                   setPaymentStatus('completed');
                   window.history.replaceState({}, '', '/payment-success?status=approved');
-                  // Re-fetch product and deliverable data if status changed to completed
                   const { data: payment } = await supabase
                     .from('payments')
                     .select(`
@@ -142,7 +133,6 @@ const PaymentSuccess = () => {
                     setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
                   }
 
-                  // Re-avaliar finalDeliverableLink a partir dos dados buscados se não estiver definido pelo localStorage
                   if (!deliverableLinkToDisplay && (payment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (payment?.checkouts?.form_fields?.deliverable?.link || payment?.checkouts?.form_fields?.deliverable?.fileUrl))) {
                     setDeliverableLinkToDisplay(payment.checkouts.form_fields.deliverable.link || payment.checkouts.form_fields.deliverable.fileUrl);
                   } else if (!deliverableLinkToDisplay && (payment?.checkouts?.products?.member_area_link || payment?.checkouts?.products?.file_url)) {
@@ -160,8 +150,7 @@ const PaymentSuccess = () => {
             }
           }
           
-          // Fallback: verificar no banco (se não foi verificado pela API ou se a API falhou)
-          if (currentPaymentData?.payment?.id && paymentStatus === 'pending') { // Only if still pending
+          if (currentPaymentData?.payment?.id && paymentStatus === 'pending') {
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -203,7 +192,6 @@ const PaymentSuccess = () => {
 
     checkPaymentStatus();
     
-    // Verificar a cada 5 segundos apenas se estiver pendente
     const interval = setInterval(() => {
       if (paymentStatus === 'pending') {
         console.log('PaymentSuccess Debug: Re-checking payment status...');
@@ -212,7 +200,7 @@ const PaymentSuccess = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [searchParams, paymentStatus, deliverableLinkToDisplay]); // Adicionado deliverableLinkToDisplay às dependências
+  }, [searchParams, paymentStatus, deliverableLinkToDisplay]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -228,15 +216,13 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Função para determinar o texto do botão com base no link
   const getDeliverableButtonText = (link: string | null) => {
-    if (!link) return 'Acessar Produto'; // Fallback
+    if (!link) return 'Acessar Produto';
     const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
     const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
     return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
   };
 
-  // Exibir status de processamento no próprio checkout para cartão de crédito
   if (paymentData?.paymentMethod === 'creditCard' && paymentStatus === 'pending') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
@@ -264,7 +250,6 @@ const PaymentSuccess = () => {
     );
   }
 
-  // Se for PIX, mostrar QR Code e instruções
   if (paymentData?.paymentMethod === 'pix') {
     const primaryColor = paymentData?.checkoutStyles?.primaryColor || '#ec4899';
     const gradientColor = paymentData?.checkoutStyles?.gradientColor || primaryColor;
@@ -310,8 +295,7 @@ const PaymentSuccess = () => {
 
                 {paymentData.payment?.qr_code && (
                   <div className="space-y-4">
-                    {/* Botão destacado para copiar PIX */}
-                     <Button 
+                    <Button 
                        onClick={copyQRCode}
                        className="w-full text-white py-4 text-lg font-semibold hover:opacity-90 transition-all duration-300"
                        style={{ 
@@ -323,7 +307,6 @@ const PaymentSuccess = () => {
                        Copiar Código PIX
                       </Button>
                       
-                      {/* Alerta fixo de segurança */}
                       <Alert className="bg-yellow-50 border-yellow-200">
                         <AlertTriangle className="h-4 w-4 text-yellow-600" />
                         <AlertDescription className="text-yellow-800">
@@ -331,7 +314,6 @@ const PaymentSuccess = () => {
                         </AlertDescription>
                       </Alert>
                       
-                      {/* Botão expansível de proteção bancária */}
                       <Collapsible open={isProtectionOpen} onOpenChange={setIsProtectionOpen}>
                         <CollapsibleTrigger asChild>
                           <Button 
@@ -405,7 +387,6 @@ const PaymentSuccess = () => {
                 )}
               </div>
 
-              {/* Seção de aguardando confirmação */}
               <div className="bg-white border rounded-lg p-6 text-center">
                 <div className="mx-auto w-12 h-12 mb-4">
                   <div className="w-full h-full border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
@@ -424,7 +405,6 @@ const PaymentSuccess = () => {
     );
   }
 
-  // Página de pagamento completado com sucesso
   if (paymentStatus === 'completed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
@@ -460,7 +440,7 @@ const PaymentSuccess = () => {
                     )}
                     
                     <div className="space-y-3">
-                      {deliverableLinkToDisplay && ( // Usar o novo estado aqui
+                      {deliverableLinkToDisplay && (
                         <Button 
                           className="w-full bg-green-600 hover:bg-green-700 text-white"
                           onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
@@ -507,7 +487,6 @@ const PaymentSuccess = () => {
     );
   }
   
-  // Página de pagamento falhado
   if (paymentStatus === 'failed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
@@ -562,7 +541,6 @@ const PaymentSuccess = () => {
     );
   }
 
-  // Fallback para quando não há dados de pagamento ou está carregando
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
@@ -634,8 +612,8 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-    );
-  }
+    </div>
+  );
 };
 
 export default PaymentSuccess;
