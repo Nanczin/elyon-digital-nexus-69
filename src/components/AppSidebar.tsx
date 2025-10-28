@@ -1,4 +1,3 @@
-import React from 'react'; // Import React for Fragment
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
@@ -89,44 +88,43 @@ export function AppSidebar() {
     >
       <SidebarContent className="overflow-hidden">
         <SidebarGroup>
-          <React.Fragment> {/* Envolvendo os filhos de SidebarGroup em um Fragment */}
-            <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-4 pb-2"}> {/* Ajustado padding-top e adicionado padding-bottom */}
-              Menu Principal
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
-                {adminNavItems.map((item) => {
-                  // Show all items to admin, only payments to regular users
-                  if (!isAdmin && item.href !== '/payments') {
-                    return null;
-                  }
+          {/* Removido React.Fragment, pois não é mais necessário */}
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-4 pb-2"}> {/* Ajustado padding-top e adicionado padding-bottom */}
+            Menu Principal
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {adminNavItems.map((item) => {
+                // Show all items to admin, only payments to regular users
+                if (!isAdmin && item.href !== '/payments') {
+                  return null;
+                }
 
-                  const IconComponent = item.icon;
-                  return (
-                    <SidebarMenuItem key={item.href} asChild> {/* Aplicado asChild aqui */}
-                      <NavLink 
-                        to={item.href} 
-                        className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${ // Alterado 'items-start' para 'items-center' e adicionado 'py-2'
-                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3' // Alterado 'pl-0' para 'pl-4'
-                          }`
-                        }
-                        title={isCollapsed ? item.label : undefined}
-                      >
-                        {/* Envolvendo os filhos do NavLink em um único span */}
-                        <span className="flex items-center gap-3">
-                          <IconComponent className="h-4 w-4 flex-shrink-0" />
-                          {!isCollapsed && (
-                            <span className="truncate text-base">{item.label}</span>
-                          )}
-                        </span>
-                      </NavLink>
-                    </SidebarMenuItem>
-                  );
-                }).filter(Boolean)} {/* Adicionado .filter(Boolean) aqui */}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </React.Fragment>
+                const IconComponent = item.icon;
+                return (
+                  <SidebarMenuItem key={item.href} asChild> {/* Aplicado asChild aqui */}
+                    <NavLink 
+                      to={item.href} 
+                      className={({ isActive }) => 
+                        `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${ // Alterado 'items-start' para 'items-center' e adicionado 'py-2'
+                          isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3' // Alterado 'pl-0' para 'pl-4'
+                        }`
+                      }
+                      title={isCollapsed ? item.label : undefined}
+                    >
+                      {/* Envolvendo os filhos do NavLink em um único span */}
+                      <span className="flex items-center gap-3">
+                        <IconComponent className="h-4 w-4 flex-shrink-0" />
+                        {!isCollapsed && (
+                          <span className="truncate text-base">{item.label}</span>
+                        )}
+                      </span>
+                    </NavLink>
+                  </SidebarMenuItem>
+                );
+              }).filter(Boolean)} {/* Adicionado .filter(Boolean) aqui */}
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
