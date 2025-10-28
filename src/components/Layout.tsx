@@ -116,14 +116,20 @@ const Layout: React.FC<LayoutProps> = ({
                 <DropdownMenuContent align="end" className="w-44 sm:w-48 lg:w-56 z-50 bg-background border shadow-lg">
                   <DropdownMenuItem asChild>
                     <Link to="/settings" className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Configurações</span>
+                      {/* Wrap children of Link in a Fragment */}
+                      <React.Fragment>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                      </React.Fragment>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut} className="text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
+                    {/* Wrap children of DropdownMenuItem in a Fragment */}
+                    <React.Fragment>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </React.Fragment>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
