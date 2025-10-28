@@ -164,15 +164,22 @@ const PaymentSuccess = () => {
           const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
           const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
 
+          console.log('PaymentSuccess Debug: currentDeliverable (from DB):', currentDeliverable);
+          console.log('PaymentSuccess Debug: currentProduct (from DB):', currentProduct);
+
           if (currentDeliverable?.type !== 'none' && (currentDeliverable?.link || currentDeliverable?.fileUrl)) {
             determinedLink = currentDeliverable.link || currentDeliverable.fileUrl;
+            console.log('PaymentSuccess Debug: Determined link from checkout deliverable:', determinedLink);
           } else if (currentProduct?.member_area_link || currentProduct?.file_url) {
             determinedLink = currentProduct.member_area_link || currentProduct.file_url;
+            console.log('PaymentSuccess Debug: Determined link from product:', determinedLink);
           }
           setDeliverableLinkToDisplay(determinedLink);
+          console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay:', determinedLink);
         } else if (currentPaymentData?.deliverableLink) {
           // Fallback to localStorage if no DB data was fetched
           setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
+          console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay from localStorage (fallback):', currentPaymentData.deliverableLink);
         }
         
       } catch (error) {
@@ -192,7 +199,7 @@ const PaymentSuccess = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [searchParams, paymentStatus]); // Removido deliverableLinkToDisplay das dependências
+  }, [searchParams, paymentStatus]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -604,8 +611,8 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default PaymentSuccess;
