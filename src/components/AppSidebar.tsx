@@ -108,7 +108,7 @@ export function AppSidebar() {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild className="w-full h-8"> {/* Alterado de h-10 para h-8 */}
+                    <SidebarMenuButton asChild className="w-full h-8">
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
@@ -118,10 +118,13 @@ export function AppSidebar() {
                         }
                         title={isCollapsed ? item.label : undefined}
                       >
-                        <IconComponent className="h-4 w-4 flex-shrink-0" />
-                        {!isCollapsed && (
-                          <span className="truncate text-base">{item.label}</span>
-                        )}
+                        {/* Envolvendo os filhos do NavLink em um único span */}
+                        <span className="flex items-center gap-3">
+                          <IconComponent className="h-4 w-4 flex-shrink-0" />
+                          {!isCollapsed && (
+                            <span className="truncate text-base">{item.label}</span>
+                          )}
+                        </span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
