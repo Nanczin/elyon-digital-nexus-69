@@ -88,13 +88,10 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
-        {/* Sidebar Trigger no topo da sidebar */}
-        <div className={`flex items-center h-12 sm:h-14 lg:h-16 px-4 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          {/* O SidebarTrigger agora está no componente Layout */}
-        </div>
+        {/* O espaço reservado para o cabeçalho foi removido daqui para que o conteúdo comece no topo */}
 
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-2"}> {/* Alterado 'py-2' para 'pt-2' */}
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-0"}> {/* Alterado 'pt-2' para 'pt-0' */}
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -112,7 +109,7 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-start rounded-md ${ // Alterado 'items-center' para 'items-start'
+                          `${getNavCls({ isActive })} flex items-start rounded-md ${
                             isCollapsed ? 'justify-center px-0' : 'gap-3 pl-0 pr-3'
                           }`
                         }
