@@ -107,7 +107,14 @@ const Checkout = () => {
         price: data.price / 100, // Convert main product price to Reais
         promotional_price: data.promotional_price ? data.promotional_price / 100 : null, // Convert promotional price to Reais
         layout: data.layout || 'horizontal',
-        form_fields: data.form_fields as FormFields || {}, // Cast explícito aqui
+        form_fields: {
+          ...(data.form_fields as FormFields || {}),
+          packages: (data.form_fields as FormFields)?.packages?.map(pkg => ({
+            ...pkg,
+            price: pkg.price / 100, // Convert package price to reais
+            originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : 0, // Convert original price to reais
+          })) || [],
+        },
         payment_methods: data.payment_methods as PaymentMethods || {},
         order_bumps: orderBumpsWithProducts,
         styles: data.styles as CheckoutData['styles'] || {},
