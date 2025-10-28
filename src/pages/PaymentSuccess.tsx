@@ -36,6 +36,9 @@ const PaymentSuccess = () => {
     if (savedPaymentData) {
       currentPaymentData = JSON.parse(savedPaymentData);
       setPaymentData(currentPaymentData);
+      // Ler o link do entregável e o status de envio de e-mail diretamente do localStorage
+      setDeliverableLinkToDisplay(currentPaymentData.deliverableLink || null);
+      setSendTransactionalEmail(currentPaymentData.sendTransactionalEmail ?? true);
     }
 
     const urlStatus = searchParams.get('status');
@@ -121,10 +124,8 @@ const PaymentSuccess = () => {
             determinedLink = currentProduct.member_area_link || currentProduct.file_url;
           }
           setDeliverableLinkToDisplay(determinedLink);
-        } else if (currentPaymentData?.deliverableLink) {
-          setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
-          setSendTransactionalEmail(currentPaymentData.sendTransactionalEmail ?? true);
-        }
+        } 
+        // Removido o else if (currentPaymentData?.deliverableLink) para evitar sobrescrever o link já lido do localStorage
         setIsChecking(false); // Garante que o carregamento seja desativado após a busca/determinação inicial
       }
     };
@@ -208,37 +209,35 @@ const PaymentSuccess = () => {
                   Parabéns! Agora você tem acesso completo ao seu produto.
                 </p>
                 
-                {productData && ( // Ainda verifica productData como um fallback geral
+                {deliverableLinkToDisplay && ( // Usar deliverableLinkToDisplay diretamente
                   <div className="bg-white border border-green-200 rounded-lg p-6 space-y-4">
                     <h3 className="font-semibold text-lg text-gray-800">
-                      {checkoutDeliverable?.name || productData.name}
+                      {checkoutDeliverable?.name || productData?.name || 'Seu Produto'} {/* Fallback para nome */}
                     </h3>
                     
-                    {(checkoutDeliverable?.description || productData.description) && (
+                    {(checkoutDeliverable?.description || productData?.description) && (
                       <p className="text-gray-600 text-sm">
-                        {checkoutDeliverable?.description || productData.description}
+                        {checkoutDeliverable?.description || productData?.description}
                       </p>
                     )}
                     
                     <div className="space-y-3">
-                      {deliverableLinkToDisplay && (
-                        <Button 
-                          className="w-full bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          {getDeliverableButtonText(deliverableLinkToDisplay)}
-                        </Button>
-                      )}
-                      
-                      {!deliverableLinkToDisplay && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                          <p className="text-yellow-800 text-sm">
-                            O acesso ao produto será enviado por e-mail em breve.
-                          </p>
-                        </div>
-                      )}
+                      <Button 
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {getDeliverableButtonText(deliverableLinkToDisplay)}
+                      </Button>
                     </div>
+                  </div>
+                )}
+                
+                {!deliverableLinkToDisplay && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-yellow-800 text-sm">
+                      O acesso ao produto será enviado por e-mail em breve.
+                    </p>
                   </div>
                 )}
                 

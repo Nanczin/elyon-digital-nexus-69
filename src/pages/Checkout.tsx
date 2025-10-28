@@ -378,7 +378,8 @@ const Checkout = () => {
           headlineColor,
           gradientColor
         },
-        deliverableLink: finalDeliverableLink
+        deliverableLink: finalDeliverableLink, // Armazenar o link final aqui
+        sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true // Armazenar o status de envio de e-mail
       }));
 
       if (paymentStatus === 'approved') {
