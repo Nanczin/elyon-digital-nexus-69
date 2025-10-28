@@ -120,7 +120,9 @@ const AdminCheckouts = () => {
       name: '', // Adicionado nome para o entregável
       description: '' // Adicionado descrição para o entregável
     } as DeliverableConfig & { file: File | null }, // Explicitly type deliverable
-    sendTransactionalEmail: true // Novo campo para e-mail transacional
+    sendTransactionalEmail: true, // Novo campo para e-mail transacional
+    transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!', // Assunto padrão
+    transactionalEmailBody: 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital' // Corpo padrão
   };
   // Usar uma chave única por checkout ou "new" para novos
   // Manter a chave consistente mesmo quando o componente remonta
@@ -283,7 +285,9 @@ const AdminCheckouts = () => {
         name: checkout.form_fields?.deliverable?.name || '', // Novo campo
         description: checkout.form_fields?.deliverable?.description || '' // Novo campo
       },
-      sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true // Carregar o novo campo
+      sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true, // Carregar o novo campo
+      transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initialFormData.transactionalEmailSubject, // Carregar assunto
+      transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.transactionalEmailBody // Carregar corpo
     };
   };
 
@@ -560,7 +564,9 @@ const AdminCheckouts = () => {
             name: checkoutData.deliverable.name || null, // Novo campo
             description: checkoutData.deliverable.description || null // Novo campo
           },
-          sendTransactionalEmail: checkoutData.sendTransactionalEmail // Salvar o novo campo
+          sendTransactionalEmail: checkoutData.sendTransactionalEmail, // Salvar o novo campo
+          transactionalEmailSubject: checkoutData.transactionalEmailSubject, // Salvar assunto
+          transactionalEmailBody: checkoutData.transactionalEmailBody // Salvar corpo
         },
         payment_methods: checkoutData.paymentMethods,
         order_bumps: checkoutData.orderBumps.map(bump => ({
@@ -1504,6 +1510,36 @@ const AdminCheckouts = () => {
                             A integração de e-mail SMTP não está configurada. Por favor, configure-a na página de Integrações para habilitar esta opção.
                           </AlertDescription>
                         </Alert>
+                      )}
+
+                      {checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured && (
+                        <div className="space-y-4 pl-6 border-l-2 border-gray-200">
+                          <div className="space-y-2">
+                            <Label htmlFor="emailSubject">Assunto do E-mail</Label>
+                            <Input 
+                              id="emailSubject" 
+                              value={checkoutData.transactionalEmailSubject || ''} 
+                              onChange={e => handleInputChange('transactionalEmailSubject', e.target.value)} 
+                              placeholder="Seu acesso ao produto Elyon Digital!" 
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Use <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{product_name}}'}</code> para o nome do produto.
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="emailBody">Corpo do E-mail</Label>
+                            <Textarea 
+                              id="emailBody" 
+                              value={checkoutData.transactionalEmailBody || ''} 
+                              onChange={e => handleInputChange('transactionalEmailBody', e.target.value)} 
+                              placeholder="Olá {customer_name},..." 
+                              rows={8}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Use <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{customer_name}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{product_name}}'}</code> e <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{access_link}}'}</code>.
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>

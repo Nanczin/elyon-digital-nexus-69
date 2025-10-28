@@ -50,6 +50,8 @@ export type FormFields = {
   deliverable?: DeliverableConfig | null; // Adicionado tipo DeliverableConfig
   description?: string; // Adicionado descrição ao FormFields
   sendTransactionalEmail?: boolean; // Adicionado para controlar o envio de e-mail transacional
+  transactionalEmailSubject?: string; // Novo campo para o assunto do e-mail
+  transactionalEmailBody?: string; // Novo campo para o corpo do e-mail
 };
 
 export type Database = {
