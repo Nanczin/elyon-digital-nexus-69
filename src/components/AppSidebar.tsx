@@ -89,7 +89,7 @@ export function AppSidebar() {
     >
       <SidebarContent className="overflow-hidden">
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}> {/* Adicionado px-4 e py-2 para espaçamento */}
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}>
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -103,23 +103,21 @@ export function AppSidebar() {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild className="w-full"> {/* Removido h-8 */}
+                    <SidebarMenuButton asChild className="w-full">
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${ // Adicionado py-2 para altura e espaçamento
-                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3' // Alterado pl-0 para pl-4
+                          `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
+                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
                           }`
                         }
                         title={isCollapsed ? item.label : undefined}
                       >
-                        {/* Envolvendo os filhos do NavLink em um único span */}
-                        <span className="flex items-center gap-3">
-                          <IconComponent className="h-4 w-4 flex-shrink-0" />
-                          {!isCollapsed && (
-                            <span className="truncate text-base">{item.label}</span>
-                          )}
-                        </span>
+                        {/* Removido o <span> extra que envolvia os filhos do NavLink */}
+                        <IconComponent className="h-4 w-4 flex-shrink-0" />
+                        {!isCollapsed && (
+                          <span className="truncate text-base">{item.label}</span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
