@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
+  SidebarTrigger, // Import SidebarTrigger
 } from '@/components/ui/sidebar';
 import { 
   LayoutDashboard, 
@@ -88,6 +89,11 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
+        {/* Sidebar Trigger no topo da sidebar */}
+        <div className={`flex items-center h-12 sm:h-14 lg:h-16 px-2 sm:px-4 lg:px-6 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+          <SidebarTrigger className="flex-shrink-0" />
+        </div>
+
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-xs sm:text-sm px-2"}>
             Menu Principal
