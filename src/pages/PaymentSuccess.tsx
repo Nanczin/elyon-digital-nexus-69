@@ -12,8 +12,8 @@ import nubankLogo from '@/assets/banks/nubank-logo.png';
 import itauLogo from '@/assets/banks/itau-logo.png';
 import bradescoLogo from '@/assets/banks/bradesco-logo.png';
 import santanderLogo from '@/assets/banks/santander-logo.png';
-import { DeliverableConfig, FormFields } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
-import { CheckoutData } from '@/components/checkout/CheckoutLayoutProps'; // Importar CheckoutData para tipagem de products
+import { DeliverableConfig, FormFields } from '@/integrations/supabase/types';
+import { CheckoutData } from '@/components/checkout/CheckoutLayoutProps';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const PaymentSuccess = () => {
   const [paymentData, setPaymentData] = useState<any>(null);
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
-  const [productData, setProductData] = useState<CheckoutData['products'] | null>(null); // Tipagem mais específica
+  const [productData, setProductData] = useState<CheckoutData['products'] | null>(null);
   const [checkoutDeliverable, setCheckoutDeliverable] = useState<DeliverableConfig | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
@@ -81,7 +81,7 @@ const PaymentSuccess = () => {
 
           console.log('PaymentSuccess Debug: Fetched payment for redirect:', fetchedPaymentFromDb);
 
-        } else if (paymentStatus === 'pending') { // Only try to verify if still pending
+        } else if (paymentStatus === 'pending') {
           const mpIdToCheck = urlPaymentId || currentPaymentData?.payment?.mp_payment_id;
           
           if (mpIdToCheck) {
@@ -121,7 +121,6 @@ const PaymentSuccess = () => {
             }
           }
           
-          // Fallback DB payment check if still pending and no MP verification happened or it failed
           if (paymentStatus === 'pending' && !fetchedPaymentFromDb && currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
@@ -150,7 +149,6 @@ const PaymentSuccess = () => {
           }
         }
         
-        // Always set productData, checkoutDeliverable, and deliverableLinkToDisplay from the fetched DB data
         if (fetchedPaymentFromDb) {
           if (fetchedPaymentFromDb.checkouts?.products) {
             setProductData(fetchedPaymentFromDb.checkouts.products as CheckoutData['products']);
@@ -174,7 +172,6 @@ const PaymentSuccess = () => {
           setDeliverableLinkToDisplay(determinedLink);
           console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay:', determinedLink);
         } else if (currentPaymentData?.deliverableLink) {
-          // Fallback to localStorage if no DB data was fetched
           setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
           console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay from localStorage (fallback):', currentPaymentData.deliverableLink);
         }
@@ -214,13 +211,11 @@ const PaymentSuccess = () => {
 
   const getDeliverableButtonText = (link: string | null) => {
     if (!link) return 'Acessar Produto';
-    // Corrigido: .pp3 para .pptx
     const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
     const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
     return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
   };
 
-  // 1. Estado de carregamento
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
@@ -243,7 +238,6 @@ const PaymentSuccess = () => {
     );
   }
 
-  // 2. Estado de pagamento aprovado/completo
   if (paymentStatus === 'completed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
@@ -316,7 +310,6 @@ const PaymentSuccess = () => {
     );
   }
   
-  // 3. Estado de pagamento falhou
   if (paymentStatus === 'failed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
@@ -371,7 +364,6 @@ const PaymentSuccess = () => {
     );
   }
 
-  // 4. Estados pendentes específicos (se não for carregando, completo ou falhou)
   if (paymentStatus === 'pending') {
     if (paymentData?.paymentMethod === 'pix') {
       const primaryColor = paymentData?.checkoutStyles?.primaryColor || '#ec4899';
@@ -528,7 +520,7 @@ const PaymentSuccess = () => {
     );
   }
 
-  if (paymentData?.paymentMethod === 'creditCard') { // Assumindo que se não for PIX, é CC e está pendente
+  if (paymentData?.paymentMethod === 'creditCard') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
         <div className="container mx-auto px-4 max-w-2xl">
@@ -555,9 +547,6 @@ const PaymentSuccess = () => {
     );
   }
 
-  // 5. Retorno padrão (se nenhum dos estados acima for correspondido, o que é improvável com a lógica atual)
-  // Este bloco só será alcançado se `paymentStatus` não for 'pending', 'completed', 'failed' e `isChecking` for false.
-  // Mantemos um estado genérico de "processado" como fallback.
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
       <div className="container mx-auto px-4 max-w-2xl">
