@@ -221,6 +221,13 @@ export const useIntegrations = () => {
     }
   };
 
+  // Lógica atualizada para verificar se a configuração de e-mail está ativa
+  const isEmailConfigured = emailConfig && 
+                             emailConfig.host && 
+                             emailConfig.username && 
+                             emailConfig.password && 
+                             emailConfig.fromEmail;
+
   return {
     mercadoPagoAccounts,
     metaPixels,
@@ -237,7 +244,7 @@ export const useIntegrations = () => {
       mercadoPago: mercadoPagoAccounts.length > 0,
       metaPixel: metaPixels.length > 0,
       utmify: utmifyConfig !== null,
-      email: emailConfig !== null
+      email: isEmailConfigured // Usar a nova variável de status
     }
   };
 };
