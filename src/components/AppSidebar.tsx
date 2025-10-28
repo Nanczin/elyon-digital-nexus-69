@@ -94,7 +94,7 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}>
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-2"}> {/* Alterado 'py-2' para 'pt-2' */}
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -112,8 +112,8 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md ${
-                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-0 pr-3' // Alterado de 'px-3' para 'pl-0 pr-3'
+                          `${getNavCls({ isActive })} flex items-start rounded-md ${ // Alterado 'items-center' para 'items-start'
+                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-0 pr-3'
                           }`
                         }
                         title={isCollapsed ? item.label : undefined}
