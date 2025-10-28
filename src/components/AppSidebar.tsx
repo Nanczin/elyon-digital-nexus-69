@@ -9,8 +9,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem, // Removido SidebarMenuButton
   useSidebar,
 } from '@/components/ui/sidebar';
 import { 
@@ -104,26 +103,24 @@ export function AppSidebar() {
 
                   const IconComponent = item.icon;
                   return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild className="w-full"> {/* Removido h-8 para permitir padding vertical */}
-                        <NavLink 
-                          to={item.href} 
-                          className={({ isActive }) => 
-                            `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${ // Alterado 'items-start' para 'items-center' e adicionado 'py-2'
-                              isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3' // Alterado 'pl-0' para 'pl-4'
-                            }`
-                          }
-                          title={isCollapsed ? item.label : undefined}
-                        >
-                          {/* Envolvendo os filhos do NavLink em um único span */}
-                          <span className="flex items-center gap-3">
-                            <IconComponent className="h-4 w-4 flex-shrink-0" />
-                            {!isCollapsed && (
-                              <span className="truncate text-base">{item.label}</span>
-                            )}
-                          </span>
-                        </NavLink>
-                      </SidebarMenuButton>
+                    <SidebarMenuItem key={item.href} asChild> {/* Aplicado asChild aqui */}
+                      <NavLink 
+                        to={item.href} 
+                        className={({ isActive }) => 
+                          `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${ // Alterado 'items-start' para 'items-center' e adicionado 'py-2'
+                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3' // Alterado 'pl-0' para 'pl-4'
+                          }`
+                        }
+                        title={isCollapsed ? item.label : undefined}
+                      >
+                        {/* Envolvendo os filhos do NavLink em um único span */}
+                        <span className="flex items-center gap-3">
+                          <IconComponent className="h-4 w-4 flex-shrink-0" />
+                          {!isCollapsed && (
+                            <span className="truncate text-base">{item.label}</span>
+                          )}
+                        </span>
+                      </NavLink>
                     </SidebarMenuItem>
                   );
                 }).filter(Boolean)} {/* Adicionado .filter(Boolean) aqui */}
