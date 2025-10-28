@@ -95,7 +95,7 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-xs sm:text-sm px-2"}>
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-2 py-2"}>
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -109,15 +109,15 @@ export function AppSidebar() {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild className="w-full min-h-8 sm:min-h-9 lg:min-h-10">
+                    <SidebarMenuButton asChild className="w-full min-h-12">
                       <NavLink 
                         to={item.href} 
                         className={getNavCls}
                         title={isCollapsed ? item.label : undefined}
                       >
-                        <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <IconComponent className="h-5 w-5 flex-shrink-0" />
                         {!isCollapsed && (
-                          <span className="truncate text-xs sm:text-sm">{item.label}</span>
+                          <span className="truncate text-base">{item.label}</span>
                         )}
                       </NavLink>
                     </SidebarMenuButton>
