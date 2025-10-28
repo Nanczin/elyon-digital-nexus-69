@@ -32,33 +32,6 @@ const Index = () => {
   
   return (
     <div>
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/60aef8b0-cab0-4f83-87eb-eced18d89bff.png" 
-              alt="Logo Elyon" 
-              className="w-10 h-10 object-contain"
-            />
-          </Link>
-          
-          {/* Navigation */}
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
-                <Link to="/login">Entrar</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/register">Criar conta</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section 
         className="hero-section relative flex justify-center items-center z-[1]" 
