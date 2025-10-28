@@ -354,6 +354,16 @@ const Checkout = () => {
         });
       }
 
+      // Determine the final deliverable link/file
+      const productData = checkout?.products;
+      const checkoutDeliverable = checkout?.form_fields?.deliverable;
+
+      const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
+        ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
+        : productData?.member_area_link || productData?.file_url;
+
+      console.log('Checkout Debug: Final deliverable link (after approval):', finalDeliverableLink);
+
       // Armazenar informações do pagamento no localStorage para mostrar na tela de sucesso
       localStorage.setItem('paymentData', JSON.stringify({
         payment: mpResponse.payment,
@@ -367,39 +377,20 @@ const Checkout = () => {
           textColor,
           headlineColor,
           gradientColor
-        }
+        },
+        deliverableLink: finalDeliverableLink // Adiciona o link do entregável aqui
       }));
 
       // --- MODIFIED REDIRECTION LOGIC ---
       if (paymentStatus === 'approved') {
-        // Determine the final deliverable link/file
-        const productData = checkout?.products;
-        const checkoutDeliverable = checkout?.form_fields?.deliverable;
-
-        const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
-          ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-          : productData?.member_area_link || productData?.file_url;
-
-        console.log('Checkout Debug: Final deliverable link (after approval):', finalDeliverableLink);
-
-        if (finalDeliverableLink) {
-          toast({
-            title: "Pagamento Aprovado! ✅",
-            description: "Redirecionando para o seu produto..."
-          });
-          setTimeout(() => {
-            console.log('Checkout Debug: Redirecting to:', finalDeliverableLink);
-            window.location.href = finalDeliverableLink;
-          }, 1500);
-        } else {
-          toast({
-            title: "Pagamento Aprovado! ✅",
-            description: "Redirecionando para a página de confirmação..."
-          });
-          setTimeout(() => {
-            navigate('/payment-success?status=approved');
-          }, 1500);
-        }
+        // Sempre redirecionar para payment-success, a página de sucesso irá lidar com a exibição do entregável
+        toast({
+          title: "Pagamento Aprovado! ✅",
+          description: "Redirecionando para a página de confirmação..."
+        });
+        setTimeout(() => {
+          navigate('/payment-success?status=approved');
+        }, 1500);
       } else if (paymentStatus === 'pending' && selectedPaymentMethod === 'pix') {
         // PIX pendente - mostrar QR code
         toast({

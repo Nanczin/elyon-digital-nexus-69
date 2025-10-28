@@ -24,6 +24,7 @@ const PaymentSuccess = () => {
   const [checkoutDeliverable, setCheckoutDeliverable] = useState<any>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
+  const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null); // Novo estado para o link do entregável
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
@@ -37,6 +38,10 @@ const PaymentSuccess = () => {
         if (savedPaymentData) {
           currentPaymentData = JSON.parse(savedPaymentData);
           setPaymentData(currentPaymentData);
+          // Extrair deliverableLink do savedPaymentData
+          if (currentPaymentData.deliverableLink) {
+            setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
+          }
         }
 
         // Priorizar status e payment_id da URL (vindo do Mercado Pago Standard Checkout)
@@ -88,24 +93,25 @@ const PaymentSuccess = () => {
             setCheckoutDeliverable(fetchedPayment.checkouts.form_fields.deliverable);
           }
           
-          // Determine final deliverable link
-          const finalDeliverableLink = (fetchedPayment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (fetchedPayment?.checkouts?.form_fields?.deliverable?.link || fetchedPayment?.checkouts?.form_fields?.deliverable?.fileUrl))
-            ? (fetchedPayment.checkouts.form_fields.deliverable.link || fetchedPayment.checkouts.form_fields.deliverable.fileUrl)
-            : fetchedPayment?.checkouts?.products?.member_area_link || fetchedPayment?.checkouts?.products?.file_url;
-
-          console.log('PaymentSuccess Debug: Final deliverable link (initial check):', finalDeliverableLink);
-
-          if (finalDeliverableLink) {
-            toast({
-              title: "Pagamento Aprovado! ✅",
-              description: "Redirecionando para o seu produto..."
-            });
-            setTimeout(() => {
-              console.log('PaymentSuccess Debug: Redirecting to:', finalDeliverableLink);
-              window.location.href = finalDeliverableLink;
-            }, 1500);
-            return; // Exit early after redirect
+          // Re-avaliar finalDeliverableLink a partir dos dados buscados se não estiver definido pelo localStorage
+          if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (fetchedPayment?.checkouts?.form_fields?.deliverable?.link || fetchedPayment?.checkouts?.form_fields?.deliverable?.fileUrl))) {
+            setDeliverableLinkToDisplay(fetchedPayment.checkouts.form_fields.deliverable.link || fetchedPayment.checkouts.form_fields.deliverable.fileUrl);
+          } else if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.products?.member_area_link || fetchedPayment?.checkouts?.products?.file_url)) {
+            setDeliverableLinkToDisplay(fetchedPayment.checkouts.products.member_area_link || fetchedPayment.checkouts.products.file_url);
           }
+          
+          // REMOVER O REDIRECIONAMENTO DIRETO AQUI
+          // if (finalDeliverableLink) {
+          //   toast({
+          //     title: "Pagamento Aprovado! ✅",
+          //     description: "Redirecionando para o seu produto..."
+          //   });
+          //   setTimeout(() => {
+          //     console.log('PaymentSuccess Debug: Redirecting to:', finalDeliverableLink);
+          //     window.location.href = finalDeliverableLink;
+          //   }, 1500);
+          //   return; // Exit early after redirect
+          // }
           
           setIsChecking(false);
           return; // Não continuar verificando
@@ -149,24 +155,25 @@ const PaymentSuccess = () => {
                     setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
                   }
 
-                  // Determine final deliverable link after status change
-                  const finalDeliverableLinkAfterCheck = (payment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (payment?.checkouts?.form_fields?.deliverable?.link || payment?.checkouts?.form_fields?.deliverable?.fileUrl))
-                    ? (payment.checkouts.form_fields.deliverable.link || payment.checkouts.form_fields.deliverable.fileUrl)
-                    : payment?.checkouts?.products?.member_area_link || payment?.checkouts?.products?.file_url;
-
-                  console.log('PaymentSuccess Debug: Final deliverable link (after status check):', finalDeliverableLinkAfterCheck);
-
-                  if (finalDeliverableLinkAfterCheck) {
-                    toast({
-                      title: "Pagamento Aprovado! ✅",
-                      description: "Redirecionando para o seu produto..."
-                    });
-                    setTimeout(() => {
-                      console.log('PaymentSuccess Debug: Redirecting to (after status check):', finalDeliverableLinkAfterCheck);
-                      window.location.href = finalDeliverableLinkAfterCheck;
-                    }, 1500);
-                    return; // Exit early after redirect
+                  // Re-avaliar finalDeliverableLink a partir dos dados buscados se não estiver definido pelo localStorage
+                  if (!deliverableLinkToDisplay && (payment?.checkouts?.form_fields?.deliverable?.type !== 'none' && (payment?.checkouts?.form_fields?.deliverable?.link || payment?.checkouts?.form_fields?.deliverable?.fileUrl))) {
+                    setDeliverableLinkToDisplay(payment.checkouts.form_fields.deliverable.link || payment.checkouts.form_fields.deliverable.fileUrl);
+                  } else if (!deliverableLinkToDisplay && (payment?.checkouts?.products?.member_area_link || payment?.checkouts?.products?.file_url)) {
+                    setDeliverableLinkToDisplay(payment.checkouts.products.member_area_link || payment.checkouts.products.file_url);
                   }
+
+                  // REMOVER O REDIRECIONAMENTO DIRETO AQUI
+                  // if (finalDeliverableLinkAfterCheck) {
+                  //   toast({
+                  //     title: "Pagamento Aprovado! ✅",
+                  //     description: "Redirecionando para o seu produto..."
+                  //   });
+                  //   setTimeout(() => {
+                  //     console.log('PaymentSuccess Debug: Redirecting to (after status check):', finalDeliverableLinkAfterCheck);
+                  //     window.location.href = finalDeliverableLinkAfterCheck;
+                  //   }, 1500);
+                  //   return; // Exit early after redirect
+                  // }
 
                 } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
                   setPaymentStatus('failed');
@@ -232,7 +239,7 @@ const PaymentSuccess = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [searchParams, paymentStatus]);
+  }, [searchParams, paymentStatus, deliverableLinkToDisplay]); // Adicionado deliverableLinkToDisplay às dependências
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -248,11 +255,10 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Determine the final deliverable link/file
-  // This is used for rendering the "Acessar Entregável" button, not for direct redirect
-  const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
-    ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-    : productData?.member_area_link || productData?.file_url;
+  // REMOVER ESTA VARIÁVEL, AGORA USAMOS deliverableLinkToDisplay
+  // const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
+  //   ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
+  //   : productData?.member_area_link || productData?.file_url;
 
   // Exibir status de processamento no próprio checkout para cartão de crédito
   if (paymentData?.paymentMethod === 'creditCard' && paymentStatus === 'pending') {
@@ -478,10 +484,10 @@ const PaymentSuccess = () => {
                     )}
                     
                     <div className="space-y-3">
-                      {finalDeliverableLink && (
+                      {deliverableLinkToDisplay && ( // Usar o novo estado aqui
                         <Button 
                           className="w-full bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => window.open(finalDeliverableLink, '_blank')}
+                          onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
                         >
                           <ExternalLink className="h-4 w-4 mr-2" />
                           {checkoutDeliverable?.type === 'link' || productData?.member_area_link
@@ -491,7 +497,7 @@ const PaymentSuccess = () => {
                         </Button>
                       )}
                       
-                      {!finalDeliverableLink && (
+                      {!deliverableLinkToDisplay && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <p className="text-yellow-800 text-sm">
                             O acesso ao produto será enviado por e-mail em breve.
