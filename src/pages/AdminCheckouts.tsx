@@ -48,7 +48,6 @@ const AdminCheckouts = () => {
   
   const initialFormData = {
     name: '',
-    description: '', // Agora parte de FormFields, mas mantido aqui para o estado local
     selectedProduct: '',
     layout: 'horizontal' as string,
     customerFields: {
@@ -102,7 +101,7 @@ const AdminCheckouts = () => {
       textColor: '#000000',
       headlineText: 'Sua transformação começa agora!',
       headlineColor: '#000000',
-      description: '',
+      description: '', // A descrição principal do checkout vive aqui
       gradientColor: '#60a5fa',
       highlightColor: '#3b82f6'
     },
@@ -258,7 +257,6 @@ const AdminCheckouts = () => {
 
     return {
       name: checkout.products?.name || '',
-      description: (checkout.form_fields as FormFields)?.description || '', // Corrigido: acessar de form_fields
       selectedProduct: checkout.product_id || '',
       layout: checkout.layout || 'horizontal',
       customerFields: {
@@ -552,7 +550,7 @@ const AdminCheckouts = () => {
         price: checkoutData.packages[0]?.price * 100 || 0,
         promotional_price: checkoutData.packages[0]?.originalPrice ? checkoutData.packages[0].originalPrice * 100 : null,
         form_fields: {
-          description: checkoutData.description, // Isso agora está corretamente tipado em FormFields
+          // description: checkoutData.description, // REMOVIDO: A descrição principal agora está em styles
           ...checkoutData.customerFields,
           packages: checkoutData.packages,
           guarantee: checkoutData.guarantee,
@@ -769,7 +767,7 @@ const AdminCheckouts = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description">Descrição *</Label>
-                      <Textarea id="description" value={checkoutData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="Descrição do checkout..." rows={4} required />
+                      <Textarea id="description" value={checkoutData.styles?.description || ''} onChange={e => handleInputChange('styles.description', e.target.value)} placeholder="Descrição do checkout..." rows={4} required />
                     </div>
                   </div>
                 </TabsContent>

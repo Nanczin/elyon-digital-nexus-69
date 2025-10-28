@@ -32,6 +32,9 @@ export interface FormFields {
   requireCpf?: boolean;
   packages?: any[]; // Assuming packages can be part of form_fields
   deliverable?: DeliverableConfig; // Usar o tipo DeliverableConfig
+  sendTransactionalEmail?: boolean; // Adicionado para controlar o envio de e-mail transacional
+  transactionalEmailSubject?: string; // Novo campo para o assunto do e-mail
+  transactionalEmailBody?: string; // Novo campo para o corpo do e-mail
 }
 
 export interface CheckoutData {
@@ -49,7 +52,7 @@ export interface CheckoutData {
     textColor?: string;
     headlineText?: string;
     headlineColor?: string;
-    description?: string;
+    description?: string; // A descrição principal do checkout vive aqui
     gradientColor?: string;
     highlightColor?: string;
   };
