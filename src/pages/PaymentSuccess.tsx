@@ -169,10 +169,8 @@ const PaymentSuccess = () => {
 
           if (currentDeliverable?.type !== 'none' && (currentDeliverable?.link || currentDeliverable?.fileUrl)) {
             determinedLink = currentDeliverable.link || currentDeliverable.fileUrl;
-            console.log('PaymentSuccess Debug: Determined link from checkout deliverable:', determinedLink);
           } else if (currentProduct?.member_area_link || currentProduct?.file_url) {
             determinedLink = currentProduct.member_area_link || currentProduct.file_url;
-            console.log('PaymentSuccess Debug: Determined link from product:', determinedLink);
           }
           setDeliverableLinkToDisplay(determinedLink);
           console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay:', determinedLink);
@@ -611,8 +609,8 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-    );
-  }
+    </div>
+  );
 };
 
 export default PaymentSuccess;
