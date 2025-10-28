@@ -100,14 +100,14 @@ const Checkout = () => {
         price: data.price,
         promotional_price: data.promotional_price,
         layout: data.layout || 'horizontal',
-        form_fields: data.form_fields as FormFields || {},
+        form_fields: data.form_fields as FormFields || {}, // Cast explícito aqui
         payment_methods: data.payment_methods as PaymentMethods || {},
         order_bumps: orderBumpsWithProducts,
         styles: data.styles as CheckoutData['styles'] || {},
         support_contact: data.support_contact || {},
         integrations: data.integrations || {},
         timer: data.timer as CheckoutData['timer'] || undefined,
-        products: data.products as CheckoutData['products'] // Cast para o tipo correto
+        products: data.products as CheckoutData['products'] // Cast explícito aqui
       };
       
       console.log('Checkout Debug: Timer carregado do banco:', data.timer);
@@ -151,7 +151,7 @@ const Checkout = () => {
     if (!checkout) return 0;
     
     let basePrice = 0;
-    const packages = (checkout.form_fields as any)?.packages;
+    const packages = (checkout.form_fields as FormFields)?.packages; // Cast explícito aqui
 
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
@@ -341,12 +341,12 @@ const Checkout = () => {
         });
       }
 
-      const productData = checkout?.products;
-      const checkoutDeliverable = checkout?.form_fields?.deliverable;
+      const productData = checkout?.products as CheckoutData['products']; // Cast explícito aqui
+      const checkoutDeliverable = checkout?.form_fields?.deliverable as DeliverableConfig | undefined; // Cast explícito aqui
 
       const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
         ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-        : (productData as any)?.member_area_link || (productData as any)?.file_url; // Cast para any aqui
+        : productData?.member_area_link || productData?.file_url;
 
       console.log('Checkout Debug: Final deliverable link (after approval):', finalDeliverableLink);
 
@@ -458,7 +458,7 @@ const Checkout = () => {
   const calculateSavings = () => {
     if (!checkout) return 0;
     
-    const packages = (checkout.form_fields as any)?.packages;
+    const packages = (checkout.form_fields as FormFields)?.packages; // Cast explícito aqui
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
       if (selectedPkg && (parseFloat(String(selectedPkg.originalPrice)) || 0) > (parseFloat(String(selectedPkg.price)) || 0)) {

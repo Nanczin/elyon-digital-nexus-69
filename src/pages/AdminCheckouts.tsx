@@ -22,7 +22,7 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig
+import { DeliverableConfig, FormFields } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
 
 const AdminCheckouts = () => {
   const {
@@ -245,17 +245,17 @@ const AdminCheckouts = () => {
     
     return {
       name: checkout.products?.name || '',
-      description: checkout.form_fields?.description || '',
+      description: (checkout.form_fields as FormFields)?.description || '', // Cast para FormFields
       selectedProduct: checkout.product_id || '',
       layout: checkout.layout || 'horizontal',
       customerFields: {
-        requireName: checkout.form_fields?.requireName ?? true,
-        requireCpf: checkout.form_fields?.requireCpf ?? true,
-        requirePhone: checkout.form_fields?.requirePhone ?? true,
-        requireEmail: checkout.form_fields?.requireEmail ?? true,
-        requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true
+        requireName: (checkout.form_fields as FormFields)?.requireName ?? true,
+        requireCpf: (checkout.form_fields as FormFields)?.requireCpf ?? true,
+        requirePhone: (checkout.form_fields as FormFields)?.requirePhone ?? true,
+        requireEmail: (checkout.form_fields as FormFields)?.requireEmail ?? true,
+        requireEmailConfirm: (checkout.form_fields as FormFields)?.requireEmailConfirm ?? true
       },
-      packages: checkout.form_fields?.packages?.map(pkg => ({
+      packages: (checkout.form_fields as FormFields)?.packages?.map(pkg => ({
         ...pkg,
         price: pkg.price || priceInReais,
         originalPrice: pkg.originalPrice || promotionalPriceInReais
@@ -269,12 +269,12 @@ const AdminCheckouts = () => {
         mostSold: false
       }],
       orderBumps: orderBumpsInReais,
-      guarantee: checkout.form_fields?.guarantee || {
+      guarantee: (checkout.form_fields as FormFields)?.guarantee || {
         enabled: true,
         days: 7,
         description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
       },
-      reservedRights: checkout.form_fields?.reservedRights || {
+      reservedRights: (checkout.form_fields as FormFields)?.reservedRights || {
         enabled: true,
         text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
       },
@@ -297,7 +297,7 @@ const AdminCheckouts = () => {
         textColor: '#000000',
         headlineText: 'Sua transformação começa agora!',
         headlineColor: '#000000',
-        highlightColor: checkout.styles?.highlightColor || checkout.styles?.primaryColor || '#3b82f6',
+        highlightColor: checkout.styles?.highlightColor || checkout.styles?.primaryColor || '#3b82f6', // Corrigido aqui
         description: '',
         gradientColor: '#60a5fa'
       },
@@ -307,7 +307,7 @@ const AdminCheckouts = () => {
         color: '#dc2626',
         text: 'Oferta por tempo limitado'
       },
-      deliverable: checkout.form_fields?.deliverable || { // Load deliverable data
+      deliverable: (checkout.form_fields as FormFields)?.deliverable || { // Load deliverable data
         type: 'none',
         link: '',
         file: null,
