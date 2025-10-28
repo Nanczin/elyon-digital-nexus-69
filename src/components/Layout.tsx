@@ -17,7 +17,8 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const {
     user,
-    signOut
+    signOut,
+    loading // Obter o estado de carregamento do useAuth
   } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname.startsWith('/auth');
@@ -25,6 +26,15 @@ const Layout: React.FC<LayoutProps> = ({
   
   if (isAuthPage || isCheckoutPage) {
     return <>{children}</>;
+  }
+
+  // Se ainda estiver carregando o estado de autenticação, mostre um spinner
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
   
   if (!user) {
@@ -77,44 +87,40 @@ const Layout: React.FC<LayoutProps> = ({
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <header className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0">
-            <SidebarTrigger className="mr-2 sm:mr-4 flex-shrink-0" />
-            <Link to="/" className="flex items-center space-x-2 mr-auto min-w-0">
-              <img 
-                src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
-                alt="Elyon Logo" 
-                className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
-              />
-            </Link>
-            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
-              <ThemeToggle />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center p-1.5 sm:p-2">
-                    <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44 sm:w-48 lg:w-56 z-50 bg-background border shadow-lg">
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Configurações</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </header>
-          {/* Main Content */}
-          <main className="flex-1 overflow-auto">{children}</main>
-        </div>
+        <header className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0">
+          <SidebarTrigger className="mr-2 sm:mr-4 flex-shrink-0" />
+          <Link to="/" className="flex items-center space-x-2 mr-auto min-w-0">
+            <img 
+              src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
+              alt="Elyon Logo" 
+              className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
+            />
+          </Link>
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center p-1.5 sm:p-2">
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 sm:w-48 lg:w-56 z-50 bg-background border shadow-lg">
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configurações</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </SidebarProvider>;
 };
