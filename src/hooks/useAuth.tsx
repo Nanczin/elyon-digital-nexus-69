@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+// import { useNavigate } from 'react-router-dom'; // REMOVIDO: useNavigate não deve ser usado aqui
 
 interface AuthContextType {
   user: User | null;
@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const navigate = useNavigate(); // Inicializar useNavigate
+  // const navigate = useNavigate(); // REMOVIDO: useNavigate não deve ser usado aqui
 
   useEffect(() => {
     // Set up auth state listener
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
-    navigate('/'); // Redirecionar para a página inicial após o logout
+    // navigate('/'); // REMOVIDO: A navegação será feita no componente Layout
   };
 
   const value = {

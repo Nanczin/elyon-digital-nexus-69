@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Importar useNavigate
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'; // Importar SidebarTrigger
@@ -21,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({
     loading // Obter o estado de carregamento do useAuth
   } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate(); // Inicializar useNavigate aqui
   const isAuthPage = location.pathname.startsWith('/auth');
   const isCheckoutPage = location.pathname.startsWith('/checkout') || location.pathname === '/payment-success';
   
@@ -37,6 +38,11 @@ const Layout: React.FC<LayoutProps> = ({
     );
   }
   
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/'); // Redirecionar para a página inicial após o logout
+  };
+
   if (!user) {
     return <div className="min-h-screen bg-background">
         <nav className="border-b bg-card">
@@ -121,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-destructive">
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive"> {/* Chamar handleSignOut */}
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sair</span>
                   </DropdownMenuItem>
