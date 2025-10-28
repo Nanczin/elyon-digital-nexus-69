@@ -303,8 +303,7 @@ serve(async (req) => {
           customer_data: customerData,
           order_bumps: orderBumps,
           selected_package: selectedPackage,
-          payment_method: paymentMethod,
-          mp_response: mpResult
+          payment_method: paymentMethod
         }
       })
       .select()
@@ -319,61 +318,10 @@ serve(async (req) => {
     }
     console.log('CREATE_MP_PAYMENT_DEBUG: 19. Payment saved to DB:', JSON.stringify(payment, null, 2));
 
-    // --- Lógica de envio de e-mail transacional ---
-    if (paymentStatus === 'completed' && checkout.form_fields?.sendTransactionalEmail) {
-      console.log('CREATE_MP_PAYMENT_DEBUG: Disparando e-mail transacional...');
-      const productName = checkout.products?.name || 'Seu Produto';
-      const customerName = customerData.name || customerData.email.split('@')[0];
-
-      let accessLink = '';
-      const checkoutDeliverable = checkout.form_fields?.deliverable;
-      const productMemberAreaLink = checkout.products?.member_area_link;
-      const productFileUrl = checkout.products?.file_url;
-
-      if (checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)) {
-        accessLink = checkoutDeliverable.link || checkoutDeliverable.fileUrl || '';
-      } else if (productMemberAreaLink || productFileUrl) {
-        accessLink = productMemberAreaLink || productFileUrl || '';
-      }
-
-      const emailSubjectTemplate = checkout.form_fields?.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
-      const emailBodyTemplate = checkout.form_fields?.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
-
-      const finalSubject = emailSubjectTemplate
-        .replace(/{customer_name}/g, customerName)
-        .replace(/{product_name}/g, productName);
-
-      const finalBody = emailBodyTemplate
-        .replace(/{customer_name}/g, customerName)
-        .replace(/{product_name}/g, productName)
-        .replace(/{access_link}/g, accessLink);
-
-      try {
-        const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
-          'send-transactional-email',
-          {
-            body: {
-              to: customerData.email,
-              subject: finalSubject,
-              html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-              fromEmail: checkout.support_contact?.email || 'noreply@elyondigital.com', // Usar email de suporte ou um padrão
-              fromName: 'Elyon Digital',
-              sellerUserId: checkout.user_id,
-            }
-          }
-        );
-
-        if (emailSendError) {
-          console.error('CREATE_MP_PAYMENT_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
-        } else if (!emailSendResult?.success) {
-          console.error('CREATE_MP_PAYMENT_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
-        } else {
-          console.log('CREATE_MP_PAYMENT_DEBUG: E-mail transacional disparado com sucesso para:', customerData.email);
-        }
-      } catch (invokeError) {
-        console.error('CREATE_MP_PAYMENT_DEBUG: Exceção ao invocar send-transactional-email:', invokeError);
-      }
-    }
+    // --- REMOVIDO: Lógica de envio de e-mail transacional imediato. Será tratada no webhook/verify. ---
+    // if (paymentStatus === 'completed' && checkout.form_fields?.sendTransactionalEmail) {
+    //   ... (código removido)
+    // }
     // --- Fim da lógica de envio de e-mail transacional ---
 
     const responsePayload = {

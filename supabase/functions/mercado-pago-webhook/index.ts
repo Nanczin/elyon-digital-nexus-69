@@ -322,30 +322,34 @@ serve(async (req) => {
               .replace(/{product_name}/g, productName)
               .replace(/{access_link}/g, accessLink);
 
-            try {
-              const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
-                'send-transactional-email',
-                {
-                  body: {
-                    to: (customerData as any).email,
-                    subject: finalSubject,
-                    html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                    fromEmail: (checkoutData as any)?.support_contact?.email || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
-                    fromName: 'Elyon Digital',
-                    sellerUserId: checkoutSellerUserId,
+            if (customerEmail) {
+              try {
+                const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
+                  'send-transactional-email',
+                  {
+                    body: {
+                      to: customerEmail,
+                      subject: finalSubject,
+                      html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
+                      fromEmail: (checkoutData as any)?.support_contact?.email || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
+                      fromName: 'Elyon Digital',
+                      sellerUserId: checkoutSellerUserId,
+                    }
                   }
-                }
-              );
+                );
 
-              if (emailSendError) {
-                console.error('WEBHOOK_MP_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
-              } else if (!emailSendResult?.success) {
-                console.error('WEBHOOK_MP_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
-              } else {
-                console.log('WEBHOOK_MP_DEBUG: E-mail transacional disparado com sucesso para:', (customerData as any).email);
+                if (emailSendError) {
+                  console.error('WEBHOOK_MP_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
+                } else if (!emailSendResult?.success) {
+                  console.error('WEBHOOK_MP_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
+                } else {
+                  console.log('WEBHOOK_MP_DEBUG: E-mail transacional disparado com sucesso para:', customerEmail);
+                }
+              } catch (invokeError) {
+                console.error('WEBHOOK_MP_DEBUG: Exceção ao invocar send-transactional-email:', invokeError);
               }
-            } catch (invokeError) {
-              console.error('WEBHOOK_MP_DEBUG: Exceção ao invocar send-transactional-email:', invokeError);
+            } else {
+              console.warn('WEBHOOK_MP_DEBUG: Não foi possível enviar e-mail transacional: email do cliente ausente.');
             }
           }
           // --- Fim da lógica de envio de e-mail transacional ---
