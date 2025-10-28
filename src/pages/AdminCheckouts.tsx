@@ -559,14 +559,14 @@ const AdminCheckouts = () => {
       const checkoutPayload = {
         user_id: user?.id, // Adicionar user_id
         product_id: checkoutData.selectedProduct,
-        price: checkoutData.packages[0]?.price * 100 || 0,
-        promotional_price: checkoutData.packages[0]?.originalPrice ? checkoutData.packages[0].originalPrice * 100 : null,
+        price: Math.round(checkoutData.packages[0]?.price * 100) || 0, // Aplicar Math.round
+        promotional_price: checkoutData.packages[0]?.originalPrice ? Math.round(checkoutData.packages[0].originalPrice * 100) : null, // Aplicar Math.round
         form_fields: {
           ...checkoutData.customerFields,
           packages: checkoutData.packages.map(pkg => ({ // Convert package prices to cents
             ...pkg,
-            price: pkg.price * 100,
-            originalPrice: (pkg.originalPrice || 0) * 100
+            price: Math.round(pkg.price * 100), // Aplicar Math.round
+            originalPrice: Math.round((pkg.originalPrice || 0) * 100) // Aplicar Math.round
           })),
           guarantee: checkoutData.guarantee,
           reservedRights: checkoutData.reservedRights,
@@ -584,8 +584,8 @@ const AdminCheckouts = () => {
         payment_methods: checkoutData.paymentMethods,
         order_bumps: checkoutData.orderBumps.map(bump => ({
           ...bump,
-          price: bump.price * 100, // Converter para centavos
-          originalPrice: (bump.originalPrice || 0) * 100 // Converter para centavos
+          price: Math.round(bump.price * 100), // Converter para centavos e aplicar Math.round
+          originalPrice: Math.round((bump.originalPrice || 0) * 100) // Converter para centavos e aplicar Math.round
         })),
         styles: {
           backgroundColor: checkoutData.styles?.backgroundColor || '#ffffff',
@@ -604,6 +604,9 @@ const AdminCheckouts = () => {
         integrations: checkoutData.integrations || {},
         timer: checkoutData.timer || null
       };
+
+      console.log('DEBUG: Final checkoutPayload before DB operation:', JSON.stringify(checkoutPayload, null, 2)); // Log detalhado
+
       if (editingCheckout) {
         const {
           error
