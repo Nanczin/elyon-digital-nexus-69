@@ -22,7 +22,7 @@ const PaymentSuccess = () => {
   const [paymentData, setPaymentData] = useState<any>(null);
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
-  const [productData, setProductData] = useState<any>(null);
+  const [productData, setProductData] = useState<CheckoutData['products'] | null>(null); // Tipagem mais específica
   const [checkoutDeliverable, setCheckoutDeliverable] = useState<DeliverableConfig | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
@@ -39,9 +39,7 @@ const PaymentSuccess = () => {
         if (savedPaymentData) {
           currentPaymentData = JSON.parse(savedPaymentData);
           setPaymentData(currentPaymentData);
-          if (currentPaymentData.deliverableLink) {
-            setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
-          }
+          // Não definir deliverableLinkToDisplay aqui, será feito após a busca do Supabase
         }
 
         const urlPaymentId = searchParams.get('payment_id');
@@ -49,10 +47,11 @@ const PaymentSuccess = () => {
         
         console.log('PaymentSuccess Debug: Verificando status:', { urlStatus, urlPaymentId, currentPaymentData });
         
+        let fetchedPaymentFromDb: any = null;
+
         if (urlStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
           
-          let fetchedPayment = null;
           if (urlPaymentId) {
             const { data: payment } = await supabase
               .from('payments')
@@ -65,7 +64,7 @@ const PaymentSuccess = () => {
               `)
               .eq('mp_payment_id', urlPaymentId)
               .maybeSingle();
-            fetchedPayment = payment;
+            fetchedPaymentFromDb = payment;
           } else if (currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
@@ -78,29 +77,12 @@ const PaymentSuccess = () => {
               `)
               .eq('id', currentPaymentData.payment.id)
               .maybeSingle();
-            fetchedPayment = payment;
+            fetchedPaymentFromDb = payment;
           }
 
-          console.log('PaymentSuccess Debug: Fetched payment for redirect:', fetchedPayment);
+          console.log('PaymentSuccess Debug: Fetched payment for redirect:', fetchedPaymentFromDb);
 
-          if (fetchedPayment?.checkouts?.products) {
-            setProductData(fetchedPayment.checkouts.products as CheckoutData['products']); // Cast explícito aqui
-          }
-          if (fetchedPayment?.checkouts?.form_fields?.deliverable) {
-            setCheckoutDeliverable(fetchedPayment.checkouts.form_fields.deliverable as DeliverableConfig); // Cast explícito aqui
-          }
-
-          if (!deliverableLinkToDisplay && (fetchedPayment?.checkouts?.form_fields?.deliverable?.type !== 'none' && ((fetchedPayment?.checkouts?.form_fields?.deliverable as DeliverableConfig)?.link || (fetchedPayment?.checkouts?.form_fields?.deliverable as DeliverableConfig)?.fileUrl))) {
-            setDeliverableLinkToDisplay((fetchedPayment.checkouts.form_fields.deliverable as DeliverableConfig).link || (fetchedPayment.checkouts.form_fields.deliverable as DeliverableConfig).fileUrl);
-          } else if (!deliverableLinkToDisplay && ((fetchedPayment?.checkouts?.products as CheckoutData['products'])?.member_area_link || (fetchedPayment?.checkouts?.products as CheckoutData['products'])?.file_url)) {
-            setDeliverableLinkToDisplay((fetchedPayment?.checkouts?.products as CheckoutData['products'])?.member_area_link || (fetchedPayment?.checkouts?.products as CheckoutData['products'])?.file_url);
-          }
-          
-          setIsChecking(false);
-          return;
-        }
-        
-        if (paymentStatus === 'pending') {
+        } else if (paymentStatus === 'pending') { // Only try to verify if still pending
           const mpIdToCheck = urlPaymentId || currentPaymentData?.payment?.mp_payment_id;
           
           if (mpIdToCheck) {
@@ -127,19 +109,7 @@ const PaymentSuccess = () => {
                     `)
                     .eq('mp_payment_id', mpIdToCheck)
                     .maybeSingle();
-                  
-                  if (payment?.checkouts?.products) {
-                    setProductData(payment.checkouts.products as CheckoutData['products']); // Cast explícito aqui
-                  }
-                  if (payment?.checkouts?.form_fields?.deliverable) {
-                    setCheckoutDeliverable(payment.checkouts.form_fields.deliverable as DeliverableConfig); // Cast explícito aqui
-                  }
-
-                  if (!deliverableLinkToDisplay && (payment?.checkouts?.form_fields?.deliverable?.type !== 'none' && ((payment?.checkouts?.form_fields?.deliverable as DeliverableConfig)?.link || (payment?.checkouts?.form_fields?.deliverable as DeliverableConfig)?.fileUrl))) {
-                    setDeliverableLinkToDisplay((payment.checkouts.form_fields.deliverable as DeliverableConfig).link || (payment.checkouts.form_fields.deliverable as DeliverableConfig).fileUrl);
-                  } else if (!deliverableLinkToDisplay && ((payment?.checkouts?.products as CheckoutData['products'])?.member_area_link || (payment?.checkouts?.products as CheckoutData['products'])?.file_url)) {
-                    setDeliverableLinkToDisplay((payment?.checkouts?.products as CheckoutData['products'])?.member_area_link || (payment?.checkouts?.products as CheckoutData['products'])?.file_url);
-                  }
+                  fetchedPaymentFromDb = payment;
 
                 } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
                   setPaymentStatus('failed');
@@ -152,7 +122,8 @@ const PaymentSuccess = () => {
             }
           }
           
-          if (currentPaymentData?.payment?.id && paymentStatus === 'pending') {
+          // Fallback DB payment check if still pending and no MP verification happened or it failed
+          if (paymentStatus === 'pending' && !fetchedPaymentFromDb && currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
               .select(`
@@ -172,17 +143,36 @@ const PaymentSuccess = () => {
               if (payment.status === 'completed' || payment.mp_payment_status === 'approved') {
                 setPaymentStatus('completed');
                 window.history.replaceState({}, '', '/payment-success?status=approved');
-                if (payment.checkouts?.products) {
-                  setProductData(payment.checkouts.products as CheckoutData['products']); // Cast explícito aqui
-                }
-                if (payment?.checkouts?.form_fields?.deliverable) {
-                  setCheckoutDeliverable(payment.checkouts.form_fields.deliverable as DeliverableConfig); // Cast explícito aqui
-                }
+                fetchedPaymentFromDb = payment;
               } else if (payment.status === 'failed') {
                 setPaymentStatus('failed');
               }
             }
           }
+        }
+        
+        // Always set productData, checkoutDeliverable, and deliverableLinkToDisplay from the fetched DB data
+        if (fetchedPaymentFromDb) {
+          if (fetchedPaymentFromDb.checkouts?.products) {
+            setProductData(fetchedPaymentFromDb.checkouts.products as CheckoutData['products']);
+          }
+          if (fetchedPaymentFromDb.checkouts?.form_fields?.deliverable) {
+            setCheckoutDeliverable(fetchedPaymentFromDb.checkouts.form_fields.deliverable as DeliverableConfig);
+          }
+
+          let determinedLink: string | null = null;
+          const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
+          const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
+
+          if (currentDeliverable?.type !== 'none' && (currentDeliverable?.link || currentDeliverable?.fileUrl)) {
+            determinedLink = currentDeliverable.link || currentDeliverable.fileUrl;
+          } else if (currentProduct?.member_area_link || currentProduct?.file_url) {
+            determinedLink = currentProduct.member_area_link || currentProduct.file_url;
+          }
+          setDeliverableLinkToDisplay(determinedLink);
+        } else if (currentPaymentData?.deliverableLink) {
+          // Fallback to localStorage if no DB data was fetched
+          setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
         }
         
       } catch (error) {
@@ -202,7 +192,7 @@ const PaymentSuccess = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [searchParams, paymentStatus, deliverableLinkToDisplay]);
+  }, [searchParams, paymentStatus]); // Removido deliverableLinkToDisplay das dependências
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
