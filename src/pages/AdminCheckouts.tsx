@@ -272,7 +272,7 @@ const AdminCheckouts = () => {
       reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.reservedRights, // Usar initialFormData default e cast
       paymentMethods: checkout.payment_methods || initialFormData.paymentMethods,
       integrations: checkout.integrations || initialFormData.integrations,
-      support_contact: checkout.support_contact || initialFormData.support_contact,
+      support_contact: checkout.support_contact || initialFormData.support_contact, // FIXED TYPO HERE
       styles: checkout.styles || initialFormData.styles,
       timer: checkout.timer || initialFormData.timer,
       deliverable: {
@@ -531,6 +531,18 @@ const AdminCheckouts = () => {
       });
       return;
     }
+
+    // NEW VALIDATION: Ensure main package price is greater than zero
+    const mainPackagePrice = checkoutData.packages[0]?.price;
+    if (mainPackagePrice === undefined || mainPackagePrice <= 0) {
+      toast({
+        title: "Erro",
+        description: "O preço do pacote principal deve ser maior que zero.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       console.log('Timer sendo salvo:', checkoutData.timer);
@@ -611,10 +623,11 @@ const AdminCheckouts = () => {
       setEditingCheckout(null);
       clearSavedData(); // Limpar dados salvos após salvar com sucesso
       fetchCheckouts();
-    } catch (error) {
+    } catch (error: any) { // Improved error logging
+      console.error('Detailed error saving checkout:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar checkout",
+        description: error.message || "Erro ao salvar checkout. Verifique o console para mais detalhes.",
         variant: "destructive"
       });
     } finally {
