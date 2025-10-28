@@ -308,16 +308,6 @@ const PaymentSuccess = () => {
                   </ul>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  className="flex-1"
-                  onClick={() => navigate('/')}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Voltar ao início
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -598,15 +588,7 @@ const PaymentSuccess = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                className="flex-1"
-                onClick={() => navigate('/')}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Voltar ao início
-              </Button>
-            </div>
+            {/* O botão "Voltar ao início" foi removido daqui */}
 
             <div className="text-center text-sm text-muted-foreground">
               <p>
