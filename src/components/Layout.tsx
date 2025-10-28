@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'; // Importar SidebarTrigger
 import { AppSidebar } from '@/components/AppSidebar';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Menu } from 'lucide-react'; // Importar Menu icon
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface LayoutProps {
@@ -95,7 +95,11 @@ const Layout: React.FC<LayoutProps> = ({
         <div className="flex-1 flex flex-col"> {/* Nova div para envolver header e main */}
           <header className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0 gap-2 sm:gap-4">
             <div className="flex items-center gap-2"> {/* Novo wrapper para logo e trigger */}
-              <SidebarTrigger className="flex-shrink-0" /> {/* Botão de recolher/abrir */}
+              <SidebarTrigger asChild className="flex-shrink-0"> {/* Adicionado asChild */}
+                <Button variant="ghost" size="icon"> {/* Envolvido em Button */}
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SidebarTrigger>
               <Link to="/" className="flex items-center space-x-2">
                 <img 
                   src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
