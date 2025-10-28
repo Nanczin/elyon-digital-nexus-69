@@ -113,7 +113,7 @@ export function AppSidebar() {
                         to={item.href} 
                         className={({ isActive }) => 
                           `${getNavCls({ isActive })} flex items-center rounded-md ${
-                            isCollapsed ? 'justify-center px-0' : 'gap-3 pl-0 pr-4' // Alterado de 'gap-3 px-4' para 'gap-3 pl-0 pr-4'
+                            isCollapsed ? 'justify-center px-0' : 'gap-3 px-3' // Alterado de 'pl-0 pr-4' para 'px-3'
                           }`
                         }
                         title={isCollapsed ? item.label : undefined}
