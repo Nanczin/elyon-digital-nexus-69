@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'; // Importar SidebarTrigger
 import { AppSidebar } from '@/components/AppSidebar';
 import { User, Settings, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -94,14 +94,17 @@ const Layout: React.FC<LayoutProps> = ({
         <AppSidebar />
         <div className="flex-1 flex flex-col"> {/* Nova div para envolver header e main */}
           <header className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0 gap-2 sm:gap-4">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
-                alt="Elyon Logo" 
-                className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
-              />
-              <span className="text-lg font-bold text-foreground hidden sm:inline">ELYON</span>
-            </Link>
+            <div className="flex items-center gap-2"> {/* Novo wrapper para logo e trigger */}
+              <SidebarTrigger className="flex-shrink-0" /> {/* Botão de recolher/abrir */}
+              <Link to="/" className="flex items-center space-x-2">
+                <img 
+                  src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
+                  alt="Elyon Logo" 
+                  className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
+                />
+                <span className="text-lg font-bold text-foreground hidden sm:inline">ELYON</span>
+              </Link>
+            </div>
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 ml-auto">
               <ThemeToggle />
               <DropdownMenu>

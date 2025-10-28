@@ -11,7 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-  SidebarTrigger, // Import SidebarTrigger
 } from '@/components/ui/sidebar';
 import { 
   LayoutDashboard, 
@@ -89,9 +88,9 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
-        {/* Sidebar Trigger no topo da sidebar */}
+        {/* Removido SidebarTrigger daqui */}
         <div className={`flex items-center h-12 sm:h-14 lg:h-16 px-4 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          <SidebarTrigger className="flex-shrink-0" />
+          {/* O SidebarTrigger agora está no componente Layout */}
         </div>
 
         <SidebarGroup>
@@ -113,7 +112,7 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md ${ // Removido h-full daqui
+                          `${getNavCls({ isActive })} flex items-center rounded-md ${
                             isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'
                           }`
                         }
