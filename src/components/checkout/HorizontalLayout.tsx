@@ -264,11 +264,11 @@ const HorizontalLayout = ({
                                    </span>
                                    <div className="flex items-center gap-2">
                                      <span className="font-bold text-sm sm:text-base" style={{ color: primaryColor }}>
-                                       R${(bump.price / 100).toFixed(2).replace('.', ',')}
+                                       R${(bump.price).toFixed(2).replace('.', ',')}
                                      </span>
                                      {bump.originalPrice && bump.originalPrice > bump.price && (
                                        <span className="text-xs sm:text-sm text-gray-500 line-through">
-                                         R${(bump.originalPrice / 100).toFixed(2).replace('.', ',')}
+                                         R${(bump.originalPrice).toFixed(2).replace('.', ',')}
                                        </span>
                                      )}
                                    </div>
@@ -397,7 +397,7 @@ const HorizontalLayout = ({
                       <div key={bumpId} className="flex justify-between">
                         <span className="text-gray-600">{productName}</span>
                         <span className="text-gray-600">
-                          + {formatCurrency(bump.price / 100)}
+                          + {formatCurrency(bump.price)}
                         </span>
                       </div>
                     );

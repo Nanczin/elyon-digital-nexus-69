@@ -359,7 +359,7 @@ const MosaicLayout = ({
                       <div key={bumpId} className="flex justify-between">
                         <span className="text-gray-600">{productName}</span>
                       <span className="text-gray-600">
-                        + {formatCurrency(bump.price / 100)}
+                        + {formatCurrency(bump.price)}
                       </span>
                       </div>
                     );
@@ -428,7 +428,3 @@ const MosaicLayout = ({
           />
         </div>
       </div>
-  );
-};
-
-export default MosaicLayout;

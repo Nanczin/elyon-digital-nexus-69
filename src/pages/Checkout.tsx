@@ -76,10 +76,17 @@ const Checkout = () => {
           
           orderBumpsWithProducts = orderBumps.map(bump => ({
             ...bump,
+            price: bump.price / 100, // Convert to Reais
+            originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0, // Convert to Reais
             product: productsData?.find(p => p.id === bump.selectedProduct) || null
           }));
         } else {
-          orderBumpsWithProducts = orderBumps;
+          // If no products to fetch, still convert prices
+          orderBumpsWithProducts = orderBumps.map(bump => ({
+            ...bump,
+            price: bump.price / 100, // Convert to Reais
+            originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0, // Convert to Reais
+          }));
         }
       }
 
@@ -155,7 +162,7 @@ const Checkout = () => {
 
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-      basePrice = selectedPkg ? (parseFloat(selectedPkg.price) || 0) : 0;
+      basePrice = selectedPkg ? (parseFloat(String(selectedPkg.price)) || 0) : 0;
       console.log('Checkout Debug: Package selected:', selectedPkg);
       console.log('Checkout Debug: Base price from package (in Reais):', basePrice);
     } else {
@@ -168,7 +175,7 @@ const Checkout = () => {
     selectedOrderBumps.forEach(bumpId => {
       const bump = checkout.order_bumps.find(b => b.id === bumpId);
       if (bump && bump.enabled) {
-        totalInReais += (parseFloat(String(bump.price)) || 0) / 100;
+        totalInReais += (parseFloat(String(bump.price)) || 0); // REMOVED / 100
       }
     });
     
@@ -198,7 +205,7 @@ const Checkout = () => {
       if (bump) {
         trackAddToCartEvent({
           product_id: bump.selectedProduct || 'order-bump-' + bumpId,
-          price: toCents((parseFloat(String(bump.price)) || 0) / 100)
+          price: toCents((parseFloat(String(bump.price)) || 0)) // Price is now in Reais, so only toCents
         });
       }
     }
