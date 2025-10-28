@@ -91,7 +91,7 @@ export function AppSidebar() {
         {/* O espaço reservado para o cabeçalho foi removido daqui para que o conteúdo comece no topo */}
 
         <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-0"}> {/* Alterado 'pt-2' para 'pt-0' */}
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-0"}> {/* Alterado 'pt-0' para 'py-0' para remover qualquer padding vertical */}
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -109,7 +109,7 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-start rounded-md ${
+                          `${getNavCls({ isActive })} flex items-center rounded-md ${ // Alterado 'items-start' para 'items-center'
                             isCollapsed ? 'justify-center px-0' : 'gap-3 pl-0 pr-3'
                           }`
                         }
