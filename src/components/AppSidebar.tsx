@@ -112,7 +112,11 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild className="w-full h-12">
                       <NavLink 
                         to={item.href} 
-                        className={({ isActive }) => `${getNavCls({ isActive })} flex items-center gap-3 px-4 py-2 rounded-md`}
+                        className={({ isActive }) => 
+                          `${getNavCls({ isActive })} flex items-center rounded-md h-12 ${
+                            isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'
+                          }`
+                        }
                         title={isCollapsed ? item.label : undefined}
                       >
                         <IconComponent className="h-5 w-5 flex-shrink-0" />
