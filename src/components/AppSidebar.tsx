@@ -88,11 +88,11 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
-        <React.Fragment> {/* Envolvendo os filhos de SidebarContent em um Fragment */}
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-4 pb-2"}>
-            Menu Principal
-          </SidebarGroupLabel>
-          <SidebarGroup>
+        <SidebarGroup>
+          <React.Fragment> {/* O Fragment agora é o único filho direto de SidebarGroup */}
+            <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 pt-4 pb-2"}>
+              Menu Principal
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {adminNavItems.map((item) => {
@@ -124,8 +124,8 @@ export function AppSidebar() {
                 }).filter(Boolean)}
               </SidebarMenu>
             </SidebarGroupContent>
-          </SidebarGroup>
-        </React.Fragment>
+          </React.Fragment>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
