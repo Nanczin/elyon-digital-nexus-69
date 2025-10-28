@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({
                   alt="Elyon Logo" 
                   className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" 
                 />
-                <span className="text-lg font-bold text-foreground hidden sm:inline">ELYON</span>
+                {/* <span className="text-lg font-bold text-foreground hidden sm:inline">ELYON</span> */}
               </Link>
               <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
                 <ThemeToggle />
@@ -102,7 +102,7 @@ const Layout: React.FC<LayoutProps> = ({
                   alt="Elyon Logo" 
                   className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
                 />
-                <span className="text-lg font-bold text-foreground hidden sm:inline">ELYON</span>
+                {/* <span className="text-lg font-bold text-foreground hidden sm:inline">ELYON</span> */}
               </Link>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 ml-auto">
