@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,12 +30,12 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
+      setIsChecking(true);
+      let currentPaymentData = null;
+      let fetchedPaymentFromDb: any = null;
+
       try {
-        setIsChecking(true);
-        
         const savedPaymentData = localStorage.getItem('paymentData');
-        let currentPaymentData = null;
-        
         if (savedPaymentData) {
           currentPaymentData = JSON.parse(savedPaymentData);
           setPaymentData(currentPaymentData);
@@ -44,72 +44,41 @@ const PaymentSuccess = () => {
         const urlPaymentId = searchParams.get('payment_id');
         const urlStatus = searchParams.get('status');
         
-        console.log('PaymentSuccess Debug: Verificando status:', { urlStatus, urlPaymentId, currentPaymentData });
-        
-        let fetchedPaymentFromDb: any = null;
-
         if (urlStatus === 'approved' || urlStatus === 'completed') {
           setPaymentStatus('completed');
-          
           if (urlPaymentId) {
             const { data: payment } = await supabase
               .from('payments')
-              .select(`
-                *,
-                checkouts (
-                  *,
-                  products (*)
-                )
-              `)
+              .select(`*, checkouts (*, products (*))`)
               .eq('mp_payment_id', urlPaymentId)
               .maybeSingle();
             fetchedPaymentFromDb = payment;
           } else if (currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
-              .select(`
-                *,
-                checkouts (
-                  *,
-                  products (*)
-                )
-              `)
+              .select(`*, checkouts (*, products (*))`)
               .eq('id', currentPaymentData.payment.id)
               .maybeSingle();
             fetchedPaymentFromDb = payment;
           }
-
-          console.log('PaymentSuccess Debug: Fetched payment for redirect:', fetchedPaymentFromDb);
-
-        } else if (paymentStatus === 'pending') {
+        } else {
           const mpIdToCheck = urlPaymentId || currentPaymentData?.payment?.mp_payment_id;
-          
           if (mpIdToCheck) {
             try {
               const res = await supabase.functions.invoke('verify-mercado-pago-payment', {
                 body: { mp_payment_id: mpIdToCheck },
                 method: 'POST'
               });
-              
-              console.log('PaymentSuccess Debug: Verify MP payment response:', res);
-
               if (res.data?.success) {
                 if (res.data.status === 'approved' || res.data.payment?.status === 'completed') {
                   setPaymentStatus('completed');
                   window.history.replaceState({}, '', '/payment-success?status=approved');
                   const { data: payment } = await supabase
                     .from('payments')
-                    .select(`
-                      *,
-                      checkouts (
-                        *,
-                        products (*)
-                      )
-                    `)
+                    .select(`*, checkouts (*, products (*))`)
                     .eq('mp_payment_id', mpIdToCheck)
                     .maybeSingle();
                   fetchedPaymentFromDb = payment;
-
                 } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
                   setPaymentStatus('failed');
                 } else {
@@ -117,26 +86,16 @@ const PaymentSuccess = () => {
                 }
               }
             } catch (err) {
-              console.warn('PaymentSuccess Debug: Erro ao verificar status:', err);
+              console.warn('PaymentSuccess Debug: Erro ao verificar status via Edge Function:', err);
             }
           }
-          
+
           if (paymentStatus === 'pending' && !fetchedPaymentFromDb && currentPaymentData?.payment?.id) {
             const { data: payment } = await supabase
               .from('payments')
-              .select(`
-                status,
-                mp_payment_status,
-                checkouts (
-                  *,
-                  products (*)
-                )
-              `)
+              .select(`status, mp_payment_status, checkouts (*, products (*))`)
               .eq('id', currentPaymentData.payment.id)
               .maybeSingle();
-              
-            console.log('PaymentSuccess Debug: Fallback DB payment check:', payment);
-
             if (payment) {
               if (payment.status === 'completed' || payment.mp_payment_status === 'approved') {
                 setPaymentStatus('completed');
@@ -150,19 +109,12 @@ const PaymentSuccess = () => {
         }
         
         if (fetchedPaymentFromDb) {
-          if (fetchedPaymentFromDb.checkouts?.products) {
-            setProductData(fetchedPaymentFromDb.checkouts.products as CheckoutData['products']);
-          }
-          if (fetchedPaymentFromDb.checkouts?.form_fields?.deliverable) {
-            setCheckoutDeliverable(fetchedPaymentFromDb.checkouts.form_fields.deliverable as DeliverableConfig);
-          }
+          setProductData(fetchedPaymentFromDb.checkouts?.products || null);
+          setCheckoutDeliverable(fetchedPaymentFromDb.checkouts?.form_fields?.deliverable || null);
 
           let determinedLink: string | null = null;
           const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
           const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
-
-          console.log('PaymentSuccess Debug: currentDeliverable (from DB):', currentDeliverable);
-          console.log('PaymentSuccess Debug: currentProduct (from DB):', currentProduct);
 
           if (currentDeliverable?.type !== 'none' && (currentDeliverable?.link || currentDeliverable?.fileUrl)) {
             determinedLink = currentDeliverable.link || currentDeliverable.fileUrl;
@@ -170,10 +122,8 @@ const PaymentSuccess = () => {
             determinedLink = currentProduct.member_area_link || currentProduct.file_url;
           }
           setDeliverableLinkToDisplay(determinedLink);
-          console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay:', determinedLink);
         } else if (currentPaymentData?.deliverableLink) {
           setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
-          console.log('PaymentSuccess Debug: Final deliverableLinkToDisplay from localStorage (fallback):', currentPaymentData.deliverableLink);
         }
         
       } catch (error) {
@@ -187,7 +137,6 @@ const PaymentSuccess = () => {
     
     const interval = setInterval(() => {
       if (paymentStatus === 'pending') {
-        console.log('PaymentSuccess Debug: Re-checking payment status...');
         checkPaymentStatus();
       }
     }, 5000);
