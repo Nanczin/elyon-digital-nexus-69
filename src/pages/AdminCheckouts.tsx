@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,8 @@ const AdminCheckouts = () => {
   } = useAuth();
   const {
     mercadoPagoAccounts,
-    metaPixels
+    metaPixels,
+    isConfigured: { email: isEmailIntegrationConfigured } // Obter status da integração de e-mail
   } = useIntegrations();
   const {
     toast
@@ -117,7 +118,8 @@ const AdminCheckouts = () => {
       fileUrl: '',
       name: '', // Adicionado nome para o entregável
       description: '' // Adicionado descrição para o entregável
-    } as DeliverableConfig & { file: File | null } // Explicitly type deliverable
+    } as DeliverableConfig & { file: File | null }, // Explicitly type deliverable
+    sendTransactionalEmail: true // Novo campo para e-mail transacional
   };
   // Usar uma chave única por checkout ou "new" para novos
   // Manter a chave consistente mesmo quando o componente remonta
@@ -279,7 +281,8 @@ const AdminCheckouts = () => {
         fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
         name: checkout.form_fields?.deliverable?.name || '', // Novo campo
         description: checkout.form_fields?.deliverable?.description || '' // Novo campo
-      }
+      },
+      sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true // Carregar o novo campo
     };
   };
 
@@ -555,7 +558,8 @@ const AdminCheckouts = () => {
             fileUrl: deliverableFileUrl, // This will be the uploaded URL or the provided link
             name: checkoutData.deliverable.name || null, // Novo campo
             description: checkoutData.deliverable.description || null // Novo campo
-          }
+          },
+          sendTransactionalEmail: checkoutData.sendTransactionalEmail // Salvar o novo campo
         },
         payment_methods: checkoutData.paymentMethods,
         order_bumps: checkoutData.orderBumps.map(bump => ({
@@ -1465,6 +1469,42 @@ const AdminCheckouts = () => {
                         )}
                       </div>
                     )}
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        E-mail Transacional
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Envie e-mails automáticos de confirmação de compra e acesso ao produto.
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Ativar envio de e-mail</Label>
+                          <p className="text-sm text-muted-foreground">
+                            {isEmailIntegrationConfigured 
+                              ? "Um e-mail será enviado ao cliente com os detalhes da compra."
+                              : "Configure o SMTP na aba 'Integrações' para ativar esta opção."
+                            }
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured} 
+                          onCheckedChange={checked => handleInputChange('sendTransactionalEmail', checked)} 
+                          disabled={!isEmailIntegrationConfigured}
+                        />
+                      </div>
+                      {!isEmailIntegrationConfigured && (
+                        <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            A integração de e-mail SMTP não está configurada. Por favor, configure-a na página de Integrações para habilitar esta opção.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
                   </div>
                 </TabsContent>
 

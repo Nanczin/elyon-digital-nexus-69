@@ -49,6 +49,7 @@ export type FormFields = {
   reservedRights?: ReservedRightsConfig; // Usar o novo tipo ReservedRightsConfig
   deliverable?: DeliverableConfig | null; // Adicionado tipo DeliverableConfig
   description?: string; // Adicionado descrição ao FormFields
+  sendTransactionalEmail?: boolean; // Adicionado para controlar o envio de e-mail transacional
 };
 
 export type Database = {

@@ -27,6 +27,7 @@ const PaymentSuccess = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
   const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null);
+  const [sendTransactionalEmail, setSendTransactionalEmail] = useState<boolean>(true); // Novo estado
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
@@ -111,9 +112,11 @@ const PaymentSuccess = () => {
         if (fetchedPaymentFromDb) {
           const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
           const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
+          const currentSendTransactionalEmail = fetchedPaymentFromDb.checkouts?.form_fields?.sendTransactionalEmail ?? true; // Obter do checkout
 
           setProductData(currentProduct || null); // Manter productData para fallback
           setCheckoutDeliverable(currentDeliverable || null); // Definir a configuração específica do entregável
+          setSendTransactionalEmail(currentSendTransactionalEmail); // Definir o estado do e-mail transacional
 
           let determinedLink: string | null = null;
           if (currentDeliverable?.type !== 'none' && (currentDeliverable?.link || currentDeliverable?.fileUrl)) {
@@ -124,6 +127,8 @@ const PaymentSuccess = () => {
           setDeliverableLinkToDisplay(determinedLink);
         } else if (currentPaymentData?.deliverableLink) {
           setDeliverableLinkToDisplay(currentPaymentData.deliverableLink);
+          // Se não há checkout, assumir que o e-mail transacional está ativo por padrão ou de outra fonte
+          setSendTransactionalEmail(currentPaymentData.sendTransactionalEmail ?? true);
         }
         
       } catch (error) {
@@ -246,7 +251,9 @@ const PaymentSuccess = () => {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h3 className="font-semibold text-green-800 mb-2">Importante:</h3>
                   <ul className="text-sm text-green-700 space-y-1 text-left">
-                    <li>• Você também receberá um e-mail com os detalhes</li>
+                    {sendTransactionalEmail && ( // Condicionalmente exibir a mensagem de e-mail
+                      <li>• Você também receberá um e-mail com os detalhes</li>
+                    )}
                     <li>• Guarde este link para acessar quando quiser</li>
                     <li>• Entre em contato se tiver dúvidas</li>
                   </ul>
@@ -520,7 +527,9 @@ const PaymentSuccess = () => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-semibold text-green-800 mb-2">Próximos passos:</h3>
                 <ul className="text-sm text-green-700 space-y-1 text-left">
-                  <li>• Verifique seu e-mail (incluindo spam)</li>
+                  {sendTransactionalEmail && ( // Condicionalmente exibir a mensagem de e-mail
+                    <li>• Verifique seu e-mail (incluindo spam)</li>
+                  )}
                   <li>• Acesse o produto através do link enviado</li>
                   <li>• Entre em contato conosco se tiver dúvidas</li>
                 </ul>
