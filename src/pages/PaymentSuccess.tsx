@@ -100,19 +100,6 @@ const PaymentSuccess = () => {
             setDeliverableLinkToDisplay(fetchedPayment.checkouts.products.member_area_link || fetchedPayment.checkouts.products.file_url);
           }
           
-          // REMOVER O REDIRECIONAMENTO DIRETO AQUI
-          // if (finalDeliverableLink) {
-          //   toast({
-          //     title: "Pagamento Aprovado! ✅",
-          //     description: "Redirecionando para o seu produto..."
-          //   });
-          //   setTimeout(() => {
-          //     console.log('PaymentSuccess Debug: Redirecting to:', finalDeliverableLink);
-          //     window.location.href = finalDeliverableLink;
-          //   }, 1500);
-          //   return; // Exit early after redirect
-          // }
-          
           setIsChecking(false);
           return; // Não continuar verificando
         }
@@ -162,19 +149,6 @@ const PaymentSuccess = () => {
                     setDeliverableLinkToDisplay(payment.checkouts.products.member_area_link || payment.checkouts.products.file_url);
                   }
 
-                  // REMOVER O REDIRECIONAMENTO DIRETO AQUI
-                  // if (finalDeliverableLinkAfterCheck) {
-                  //   toast({
-                  //     title: "Pagamento Aprovado! ✅",
-                  //     description: "Redirecionando para o seu produto..."
-                  //   });
-                  //   setTimeout(() => {
-                  //     console.log('PaymentSuccess Debug: Redirecting to (after status check):', finalDeliverableLinkAfterCheck);
-                  //     window.location.href = finalDeliverableLinkAfterCheck;
-                  //   }, 1500);
-                  //   return; // Exit early after redirect
-                  // }
-
                 } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
                   setPaymentStatus('failed');
                 } else {
@@ -213,7 +187,6 @@ const PaymentSuccess = () => {
                 if (payment?.checkouts?.form_fields?.deliverable) {
                   setCheckoutDeliverable(payment.checkouts.form_fields.deliverable);
                 }
-                // No direct redirect here, as the main logic above handles it if status changes.
               } else if (payment.status === 'failed') {
                 setPaymentStatus('failed');
               }
@@ -255,10 +228,13 @@ const PaymentSuccess = () => {
     }
   };
 
-  // REMOVER ESTA VARIÁVEL, AGORA USAMOS deliverableLinkToDisplay
-  // const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
-  //   ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-  //   : productData?.member_area_link || productData?.file_url;
+  // Função para determinar o texto do botão com base no link
+  const getDeliverableButtonText = (link: string | null) => {
+    if (!link) return 'Acessar Produto'; // Fallback
+    const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
+    const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
+    return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
+  };
 
   // Exibir status de processamento no próprio checkout para cartão de crédito
   if (paymentData?.paymentMethod === 'creditCard' && paymentStatus === 'pending') {
@@ -490,10 +466,7 @@ const PaymentSuccess = () => {
                           onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
                         >
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          {checkoutDeliverable?.type === 'link' || productData?.member_area_link
-                            ? 'Acessar Entregável'
-                            : 'Fazer Download'
-                          }
+                          {getDeliverableButtonText(deliverableLinkToDisplay)}
                         </Button>
                       )}
                       
@@ -661,8 +634,8 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default PaymentSuccess;
