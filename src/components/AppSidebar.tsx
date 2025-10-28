@@ -124,7 +124,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
-              })}
+              }).filter(Boolean)} {/* Adicionado .filter(Boolean) aqui */}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
