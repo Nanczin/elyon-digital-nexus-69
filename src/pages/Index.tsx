@@ -34,26 +34,23 @@ const Index = () => {
     <div>
       {/* Hero Section */}
       <section 
-        className="hero-section relative flex justify-center items-center z-[1]" 
+        className="hero-section relative flex justify-center items-center" 
         style={{ 
           backgroundImage: `url('/lovable-uploads/db2f06d9-33b1-4a0b-817b-81cb3e2b0760.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'top center',
           backgroundRepeat: 'no-repeat',
           width: '100vw',
-          height: 'calc(100vh + 100px)',
-          marginTop: '-100px',
-          paddingTop: '0',
+          minHeight: 'calc(100vh - 64px)', // Ajustado para preencher a altura restante da tela
           boxSizing: 'border-box',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)',
-          zIndex: 1
         }}
       >
         {/* Overlay darker in light mode, slightly lighter in dark mode */}
         <div className="absolute inset-0"></div>
         
-        <div className="text-center relative z-10 w-full max-w-none px-0 mx-0">
+        <div className="text-center relative z-10 w-full max-w-none px-0 mx-0 pt-16"> {/* Adicionado pt-16 para empurrar o conteúdo para baixo */}
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Bem-vindo à <span className="text-primary">Elyon</span>
           </h1>

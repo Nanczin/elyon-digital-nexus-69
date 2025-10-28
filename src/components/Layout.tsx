@@ -80,7 +80,10 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
           </div>
         </nav>
-        <main className="mobile-container py-4 sm:py-6 lg:py-8">{children}</main>
+        {/* Conditional padding for main based on path */}
+        <main className={location.pathname === '/' ? "flex-1 overflow-auto" : "mobile-container py-4 sm:py-6 lg:py-8"}>
+          {children}
+        </main>
       </div>;
   }
 
@@ -120,7 +123,10 @@ const Layout: React.FC<LayoutProps> = ({
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        {/* Conditional padding for main based on path */}
+        <main className={location.pathname === '/' ? "flex-1 overflow-auto" : "flex-1 overflow-auto mobile-container py-4 sm:py-6 lg:py-8"}>
+          {children}
+        </main>
       </div>
     </SidebarProvider>;
 };
