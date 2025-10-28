@@ -233,7 +233,7 @@ const HorizontalLayout = ({
                                    <div className="relative flex-shrink-0">
                                       <div 
                                         className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-                                        style={{
+                                        style={{ 
                                           borderColor: selectedOrderBumps.includes(bump.id) ? primaryColor : '#d1d5db',
                                           backgroundColor: selectedOrderBumps.includes(bump.id) ? primaryColor : 'transparent'
                                         }}
@@ -372,7 +372,7 @@ const HorizontalLayout = ({
                         <div className="flex justify-between">
                           <span className="text-gray-700">Pacote Completo</span>
                           <span className="font-semibold text-gray-800">
-                            {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price) / 100)}
+                            {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price))}
                           </span>
                         </div>
                       );
@@ -382,7 +382,7 @@ const HorizontalLayout = ({
                     <div className="flex justify-between">
                       <span className="text-gray-700">Pacote Completo</span>
                       <span className="font-semibold text-gray-800">
-                        {formatCurrency((checkout.promotional_price || checkout.price) / 100)}
+                        {formatCurrency(checkout.promotional_price || checkout.price)}
                       </span>
                     </div>
                   );

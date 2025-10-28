@@ -65,7 +65,7 @@ const Checkout = () => {
       if (data.order_bumps && Array.isArray(data.order_bumps)) {
         const orderBumps = data.order_bumps as unknown as OrderBump[];
         const productIds = orderBumps
-          .filter(bump => bump.selectedProduct)
+          .filter(bump => bump.enabled && bump.selectedProduct) // Only enabled bumps with selected product
           .map(bump => bump.selectedProduct);
         
         if (productIds.length > 0) {
@@ -104,8 +104,8 @@ const Checkout = () => {
       const transformedData: CheckoutData = {
         id: data.id,
         product_id: data.product_id,
-        price: data.price,
-        promotional_price: data.promotional_price,
+        price: data.price / 100, // Convert main product price to Reais
+        promotional_price: data.promotional_price ? data.promotional_price / 100 : null, // Convert promotional price to Reais
         layout: data.layout || 'horizontal',
         form_fields: data.form_fields as FormFields || {}, // Cast explícito aqui
         payment_methods: data.payment_methods as PaymentMethods || {},
@@ -166,7 +166,8 @@ const Checkout = () => {
       console.log('Checkout Debug: Package selected:', selectedPkg);
       console.log('Checkout Debug: Base price from package (in Reais):', basePrice);
     } else {
-      basePrice = (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0) / 100;
+      // Use checkout.promotional_price or checkout.price directly, as they are already in Reais
+      basePrice = (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0);
       console.log('Checkout Debug: Base price from main checkout (in Reais):', basePrice);
     }
 
@@ -175,7 +176,7 @@ const Checkout = () => {
     selectedOrderBumps.forEach(bumpId => {
       const bump = checkout.order_bumps.find(b => b.id === bumpId);
       if (bump && bump.enabled) {
-        totalInReais += (parseFloat(String(bump.price)) || 0); // REMOVED / 100
+        totalInReais += (parseFloat(String(bump.price)) || 0); 
       }
     });
     
@@ -205,7 +206,7 @@ const Checkout = () => {
       if (bump) {
         trackAddToCartEvent({
           product_id: bump.selectedProduct || 'order-bump-' + bumpId,
-          price: toCents((parseFloat(String(bump.price)) || 0)) // Price is now in Reais, so only toCents
+          price: toCents((parseFloat(String(bump.price)) || 0)) 
         });
       }
     }
@@ -473,8 +474,9 @@ const Checkout = () => {
       }
     }
     
+    // Use checkout.price and checkout.promotional_price directly, as they are already in Reais
     if ((parseFloat(String(checkout.price)) || 0) > (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0)) {
-      return ((parseFloat(String(checkout.price)) || 0) - (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0)) / 100;
+      return (parseFloat(String(checkout.price)) || 0) - (parseFloat(String(checkout.promotional_price)) || parseFloat(String(checkout.price)) || 0);
     }
     
     return 0;

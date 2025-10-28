@@ -335,7 +335,7 @@ const MosaicLayout = ({
                         <div className="flex justify-between">
                           <span className="text-gray-700">Pacote Completo</span>
                           <span className="font-semibold text-gray-800">
-                            {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price) / 100)}
+                            {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price))}
                           </span>
                         </div>
                       );
@@ -345,7 +345,7 @@ const MosaicLayout = ({
                     <div className="flex justify-between">
                       <span className="text-gray-700">Pacote Completo</span>
                       <span className="font-semibold text-gray-800">
-                        {formatCurrency((checkout.promotional_price || checkout.price) / 100)}
+                        {formatCurrency(checkout.promotional_price || checkout.price)}
                       </span>
                     </div>
                   );
