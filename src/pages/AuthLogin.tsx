@@ -8,28 +8,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff, Sparkles } from 'lucide-react';
 
 const AuthLogin = () => {
-  const { signIn, user } = useAuth();
+  const { signIn, user, isAdmin, loading: authLoading } = useAuth(); // Obter isAdmin e authLoading
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading local para o formulário
 
-  // Redirect if already logged in
+  // Exibir carregamento enquanto o estado de autenticação é determinado
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Redirecionar se o usuário já estiver logado
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={isAdmin ? "/admin/dashboard" : "/"} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signIn(email, password);
-    if (!error) {
-      // Redirect to dashboard on successful login
-      setTimeout(() => {
-        navigate('/admin/dashboard');
-      }, 1000);
-    }
+    // O redirecionamento agora é tratado pelo bloco `if (user)` acima,
+    // que reagirá à mudança de estado `user` do `useAuth`.
+    // Apenas resetar o loading aqui.
     setLoading(false);
   };
 
