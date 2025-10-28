@@ -108,7 +108,7 @@ export function AppSidebar() {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild className="w-full h-10">
+                    <SidebarMenuButton asChild className="w-full h-8"> {/* Alterado de h-10 para h-8 */}
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
@@ -118,7 +118,7 @@ export function AppSidebar() {
                         }
                         title={isCollapsed ? item.label : undefined}
                       >
-                        <IconComponent className="h-4 w-4 flex-shrink-0" /> {/* Alterado de h-5 w-5 para h-4 w-4 */}
+                        <IconComponent className="h-4 w-4 flex-shrink-0" />
                         {!isCollapsed && (
                           <span className="truncate text-base">{item.label}</span>
                         )}
