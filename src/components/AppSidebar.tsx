@@ -109,11 +109,11 @@ export function AppSidebar() {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild className="w-full h-12">
+                    <SidebarMenuButton asChild className="w-full h-10"> {/* Alterado de h-12 para h-10 */}
                       <NavLink 
                         to={item.href} 
                         className={({ isActive }) => 
-                          `${getNavCls({ isActive })} flex items-center rounded-md h-12 ${
+                          `${getNavCls({ isActive })} flex items-center rounded-md h-full ${ // h-full para preencher o botão
                             isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'
                           }`
                         }
