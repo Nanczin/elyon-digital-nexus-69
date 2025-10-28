@@ -308,6 +308,16 @@ const PaymentSuccess = () => {
                   </ul>
                 </div>
               </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  className="flex-1"
+                  onClick={() => navigate('/')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Voltar ao início
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -588,8 +598,7 @@ const PaymentSuccess = () => {
               </div>
             </div>
 
-            {/* Removido o botão "Voltar ao início" */}
-            {/* <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 className="flex-1"
                 onClick={() => navigate('/')}
@@ -597,7 +606,7 @@ const PaymentSuccess = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Voltar ao início
               </Button>
-            </div> */}
+            </div>
 
             <div className="text-center text-sm text-muted-foreground">
               <p>
