@@ -550,7 +550,6 @@ const AdminCheckouts = () => {
         price: checkoutData.packages[0]?.price * 100 || 0,
         promotional_price: checkoutData.packages[0]?.originalPrice ? checkoutData.packages[0].originalPrice * 100 : null,
         form_fields: {
-          // description: checkoutData.description, // REMOVIDO: A descrição principal agora está em styles
           ...checkoutData.customerFields,
           packages: checkoutData.packages,
           guarantee: checkoutData.guarantee,
