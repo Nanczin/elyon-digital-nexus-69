@@ -28,35 +28,35 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
-      <BrowserRouter> {/* BrowserRouter agora envolve AuthProvider */}
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth/login" element={<AuthLogin />} />
-                <Route path="/auth/register" element={<AuthRegister />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/checkouts" element={<AdminCheckouts />} />
-                <Route path="/admin/integrations" element={<AdminIntegrations />} />
-                <Route path="/sales" element={<Sales />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/payments" element={<Payments />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/checkout/:checkoutId" element={<Checkout />} />
-                
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
-          </TooltipProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth/login" element={<AuthLogin />} />
+              <Route path="/auth/register" element={<AuthRegister />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/products" element={<AdminProducts />} />
+              <Route path="/admin/checkouts" element={<AdminCheckouts />} />
+              <Route path="/admin/integrations" element={<AdminIntegrations />} />
+              <Route path="/sales" element={<Sales />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/payments" element={<Payments />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/checkout/:checkoutId" element={<Checkout />} />
+              
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
