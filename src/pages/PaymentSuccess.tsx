@@ -173,26 +173,42 @@ const PaymentSuccess = () => {
     console.log('PAYMENT_SUCCESS_DEBUG: 3. URL Params:', { urlStatus, urlPaymentId });
     console.log('PAYMENT_SUCCESS_DEBUG: 8. MP ID to check (initial effect):', mpIdToCheck);
 
+    // Clear any existing polling interval before setting up a new one
+    clearPolling();
+
     // Case 1: Status is already confirmed as completed by URL parameter
     if (urlStatus === 'approved' || urlStatus === 'completed') {
       setPaymentStatus('completed');
       setIsChecking(false);
-      clearPolling();
       localStorage.removeItem('paymentData'); 
       console.log('PAYMENT_SUCCESS_DEBUG: 4. Initial status: COMPLETED (from URL) and localStorage cleared.');
     } 
-    // Case 2: We have an MP ID to check, so payment is pending until verified
+    // Case 2: PIX payment with QR code from localStorage
+    else if (initialPaymentData?.paymentMethod === 'pix' && initialPaymentData?.payment?.qr_code) {
+      setPaymentStatus('pending'); // It's pending until paid
+      setIsChecking(false); // But we show the QR code immediately
+      console.log('PAYMENT_SUCCESS_DEBUG: 5. Initial status: PENDING (PIX with QR code, showing QR)');
+      if (mpIdToCheck) {
+        // Start polling for PIX status
+        intervalRef.current = setInterval(() => {
+          if (isMounted.current) { // Check if component is still mounted
+            console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check (PIX): re-fetching...');
+            fetchAndVerifyPayment(mpIdToCheck);
+          } else {
+            clearPolling();
+          }
+        }, 5000) as unknown as number;
+      }
+    }
+    // Case 3: Other pending payment (e.g., Credit Card processing, or PIX without QR in local storage, or just an MP ID from URL)
     else if (mpIdToCheck) {
       setPaymentStatus('pending');
-      setIsChecking(true); 
-      console.log('PAYMENT_SUCCESS_DEBUG: 6. Initial status: PENDING (starting check)');
+      setIsChecking(true); // Show spinner for generic checking
+      console.log('PAYMENT_SUCCESS_DEBUG: 6. Initial status: PENDING (default, starting check)');
+      fetchAndVerifyPayment(mpIdToCheck); // Initial check
       
-      // Perform an immediate check
-      fetchAndVerifyPayment(mpIdToCheck); 
-      
-      // Then set up polling
       intervalRef.current = setInterval(() => {
-        if (isMounted.current) { 
+        if (isMounted.current) { // Check if component is still mounted
           console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check: re-fetching...');
           fetchAndVerifyPayment(mpIdToCheck);
         } else {
@@ -200,11 +216,10 @@ const PaymentSuccess = () => {
         }
       }, 5000) as unknown as number;
     } 
-    // Case 3: No MP ID to check and no definitive URL status, so it's a failed/unknown state
+    // Case 4: No MP ID to check and no definitive URL status, so it's a failed/unknown state
     else {
       setPaymentStatus('failed'); 
       setIsChecking(false);
-      clearPolling();
       localStorage.removeItem('paymentData'); 
       console.log('PAYMENT_SUCCESS_DEBUG: 6.1. No payment data or MP ID, defaulting to FAILED and localStorage cleared.');
     }
