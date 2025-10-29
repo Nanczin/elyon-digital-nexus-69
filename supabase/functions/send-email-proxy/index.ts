@@ -30,6 +30,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+    console.log('SEND_EMAIL_PROXY_DEBUG: EMAIL_SERVICE_URL:', emailServiceUrl); // Log explícito da URL
 
     console.log('SEND_EMAIL_PROXY_DEBUG: Enviando requisição para o serviço de e-mail externo:', emailServiceUrl);
     let response;
