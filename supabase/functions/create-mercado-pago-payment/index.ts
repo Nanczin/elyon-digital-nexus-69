@@ -320,7 +320,13 @@ serve(async (req) => {
           email_transactional_data: emailMetadata,
         }
       })
-      .select()
+      .select(`
+        *,
+        checkouts (
+          *,
+          products (*)
+        )
+      `) // Select payment, then join checkouts and products
       .single();
 
     if (paymentError) {
@@ -345,7 +351,8 @@ serve(async (req) => {
           ? mpResult.point_of_interaction?.transaction_data?.ticket_url
           : null,
         amount: transactionAmountInReais, // Return amount in reais
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        checkouts: payment.checkouts // Incluir dados do checkout e produto
       }
     };
     console.log('CREATE_MP_PAYMENT_DEBUG: 20. Response payload sent to frontend:', JSON.stringify(responsePayload, null, 2));

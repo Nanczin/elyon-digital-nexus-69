@@ -80,7 +80,13 @@ serve(async (req) => {
         }
       })
       .eq('mp_payment_id', mp_payment_id.toString())
-      .select()
+      .select(`
+        *,
+        checkouts (
+          *,
+          products (*)
+        )
+      `) // Select payment, then join checkouts and products
       .single();
 
     if (updateError) {
