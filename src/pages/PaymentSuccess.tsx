@@ -233,18 +233,22 @@ const PaymentSuccess = () => {
     };
   }, [searchParams, paymentStatus]); // Depend on searchParams and paymentStatus to re-evaluate initial state and polling
 
-  // NOVO useEffect para lidar com o redirecionamento automático (AGORA REMOVIDO)
-  useEffect(() => {
-    console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
-    if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
-      console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. User will stay on this page.');
-      toast({
-        title: "Pagamento Aprovado! ✅",
-        description: "Seu acesso ao produto está liberado. Clique no botão abaixo para acessá-lo.", // Mensagem atualizada
-      });
-      // REMOVIDO: Não há mais redirecionamento automático aqui
-    }
-  }, [paymentStatus, deliverableLinkToDisplay, toast]);
+  // REMOVIDO: Este useEffect foi removido para evitar o redirecionamento automático
+  // useEffect(() => {
+  //   console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
+  //   let redirectTimer: NodeJS.Timeout;
+  //   if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
+  //     console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. Redirecting in 3 seconds...');
+  //     toast({
+  //       title: "Pagamento Aprovado! ✅",
+  //       description: "Redirecionando para o seu produto em 3 segundos...",
+  //     });
+  //     redirectTimer = setTimeout(() => {
+  //       window.location.href = deliverableLinkToDisplay; // Redirecionamento completo
+  //     }, 3000); // Redireciona após 3 segundos
+  //   }
+  //   return () => clearTimeout(redirectTimer); // Limpa o timer se o componente desmontar ou as dependências mudarem
+  // }, [paymentStatus, deliverableLinkToDisplay, toast]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -260,13 +264,21 @@ const PaymentSuccess = () => {
     }
   };
 
-  // REMOVIDO: Esta função não é mais necessária, o texto será definido diretamente no JSX
-  // const getDeliverableButtonText = (link: string | null) => {
-  //   if (!link) return 'Acessar Produto';
-  //   const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
-  //   const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
-  //   return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
-  // };
+  // Função para definir o texto do botão do entregável
+  const getDeliverableButtonText = (link: string | null) => {
+    if (!link) return 'Acessar Produto'; // Fallback genérico
+    
+    // Prioriza o nome do entregável configurado no checkout, depois o nome do produto base
+    if (checkoutDeliverable?.name) {
+      return `Acessar ${checkoutDeliverable.name}`;
+    }
+    if (productData?.name) {
+      return `Acessar ${productData.name}`;
+    }
+    
+    // Fallback se nenhum nome for encontrado
+    return 'Acessar Produto';
+  };
 
   if (isChecking) {
     return (
@@ -330,7 +342,7 @@ const PaymentSuccess = () => {
                         onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
-                        {checkoutDeliverable?.name || productData?.name || 'Acessar Produto'} {/* Texto do botão atualizado */}
+                        {getDeliverableButtonText(deliverableLinkToDisplay)}
                       </Button>
                     </div>
                   </div>
@@ -531,7 +543,7 @@ const PaymentSuccess = () => {
                             <TabsContent value="nubank" className="mt-4 space-y-3">
                               <div className="flex justify-center mb-4">
                                 <img 
-                                  src="/lovable-uploads/ecad8c6d-aea7-4fb7-a728-d52632530987.png" 
+                                  src="/lovable-uploads/ecad8c6d-aea7-4fb7-a28-d52632530987.png" 
                                   alt="Alerta de Golpe Nubank"
                                   className="w-full max-w-sm rounded-lg shadow-sm"
                                 />
