@@ -86,15 +86,17 @@ const PaymentSuccess = () => {
           setPaymentStatus('completed');
           setIsChecking(false);
           clearPolling();
-          window.history.replaceState({}, '', '/payment-success?status=approved');
-          console.log('PAYMENT_SUCCESS_DEBUG: 12. Status updated to COMPLETED (from Edge Function)');
+          // REMOVIDO: window.history.replaceState({}, '', '/payment-success?status=approved');
+          localStorage.removeItem('paymentData'); // Limpar localStorage ao completar
+          console.log('PAYMENT_SUCCESS_DEBUG: 12. Status updated to COMPLETED (from Edge Function) and localStorage cleared.');
           fetchedPaymentFromDb = res.data.payment;
           console.log('PAYMENT_SUCCESS_DEBUG: 11.1. Full fetchedPaymentFromDb:', JSON.stringify(fetchedPaymentFromDb, null, 2));
         } else if (dbPaymentStatus === 'failed' || dbMpPaymentStatus === 'rejected') {
           setPaymentStatus('failed');
           setIsChecking(false);
           clearPolling();
-          console.log('PAYMENT_SUCCESS_DEBUG: 13. Status updated to FAILED (from Edge Function)');
+          localStorage.removeItem('paymentData'); // Limpar localStorage ao falhar
+          console.log('PAYMENT_SUCCESS_DEBUG: 13. Status updated to FAILED (from Edge Function) and localStorage cleared.');
         } else {
           setLastDetail(res.data.status_detail || null);
           // Do NOT stop checking if it's still pending, continue polling
@@ -104,12 +106,14 @@ const PaymentSuccess = () => {
         console.error('PAYMENT_SUCCESS_DEBUG: 15. Error invoking verify-mercado-pago-payment:', res.error);
         setIsChecking(false);
         clearPolling();
+        localStorage.removeItem('paymentData'); // Limpar localStorage em caso de erro na verificação
         setPaymentStatus('failed'); // Assume failed if verification itself fails
       }
     } catch (err) {
       console.warn('PAYMENT_SUCCESS_DEBUG: 16. Erro ao verificar status via Edge Function:', err);
       setIsChecking(false);
       clearPolling();
+      localStorage.removeItem('paymentData'); // Limpar localStorage em caso de erro
       setPaymentStatus('failed'); // Assume failed on network/unexpected error
     }
 
@@ -187,7 +191,8 @@ const PaymentSuccess = () => {
       setPaymentStatus('completed');
       setIsChecking(false);
       clearPolling();
-      console.log('PAYMENT_SUCCESS_DEBUG: 4. Initial status: COMPLETED (from URL)');
+      localStorage.removeItem('paymentData'); // Limpar localStorage se o status já vem da URL
+      console.log('PAYMENT_SUCCESS_DEBUG: 4. Initial status: COMPLETED (from URL) and localStorage cleared.');
     } else if (initialPaymentData?.paymentMethod === 'pix' && initialPaymentData?.payment?.qr_code) {
       setPaymentStatus('pending');
       setIsChecking(false); // For PIX with QR, show QR immediately, not generic checking
@@ -223,7 +228,8 @@ const PaymentSuccess = () => {
       setPaymentStatus('failed');
       setIsChecking(false);
       clearPolling();
-      console.log('PAYMENT_SUCCESS_DEBUG: 6.1. No payment data or MP ID, defaulting to FAILED.');
+      localStorage.removeItem('paymentData'); // Limpar localStorage se não há dados de pagamento
+      console.log('PAYMENT_SUCCESS_DEBUG: 6.1. No payment data or MP ID, defaulting to FAILED and localStorage cleared.');
     }
 
     return () => {
@@ -543,7 +549,7 @@ const PaymentSuccess = () => {
                             <TabsContent value="nubank" className="mt-4 space-y-3">
                               <div className="flex justify-center mb-4">
                                 <img 
-                                  src="/lovable-uploads/ecad8c6d-aea7-4fb7-a28-d52632530987.png" 
+                                  src="/lovable-uploads/ecad8c6d-aea7-4fb7-a728-d52632530987.png" 
                                   alt="Alerta de Golpe Nubank"
                                   className="w-full max-w-sm rounded-lg shadow-sm"
                                 />
@@ -652,8 +658,7 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default PaymentSuccess;
