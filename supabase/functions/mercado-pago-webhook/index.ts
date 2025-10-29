@@ -32,108 +32,31 @@ serve(async (req) => {
       }
       console.log('WEBHOOK_MP_DEBUG: Payment ID from webhook:', paymentId);
 
-      // Buscar as configurações do Mercado Pago
-      const { data: mpConfig, error: mpConfigError } = await supabase
-        .from('integrations')
-        .select('mercado_pago_access_token')
-        .not('mercado_pago_access_token', 'is', null)
-        .limit(1)
-        .maybeSingle();
-
-      if (mpConfigError) {
-        console.error('WEBHOOK_MP_DEBUG: Erro ao buscar mpConfig:', mpConfigError);
-      }
-      let accessToken = mpConfig?.mercado_pago_access_token || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-      
-      if (!accessToken) {
-        console.error('WEBHOOK_MP_DEBUG: No access token available');
-        return new Response('No access token', { headers: corsHeaders, status: 500 });
-      }
-      console.log('WEBHOOK_MP_DEBUG: Access token obtido (length):', accessToken.length);
-
-      // Buscar detalhes do pagamento no Mercado Pago
-      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        }
-      });
-
-      const mpPayment = await mpResponse.json();
-      console.log('WEBHOOK_MP_DEBUG: MP Payment details:', mpPayment);
-
-      if (!mpResponse.ok) {
-        console.error('WEBHOOK_MP_DEBUG: Error fetching payment from MP:', mpPayment);
-        return new Response('Error fetching payment', { headers: corsHeaders, status: 400 });
-      }
-
-      // Extract customer data from Mercado Pago payment
-      const checkoutId = mpPayment.external_reference;
-      let customerData = {};
-      
-      // Try to get customer data from the checkout or create default
-      if (checkoutId) {
-        // REMOVIDO: Não precisamos mais buscar checkoutData aqui para email, pois estará no metadata do payment
-        // const { data: checkoutData, error: checkoutDataError } = await supabase
-        //   .from('checkouts')
-        //   .select('user_id, form_fields, products(name, member_area_link, file_url)') // Selecionar user_id, form_fields e dados do produto
-        //   .eq('id', checkoutId)
-        //   .single();
-        
-        // if (checkoutDataError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar checkoutData:', checkoutDataError);
-
-        // Create customer data from MP payment info
-        customerData = {
-          name: mpPayment.payer?.first_name && mpPayment.payer?.last_name 
-            ? `${mpPayment.payer.first_name} ${mpPayment.payer.last_name}`
-            : mpPayment.payer?.email?.split('@')[0] || `Cliente ${mpPayment.id}`,
-          email: mpPayment.payer?.email || `customer_${mpPayment.id}@checkout.com`,
-          phone: mpPayment.payer?.phone?.number 
-            ? `${mpPayment.payer.phone.area_code || ''}${mpPayment.payer.phone.number}`
-            : null,
-          cpf: mpPayment.payer?.identification?.number || null
-        };
-      }
-      console.log('WEBHOOK_MP_DEBUG: Customer Data extraído:', customerData);
-
-      // Get existing payment to preserve metadata
+      // Get existing payment to preserve metadata and get latest status
       const { data: existingPayment, error: existingPaymentError } = await supabase
         .from('payments')
-        .select('metadata, user_id, checkout_id, amount') // Also select user_id and amount
+        .select('*, checkouts(user_id, products(name, description, member_area_link, file_url), form_fields)') // Select all payment fields and join checkouts/products
         .eq('mp_payment_id', paymentId.toString())
         .single();
       
-      if (existingPaymentError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar pagamento existente:', existingPaymentError);
-      console.log('WEBHOOK_MP_DEBUG: Pagamento existente no DB:', existingPayment);
-
-      // Atualizar o pagamento no banco de dados
-      const { data: payment, error: updateError } = await supabase
-        .from('payments')
-        .update({
-          mp_payment_status: mpPayment.status,
-          status: mpPayment.status === 'approved' ? 'completed' : 
-                 mpPayment.status === 'rejected' ? 'failed' : 'pending',
-          metadata: {
-            ...existingPayment?.metadata || {},
-            mp_webhook_data: webhookData, // Use webhookData directly here
-            customer_data: customerData
-          }
-        })
-        .eq('mp_payment_id', paymentId.toString())
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('WEBHOOK_MP_DEBUG: Error updating payment:', updateError);
-        return new Response('Error updating payment', { headers: corsHeaders, status: 500 });
+      if (existingPaymentError || !existingPayment) {
+        console.error('WEBHOOK_MP_DEBUG: Erro ao buscar pagamento existente ou não encontrado:', existingPaymentError);
+        return new Response('Payment not found in DB or error fetching', { headers: corsHeaders, status: 404 });
       }
+      console.log('WEBHOOK_MP_DEBUG: Pagamento existente no DB (com checkout e produto):', JSON.stringify(existingPayment, null, 2));
 
-      console.log('WEBHOOK_MP_DEBUG: Payment updated:', payment);
+      const mpPaymentStatus = existingPayment.mp_payment_status; // Use status from DB, updated by verify-mercado-pago-payment
+      const paymentStatus = existingPayment.status;
+
+      // Extract customer data from Mercado Pago payment metadata
+      const customerData = existingPayment.metadata?.customer_data || {};
+      console.log('WEBHOOK_MP_DEBUG: Customer Data extraído do metadata do payment:', customerData);
 
       // Se o pagamento foi aprovado, garantir ordem e acesso ao produto (idempotente)
-      if (mpPayment.status === 'approved') {
+      if (paymentStatus === 'completed' || mpPaymentStatus === 'approved') { // Use both for robustness
         console.log(`WEBHOOK_MP_DEBUG: Payment ${paymentId} approved - ensuring order and product access.`);
         try {
-          const email = (customerData as any)?.email || mpPayment.payer?.email || null;
+          const email = (customerData as any)?.email || null;
           let userId: string | null = existingPayment?.user_id || null; // Prioritize existing user_id from payment
           console.log('WEBHOOK_MP_DEBUG: Email do cliente para pós-processamento:', email, 'User ID existente no pagamento:', userId);
 
@@ -158,9 +81,9 @@ serve(async (req) => {
                   console.log('WEBHOOK_MP_DEBUG: Perfil encontrado, userId:', userId);
                 } else {
                   console.log('WEBHOOK_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário...');
-                  const customerName = (customerData as any)?.name || mpPayment.payer?.first_name || 'Cliente';
+                  const customerName = (customerData as any)?.name || 'Cliente';
                   const customerPhone = (customerData as any)?.phone || null;
-                  const customerCpf = (customerData as any)?.cpf || mpPayment.payer?.identification?.number || null;
+                  const customerCpf = (customerData as any)?.cpf || null;
                   const generatedPassword = Math.random().toString(36).slice(-8); 
 
                   const userMetadata = { 
@@ -189,9 +112,9 @@ serve(async (req) => {
             }
           }
 
-          console.log('WEBHOOK_MP_DEBUG: Verificando se payment.user_id precisa ser atualizado. Current payment.user_id:', payment?.user_id, 'Resolved userId:', userId);
+          console.log('WEBHOOK_MP_DEBUG: Verificando se payment.user_id precisa ser atualizado. Current payment.user_id:', existingPayment?.user_id, 'Resolved userId:', userId);
           // Atualizar user_id no pagamento (se aplicável)
-          if (userId && payment?.id && !payment?.user_id) {
+          if (userId && existingPayment?.id && !existingPayment?.user_id) {
             const { error: payUserErr } = await supabase
               .from('payments')
               .update({ user_id: userId })
@@ -201,23 +124,7 @@ serve(async (req) => {
           }
 
           // Obter produto a partir do checkout
-          let productId: string | null = null;
-          // let checkoutSellerUserId: string | null = null; // REMOVIDO: Agora vem do metadata do payment
-          // let checkoutFormFields: any = null; // REMOVIDO: Agora vem do metadata do payment
-          // let productData: any = null; // REMOVIDO: Agora vem do metadata do payment
-          if (checkoutId) {
-            console.log('WEBHOOK_MP_DEBUG: Buscando product_id para checkoutId:', checkoutId);
-            const { data: checkoutRow, error: checkoutRowError } = await supabase
-              .from('checkouts')
-              .select('product_id') // Apenas product_id, o resto vem do metadata do payment
-              .eq('id', checkoutId)
-              .maybeSingle();
-            if (checkoutRowError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar product_id do checkout:', checkoutRowError);
-            productId = checkoutRow?.product_id || null;
-            // checkoutSellerUserId = checkoutRow?.user_id || null; // REMOVIDO
-            // checkoutFormFields = checkoutRow?.form_fields || null; // REMOVIDO
-            // productData = checkoutRow?.products || null; // REMOVIDO
-          }
+          const productId = existingPayment.checkouts?.product_id || null;
           console.log('WEBHOOK_MP_DEBUG: Product ID para ordem/acesso:', productId);
 
           console.log('WEBHOOK_MP_DEBUG: Final userId for order/access:', userId, 'Final productId for order/access:', productId);
@@ -233,20 +140,20 @@ serve(async (req) => {
             if (orderExistsError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar ordem existente:', orderExistsError);
 
             if (!existingOrder) {
-                const orderAmount = payment?.amount || (mpPayment.transaction_amount ? Math.round(Number(mpPayment.transaction_amount) * 100) : 0);
+                const orderAmount = existingPayment?.amount || 0;
                 console.log('WEBHOOK_MP_DEBUG: Inserindo nova ordem com amount (cents):', orderAmount);
                 const { data: orderIns, error: orderErr } = await supabase
                     .from('orders')
                     .insert({
                         mp_payment_id: paymentId.toString(),
-                        payment_id: payment?.id || null,
-                        checkout_id: checkoutId || null,
+                        payment_id: existingPayment?.id || null,
+                        checkout_id: existingPayment?.checkout_id || null,
                         user_id: userId,
                         product_id: productId,
                         amount: orderAmount,
                         status: 'paid',
                         metadata: {
-                          mp_status: mpPayment.status,
+                          mp_status: mpPaymentStatus,
                           source: 'webhook'
                         }
                     })
@@ -280,7 +187,7 @@ serve(async (req) => {
                     .insert({
                         user_id: userId,
                         product_id: productId,
-                        payment_id: payment?.id || null,
+                        payment_id: existingPayment?.id || null,
                         source: 'purchase'
                     })
                     .select('id')
@@ -295,16 +202,16 @@ serve(async (req) => {
           }
 
           // --- Lógica de envio de e-mail transacional (após aprovação) ---
-          const emailTransactionalData = (payment?.metadata as any)?.email_transactional_data;
+          const emailTransactionalData = (existingPayment?.metadata as any)?.email_transactional_data;
           console.log('WEBHOOK_MP_DEBUG: emailTransactionalData do payment metadata:', emailTransactionalData);
 
           if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
             console.log('WEBHOOK_MP_DEBUG: Disparando e-mail transacional...');
-            const productName = emailTransactionalData.productName || 'Seu Produto';
+            const productName = emailTransactionalData.productName || existingPayment.checkouts?.products?.name || 'Seu Produto';
             const customerName = (customerData as any).name || (customerData as any).email.split('@')[0];
-            const customerEmail = (customerData as any).email || mpPayment.payer?.email || null;
+            const customerEmail = (customerData as any).email || null;
 
-            const accessLink = emailTransactionalData.deliverableLink || '';
+            const accessLink = emailTransactionalData.deliverableLink || existingPayment.checkouts?.products?.member_area_link || existingPayment.checkouts?.products?.file_url || '';
 
             const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
             const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
@@ -324,8 +231,7 @@ serve(async (req) => {
                   to: customerEmail,
                   subject: finalSubject,
                   html: finalBody.replace(/\n/g, '<br/>'),
-                  fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com',
-                  fromName: 'Elyon Digital',
+                  // fromEmail and fromName are now derived within send-transactional-email
                   sellerUserId: emailTransactionalData.sellerUserId,
                 });
                 const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
@@ -335,8 +241,6 @@ serve(async (req) => {
                       to: customerEmail,
                       subject: finalSubject,
                       html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                      fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
-                      fromName: 'Elyon Digital',
                       sellerUserId: emailTransactionalData.sellerUserId,
                     }
                   }

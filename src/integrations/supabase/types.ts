@@ -309,11 +309,14 @@ export type Database = {
       }
       products: {
         Row: {
+          access_url: string | null
           banner_url: string | null
           created_at: string
           description: string | null
+          email_template: string | null
           file_url: string | null
           id: string
+          is_active: boolean | null
           logo_url: string | null
           member_area_link: string | null
           name: string
@@ -322,11 +325,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_url?: string | null
           banner_url?: string | null
           created_at?: string
           description?: string | null
+          email_template?: string | null
           file_url?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
           member_area_link?: string | null
           name: string
@@ -335,11 +341,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_url?: string | null
           banner_url?: string | null
           created_at?: string
           description?: string | null
+          email_template?: string | null
           file_url?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
           member_area_link?: string | null
           name?: string
@@ -381,6 +390,156 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      product_access: {
+        Row: {
+          created_at: string | null
+          id: string
+          payment_id: string | null
+          product_id: string | null
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          payment_id?: string | null
+          product_id?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          payment_id?: string | null
+          product_id?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_access_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_deliveries: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          gmail_account_id: string | null
+          id: string
+          purchase_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          gmail_account_id?: string | null
+          id?: string
+          purchase_id?: string | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          gmail_account_id?: string | null
+          id?: string
+          purchase_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_deliveries_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "product_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_deliveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_purchases: {
+        Row: {
+          access_sent: boolean | null
+          access_sent_at: string | null
+          amount: number
+          created_at: string | null
+          customer_email: string
+          customer_name: string
+          id: string
+          payment_id: string
+          payment_status: string
+          product_id: string | null
+          user_id: string | null
+          username: string | null
+          password: string | null
+        }
+        Insert: {
+          access_sent?: boolean | null
+          access_sent_at?: string | null
+          amount: number
+          created_at?: string | null
+          customer_email: string
+          customer_name: string
+          id?: string
+          payment_id: string
+          payment_status: string
+          product_id?: string | null
+          user_id?: string | null
+          username?: string | null
+          password?: string | null
+        }
+        Update: {
+          access_sent?: boolean | null
+          access_sent_at?: string | null
+          amount?: number
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string
+          id?: string
+          payment_id?: string
+          payment_status?: string
+          product_id?: string | null
+          user_id?: string | null
+          username?: string | null
+          password?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales: {
         Row: {

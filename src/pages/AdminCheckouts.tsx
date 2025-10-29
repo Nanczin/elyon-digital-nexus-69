@@ -204,7 +204,7 @@ const AdminCheckouts = () => {
       const {
         data,
         error
-      } = await supabase.from('products').select('id, name, price, description').order('created_at', {
+      } = await supabase.from('products').select('id, name, price, description, access_url').order('created_at', {
         ascending: false
       });
       if (error) throw error;
@@ -257,6 +257,10 @@ const AdminCheckouts = () => {
       mostSold: pkg.mostSold ?? false
     })) : initialFormData.packages; // Use initialFormData default
 
+    // Obter o produto base para pegar o access_url padrão
+    const baseProduct = products.find(p => p.id === checkout.product_id);
+    const defaultAccessLink = baseProduct?.access_url || '';
+
     return {
       name: checkout.products?.name || '',
       selectedProduct: checkout.product_id || '',
@@ -291,7 +295,7 @@ const AdminCheckouts = () => {
       },
       sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true, // Carregar o novo campo
       transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initialFormData.transactionalEmailSubject, // Carregar assunto
-      transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.transactionalEmailBody // Carregar corpo
+      transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.transactionalEmailBody.replace(/{access_link}/g, defaultAccessLink), // Carregar corpo e preencher link padrão
     };
   };
 
@@ -585,7 +589,7 @@ const AdminCheckouts = () => {
           },
           sendTransactionalEmail: checkoutData.sendTransactionalEmail, // Salvar o novo campo
           transactionalEmailSubject: checkoutData.transactionalEmailSubject, // Salvar assunto
-          transactionalEmailBody: checkoutData.transactionalEmailBody // Salvar corpo
+          transactionalEmailBody: checkoutData.transactionalEmailBody, // Salvar corpo
         },
         payment_methods: checkoutData.paymentMethods,
         order_bumps: checkoutData.orderBumps.map(bump => ({

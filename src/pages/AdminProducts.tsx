@@ -39,6 +39,8 @@ const AdminProducts = () => {
     memberAreaLink: '',
     deliverable: null as File | null,
     deliverableLink: '', // New field for deliverable link
+    accessUrl: '', // Novo campo para access_url
+    emailTemplate: '', // Novo campo para email_template
     orderBumps: [{
       id: 1,
       name: '',
@@ -211,7 +213,9 @@ const AdminProducts = () => {
           banner_url: bannerUrl,
           logo_url: logoUrl,
           file_url: fileUrl, // Save deliverable link here
-          member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null
+          member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null,
+          access_url: formData.accessUrl, // Salvar access_url
+          email_template: formData.emailTemplate, // Salvar email_template
         });
 
       if (error) throw error;
@@ -232,6 +236,8 @@ const AdminProducts = () => {
         memberAreaLink: '',
         deliverable: null,
         deliverableLink: '',
+        accessUrl: '',
+        emailTemplate: '',
         orderBumps: [{
           id: 1,
           name: '',
@@ -267,6 +273,8 @@ const AdminProducts = () => {
       memberAreaLink: product.member_area_link || '',
       deliverable: null,
       deliverableLink: product.file_url && product.file_url.startsWith('http') ? product.file_url : '', // Load deliverable link
+      accessUrl: product.access_url || '', // Carregar access_url
+      emailTemplate: product.email_template || '', // Carregar email_template
       orderBumps: [{
         id: 1,
         name: '',
@@ -383,7 +391,9 @@ const AdminProducts = () => {
           banner_url: bannerUrl,
           logo_url: logoUrl,
           file_url: fileUrl, // Save deliverable link here
-          member_area_link: memberAreaLink
+          member_area_link: memberAreaLink,
+          access_url: formData.accessUrl, // Salvar access_url
+          email_template: formData.emailTemplate, // Salvar email_template
         })
         .eq('id', editingProduct.id);
 
@@ -406,6 +416,8 @@ const AdminProducts = () => {
         memberAreaLink: '',
         deliverable: null,
         deliverableLink: '',
+        accessUrl: '',
+        emailTemplate: '',
         orderBumps: [{
           id: 1,
           name: '',
@@ -452,6 +464,8 @@ const AdminProducts = () => {
               memberAreaLink: '',
               deliverable: null,
               deliverableLink: '',
+              accessUrl: '',
+              emailTemplate: '',
               orderBumps: [{
                 id: 1,
                 name: '',
@@ -475,6 +489,8 @@ const AdminProducts = () => {
                 memberAreaLink: '',
                 deliverable: null,
                 deliverableLink: '',
+                accessUrl: '',
+                emailTemplate: '',
                 orderBumps: [{
                   id: 1,
                   name: '',
@@ -619,6 +635,38 @@ const AdminProducts = () => {
                         <Label htmlFor="deliverableLink">Link Direto do Entregável *</Label>
                         <Input id="deliverableLink" type="url" value={formData.deliverableLink} onChange={e => handleInputChange('deliverableLink', e.target.value)} placeholder="https://exemplo.com/meu-ebook.pdf" required />
                       </div>}
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Configurações de Acesso e E-mail</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="accessUrl">URL de Acesso ao Produto</Label>
+                      <Input 
+                        id="accessUrl" 
+                        type="url" 
+                        value={formData.accessUrl} 
+                        onChange={e => handleInputChange('accessUrl', e.target.value)} 
+                        placeholder="https://seuplataforma.com/acesso" 
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Link para onde o cliente será direcionado para acessar o produto.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="emailTemplate">Template de E-mail de Acesso</Label>
+                      <Textarea 
+                        id="emailTemplate" 
+                        value={formData.emailTemplate} 
+                        onChange={e => handleInputChange('emailTemplate', e.target.value)} 
+                        placeholder="Olá {{nome}}, seu acesso é..." 
+                        rows={8} 
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Use variáveis como <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{nome}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{produto}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{username}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{password}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{url_acesso}}'}</code> e <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{suporte}}'}</code>.
+                      </p>
+                    </div>
                   </div>
                 </TabsContent>
 

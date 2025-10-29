@@ -153,9 +153,13 @@ const PaymentSuccess = () => {
       setPaymentData(initialPaymentData);
       setSendTransactionalEmail(initialPaymentData.sendTransactionalEmail ?? true);
 
+      // Directly use product and deliverable data from the payment object in localStorage
       const productFromLocalStorage = initialPaymentData.payment?.checkouts?.products as CheckoutData['products'] || null;
       const checkoutDeliverableFromLocalStorage = initialPaymentData.payment?.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const emailTransactionalDeliverableLinkFromLocalStorage = initialPaymentData.deliverableLink || null;
+
+      setProductData(productFromLocalStorage);
+      setCheckoutDeliverable(checkoutDeliverableFromLocalStorage);
 
       const initialDeterminedLink = deriveDeliverableLink(
         productFromLocalStorage,
