@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.10.0/mod.ts"; // Atualizado para v0.10.0
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +15,7 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
-  console.log('SEND_EMAIL_DEBUG: Função send-transactional-email iniciada.'); // Log inicial
+  console.log('SEND_EMAIL_DEBUG: Função send-transactional-email iniciada.');
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
@@ -36,8 +35,8 @@ serve(async (req) => {
       );
     }
 
-    // 1. Buscar configurações SMTP do vendedor
-    console.log('SEND_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
+    // 1. Buscar configurações SMTP do vendedor para obter o 'from'
+    console.log('SEND_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId para obter o remetente formatado:', sellerUserId);
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('smtp_config')
@@ -45,76 +44,47 @@ serve(async (req) => {
       .maybeSingle();
 
     if (integrationError) {
-      console.error('SEND_EMAIL_DEBUG: Erro ao buscar configurações de integração:', integrationError);
+      console.error('SEND_EMAIL_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
+      // Não é um erro crítico para o envio, mas o remetente pode ser genérico
+    }
+
+    const smtpConfig = integration?.smtp_config as any;
+    const finalFromEmail = smtpConfig?.email || 'suporte@elyondigital.com'; // Fallback
+    const finalFromName = smtpConfig?.displayName || 'Elyon Digital'; // Fallback
+    const formattedFrom = `${finalFromName} <${finalFromEmail}>`;
+
+    // Chamar a função proxy para enviar o e-mail
+    console.log('SEND_EMAIL_DEBUG: Invocando função proxy send-email-proxy para enviar e-mail.');
+    const { data: proxyResult, error: proxyError } = await supabase.functions.invoke(
+      'send-email-proxy',
+      {
+        body: { to, subject, html, sellerUserId, from: formattedFrom }, // Passar o remetente formatado
+        method: 'POST'
+      }
+    );
+
+    if (proxyError) {
+      console.error('SEND_EMAIL_DEBUG: Erro ao invocar send-email-proxy:', proxyError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor' }),
+        JSON.stringify({ success: false, error: proxyError.message || 'Erro ao enviar e-mail via proxy' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    const smtpConfig = integration?.smtp_config as any; // Cast para any para acessar propriedades
-    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
-      console.error('SEND_EMAIL_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+    if (!proxyResult?.success) {
+      console.error('SEND_EMAIL_DEBUG: Falha no envio de e-mail via proxy:', proxyResult?.error);
       return new Response(
-        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (email, appPassword, displayName são obrigatórios)' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    // Derivar os campos SMTP da configuração simplificada, com fallbacks
-    const finalHost = smtpConfig.host || 'smtp.gmail.com'; // Padrão para Gmail
-    const finalPort = Number(smtpConfig.port || '587');
-    const finalSecure = smtpConfig.secure ?? true; // Padrão para true
-    const finalUsername = smtpConfig.email; // O email é o username
-    const finalPassword = smtpConfig.appPassword; // A senha do app é a senha
-    const finalFromEmail = smtpConfig.email; // O email é o remetente
-    const finalFromName = smtpConfig.displayName || 'Elyon Digital'; // Nome de exibição ou padrão
-
-    console.log('SEND_EMAIL_DEBUG: SMTP Config loaded:', {
-      host: finalHost,
-      port: finalPort,
-      username: finalUsername,
-      password: finalPassword ? '***MASKED***' : 'MISSING', // MASCARADO POR SEGURANÇA
-      fromEmail: finalFromEmail,
-      fromName: finalFromName,
-      secure: finalSecure,
-    });
-    console.log('SEND_EMAIL_DEBUG: Email details:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING' });
-
-    // 2. Configurar e enviar e-mail
-    const client = new SmtpClient();
-    try {
-      console.log('SEND_EMAIL_DEBUG: Tentando conectar ao servidor SMTP...');
-      await client.connect({
-        hostname: finalHost,
-        port: finalPort,
-        tls: finalSecure,
-        username: finalUsername,
-        password: finalPassword,
-      });
-      console.log('SEND_EMAIL_DEBUG: Conectado ao servidor SMTP. Tentando enviar e-mail...');
-
-      await client.send({
-        from: `${finalFromName} <${finalFromEmail}>`,
-        to,
-        subject,
-        content: html,
-        html: html,
-      });
-
-      await client.close();
-      console.log('SEND_EMAIL_DEBUG: E-mail enviado com sucesso para:', to);
-      return new Response(
-        JSON.stringify({ success: true, message: 'E-mail enviado com sucesso' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    } catch (emailError: any) {
-      console.error('SEND_EMAIL_DEBUG: Erro ao enviar e-mail:', emailError.message, 'Stack:', emailError.stack);
-      return new Response(
-        JSON.stringify({ success: false, error: `Erro ao enviar e-mail: ${emailError.message}` }),
+        JSON.stringify({ success: false, error: proxyResult?.error || 'Falha ao enviar e-mail via proxy' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    console.log('SEND_EMAIL_DEBUG: E-mail enviado com sucesso via proxy.');
+    return new Response(
+      JSON.stringify({ success: true, message: 'E-mail enviado com sucesso' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
+
   } catch (error: any) {
     console.error('SEND_EMAIL_DEBUG: Erro geral na função send-transactional-email:', error.message, 'Stack:', error.stack);
     return new Response(

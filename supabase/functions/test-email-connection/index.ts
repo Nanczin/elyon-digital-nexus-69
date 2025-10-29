@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.10.0/mod.ts"; // Atualizado para v0.10.0
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,8 +33,8 @@ serve(async (req) => {
       );
     }
 
-    // 1. Buscar configurações SMTP do vendedor
-    console.log('TEST_EMAIL_CONNECTION_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
+    // 1. Buscar configurações SMTP do vendedor para obter o 'from'
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: Buscando configurações SMTP para sellerUserId para obter o remetente formatado:', sellerUserId);
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('smtp_config')
@@ -43,88 +42,63 @@ serve(async (req) => {
       .maybeSingle();
 
     if (integrationError) {
-      console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro ao buscar configurações de integração:', integrationError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+      console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
+      // Não é um erro crítico para o envio, mas o remetente pode ser genérico
     }
 
     const smtpConfig = integration?.smtp_config as any;
-    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
-      console.error('TEST_EMAIL_CONNECTION_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+    const finalFromEmail = smtpConfig?.email || 'suporte@elyondigital.com'; // Fallback
+    const finalFromName = smtpConfig?.displayName || 'Elyon Digital'; // Fallback
+    const formattedFrom = `${finalFromName} <${finalFromEmail}>`;
+
+    const testSubject = 'Teste de Conexão Elyon Digital! ✅';
+    const testHtml = `
+      <h1>Olá!</h1>
+      <p>Este é um e-mail de teste enviado com sucesso da sua integração Elyon Digital.</p>
+      <p>Se você recebeu este e-mail, sua configuração de SMTP está funcionando!</p>
+      <br/>
+      <p>Atenciosamente,</p>
+      <p>Equipe Elyon Digital</p>
+    `;
+
+    // Chamar a função proxy para enviar o e-mail de teste
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: Invocando função proxy send-email-proxy para enviar e-mail de teste.');
+    const { data: proxyResult, error: proxyError } = await supabase.functions.invoke(
+      'send-email-proxy',
+      {
+        body: { 
+          to, 
+          subject: testSubject, 
+          html: testHtml, 
+          sellerUserId,
+          from: formattedFrom // Passar o remetente formatado
+        },
+        method: 'POST'
+      }
+    );
+
+    if (proxyError) {
+      console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro ao invocar send-email-proxy:', proxyError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes. Verifique se email, appPassword e displayName estão preenchidos.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    const finalHost = smtpConfig.host || 'smtp.gmail.com';
-    const finalPort = Number(smtpConfig.port || '587');
-    const finalSecure = smtpConfig.secure ?? true;
-    const finalUsername = smtpConfig.email;
-    const finalPassword = smtpConfig.appPassword;
-    const finalFromEmail = smtpConfig.email;
-    const finalFromName = smtpConfig.displayName || 'Elyon Digital';
-
-    console.log('TEST_EMAIL_CONNECTION_DEBUG: SMTP Config loaded:', {
-      host: finalHost,
-      port: finalPort,
-      username: finalUsername,
-      password: finalPassword ? '***MASKED***' : 'MISSING',
-      fromEmail: finalFromEmail,
-      fromName: finalFromName,
-      secure: finalSecure,
-    });
-
-    // 2. Configurar e enviar e-mail de teste
-    const client = new SmtpClient();
-    try {
-      console.log('TEST_EMAIL_CONNECTION_DEBUG: Tentando conectar ao servidor SMTP...');
-      await client.connect({
-        hostname: finalHost,
-        port: finalPort,
-        tls: finalSecure,
-        username: finalUsername,
-        password: finalPassword,
-      });
-      console.log('TEST_EMAIL_CONNECTION_DEBUG: Conectado ao servidor SMTP. Tentando enviar e-mail de teste...');
-
-      await client.send({
-        from: `${finalFromName} <${finalFromEmail}>`,
-        to,
-        subject: 'Teste de Conexão Elyon Digital! ✅',
-        content: `
-          <h1>Olá!</h1>
-          <p>Este é um e-mail de teste enviado com sucesso da sua integração Elyon Digital.</p>
-          <p>Se você recebeu este e-mail, sua configuração de SMTP está funcionando!</p>
-          <br/>
-          <p>Atenciosamente,</p>
-          <p>Equipe Elyon Digital</p>
-        `,
-        html: `
-          <h1>Olá!</h1>
-          <p>Este é um e-mail de teste enviado com sucesso da sua integração Elyon Digital.</p>
-          <p>Se você recebeu este e-mail, sua configuração de SMTP está funcionando!</p>
-          <br/>
-          <p>Atenciosamente,</p>
-          <p>Equipe Elyon Digital</p>
-        `,
-      });
-
-      await client.close();
-      console.log('TEST_EMAIL_CONNECTION_DEBUG: E-mail de teste enviado com sucesso para:', to);
-      return new Response(
-        JSON.stringify({ success: true, message: 'E-mail de teste enviado com sucesso!' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    } catch (emailError: any) {
-      console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro ao enviar e-mail de teste:', emailError.message, 'Stack:', emailError.stack);
-      return new Response(
-        JSON.stringify({ success: false, error: `Erro ao enviar e-mail de teste: ${emailError.message}. Verifique suas credenciais e as configurações de segurança do seu provedor de e-mail (ex: Senha de App do Gmail).` }),
+        JSON.stringify({ success: false, error: proxyError.message || 'Erro ao enviar e-mail de teste via proxy' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    if (!proxyResult?.success) {
+      console.error('TEST_EMAIL_CONNECTION_DEBUG: Falha no envio de e-mail de teste via proxy:', proxyResult?.error);
+      return new Response(
+        JSON.stringify({ success: false, error: proxyResult?.error || 'Falha ao enviar e-mail de teste via proxy' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: E-mail de teste enviado com sucesso via proxy.');
+    return new Response(
+      JSON.stringify({ success: true, message: 'E-mail de teste enviado com sucesso!' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
+
   } catch (error: any) {
     console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro geral na função test-email-connection:', error.message, 'Stack:', error.stack);
     return new Response(
