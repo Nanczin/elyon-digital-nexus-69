@@ -34,6 +34,7 @@ const AdminCheckouts = () => {
   const {
     mercadoPagoAccounts,
     metaPixels,
+    emailConfig, // <-- Adicionado
     isConfigured: { email: isEmailIntegrationConfigured } // Obter status da integração de e-mail
   } = useIntegrations();
   const {
@@ -90,7 +91,8 @@ const AdminCheckouts = () => {
     },
     integrations: {
       selectedMercadoPagoAccount: '',
-      selectedMetaPixel: ''
+      selectedMetaPixel: '',
+      selectedEmailAccount: '', // <-- Adicionado
     },
     support_contact: {
       email: ''
@@ -271,7 +273,11 @@ const AdminCheckouts = () => {
       guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initialFormData.guarantee, // Usar initialFormData default e cast
       reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.reservedRights, // Usar initialFormData default e cast
       paymentMethods: checkout.payment_methods || initialFormData.paymentMethods,
-      integrations: checkout.integrations || initialFormData.integrations,
+      integrations: { // <-- Atualizado
+        ...initialFormData.integrations, // Garante que todos os campos padrão de integração estejam presentes
+        ...(checkout.integrations || {}), // Mescla as integrações existentes
+        selectedEmailAccount: checkout.integrations?.selectedEmailAccount || '', // <-- Carrega o campo
+      },
       support_contact: checkout.support_contact || initialFormData.support_contact,
       styles: checkout.styles || initialFormData.styles,
       timer: checkout.timer || initialFormData.timer,
@@ -601,7 +607,10 @@ const AdminCheckouts = () => {
         support_contact: {
           email: checkoutData.support_contact?.email || ''
         },
-        integrations: checkoutData.integrations || {},
+        integrations: { // <-- Atualizado
+          ...checkoutData.integrations,
+          selectedEmailAccount: checkoutData.integrations?.selectedEmailAccount || null, // <-- Salva o campo
+        },
         timer: checkoutData.timer || null
       };
 
@@ -1221,7 +1230,43 @@ const AdminCheckouts = () => {
                         </p>
                       </div>
 
-                      {(mercadoPagoAccounts.length === 0 || metaPixels.length === 0) && (
+                      {/* Nova seção para Email Transacional */}
+                      <div className="space-y-2">
+                        <Label>Conta de Email Transacional</Label>
+                        <Select 
+                          value={checkoutData.integrations?.selectedEmailAccount || ''} 
+                          onValueChange={value => {
+                            if (value !== 'no-email-config') {
+                              handleInputChange('integrations.selectedEmailAccount', value);
+                            } else {
+                              handleInputChange('integrations.selectedEmailAccount', ''); // Desselecionar
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma conta de email configurada" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {emailConfig ? (
+                              <SelectItem key="default-email-config" value="default-email-config">
+                                {emailConfig.fromName || emailConfig.fromEmail}
+                              </SelectItem>
+                            ) : (
+                              <SelectItem value="no-email-config" disabled>
+                                Nenhuma conta de email configurada
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          {emailConfig
+                            ? "Conta que será usada para enviar e-mails transacionais deste checkout"
+                            : "Configure uma conta de e-mail na página de Integrações para habilitar esta opção"
+                          }
+                        </p>
+                      </div>
+
+                      {(mercadoPagoAccounts.length === 0 || metaPixels.length === 0 || !emailConfig) && ( // <-- Condição atualizada
                         <Card className="p-4 bg-blue-50 border-blue-200">
                           <div className="flex items-center gap-2 text-blue-800">
                             <CreditCard className="h-4 w-4" />
@@ -1509,16 +1554,16 @@ const AdminCheckouts = () => {
                         <div className="space-y-0.5">
                           <Label>Ativar envio de e-mail</Label>
                           <p className="text-sm text-muted-foreground">
-                            {isEmailIntegrationConfigured 
+                            {isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config'
                               ? "Um e-mail será enviado ao cliente com os detalhes da compra."
-                              : "Configure o SMTP na aba 'Integrações' para ativar esta opção."
+                              : "Selecione uma conta de e-mail na aba 'Integrações' para ativar esta opção."
                             }
                           </p>
                         </div>
                         <Switch 
-                          checked={checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured} 
+                          checked={checkoutData.sendTransactionalEmail && checkoutData.integrations?.selectedEmailAccount === 'default-email-config'} 
                           onCheckedChange={checked => handleInputChange('sendTransactionalEmail', checked)} 
-                          disabled={!isEmailIntegrationConfigured}
+                          disabled={!isEmailIntegrationConfigured || checkoutData.integrations?.selectedEmailAccount !== 'default-email-config'}
                         />
                       </div>
                       {!isEmailIntegrationConfigured && (
@@ -1529,8 +1574,16 @@ const AdminCheckouts = () => {
                           </AlertDescription>
                         </Alert>
                       )}
+                      {isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount !== 'default-email-config' && (
+                        <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            Nenhuma conta de e-mail transacional selecionada para este checkout. Selecione uma na aba "Integrações" para habilitar o envio de e-mails.
+                          </AlertDescription>
+                        </Alert>
+                      )}
 
-                      {checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured && (
+                      {checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config' && (
                         <div className="space-y-4 pl-6 border-l-2 border-gray-200">
                           <div className="space-y-2">
                             <Label htmlFor="emailSubject">Assunto do E-mail</Label>
@@ -1624,6 +1677,11 @@ const AdminCheckouts = () => {
                         {checkout.integrations?.selectedMetaPixel && (
                           <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                             Pixel Ativo
+                          </Badge>
+                        )}
+                        {checkout.integrations?.selectedEmailAccount && ( // <-- Adicionado
+                          <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
+                            Email Ativo
                           </Badge>
                         )}
                       </div>
