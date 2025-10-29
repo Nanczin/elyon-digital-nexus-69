@@ -31,23 +31,19 @@ app.post('/send-email', async (req, res) => {
   console.log('EMAIL_SERVICE_DEBUG: Received smtpConfig:', JSON.stringify(smtpConfig));
 
   try {
-    let transporterOptions = {
+    const transporterOptions = {
       host: smtpConfig.host || "smtp.gmail.com",
       port: Number(smtpConfig.port || 587),
-      secure: smtpConfig.secure ?? false, // Default to false, will be overridden for 465
+      secure: smtpConfig.secure, // Corrigido: usar diretamente o valor de smtpConfig.secure
       auth: {
         user: smtpConfig.email,
         pass: smtpConfig.appPassword,
       },
     };
 
-    // Specific handling for common Gmail ports
-    if (transporterOptions.port === 465) {
-      transporterOptions.secure = true; // Use SSL
-    } else if (transporterOptions.port === 587) {
-      transporterOptions.secure = false; // Use TLS
-      transporterOptions.requireTLS = true; // Explicitly require TLS for port 587
-    }
+    // Removida a lógica de ajuste de secure/requireTLS baseada na porta,
+    // pois smtpConfig.secure já deve vir configurado corretamente do frontend.
+    // Se a porta for 587 e secure for false, Nodemailer usará STARTTLS automaticamente.
 
     console.log('EMAIL_SERVICE_DEBUG: Nodemailer transporter options:', JSON.stringify(transporterOptions));
 
