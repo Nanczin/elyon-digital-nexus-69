@@ -263,15 +263,25 @@ serve(async (req) => {
 
         if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
           console.log('VERIFY_MP_DEBUG: Disparando e-mail transacional...');
+          
           const productName = emailTransactionalData.productName || payment.checkouts?.products?.name || 'Seu Produto';
           const customerName = (existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente');
           const customerEmail = (existingPayment?.metadata?.customer_data?.email || mpPayment?.payer?.email || null);
+          const supportEmail = emailTransactionalData.supportEmail || 'suporte@elyondigital.com'; // Default support email
 
           // Priorizar o link do entregável do checkout, depois do produto
           const accessLink = emailTransactionalData.deliverableLink || payment.checkouts?.products?.member_area_link || payment.checkouts?.products?.file_url || '';
 
           const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
           const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
+
+          console.log('VERIFY_MP_DEBUG: Template Subject:', emailSubjectTemplate);
+          console.log('VERIFY_MP_DEBUG: Template Body:', emailBodyTemplate);
+          console.log('VERIFY_MP_DEBUG: Resolved Access Link:', accessLink);
+          console.log('VERIFY_MP_DEBUG: Customer Name for Email:', customerName);
+          console.log('VERIFY_MP_DEBUG: Product Name for Email:', productName);
+          console.log('VERIFY_MP_DEBUG: Support Email for Email:', supportEmail);
+
 
           const finalSubject = emailSubjectTemplate
             .replace(/{customer_name}/g, customerName)
@@ -280,7 +290,12 @@ serve(async (req) => {
           const finalBody = emailBodyTemplate
             .replace(/{customer_name}/g, customerName)
             .replace(/{product_name}/g, productName)
-            .replace(/{access_link}/g, accessLink); // Substituição dinâmica aqui
+            .replace(/{access_link}/g, accessLink)
+            .replace(/{support_email}/g, supportEmail); // Substituição dinâmica aqui
+
+          console.log('VERIFY_MP_DEBUG: Final Subject after replacement:', finalSubject);
+          console.log('VERIFY_MP_DEBUG: Final Body after replacement:', finalBody);
+
 
           if (customerEmail) {
             try {
@@ -288,7 +303,6 @@ serve(async (req) => {
                 to: customerEmail,
                 subject: finalSubject,
                 html: finalBody.replace(/\n/g, '<br/>'),
-                // fromEmail and fromName are now derived within send-transactional-email
                 sellerUserId: emailTransactionalData.sellerUserId,
               });
               const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
