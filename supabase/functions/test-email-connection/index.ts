@@ -33,8 +33,8 @@ serve(async (req) => {
       );
     }
 
-    // 1. Buscar configurações SMTP do vendedor para obter o 'from'
-    console.log('TEST_EMAIL_CONNECTION_DEBUG: Buscando configurações SMTP para sellerUserId para obter o remetente formatado:', sellerUserId);
+    // 1. Buscar configurações SMTP do vendedor
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('smtp_config')
@@ -43,13 +43,20 @@ serve(async (req) => {
 
     if (integrationError) {
       console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
-      // Não é um erro crítico para o envio, mas o remetente pode ser genérico
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     const smtpConfig = integration?.smtp_config as any;
-    const finalFromEmail = smtpConfig?.email || 'suporte@elyondigital.com'; // Fallback
-    const finalFromName = smtpConfig?.displayName || 'Elyon Digital'; // Fallback
-    const formattedFrom = `${finalFromName} <${finalFromEmail}>`;
+    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
+      console.error('TEST_EMAIL_CONNECTION_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+      return new Response(
+        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes. Verifique se email, appPassword e displayName estão preenchidos.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     const testSubject = 'Teste de Conexão Elyon Digital! ✅';
     const testHtml = `
@@ -61,7 +68,7 @@ serve(async (req) => {
       <p>Equipe Elyon Digital</p>
     `;
 
-    // Chamar a função proxy para enviar o e-mail de teste
+    // Chamar a função proxy para enviar o e-mail de teste, passando o smtpConfig completo
     console.log('TEST_EMAIL_CONNECTION_DEBUG: Invocando função proxy send-email-proxy para enviar e-mail de teste.');
     const { data: proxyResult, error: proxyError } = await supabase.functions.invoke(
       'send-email-proxy',
@@ -71,7 +78,7 @@ serve(async (req) => {
           subject: testSubject, 
           html: testHtml, 
           sellerUserId,
-          from: formattedFrom // Passar o remetente formatado
+          smtpConfig // Passar o smtpConfig completo
         },
         method: 'POST'
       }

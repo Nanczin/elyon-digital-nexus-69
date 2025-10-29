@@ -12,12 +12,12 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, html, sellerUserId, from } = await req.json(); // Adicionado 'from'
+    const { to, subject, html, sellerUserId, smtpConfig } = await req.json(); // Agora esperando smtpConfig
 
-    if (!to || !subject || !html || !sellerUserId) {
-      console.error('SEND_EMAIL_PROXY_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
+    if (!to || !subject || !html || !sellerUserId || !smtpConfig || !smtpConfig.email || !smtpConfig.appPassword) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId, smtpConfig });
       return new Response(
-        JSON.stringify({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId são obrigatórios)' }),
+        JSON.stringify({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId, smtpConfig.email, smtpConfig.appPassword são obrigatórios)' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -37,7 +37,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ to, subject, html, sellerUserId, from }), // Passar 'from' para o serviço externo
+      body: JSON.stringify({ to, subject, html, sellerUserId, smtpConfig }), // Passar o smtpConfig completo
     });
 
     const result = await response.json();

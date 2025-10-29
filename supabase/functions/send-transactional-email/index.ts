@@ -35,8 +35,8 @@ serve(async (req) => {
       );
     }
 
-    // 1. Buscar configurações SMTP do vendedor para obter o 'from'
-    console.log('SEND_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId para obter o remetente formatado:', sellerUserId);
+    // 1. Buscar configurações SMTP do vendedor
+    console.log('SEND_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('smtp_config')
@@ -45,20 +45,27 @@ serve(async (req) => {
 
     if (integrationError) {
       console.error('SEND_EMAIL_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
-      // Não é um erro crítico para o envio, mas o remetente pode ser genérico
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     const smtpConfig = integration?.smtp_config as any;
-    const finalFromEmail = smtpConfig?.email || 'suporte@elyondigital.com'; // Fallback
-    const finalFromName = smtpConfig?.displayName || 'Elyon Digital'; // Fallback
-    const formattedFrom = `${finalFromName} <${finalFromEmail}>`;
+    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
+      console.error('SEND_EMAIL_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+      return new Response(
+        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (email, appPassword, displayName são obrigatórios)' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
-    // Chamar a função proxy para enviar o e-mail
+    // Chamar a função proxy para enviar o e-mail, passando o smtpConfig completo
     console.log('SEND_EMAIL_DEBUG: Invocando função proxy send-email-proxy para enviar e-mail.');
     const { data: proxyResult, error: proxyError } = await supabase.functions.invoke(
       'send-email-proxy',
       {
-        body: { to, subject, html, sellerUserId, from: formattedFrom }, // Passar o remetente formatado
+        body: { to, subject, html, sellerUserId, smtpConfig }, // Passar o smtpConfig completo
         method: 'POST'
       }
     );

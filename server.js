@@ -21,44 +21,28 @@ app.use((req, res, next) => {
 
 // Endpoint para envio de e-mail via proxy
 app.post('/send-email', async (req, res) => {
-  const { to, subject, html, sellerUserId, from } = req.body; // 'from' é opcional, pode ser passado formatado
+  const { to, subject, html, sellerUserId, smtpConfig } = req.body; // Agora esperando smtpConfig
 
-  if (!to || !subject || !html || !sellerUserId) {
-    console.error('EMAIL_SERVICE_DEBUG: Dados de e-mail incompletos recebidos no proxy:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
-    return res.status(400).json({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId são obrigatórios)' });
+  if (!to || !subject || !html || !sellerUserId || !smtpConfig || !smtpConfig.email || !smtpConfig.appPassword) {
+    console.error('EMAIL_SERVICE_DEBUG: Dados de e-mail incompletos recebidos no proxy:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId, smtpConfig });
+    return res.status(400).json({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId, smtpConfig.email, smtpConfig.appPassword são obrigatórios)' });
   }
 
   try {
-    // 1. Buscar configurações SMTP do vendedor no Supabase
-    // Nota: Esta parte requer que o server.js tenha acesso ao Supabase,
-    // o que pode ser um problema de segurança/arquitetura se o server.js
-    // não for uma Edge Function. Para simplificar, vamos assumir que
-    // as credenciais SMTP são passadas diretamente ou que o server.js
-    // tem acesso a um banco de dados ou variáveis de ambiente para isso.
-    // Para este exemplo, vamos usar as variáveis de ambiente MAIL_USER e MAIL_PASS
-    // que já estão no .env e são carregadas pelo dotenv.
-
-    const mailUser = process.env.MAIL_USER;
-    const mailPass = process.env.MAIL_PASS;
-    const defaultDisplayName = 'Elyon Digital';
-
-    if (!mailUser || !mailPass) {
-      console.error('EMAIL_SERVICE_DEBUG: Variáveis de ambiente MAIL_USER e MAIL_PASS não configuradas no server.js.');
-      return res.status(500).json({ success: false, error: 'Configurações de e-mail do servidor ausentes. Contate o administrador.' });
-    }
-
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      host: smtpConfig.host || "smtp.gmail.com",
+      port: Number(smtpConfig.port || 587),
+      secure: smtpConfig.secure ?? true,
       auth: {
-        user: mailUser,
-        pass: mailPass,
+        user: smtpConfig.email,
+        pass: smtpConfig.appPassword,
       },
     });
 
+    const fromAddress = `${smtpConfig.displayName || 'Elyon Digital'} <${smtpConfig.email}>`;
+
     const mailOptions = {
-      from: from || `${defaultDisplayName} <${mailUser}>`, // Usar 'from' se fornecido, senão o padrão
+      from: fromAddress,
       to,
       subject,
       html,
