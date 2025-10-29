@@ -320,6 +320,14 @@ serve(async (req) => {
 
             if (customerEmail) {
               try {
+                console.log('WEBHOOK_MP_DEBUG: Invoking send-transactional-email with:', {
+                  to: customerEmail,
+                  subject: finalSubject,
+                  html: finalBody.replace(/\n/g, '<br/>'),
+                  fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com',
+                  fromName: 'Elyon Digital',
+                  sellerUserId: emailTransactionalData.sellerUserId,
+                });
                 const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
                   'send-transactional-email',
                   {

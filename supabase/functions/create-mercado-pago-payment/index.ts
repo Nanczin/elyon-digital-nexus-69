@@ -356,7 +356,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
-    );
+      );
 
   } catch (error) {
     console.error('CREATE_MP_PAYMENT_DEBUG: 21. Error creating payment:', error);

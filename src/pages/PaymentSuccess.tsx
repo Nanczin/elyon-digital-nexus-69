@@ -33,85 +33,111 @@ const PaymentSuccess = () => {
     let isMounted = true; // Flag para evitar atualizações de estado em componente desmontado
     let currentPaymentData: any = null;
     const savedPaymentData = localStorage.getItem('paymentData');
+    console.log('PAYMENT_SUCCESS_DEBUG: 1. Saved payment data from localStorage:', savedPaymentData);
+
     if (savedPaymentData) {
       currentPaymentData = JSON.parse(savedPaymentData);
       setPaymentData(currentPaymentData);
       // Ler o link do entregável e o status de envio de e-mail diretamente do localStorage
       setDeliverableLinkToDisplay(currentPaymentData.deliverableLink || null);
       setSendTransactionalEmail(currentPaymentData.sendTransactionalEmail ?? true);
+      console.log('PAYMENT_SUCCESS_DEBUG: 2. Initialized from localStorage:', { currentPaymentData, deliverableLinkToDisplay: currentPaymentData.deliverableLink, sendTransactionalEmail: currentPaymentData.sendTransactionalEmail });
     }
 
     const urlStatus = searchParams.get('status');
     const urlPaymentId = searchParams.get('payment_id');
+    console.log('PAYMENT_SUCCESS_DEBUG: 3. URL Params:', { urlStatus, urlPaymentId });
 
     // --- Determinação do estado inicial da UI ---
     if (urlStatus === 'approved' || urlStatus === 'completed') {
       setPaymentStatus('completed');
       setIsChecking(false); // Já aprovado, não precisa verificar
+      console.log('PAYMENT_SUCCESS_DEBUG: 4. Initial status: COMPLETED (from URL)');
     } else if (currentPaymentData?.paymentMethod === 'pix' && currentPaymentData?.payment?.qr_code) {
       // Se for um pagamento PIX com QR code, mostra os detalhes do PIX imediatamente
       setPaymentStatus('pending'); // PIX começa como pendente
       setIsChecking(false); // Não mostra o carregamento genérico para PIX, mostra o QR code
+      console.log('PAYMENT_SUCCESS_DEBUG: 5. Initial status: PENDING (PIX with QR code)');
     } else {
       // Para outros casos (ex: cartão de crédito, ou PIX sem QR code ainda), mostra o carregamento inicialmente
+      setPaymentStatus('pending'); // Default to pending
       setIsChecking(true);
+      console.log('PAYMENT_SUCCESS_DEBUG: 6. Initial status: PENDING (default, starting check)');
     }
     // --- Fim da Determinação do estado inicial da UI ---
 
     const fetchAndVerifyPayment = async () => {
+      console.log('PAYMENT_SUCCESS_DEBUG: 7. Starting fetchAndVerifyPayment...');
       let fetchedPaymentFromDb: any = null;
       const mpIdToCheck = urlPaymentId || currentPaymentData?.payment?.mp_payment_id;
+      console.log('PAYMENT_SUCCESS_DEBUG: 8. MP ID to check:', mpIdToCheck);
 
       if (mpIdToCheck) {
         try {
+          console.log('PAYMENT_SUCCESS_DEBUG: 9. Invoking verify-mercado-pago-payment for MP ID:', mpIdToCheck);
           const res = await supabase.functions.invoke('verify-mercado-pago-payment', {
             body: { mp_payment_id: mpIdToCheck },
             method: 'POST'
           });
+          console.log('PAYMENT_SUCCESS_DEBUG: 10. Response from verify-mercado-pago-payment:', res);
+
           if (isMounted && res.data?.success) {
-            if (res.data.status === 'approved' || res.data.payment?.status === 'completed') {
+            const dbPaymentStatus = res.data.payment?.status;
+            const dbMpPaymentStatus = res.data.payment?.mp_payment_status;
+            console.log('PAYMENT_SUCCESS_DEBUG: 11. DB Payment Status from Edge Function:', { dbPaymentStatus, dbMpPaymentStatus });
+
+            if (dbPaymentStatus === 'completed' || dbMpPaymentStatus === 'approved') {
               setPaymentStatus('completed');
               window.history.replaceState({}, '', '/payment-success?status=approved');
-              const { data: payment } = await supabase
-                .from('payments')
-                .select(`*, checkouts (*, products (*))`)
-                .eq('mp_payment_id', mpIdToCheck)
-                .maybeSingle();
-              fetchedPaymentFromDb = payment;
-            } else if (res.data.status === 'rejected' || res.data.payment?.status === 'failed') {
+              console.log('PAYMENT_SUCCESS_DEBUG: 12. Status updated to COMPLETED (from Edge Function)');
+              fetchedPaymentFromDb = res.data.payment; // Use the payment object returned by the Edge Function
+            } else if (dbPaymentStatus === 'failed' || dbMpPaymentStatus === 'rejected') {
               setPaymentStatus('failed');
+              console.log('PAYMENT_SUCCESS_DEBUG: 13. Status updated to FAILED (from Edge Function)');
             } else {
               setLastDetail(res.data.status_detail || null);
+              console.log('PAYMENT_SUCCESS_DEBUG: 14. Status still PENDING, last detail:', res.data.status_detail);
             }
+          } else if (res.error) {
+            console.error('PAYMENT_SUCCESS_DEBUG: 15. Error invoking verify-mercado-pago-payment:', res.error);
           }
         } catch (err) {
-          console.warn('PaymentSuccess Debug: Erro ao verificar status via Edge Function:', err);
+          console.warn('PAYMENT_SUCCESS_DEBUG: 16. Erro ao verificar status via Edge Function:', err);
         }
       }
 
-      // Verificação de fallback se o paymentStatus ainda estiver pendente e tivermos um ID de pagamento local
+      // Fallback verification if paymentStatus is still pending and we have a local payment ID
       if (isMounted && paymentStatus === 'pending' && !fetchedPaymentFromDb && currentPaymentData?.payment?.id) {
+        console.log('PAYMENT_SUCCESS_DEBUG: 17. Fallback: Fetching payment directly from DB for ID:', currentPaymentData.payment.id);
         const { data: payment } = await supabase
           .from('payments')
           .select(`status, mp_payment_status, checkouts (*, products (*))`)
           .eq('id', currentPaymentData.payment.id)
           .maybeSingle();
+        console.log('PAYMENT_SUCCESS_DEBUG: 18. Fallback: Payment data from direct DB fetch:', payment);
+
         if (isMounted && payment) {
           if (payment.status === 'completed' || payment.mp_payment_status === 'approved') {
             setPaymentStatus('completed');
             window.history.replaceState({}, '', '/payment-success?status=approved');
+            console.log('PAYMENT_SUCCESS_DEBUG: 19. Fallback: Status updated to COMPLETED (from direct DB fetch)');
             fetchedPaymentFromDb = payment;
           } else if (payment.status === 'failed') {
             setPaymentStatus('failed');
+            console.log('PAYMENT_SUCCESS_DEBUG: 20. Fallback: Status updated to FAILED (from direct DB fetch)');
           }
         }
       }
 
       if (isMounted) {
         if (fetchedPaymentFromDb) {
+          // Use the fetchedPaymentFromDb to get product and deliverable info
           const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
-          const currentDeliverable = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
-          const currentSendTransactionalEmail = fetchedPaymentFromDb.checkouts?.form_fields?.sendTransactionalEmail ?? true;
+          const currentDeliverable = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink
+            ? { type: 'link', link: (fetchedPaymentFromDb.metadata as any).email_transactional_data.deliverableLink } as DeliverableConfig
+            : fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
+          
+          const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
 
           setProductData(currentProduct || null);
           setCheckoutDeliverable(currentDeliverable || null);
@@ -124,9 +150,10 @@ const PaymentSuccess = () => {
             determinedLink = currentProduct.member_area_link || currentProduct.file_url;
           }
           setDeliverableLinkToDisplay(determinedLink);
+          console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentDeliverable, determinedLink, currentSendTransactionalEmail });
         } 
-        // Removido o else if (currentPaymentData?.deliverableLink) para evitar sobrescrever o link já lido do localStorage
         setIsChecking(false); // Garante que o carregamento seja desativado após a busca/determinação inicial
+        console.log('PAYMENT_SUCCESS_DEBUG: 22. isChecking set to FALSE.');
       }
     };
 
@@ -134,13 +161,18 @@ const PaymentSuccess = () => {
 
     const interval = setInterval(() => {
       if (isMounted && paymentStatus === 'pending') { // Apenas verifica se ainda está pendente
+        console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check: paymentStatus is PENDING, re-fetching...');
         fetchAndVerifyPayment();
+      } else if (isMounted) {
+        console.log('PAYMENT_SUCCESS_DEBUG: 24. Interval check: paymentStatus is NOT PENDING, clearing interval.');
+        clearInterval(interval);
       }
     }, 5000);
 
     return () => {
       isMounted = false; // Limpa a flag
       clearInterval(interval);
+      console.log('PAYMENT_SUCCESS_DEBUG: 25. Component unmounted or effect re-ran, interval cleared.');
     };
   }, [searchParams, paymentStatus]); // Depende de paymentStatus para reavaliar a sondagem
 

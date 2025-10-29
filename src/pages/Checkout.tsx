@@ -334,7 +334,7 @@ const Checkout = () => {
           sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true,
           transactionalEmailSubject: checkout?.form_fields?.transactionalEmailSubject,
           transactionalEmailBody: checkout?.form_fields?.transactionalEmailBody,
-          deliverableLink: finalDeliverableLink,
+          deliverableLink: finalDeliverableLink || null, // Garantir que seja string ou null
           productName: productData?.name,
           productDescription: productData?.description,
           sellerUserId: checkout?.user_id, // Passar o user_id do checkout (vendedor)
@@ -364,6 +364,9 @@ const Checkout = () => {
       const paymentStatus = mpResponse.payment?.status;
       const statusDetail = mpResponse.payment?.status_detail;
 
+      console.log('CHECKOUT_FRONTEND_DEBUG: MP Payment Status:', paymentStatus);
+      console.log('CHECKOUT_FRONTEND_DEBUG: MP Status Detail:', statusDetail);
+
       if (hasIntegrations) {
         trackPurchaseEvent({
           amount: totalAmount,
@@ -388,7 +391,7 @@ const Checkout = () => {
           headlineColor,
           gradientColor
         },
-        deliverableLink: finalDeliverableLink, // Armazenar o link final aqui
+        deliverableLink: finalDeliverableLink || null, // Armazenar o link final aqui
         sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true // Armazenar o status de envio de e-mail
       }));
 
