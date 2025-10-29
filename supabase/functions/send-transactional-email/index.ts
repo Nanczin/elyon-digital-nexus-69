@@ -74,7 +74,7 @@ serve(async (req) => {
       host: finalHost,
       port: finalPort,
       username: finalUsername,
-      password: finalPassword ? '***MASKED***' : 'MISSING',
+      password: finalPassword ? '***MASKED***' : 'MISSING', // MASCARADO POR SEGURANÇA
       fromEmail: finalFromEmail,
       fromName: finalFromName,
       secure: finalSecure,
