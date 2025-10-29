@@ -58,7 +58,7 @@ serve(async (req) => {
     // Buscar pagamento existente para preservar metadata
     const { data: existingPayment, error: existingPaymentError } = await supabase
       .from('payments')
-      .select('*')
+      .select('*, checkouts(user_id, products(name, description, member_area_link, file_url), form_fields)') // Select all payment fields and join checkouts/products
       .eq('mp_payment_id', mp_payment_id.toString())
       .maybeSingle();
     
@@ -270,7 +270,11 @@ serve(async (req) => {
           const supportEmail = emailTransactionalData.supportEmail || 'suporte@elyondigital.com'; // Default support email
 
           // Priorizar o link do entregável do checkout, depois do produto
-          const accessLink = emailTransactionalData.deliverableLink || payment.checkouts?.products?.member_area_link || payment.checkouts?.products?.file_url || '';
+          const accessLink = 
+            emailTransactionalData.deliverableLink || 
+            payment.checkouts?.products?.member_area_link || 
+            payment.checkouts?.products?.file_url || 
+            ''; // Fallback para string vazia
 
           const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
           const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';

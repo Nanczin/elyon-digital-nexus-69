@@ -201,83 +201,8 @@ serve(async (req) => {
             console.log('WEBHOOK_MP_DEBUG: Pulando criação de acesso ao produto: userId ou productId ausente. userId:', userId, 'productId:', productId);
           }
 
-          // --- Lógica de envio de e-mail transacional (após aprovação) ---
-          const emailTransactionalData = (existingPayment?.metadata as any)?.email_transactional_data;
-          console.log('WEBHOOK_MP_DEBUG: emailTransactionalData do payment metadata:', emailTransactionalData);
-
-          if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
-            console.log('WEBHOOK_MP_DEBUG: Disparando e-mail transacional...');
-            
-            const productName = emailTransactionalData.productName || existingPayment.checkouts?.products?.name || 'Seu Produto';
-            const customerName = (customerData as any).name || (customerData as any).email?.split('@')[0] || 'Cliente';
-            const customerEmail = (customerData as any).email || null;
-            const supportEmail = emailTransactionalData.supportEmail || 'suporte@elyondigital.com'; // Default support email
-
-            // Priorizar o link do entregável do checkout, depois do produto
-            const accessLink = emailTransactionalData.deliverableLink || existingPayment.checkouts?.products?.member_area_link || existingPayment.checkouts?.products?.file_url || '';
-
-            const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
-            const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
-
-            console.log('WEBHOOK_MP_DEBUG: Template Subject:', emailSubjectTemplate);
-            console.log('WEBHOOK_MP_DEBUG: Template Body:', emailBodyTemplate);
-            console.log('WEBHOOK_MP_DEBUG: Resolved Access Link:', accessLink);
-            console.log('WEBHOOK_MP_DEBUG: Customer Name for Email:', customerName);
-            console.log('WEBHOOK_MP_DEBUG: Product Name for Email:', productName);
-            console.log('WEBHOOK_MP_DEBUG: Support Email for Email:', supportEmail);
-
-
-            const finalSubject = emailSubjectTemplate
-              .replace(/{customer_name}/g, customerName)
-              .replace(/{product_name}/g, productName);
-
-            const finalBody = emailBodyTemplate
-              .replace(/{customer_name}/g, customerName)
-              .replace(/{product_name}/g, productName)
-              .replace(/{access_link}/g, accessLink)
-              .replace(/{support_email}/g, supportEmail); // Substituição dinâmica aqui
-
-            console.log('WEBHOOK_MP_DEBUG: Final Subject after replacement:', finalSubject);
-            console.log('WEBHOOK_MP_DEBUG: Final Body after replacement:', finalBody);
-
-
-            if (customerEmail) {
-              try {
-                console.log('WEBHOOK_MP_DEBUG: Invoking send-transactional-email with:', {
-                  to: customerEmail,
-                  subject: finalSubject,
-                  html: finalBody.replace(/\n/g, '<br/>'),
-                  sellerUserId: emailTransactionalData.sellerUserId,
-                });
-                const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
-                  'send-transactional-email',
-                  {
-                    body: {
-                      to: customerEmail,
-                      subject: finalSubject,
-                      html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                      sellerUserId: emailTransactionalData.sellerUserId,
-                    }
-                  }
-                );
-
-                if (emailSendError) {
-                  console.error('WEBHOOK_MP_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
-                } else if (!emailSendResult?.success) {
-                  console.error('WEBHOOK_MP_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
-                } else {
-                  console.log('WEBHOOK_MP_DEBUG: E-mail transacional disparado com sucesso para:', customerEmail);
-                }
-              } catch (invokeError) {
-                console.error('WEBHOOK_MP_DEBUG: Exceção ao invocar send-transactional-email:', invokeError);
-              }
-            } else {
-              console.warn('WEBHOOK_MP_DEBUG: Não foi possível enviar e-mail transacional: email do cliente ausente.');
-            }
-          } else {
-            console.log('WEBHOOK_MP_DEBUG: Envio de e-mail transacional desabilitado ou dados incompletos no metadata.');
-          }
-          // --- Fim da lógica de envio de e-mail transacional ---
+          // REMOVIDO: Lógica de envio de e-mail transacional foi movida para verify-mercado-pago-payment
+          console.log('WEBHOOK_MP_DEBUG: Lógica de envio de e-mail transacional removida desta função.');
 
         } catch (postProcessErr) {
           console.error('WEBHOOK_MP_DEBUG: Post-approval processing error:', postProcessErr);

@@ -144,6 +144,7 @@ serve(async (req) => {
       }
 
       // --- 5. Buscar o pagamento completo para obter o metadata do email transacional ---
+      // Esta busca ainda é necessária para obter o metadata que será usado na função verify-mercado-pago-payment
       const { data: paymentRecord, error: paymentRecordError } = await supabase
         .from('payments')
         .select('*, checkouts(user_id, products(name, description, member_area_link, file_url), form_fields)')
@@ -166,108 +167,8 @@ serve(async (req) => {
       }
       console.log('WEBHOOK_PAYMENT_DEBUG: Registro de pagamento completo:', JSON.stringify(paymentRecord, null, 2));
 
-      // --- 6. Lógica de envio de e-mail transacional (após aprovação) ---
-      const emailTransactionalData = (paymentRecord?.metadata as any)?.email_transactional_data;
-      console.log('WEBHOOK_PAYMENT_DEBUG: emailTransactionalData do payment metadata:', emailTransactionalData);
-
-      if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
-        console.log('WEBHOOK_PAYMENT_DEBUG: Disparando e-mail transacional...');
-        const productName = emailTransactionalData.productName || paymentRecord.checkouts?.products?.name || 'Seu Produto';
-        const customerNameForEmail = (customerData as any).name || (customerData as any).email.split('@')[0];
-        const customerEmailForEmail = (customerData as any).email || null;
-
-        const accessLink = emailTransactionalData.deliverableLink || paymentRecord.checkouts?.products?.member_area_link || paymentRecord.checkouts?.products?.file_url || '';
-
-        const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
-        const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
-
-        const finalSubject = emailSubjectTemplate
-          .replace(/{customer_name}/g, customerNameForEmail)
-          .replace(/{product_name}/g, productName);
-
-        const finalBody = emailBodyTemplate
-          .replace(/{customer_name}/g, customerNameForEmail)
-          .replace(/{product_name}/g, productName)
-          .replace(/{access_link}/g, accessLink);
-
-        if (customerEmailForEmail) {
-          try {
-            console.log('WEBHOOK_PAYMENT_DEBUG: Invoking send-transactional-email with:', {
-              to: customerEmailForEmail,
-              subject: finalSubject,
-              html: finalBody.replace(/\n/g, '<br/>'),
-              sellerUserId: emailTransactionalData.sellerUserId,
-            });
-            const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
-              'send-transactional-email',
-              {
-                body: {
-                  to: customerEmailForEmail,
-                  subject: finalSubject,
-                  html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                  sellerUserId: emailTransactionalData.sellerUserId,
-                }
-              }
-            );
-
-            if (emailSendError) {
-              console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
-              await supabase.from('product_deliveries').insert({
-                purchase_id: purchaseId,
-                user_id: userId,
-                status: 'failed',
-                error_message: `Erro ao invocar função de email: ${emailSendError.message}`,
-              });
-            } else if (!emailSendResult?.success) {
-              console.error('WEBHOOK_PAYMENT_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
-              await supabase.from('product_deliveries').insert({
-                purchase_id: purchaseId,
-                user_id: userId,
-                status: 'failed',
-                error_message: `Falha no envio do e-mail: ${emailSendResult?.error}`,
-              });
-            } else {
-              console.log('WEBHOOK_PAYMENT_DEBUG: E-mail transacional disparado com sucesso para:', customerEmailForEmail);
-              // --- 7. Atualizar access_sent e registrar em product_deliveries ---
-              await supabase.from('product_purchases').update({
-                access_sent: true,
-                access_sent_at: new Date().toISOString(),
-              }).eq('id', purchaseId);
-
-              await supabase.from('product_deliveries').insert({
-                purchase_id: purchaseId,
-                user_id: userId,
-                status: 'sent',
-                error_message: null,
-              });
-            }
-          } catch (invokeError) {
-            console.error('WEBHOOK_PAYMENT_DEBUG: Exceção ao invocar send-transactional-email:', invokeError);
-            await supabase.from('product_deliveries').insert({
-              purchase_id: purchaseId,
-              user_id: userId,
-              status: 'failed',
-              error_message: `Exceção ao invocar função de email: ${invokeError.message}`,
-            });
-          }
-        } else {
-          console.warn('WEBHOOK_PAYMENT_DEBUG: Não foi possível enviar e-mail transacional: email do cliente ausente.');
-          await supabase.from('product_deliveries').insert({
-            purchase_id: purchaseId,
-            user_id: userId,
-            status: 'failed',
-            error_message: 'Não foi possível enviar e-mail transacional: email do cliente ausente.',
-          });
-        }
-      } else {
-        console.log('WEBHOOK_PAYMENT_DEBUG: Envio de e-mail transacional desabilitado ou dados incompletos no metadata.');
-        await supabase.from('product_deliveries').insert({
-          purchase_id: purchaseId,
-          user_id: userId,
-          status: 'skipped',
-          error_message: 'Envio de e-mail transacional desabilitado ou dados incompletos no metadata.',
-        });
-      }
+      // REMOVIDO: Lógica de envio de e-mail transacional foi movida para verify-mercado-pago-payment
+      console.log('WEBHOOK_PAYMENT_DEBUG: Lógica de envio de e-mail transacional removida desta função.');
     } else {
       console.log('WEBHOOK_PAYMENT_DEBUG: Pagamento não aprovado, ignorando envio de acesso.');
     }
