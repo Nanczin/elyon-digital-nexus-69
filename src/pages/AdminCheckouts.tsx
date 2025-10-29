@@ -1253,7 +1253,7 @@ const AdminCheckouts = () => {
                           <SelectContent>
                             {emailConfig ? (
                               <SelectItem key="default-email-config" value="default-email-config">
-                                {emailConfig.fromName || emailConfig.fromEmail}
+                                {emailConfig.displayName || emailConfig.email} {/* CORRIGIDO AQUI */}
                               </SelectItem>
                             ) : (
                               <SelectItem value="no-email-config" disabled>
