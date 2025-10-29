@@ -30,6 +30,16 @@ interface PaymentRequest {
     installments: number;
   };
   cardToken?: string; // Token gerado no frontend, se aplicável
+  emailMetadata?: { // Novo campo para dados de e-mail transacional
+    sendTransactionalEmail: boolean;
+    transactionalEmailSubject?: string;
+    transactionalEmailBody?: string;
+    deliverableLink?: string | null;
+    productName?: string;
+    productDescription?: string;
+    sellerUserId?: string;
+    supportEmail?: string;
+  };
 }
 
 serve(async (req) => {
@@ -48,7 +58,7 @@ serve(async (req) => {
     console.log('CREATE_MP_PAYMENT_DEBUG: 1. Raw request body received:', JSON.stringify(requestBody, null, 2));
 
     // Desestruturar com a interface definida
-    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken }: PaymentRequest = requestBody;
+    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken, emailMetadata }: PaymentRequest = requestBody;
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 2. Raw amount received from requestBody:', amount, typeof amount);
 
@@ -144,7 +154,9 @@ serve(async (req) => {
         customer_data: customerData,
         order_bumps: orderBumps,
         selected_package: selectedPackage,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        // Adicionar todos os dados de e-mail transacional e entregável aqui
+        email_transactional_data: emailMetadata,
       }
     };
 
@@ -303,7 +315,9 @@ serve(async (req) => {
           customer_data: customerData,
           order_bumps: orderBumps,
           selected_package: selectedPackage,
-          payment_method: paymentMethod
+          payment_method: paymentMethod,
+          // Persistir os dados de e-mail transacional e entregável no metadata do pagamento
+          email_transactional_data: emailMetadata,
         }
       })
       .select()
@@ -317,12 +331,6 @@ serve(async (req) => {
       );
     }
     console.log('CREATE_MP_PAYMENT_DEBUG: 19. Payment saved to DB:', JSON.stringify(payment, null, 2));
-
-    // --- REMOVIDO: Lógica de envio de e-mail transacional imediato. Será tratada no webhook/verify. ---
-    // if (paymentStatus === 'completed' && checkout.form_fields?.sendTransactionalEmail) {
-    //   ... (código removido)
-    // }
-    // --- Fim da lógica de envio de e-mail transacional ---
 
     const responsePayload = {
       success: true,

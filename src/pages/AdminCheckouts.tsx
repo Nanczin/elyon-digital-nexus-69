@@ -1561,7 +1561,7 @@ const AdminCheckouts = () => {
                           </p>
                         </div>
                         <Switch 
-                          checked={checkoutData.sendTransactionalEmail && checkoutData.integrations?.selectedEmailAccount === 'default-email-config'} 
+                          checked={checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config'} 
                           onCheckedChange={checked => handleInputChange('sendTransactionalEmail', checked)} 
                           disabled={!isEmailIntegrationConfigured || checkoutData.integrations?.selectedEmailAccount !== 'default-email-config'}
                         />

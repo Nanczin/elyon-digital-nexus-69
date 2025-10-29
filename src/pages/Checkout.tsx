@@ -309,6 +309,13 @@ const Checkout = () => {
         return;
       }
       
+      // Obter dados do produto e entregável para passar para a Edge Function
+      const productData = checkout?.products as CheckoutData['products'];
+      const checkoutDeliverable = checkout?.form_fields?.deliverable as DeliverableConfig | undefined;
+      const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
+        ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
+        : productData?.member_area_link || productData?.file_url;
+
       const paymentData: any = {
         checkoutId: checkoutId || '',
         amount: totalAmount,
@@ -321,7 +328,18 @@ const Checkout = () => {
         selectedMercadoPagoAccount: checkout?.integrations?.selectedMercadoPagoAccount,
         orderBumps: selectedOrderBumps,
         selectedPackage: selectedPackage,
-        paymentMethod: selectedPaymentMethod
+        paymentMethod: selectedPaymentMethod,
+        // Adicionar dados de e-mail transacional e entregável ao metadata
+        emailMetadata: {
+          sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true,
+          transactionalEmailSubject: checkout?.form_fields?.transactionalEmailSubject,
+          transactionalEmailBody: checkout?.form_fields?.transactionalEmailBody,
+          deliverableLink: finalDeliverableLink,
+          productName: productData?.name,
+          productDescription: productData?.description,
+          sellerUserId: checkout?.user_id, // Passar o user_id do checkout (vendedor)
+          supportEmail: checkout?.support_contact?.email,
+        }
       };
 
       console.log('CHECKOUT_FRONTEND_DEBUG: Full paymentData sent to Edge Function:', JSON.stringify(paymentData, null, 2));
@@ -356,15 +374,7 @@ const Checkout = () => {
         });
       }
 
-      const productData = checkout?.products as CheckoutData['products']; // Cast explícito aqui
-      const checkoutDeliverable = checkout?.form_fields?.deliverable as DeliverableConfig | undefined; // Cast explícito aqui
-
-      const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
-        ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-        : productData?.member_area_link || productData?.file_url;
-
-      console.log('Checkout Debug: Final deliverable link (after approval):', finalDeliverableLink);
-
+      // Armazenar dados relevantes no localStorage para a página de sucesso
       localStorage.setItem('paymentData', JSON.stringify({
         payment: mpResponse.payment,
         customerData,
@@ -419,6 +429,8 @@ const Checkout = () => {
         }
         throw new Error(errorMessage);
       } else {
+        // Fallback para qualquer outro status não explicitamente tratado
+        console.warn('Checkout Debug: Status de pagamento não tratado, redirecionando para /payment-success:', paymentStatus);
         navigate('/payment-success');
       }
 

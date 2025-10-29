@@ -98,21 +98,21 @@ serve(async (req) => {
 
         // Obter product_id, user_id do vendedor, form_fields e dados do produto
         let productId: string | null = null;
-        let checkoutSellerUserId: string | null = null;
-        let checkoutFormFields: any = null;
-        let productData: any = null;
+        // let checkoutSellerUserId: string | null = null; // REMOVIDO: Agora vem do metadata do payment
+        // let checkoutFormFields: any = null; // REMOVIDO: Agora vem do metadata do payment
+        // let productData: any = null; // REMOVIDO: Agora vem do metadata do payment
 
         if (checkoutId) {
           const { data: chk, error: chkError } = await supabase
             .from('checkouts')
-            .select('product_id, user_id, form_fields, products(name, member_area_link, file_url)')
+            .select('product_id') // Apenas product_id, o resto vem do metadata do payment
             .eq('id', checkoutId)
             .maybeSingle();
           if (chkError) console.error('VERIFY_MP_DEBUG: Erro ao buscar product_id do checkout:', chkError);
           productId = chk?.product_id || null;
-          checkoutSellerUserId = chk?.user_id || null;
-          checkoutFormFields = chk?.form_fields || null;
-          productData = chk?.products || null;
+          // checkoutSellerUserId = chk?.user_id || null; // REMOVIDO
+          // checkoutFormFields = chk?.form_fields || null; // REMOVIDO
+          // productData = chk?.products || null; // REMOVIDO
         }
         console.log('VERIFY_MP_DEBUG: Product ID para pós-processamento:', productId);
 
@@ -258,25 +258,19 @@ serve(async (req) => {
         }
 
         // --- Lógica de envio de e-mail transacional (após aprovação) ---
-        if (checkoutFormFields?.sendTransactionalEmail && checkoutSellerUserId) {
+        const emailTransactionalData = (payment?.metadata as any)?.email_transactional_data;
+        console.log('VERIFY_MP_DEBUG: emailTransactionalData do payment metadata:', emailTransactionalData);
+
+        if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
           console.log('VERIFY_MP_DEBUG: Disparando e-mail transacional...');
-          const productName = productData?.name || 'Seu Produto';
+          const productName = emailTransactionalData.productName || 'Seu Produto';
           const customerName = (existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente');
           const customerEmail = (existingPayment?.metadata?.customer_data?.email || mpPayment?.payer?.email || null);
 
-          let accessLink = '';
-          const checkoutDeliverable = checkoutFormFields?.deliverable;
-          const productMemberAreaLink = productData?.member_area_link;
-          const productFileUrl = productData?.file_url;
+          let accessLink = emailTransactionalData.deliverableLink || '';
 
-          if (checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)) {
-            accessLink = checkoutDeliverable.link || checkoutDeliverable.fileUrl || '';
-          } else if (productMemberAreaLink || productFileUrl) {
-            accessLink = productMemberAreaLink || productFileUrl || '';
-          }
-
-          const emailSubjectTemplate = checkoutFormFields?.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
-          const emailBodyTemplate = checkoutFormFields?.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
+          const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
+          const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
 
           const finalSubject = emailSubjectTemplate
             .replace(/{customer_name}/g, customerName)
@@ -296,9 +290,9 @@ serve(async (req) => {
                     to: customerEmail,
                     subject: finalSubject,
                     html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                    fromEmail: (checkoutFormFields as any)?.support_contact?.email || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
+                    fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
                     fromName: 'Elyon Digital',
-                    sellerUserId: checkoutSellerUserId,
+                    sellerUserId: emailTransactionalData.sellerUserId,
                   }
                 }
               );
@@ -316,6 +310,8 @@ serve(async (req) => {
           } else {
             console.warn('VERIFY_MP_DEBUG: Não foi possível enviar e-mail transacional: email do cliente ausente.');
           }
+        } else {
+          console.log('VERIFY_MP_DEBUG: Envio de e-mail transacional desabilitado ou dados incompletos no metadata.');
         }
         // --- Fim da lógica de envio de e-mail transacional ---
 
