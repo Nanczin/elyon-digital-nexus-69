@@ -316,6 +316,8 @@ const Checkout = () => {
         ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
         : productData?.member_area_link || productData?.file_url;
 
+      console.log('CHECKOUT_FRONTEND_DEBUG: Final deliverable link to save in localStorage:', finalDeliverableLink); // ADDED LOG
+
       const paymentData: any = {
         checkoutId: checkoutId || '',
         amount: totalAmount,
