@@ -94,7 +94,7 @@ const PaymentSuccess = () => {
     if (fetchedPaymentFromDb) {
       const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
       const currentDeliverable = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink
-        ? { type: 'link', link: (fetchedPaymentFromB.metadata as any).email_transactional_data.deliverableLink } as DeliverableConfig
+        ? { type: 'link', link: (fetchedPaymentFromDb.metadata as any).email_transactional_data.deliverableLink } as DeliverableConfig
         : fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
       
       const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
@@ -172,6 +172,22 @@ const PaymentSuccess = () => {
       console.log('PAYMENT_SUCCESS_DEBUG: 25. Component unmounted or effect re-ran, interval cleared.');
     };
   }, [searchParams]); // Depend on searchParams to re-evaluate initial state
+
+  // Novo useEffect para lidar com o redirecionamento automático
+  useEffect(() => {
+    let redirectTimer: NodeJS.Timeout;
+    if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
+      console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. Redirecting in 3 seconds...');
+      toast({
+        title: "Pagamento Aprovado! ✅",
+        description: "Redirecionando para o seu produto em 3 segundos...",
+      });
+      redirectTimer = setTimeout(() => {
+        window.location.href = deliverableLinkToDisplay; // Redirecionamento completo
+      }, 3000); // Redireciona após 3 segundos
+    }
+    return () => clearTimeout(redirectTimer); // Limpa o timer se o componente desmontar ou as dependências mudarem
+  }, [paymentStatus, deliverableLinkToDisplay, toast]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
