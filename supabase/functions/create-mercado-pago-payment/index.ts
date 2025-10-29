@@ -39,9 +39,6 @@ interface PaymentRequest {
     productDescription?: string;
     sellerUserId?: string;
     supportEmail?: string;
-    // Adicionados para o remetente do e-mail transacional
-    fromEmail?: string;
-    fromName?: string;
   };
 }
 
@@ -106,29 +103,24 @@ serve(async (req) => {
       );
     }
 
-    // Buscar as configurações do Mercado Pago e SMTP do vendedor na tabela integrations
-    const { data: sellerIntegrations, error: sellerIntegrationsError } = await supabase
+    // Buscar as configurações do Mercado Pago da tabela integrations
+    const { data: mpConfig, error: mpConfigError } = await supabase
       .from('integrations')
-      .select('mercado_pago_access_token, mercado_pago_token_public, smtp_config')
+      .select('mercado_pago_access_token, mercado_pago_token_public')
       .eq('user_id', checkout.user_id)
       .maybeSingle();
 
-    if (sellerIntegrationsError) {
-      console.error('CREATE_MP_PAYMENT_DEBUG: Erro ao buscar sellerIntegrations:', sellerIntegrationsError);
-    }
-    console.log('CREATE_MP_PAYMENT_DEBUG: 6. Seller Integrations from database:', { sellerIntegrations, sellerIntegrationsError });
+    console.log('CREATE_MP_PAYMENT_DEBUG: 6. MP Config from database:', { mpConfig, mpConfigError });
 
     // Priorize a variável de ambiente se existir, caso contrário, use a do banco de dados
-    const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || (sellerIntegrations?.mercado_pago_access_token as string) || '';
-    const publicKey = Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || (sellerIntegrations?.mercado_pago_token_public as string) || '';
-    const sellerSmtpConfig = sellerIntegrations?.smtp_config as any;
+    const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || (mpConfig?.mercado_pago_access_token as string) || '';
+    const publicKey = Deno.env.get('MERCADO_PAGO_PUBLIC_KEY') || (mpConfig?.mercado_pago_token_public as string) || '';
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 7. Access Token (length):', accessToken.length);
     console.log('CREATE_MP_PAYMENT_DEBUG: 8. Public Key (length):', publicKey.length);
-    console.log('CREATE_MP_PAYMENT_DEBUG: 8.1. Seller SMTP Config:', sellerSmtpConfig);
     
     if (!accessToken) {
-      console.error('CREATE_MP_PAYMENT_DEBUG: 8.2. Access Token is empty or not configured.');
+      console.error('CREATE_MP_PAYMENT_DEBUG: 8.1. Access Token is empty or not configured.');
       return new Response(
         JSON.stringify({ success: false, error: 'Token do Mercado Pago não configurado. Configure nas integrações.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -136,21 +128,12 @@ serve(async (req) => {
     }
     
     if (paymentMethod === 'creditCard' && !publicKey) {
-      console.error('CREATE_MP_PAYMENT_DEBUG: 8.3. Public Key is empty or not configured for credit card payment.');
+      console.error('CREATE_MP_PAYMENT_DEBUG: 8.2. Public Key is empty or not configured for credit card payment.');
       return new Response(
         JSON.stringify({ success: false, error: 'Chave pública do Mercado Pago não configurada. Configure nas integrações.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-
-    // Adicionar fromEmail e fromName do SMTP do vendedor ao emailMetadata
-    const updatedEmailMetadata = {
-      ...emailMetadata,
-      fromEmail: sellerSmtpConfig?.fromEmail || 'noreply@elyondigital.com',
-      fromName: sellerSmtpConfig?.fromName || 'Elyon Digital',
-    };
-    console.log('CREATE_MP_PAYMENT_DEBUG: 8.4. Updated Email Metadata:', updatedEmailMetadata);
-
 
     // Construir o body da requisição para o Mercado Pago
     let mpRequestBody: any = {
@@ -173,7 +156,7 @@ serve(async (req) => {
         selected_package: selectedPackage,
         payment_method: paymentMethod,
         // Adicionar todos os dados de e-mail transacional e entregável aqui
-        email_transactional_data: updatedEmailMetadata, // Usar o metadata atualizado
+        email_transactional_data: emailMetadata,
       }
     };
 
@@ -334,7 +317,7 @@ serve(async (req) => {
           selected_package: selectedPackage,
           payment_method: paymentMethod,
           // Persistir os dados de e-mail transacional e entregável no metadata do pagamento
-          email_transactional_data: updatedEmailMetadata, // Usar o metadata atualizado
+          email_transactional_data: emailMetadata,
         }
       })
       .select(`
