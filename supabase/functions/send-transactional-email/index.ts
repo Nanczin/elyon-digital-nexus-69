@@ -16,6 +16,7 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
+  console.log('SEND_EMAIL_DEBUG: Função send-transactional-email iniciada.'); // Log inicial
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
@@ -36,6 +37,7 @@ serve(async (req) => {
     }
 
     // 1. Buscar configurações SMTP do vendedor
+    console.log('SEND_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('smtp_config')
@@ -82,6 +84,7 @@ serve(async (req) => {
     // 2. Configurar e enviar e-mail
     const client = new SmtpClient();
     try {
+      console.log('SEND_EMAIL_DEBUG: Tentando conectar ao servidor SMTP...');
       await client.connect({
         hostname: finalHost,
         port: finalPort,
@@ -89,6 +92,7 @@ serve(async (req) => {
         username: finalUsername,
         password: finalPassword,
       });
+      console.log('SEND_EMAIL_DEBUG: Conectado ao servidor SMTP. Tentando enviar e-mail...');
 
       await client.send({
         from: `${finalFromName} <${finalFromEmail}>`,
