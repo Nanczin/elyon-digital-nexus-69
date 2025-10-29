@@ -141,6 +141,12 @@ const PaymentSuccess = () => {
       console.log('PAYMENT_SUCCESS_DEBUG: 21.1. Derived currentProduct:', JSON.stringify(currentProduct, null, 2));
       console.log('PAYMENT_SUCCESS_DEBUG: 21.2. Derived currentCheckoutDeliverableConfig:', JSON.stringify(currentCheckoutDeliverableConfig, null, 2));
       console.log('PAYMENT_SUCCESS_DEBUG: 21.3. Final determinedLink (from fetchAndVerifyPayment):', determinedLink);
+    } else {
+      // Ensure productData and checkoutDeliverable are reset if no payment is fetched
+      setProductData(null);
+      setCheckoutDeliverable(null);
+      setDeliverableLinkToDisplay(null);
+      setSendTransactionalEmail(true); // Default to true if no specific data
     }
   };
 
@@ -227,21 +233,17 @@ const PaymentSuccess = () => {
     };
   }, [searchParams, paymentStatus]); // Depend on searchParams and paymentStatus to re-evaluate initial state and polling
 
-  // Novo useEffect para lidar com o redirecionamento automático
+  // NOVO useEffect para lidar com o redirecionamento automático (AGORA REMOVIDO)
   useEffect(() => {
     console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
-    let redirectTimer: NodeJS.Timeout;
     if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
-      console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. Redirecting in 3 seconds...');
+      console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. User will stay on this page.');
       toast({
         title: "Pagamento Aprovado! ✅",
-        description: "Redirecionando para o seu produto em 3 segundos...",
+        description: "Seu acesso ao produto está liberado. Clique no botão abaixo para acessá-lo.", // Mensagem atualizada
       });
-      redirectTimer = setTimeout(() => {
-        window.location.href = deliverableLinkToDisplay; // Redirecionamento completo
-      }, 3000); // Redireciona após 3 segundos
+      // REMOVIDO: Não há mais redirecionamento automático aqui
     }
-    return () => clearTimeout(redirectTimer); // Limpa o timer se o componente desmontar ou as dependências mudarem
   }, [paymentStatus, deliverableLinkToDisplay, toast]);
 
   const copyToClipboard = (text: string) => {
@@ -258,12 +260,13 @@ const PaymentSuccess = () => {
     }
   };
 
-  const getDeliverableButtonText = (link: string | null) => {
-    if (!link) return 'Acessar Produto';
-    const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
-    const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
-    return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
-  };
+  // REMOVIDO: Esta função não é mais necessária, o texto será definido diretamente no JSX
+  // const getDeliverableButtonText = (link: string | null) => {
+  //   if (!link) return 'Acessar Produto';
+  //   const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
+  //   const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
+  //   return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
+  // };
 
   if (isChecking) {
     return (
@@ -327,7 +330,7 @@ const PaymentSuccess = () => {
                         onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
-                        {getDeliverableButtonText(deliverableLinkToDisplay)}
+                        {checkoutDeliverable?.name || productData?.name || 'Acessar Produto'} {/* Texto do botão atualizado */}
                       </Button>
                     </div>
                   </div>
