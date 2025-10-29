@@ -84,7 +84,7 @@ const PaymentSuccess = () => {
         if (dbPaymentStatus === 'completed' || dbMpPaymentStatus === 'approved') {
           setPaymentStatus('completed');
           setIsChecking(false);
-          clearPolling();
+          clearPolling(); // <--- Clear polling here
           localStorage.removeItem('paymentData'); // Limpar localStorage ao completar
           console.log('PAYMENT_SUCCESS_DEBUG: 12. Status updated to COMPLETED (from Edge Function) and localStorage cleared.');
           fetchedPaymentFromDb = res.data.payment;
@@ -92,7 +92,7 @@ const PaymentSuccess = () => {
         } else if (dbPaymentStatus === 'failed' || dbMpPaymentStatus === 'rejected') {
           setPaymentStatus('failed');
           setIsChecking(false);
-          clearPolling();
+          clearPolling(); // <--- Clear polling here
           localStorage.removeItem('paymentData'); // Limpar localStorage ao falhar
           console.log('PAYMENT_SUCCESS_DEBUG: 13. Status updated to FAILED (from Edge Function) and localStorage cleared.');
         } else {
@@ -173,45 +173,39 @@ const PaymentSuccess = () => {
     console.log('PAYMENT_SUCCESS_DEBUG: 3. URL Params:', { urlStatus, urlPaymentId });
     console.log('PAYMENT_SUCCESS_DEBUG: 8. MP ID to check (initial effect):', mpIdToCheck);
 
+    // Case 1: Status is already confirmed as completed by URL parameter
     if (urlStatus === 'approved' || urlStatus === 'completed') {
       setPaymentStatus('completed');
       setIsChecking(false);
       clearPolling();
-      localStorage.removeItem('paymentData'); // Limpar localStorage se o status já vem da URL
+      localStorage.removeItem('paymentData'); 
       console.log('PAYMENT_SUCCESS_DEBUG: 4. Initial status: COMPLETED (from URL) and localStorage cleared.');
-    } else if (initialPaymentData?.paymentMethod === 'pix' && initialPaymentData?.payment?.qr_code) {
+    } 
+    // Case 2: We have an MP ID to check, so payment is pending until verified
+    else if (mpIdToCheck) {
       setPaymentStatus('pending');
-      setIsChecking(false); // For PIX with QR, show QR immediately, not generic checking
-      console.log('PAYMENT_SUCCESS_DEBUG: 5. Initial status: PENDING (PIX with QR code)');
-      if (mpIdToCheck) {
-        intervalRef.current = setInterval(() => {
-          if (isMounted.current && paymentStatus === 'pending') {
-            console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check (PIX): paymentStatus is PENDING, re-fetching...');
-            fetchAndVerifyPayment(mpIdToCheck);
-          } else {
-            clearPolling();
-          }
-        }, 5000) as unknown as number;
-      }
-    } else if (mpIdToCheck) {
-      setPaymentStatus('pending');
-      setIsChecking(true);
-      console.log('PAYMENT_SUCCESS_DEBUG: 6. Initial status: PENDING (default, starting check)');
-      fetchAndVerifyPayment(mpIdToCheck); // Initial check
+      setIsChecking(true); 
+      console.log('PAYMENT_SUCCESS_DEBUG: 6. Initial status: PENDING (starting check)');
       
+      // Perform an immediate check
+      fetchAndVerifyPayment(mpIdToCheck); 
+      
+      // Then set up polling
       intervalRef.current = setInterval(() => {
-        if (isMounted.current && paymentStatus === 'pending') {
-          console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check: paymentStatus is PENDING, re-fetching...');
+        if (isMounted.current) { 
+          console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check: re-fetching...');
           fetchAndVerifyPayment(mpIdToCheck);
         } else {
           clearPolling();
         }
       }, 5000) as unknown as number;
-    } else {
-      setPaymentStatus('failed');
+    } 
+    // Case 3: No MP ID to check and no definitive URL status, so it's a failed/unknown state
+    else {
+      setPaymentStatus('failed'); 
       setIsChecking(false);
       clearPolling();
-      localStorage.removeItem('paymentData'); // Limpar localStorage se não há dados de pagamento
+      localStorage.removeItem('paymentData'); 
       console.log('PAYMENT_SUCCESS_DEBUG: 6.1. No payment data or MP ID, defaulting to FAILED and localStorage cleared.');
     }
 
@@ -220,7 +214,7 @@ const PaymentSuccess = () => {
       clearPolling();
       console.log('PAYMENT_SUCCESS_DEBUG: 25. Component unmounted or effect re-ran, interval cleared.');
     };
-  }, [searchParams, paymentStatus]);
+  }, [searchParams]); // Removed paymentStatus from dependencies
 
   useEffect(() => {
     console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
