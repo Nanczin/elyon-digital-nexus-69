@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trash2, Plus } from 'lucide-react'; // Importar ícones
 import { useToast } from '@/hooks/use-toast';
 import { useIntegrations } from '@/hooks/useIntegrations';
 
@@ -23,7 +24,7 @@ interface EmailConfigProps {
 
 const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
   const { emailConfig, saveIntegrations, loading } = useIntegrations();
-  const [config, setConfig] = useState<EmailConfig>({
+  const [newAccount, setNewAccount] = useState<EmailConfig>({ // Renomeado para newAccount
     host: '',
     port: '587',
     username: '',
@@ -36,17 +37,26 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
+  // Resetar o formulário de nova conta quando o diálogo abre ou fecha
   useEffect(() => {
-    if (emailConfig) {
-      setConfig(emailConfig);
+    if (!isOpen) {
+      setNewAccount({
+        host: '',
+        port: '587',
+        username: '',
+        password: '',
+        fromEmail: '',
+        fromName: '',
+        secure: true
+      });
     }
-  }, [emailConfig]);
+  }, [isOpen]);
 
-  const saveConfig = async () => {
-    if (!config.host || !config.username || !config.password || !config.fromEmail) {
+  const addAccount = async () => { // Renomeado para addAccount
+    if (!newAccount.host || !newAccount.username || !newAccount.password || !newAccount.fromEmail) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios para a nova conta",
         variant: "destructive",
       });
       return;
@@ -54,14 +64,14 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
 
     try {
       setSaving(true);
-      await saveIntegrations({ emailConfig: config });
+      await saveIntegrations({ emailConfig: newAccount }); // Salva a nova conta
       
       toast({
         title: "Sucesso",
         description: "Configuração de email salva com sucesso!",
       });
       
-      setIsOpen(false);
+      setIsOpen(false); // Fecha o diálogo após salvar
     } catch (error) {
       toast({
         title: "Erro",
@@ -73,23 +83,13 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
     }
   };
 
-  const clearConfig = async () => {
+  const removeCurrentAccount = async () => { // Nova função para remover a conta atual
     try {
       setSaving(true);
-      await saveIntegrations({ emailConfig: null });
-      
-      setConfig({
-        host: '',
-        port: '587',
-        username: '',
-        password: '',
-        fromEmail: '',
-        fromName: '',
-        secure: true
-      });
+      await saveIntegrations({ emailConfig: null }); // Remove a conta
       
       toast({
-        title: "Configuração limpa",
+        title: "Configuração removida",
         description: "Configuração de email removida com sucesso!",
       });
     } catch (error) {
@@ -103,7 +103,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
     }
   };
 
-  const isConfigured = config.host && config.username && config.password && config.fromEmail;
+  const isNewAccountFormValid = newAccount.host && newAccount.username && newAccount.password && newAccount.fromEmail;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -116,27 +116,38 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Status atual */}
-          {isConfigured && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Status da Configuração</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-sm text-muted-foreground">
-                  <p>Provedor: Personalizado</p>
-                  <p>Host: {config.host}</p>
-                  <p>Porta: {config.port}</p>
-                  <p>Email de Envio: {config.fromEmail}</p>
-                  <p>Nome de Envio: {config.fromName || 'Não configurado'}</p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Contas existentes (apenas uma, no caso do email) */}
+          {emailConfig && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Conta Configurada</h3>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    {emailConfig.fromName || emailConfig.fromEmail}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeCurrentAccount}
+                      disabled={saving || loading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-sm text-muted-foreground">
+                    <p>Host: {emailConfig.host}</p>
+                    <p>Porta: {emailConfig.port}</p>
+                    <p>Email de Envio: {emailConfig.fromEmail}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
-          {/* Configuração */}
+          {/* Adicionar Nova Conta */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Configurações SMTP</h3>
+            <h3 className="text-lg font-semibold">Adicionar Nova Conta</h3>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -144,8 +155,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                   <Label htmlFor="host">Host SMTP *</Label>
                   <Input
                     id="host"
-                    value={config.host}
-                    onChange={(e) => setConfig({...config, host: e.target.value})}
+                    value={newAccount.host}
+                    onChange={(e) => setNewAccount({...newAccount, host: e.target.value})}
                     placeholder="smtp.exemplo.com"
                   />
                 </div>
@@ -154,8 +165,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                   <Label htmlFor="port">Porta *</Label>
                   <Input
                     id="port"
-                    value={config.port}
-                    onChange={(e) => setConfig({...config, port: e.target.value})}
+                    value={newAccount.port}
+                    onChange={(e) => setNewAccount({...newAccount, port: e.target.value})}
                     placeholder="587"
                   />
                 </div>
@@ -165,8 +176,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                 <Label htmlFor="username">Usuário/Email *</Label>
                 <Input
                   id="username"
-                  value={config.username}
-                  onChange={(e) => setConfig({...config, username: e.target.value})}
+                  value={newAccount.username}
+                  onChange={(e) => setNewAccount({...newAccount, username: e.target.value})}
                   placeholder="seu-email@exemplo.com"
                 />
               </div>
@@ -176,8 +187,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                 <Input
                   id="password"
                   type="password"
-                  value={config.password}
-                  onChange={(e) => setConfig({...config, password: e.target.value})}
+                  value={newAccount.password}
+                  onChange={(e) => setNewAccount({...newAccount, password: e.target.value})}
                   placeholder="sua-senha-ou-app-password"
                 />
               </div>
@@ -186,8 +197,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                 <Label htmlFor="fromEmail">Email de Envio *</Label>
                 <Input
                   id="fromEmail"
-                  value={config.fromEmail}
-                  onChange={(e) => setConfig({...config, fromEmail: e.target.value})}
+                  value={newAccount.fromEmail}
+                  onChange={(e) => setNewAccount({...newAccount, fromEmail: e.target.value})}
                   placeholder="noreply@seudominio.com"
                 />
               </div>
@@ -196,24 +207,17 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                 <Label htmlFor="fromName">Nome de Envio</Label>
                 <Input
                   id="fromName"
-                  value={config.fromName}
-                  onChange={(e) => setConfig({...config, fromName: e.target.value})}
+                  value={newAccount.fromName}
+                  onChange={(e) => setNewAccount({...newAccount, fromName: e.target.value})}
                   placeholder="Sua Empresa"
                 />
               </div>
             </div>
             
-            <div className="flex gap-2">
-              <Button onClick={saveConfig} disabled={saving || loading} className="flex-1">
-                {saving ? 'Salvando...' : (isConfigured ? 'Salvar Conta' : 'Adicionar Conta')}
-              </Button>
-              
-              {isConfigured && (
-                <Button variant="outline" onClick={clearConfig} disabled={saving || loading}>
-                  Limpar
-                </Button>
-              )}
-            </div>
+            <Button onClick={addAccount} disabled={saving || loading || !isNewAccountFormValid} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              {saving ? 'Salvando...' : 'Adicionar Conta'}
+            </Button>
           </div>
         </div>
       </DialogContent>
