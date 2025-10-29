@@ -4,16 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Send } from 'lucide-react'; // Adicionado ícone Send
 import { useToast } from '@/hooks/use-toast';
 import { useIntegrations } from '@/hooks/useIntegrations';
-import { EmailConfig as SimplifiedEmailConfig } from '@/integrations/supabase/types'; // Importar a interface simplificada
+import { EmailConfig as SimplifiedEmailConfig } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client'; // Importar o cliente Supabase
+import { useAuth } from '@/hooks/useAuth'; // Importar useAuth para obter o user.id
 
 interface EmailConfigProps {
   children: React.ReactNode;
 }
 
 const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
+  const { user } = useAuth(); // Obter o usuário logado
   const { emailConfig, saveIntegrations, loading } = useIntegrations();
   const [newAccount, setNewAccount] = useState<SimplifiedEmailConfig>({
     email: '',
@@ -22,6 +25,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
   });
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false); // Novo estado para o botão de teste
+  const [testRecipientEmail, setTestRecipientEmail] = useState(''); // Novo estado para o e-mail de teste
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,8 +36,11 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
         appPassword: '',
         displayName: '',
       });
+      setTestRecipientEmail(''); // Limpar e-mail de teste ao fechar
+    } else if (emailConfig?.email) {
+      setTestRecipientEmail(emailConfig.email); // Preencher com o e-mail configurado
     }
-  }, [isOpen]);
+  }, [isOpen, emailConfig]);
 
   const addAccount = async () => {
     if (!newAccount.email || !newAccount.appPassword || !newAccount.displayName) {
@@ -46,12 +54,11 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
 
     try {
       setSaving(true);
-      // Construir o objeto smtp_config com os campos simplificados e os padrões SMTP
       const smtpConfigPayload: SimplifiedEmailConfig = {
         email: newAccount.email,
         appPassword: newAccount.appPassword,
         displayName: newAccount.displayName,
-        host: 'smtp.gmail.com', // Padrão para Gmail, pode ser ajustado se necessário
+        host: 'smtp.gmail.com',
         port: '587',
         secure: true,
       };
@@ -95,6 +102,68 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
     }
   };
 
+  const handleTestConnection = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado. Faça login para testar a conexão.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!testRecipientEmail || !testRecipientEmail.includes('@')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um e-mail de destinatário válido para o teste.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTestingConnection(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'test-email-connection',
+        {
+          body: {
+            to: testRecipientEmail,
+            sellerUserId: user.id,
+          }
+        }
+      );
+
+      if (error) {
+        console.error('Erro ao invocar função de teste:', error);
+        toast({
+          title: "Erro no Teste",
+          description: error.message || "Não foi possível testar a conexão. Verifique os logs do Supabase.",
+          variant: "destructive",
+        });
+      } else if (data?.success) {
+        toast({
+          title: "Teste de Conexão Bem-Sucedido! ✅",
+          description: `E-mail de teste enviado para ${testRecipientEmail}. Verifique sua caixa de entrada.`,
+        });
+      } else {
+        toast({
+          title: "Falha no Teste de Conexão",
+          description: data?.error || "O e-mail de teste não pôde ser enviado. Verifique suas credenciais e os logs do Supabase.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      console.error('Erro inesperado ao testar conexão:', err);
+      toast({
+        title: "Erro Inesperado",
+        description: err.message || "Ocorreu um erro inesperado ao tentar testar a conexão.",
+        variant: "destructive",
+      });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   const isNewAccountFormValid = newAccount.email && newAccount.appPassword && newAccount.displayName;
 
   return (
@@ -129,10 +198,38 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                   <div className="text-sm text-muted-foreground">
                     <p>Email: {emailConfig.email}</p>
                     <p>Nome de Exibição: {emailConfig.displayName}</p>
-                    {/* Não exibir a senha do app aqui por segurança */}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Seção de Teste de Conexão */}
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Send className="h-4 w-4" />
+                  Testar Conexão
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Envie um e-mail de teste para verificar se sua configuração SMTP está funcionando.
+                </p>
+                <div>
+                  <Label htmlFor="testRecipientEmail">Enviar e-mail de teste para:</Label>
+                  <Input
+                    id="testRecipientEmail"
+                    type="email"
+                    value={testRecipientEmail}
+                    onChange={(e) => setTestRecipientEmail(e.target.value)}
+                    placeholder="seu-email-de-teste@exemplo.com"
+                    className="mt-1"
+                  />
+                </div>
+                <Button 
+                  onClick={handleTestConnection} 
+                  disabled={testingConnection || !testRecipientEmail.includes('@')} 
+                  className="w-full"
+                >
+                  {testingConnection ? 'Enviando Teste...' : 'Enviar E-mail de Teste'}
+                </Button>
+              </div>
             </div>
           )}
 
