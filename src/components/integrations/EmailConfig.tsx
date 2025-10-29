@@ -3,13 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useIntegrations } from '@/hooks/useIntegrations';
 
 interface EmailConfig {
-  provider: string;
   host: string;
   port: string;
   username: string;
@@ -26,7 +24,6 @@ interface EmailConfigProps {
 const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
   const { emailConfig, saveIntegrations, loading } = useIntegrations();
   const [config, setConfig] = useState<EmailConfig>({
-    provider: '',
     host: '',
     port: '587',
     username: '',
@@ -44,50 +41,6 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
       setConfig(emailConfig);
     }
   }, [emailConfig]);
-
-  const presetConfigs = {
-    gmail: {
-      host: 'smtp.gmail.com',
-      port: '587',
-      secure: true
-    },
-    outlook: {
-      host: 'smtp-mail.outlook.com',
-      port: '587',
-      secure: true
-    },
-    yahoo: {
-      host: 'smtp.mail.yahoo.com',
-      port: '587',
-      secure: true
-    },
-    sendgrid: {
-      host: 'smtp.sendgrid.net',
-      port: '587',
-      secure: true
-    },
-    mailgun: {
-      host: 'smtp.mailgun.org',
-      port: '587',
-      secure: true
-    },
-    custom: {
-      host: '',
-      port: '587',
-      secure: true
-    }
-  };
-
-  const handleProviderChange = (provider: string) => {
-    const preset = presetConfigs[provider as keyof typeof presetConfigs];
-    setConfig({
-      ...config,
-      provider,
-      host: preset.host,
-      port: preset.port,
-      secure: preset.secure
-    });
-  };
 
   const saveConfig = async () => {
     if (!config.host || !config.username || !config.password || !config.fromEmail) {
@@ -126,7 +79,6 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
       await saveIntegrations({ emailConfig: null });
       
       setConfig({
-        provider: '',
         host: '',
         port: '587',
         username: '',
@@ -172,7 +124,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="text-sm text-muted-foreground">
-                  <p>Provedor: {config.provider || 'Personalizado'}</p>
+                  <p>Provedor: Personalizado</p>
                   <p>Host: {config.host}</p>
                   <p>Porta: {config.port}</p>
                   <p>Email de Envio: {config.fromEmail}</p>
@@ -187,23 +139,6 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
             <h3 className="text-lg font-semibold">Configurações SMTP</h3>
             
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="provider">Provedor</Label>
-                <Select value={config.provider} onValueChange={handleProviderChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um provedor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gmail">Gmail</SelectItem>
-                    <SelectItem value="outlook">Outlook</SelectItem>
-                    <SelectItem value="yahoo">Yahoo</SelectItem>
-                    <SelectItem value="sendgrid">SendGrid</SelectItem>
-                    <SelectItem value="mailgun">Mailgun</SelectItem>
-                    <SelectItem value="custom">Personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="host">Host SMTP *</Label>
@@ -211,7 +146,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                     id="host"
                     value={config.host}
                     onChange={(e) => setConfig({...config, host: e.target.value})}
-                    placeholder="smtp.gmail.com"
+                    placeholder="smtp.exemplo.com"
                   />
                 </div>
                 

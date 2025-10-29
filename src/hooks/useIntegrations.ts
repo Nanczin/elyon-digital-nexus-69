@@ -27,7 +27,6 @@ interface UTMifyConfig {
 }
 
 interface EmailConfig {
-  provider: string;
   host: string;
   port: string;
   username: string;
@@ -205,7 +204,6 @@ export const useIntegrations = () => {
     // Implementar envio de email
     if (emailConfig) {
       console.log('Sending email:', emailData);
-      // Aqui você implementaria a chamada para o servidor SMTP
       // Geralmente isso seria feito através de uma API backend
     }
   };
