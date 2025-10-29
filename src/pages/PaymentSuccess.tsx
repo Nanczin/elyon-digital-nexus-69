@@ -93,6 +93,11 @@ const PaymentSuccess = () => {
     if (!isMounted.current) return;
 
     if (fetchedPaymentFromDb) {
+      console.log('PAYMENT_SUCCESS_DEBUG: 20. Processing fetchedPaymentFromDb for product/deliverable data.');
+      console.log('PAYMENT_SUCCESS_DEBUG: 20.1. fetchedPaymentFromDb.checkouts:', JSON.stringify(fetchedPaymentFromDb.checkouts, null, 2));
+      console.log('PAYMENT_SUCCESS_DEBUG: 20.2. fetchedPaymentFromDb.checkouts?.products:', JSON.stringify(fetchedPaymentFromDb.checkouts?.products, null, 2));
+      console.log('PAYMENT_SUCCESS_DEBUG: 20.3. fetchedPaymentFromDb.checkouts?.form_fields?.deliverable:', JSON.stringify(fetchedPaymentFromDb.checkouts?.form_fields?.deliverable, null, 2));
+
       const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
       const currentDeliverable = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink
         ? { type: 'link', link: (fetchedPaymentFromDb.metadata as any).email_transactional_data.deliverableLink } as DeliverableConfig
@@ -114,6 +119,7 @@ const PaymentSuccess = () => {
       console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentDeliverable, determinedLink, currentSendTransactionalEmail });
       console.log('PAYMENT_SUCCESS_DEBUG: 21.1. Derived currentProduct:', JSON.stringify(currentProduct, null, 2));
       console.log('PAYMENT_SUCCESS_DEBUG: 21.2. Derived currentDeliverable:', JSON.stringify(currentDeliverable, null, 2));
+      console.log('PAYMENT_SUCCESS_DEBUG: 21.3. Final determinedLink:', determinedLink);
     }
   };
 
@@ -129,6 +135,7 @@ const PaymentSuccess = () => {
       setDeliverableLinkToDisplay(initialPaymentData.deliverableLink || null);
       setSendTransactionalEmail(initialPaymentData.sendTransactionalEmail ?? true);
       console.log('PAYMENT_SUCCESS_DEBUG: 2. Initialized from localStorage (initial effect):', { initialPaymentData, deliverableLinkToDisplay: initialPaymentData.deliverableLink, sendTransactionalEmail: initialPaymentData.sendTransactionalEmail });
+      console.log('PAYMENT_SUCCESS_DEBUG: 2.1. Full initialPaymentData from localStorage:', JSON.stringify(initialPaymentData, null, 2));
     }
 
     const urlStatus = searchParams.get('status');
@@ -209,7 +216,7 @@ const PaymentSuccess = () => {
 
   const getDeliverableButtonText = (link: string | null) => {
     if (!link) return 'Acessar Produto';
-    const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4', '.mov', '.avi'];
+    const fileExtensions = ['.pdf', '.zip', '.rar', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pp4', '.mov', '.avi'];
     const isDownloadableFile = fileExtensions.some(ext => link.toLowerCase().includes(ext));
     return isDownloadableFile ? 'Fazer Download' : 'Acessar Entregável';
   };
