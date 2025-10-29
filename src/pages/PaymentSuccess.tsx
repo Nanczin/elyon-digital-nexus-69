@@ -66,6 +66,7 @@ const PaymentSuccess = () => {
           window.history.replaceState({}, '', '/payment-success?status=approved');
           console.log('PAYMENT_SUCCESS_DEBUG: 12. Status updated to COMPLETED (from Edge Function)');
           fetchedPaymentFromDb = res.data.payment;
+          console.log('PAYMENT_SUCCESS_DEBUG: 11.1. Full fetchedPaymentFromDb:', JSON.stringify(fetchedPaymentFromDb, null, 2));
         } else if (dbPaymentStatus === 'failed' || dbMpPaymentStatus === 'rejected') {
           setPaymentStatus('failed');
           setIsChecking(false);
@@ -111,6 +112,8 @@ const PaymentSuccess = () => {
       }
       setDeliverableLinkToDisplay(determinedLink);
       console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentDeliverable, determinedLink, currentSendTransactionalEmail });
+      console.log('PAYMENT_SUCCESS_DEBUG: 21.1. Derived currentProduct:', JSON.stringify(currentProduct, null, 2));
+      console.log('PAYMENT_SUCCESS_DEBUG: 21.2. Derived currentDeliverable:', JSON.stringify(currentDeliverable, null, 2));
     }
   };
 
@@ -175,6 +178,7 @@ const PaymentSuccess = () => {
 
   // Novo useEffect para lidar com o redirecionamento automático
   useEffect(() => {
+    console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
     let redirectTimer: NodeJS.Timeout;
     if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
       console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. Redirecting in 3 seconds...');
