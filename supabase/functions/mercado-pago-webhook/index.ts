@@ -211,6 +211,7 @@ serve(async (req) => {
             const customerName = (customerData as any).name || (customerData as any).email.split('@')[0];
             const customerEmail = (customerData as any).email || null;
 
+            // Priorizar o link do entregável do checkout, depois do produto
             const accessLink = emailTransactionalData.deliverableLink || existingPayment.checkouts?.products?.member_area_link || existingPayment.checkouts?.products?.file_url || '';
 
             const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
@@ -223,7 +224,7 @@ serve(async (req) => {
             const finalBody = emailBodyTemplate
               .replace(/{customer_name}/g, customerName)
               .replace(/{product_name}/g, productName)
-              .replace(/{access_link}/g, accessLink);
+              .replace(/{access_link}/g, accessLink); // Substituição dinâmica aqui
 
             if (customerEmail) {
               try {

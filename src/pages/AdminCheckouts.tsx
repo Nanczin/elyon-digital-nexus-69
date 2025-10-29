@@ -257,10 +257,6 @@ const AdminCheckouts = () => {
       mostSold: pkg.mostSold ?? false
     })) : initialFormData.packages; // Use initialFormData default
 
-    // Obter o produto base para pegar o access_url padrão
-    const baseProduct = products.find(p => p.id === checkout.product_id);
-    const defaultAccessLink = baseProduct?.access_url || '';
-
     return {
       name: checkout.products?.name || '',
       selectedProduct: checkout.product_id || '',
@@ -1253,7 +1249,7 @@ const AdminCheckouts = () => {
                           <SelectContent>
                             {emailConfig ? (
                               <SelectItem key="default-email-config" value="default-email-config">
-                                {emailConfig.displayName || emailConfig.email} {/* CORRIGIDO AQUI */}
+                                {emailConfig.displayName || emailConfig.email}
                               </SelectItem>
                             ) : (
                               <SelectItem value="no-email-config" disabled>

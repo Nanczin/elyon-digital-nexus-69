@@ -267,7 +267,8 @@ serve(async (req) => {
           const customerName = (existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente');
           const customerEmail = (existingPayment?.metadata?.customer_data?.email || mpPayment?.payer?.email || null);
 
-          let accessLink = emailTransactionalData.deliverableLink || payment.checkouts?.products?.member_area_link || payment.checkouts?.products?.file_url || '';
+          // Priorizar o link do entregável do checkout, depois do produto
+          const accessLink = emailTransactionalData.deliverableLink || payment.checkouts?.products?.member_area_link || payment.checkouts?.products?.file_url || '';
 
           const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
           const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
@@ -279,7 +280,7 @@ serve(async (req) => {
           const finalBody = emailBodyTemplate
             .replace(/{customer_name}/g, customerName)
             .replace(/{product_name}/g, productName)
-            .replace(/{access_link}/g, accessLink);
+            .replace(/{access_link}/g, accessLink); // Substituição dinâmica aqui
 
           if (customerEmail) {
             try {
