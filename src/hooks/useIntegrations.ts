@@ -6,10 +6,10 @@ import { EmailConfig as SimplifiedEmailConfig } from '@/integrations/supabase/ty
 interface MercadoPagoAccount {
   id: string;
   name: string;
-  accessToken: string;
-  publicKey: string;
-  clientId: string;
-  clientSecret: string;
+  accessToken: string | null; // Permitir null
+  publicKey: string | null; // Permitir null
+  clientId: string | null; // Permitir null
+  clientSecret: string | null; // Permitir null
 }
 
 interface MetaPixel {
@@ -69,10 +69,10 @@ export const useIntegrations = () => {
         setMercadoPagoAccounts(data.mercado_pago_access_token ? [{
           id: '1',
           name: 'Conta Principal',
-          accessToken: data.mercado_pado_access_token,
-          publicKey: data.mercado_pago_token_public || '',
-          clientId: '',
-          clientSecret: ''
+          accessToken: data.mercado_pago_access_token, // Corrigido o nome do campo
+          publicKey: data.mercado_pago_token_public || null,
+          clientId: null,
+          clientSecret: null
         }] : []);
 
         setMetaPixels(data.meta_pixel_id ? [{

@@ -11,10 +11,10 @@ import { useIntegrations } from '@/hooks/useIntegrations';
 interface MercadoPagoAccount {
   id: string;
   name: string;
-  accessToken: string;
-  publicKey: string;
-  clientId: string;
-  clientSecret: string;
+  accessToken: string | null;
+  publicKey: string | null;
+  clientId: string | null;
+  clientSecret: string | null;
 }
 
 interface MercadoPagoConfigProps {
@@ -24,12 +24,13 @@ interface MercadoPagoConfigProps {
 const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
   const { mercadoPagoAccounts, saveIntegrations, loading } = useIntegrations();
   const [isOpen, setIsOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState({
+  const [newAccount, setNewAccount] = useState<MercadoPagoAccount>({
+    id: '',
     name: '',
-    accessToken: '',
-    publicKey: '',
-    clientId: '',
-    clientSecret: ''
+    accessToken: null,
+    publicKey: null,
+    clientId: null,
+    clientSecret: null
   });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -55,11 +56,12 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
       await saveIntegrations({ mercadoPagoAccounts: updatedAccounts });
       
       setNewAccount({
+        id: '',
         name: '',
-        accessToken: '',
-        publicKey: '',
-        clientId: '',
-        clientSecret: ''
+        accessToken: null,
+        publicKey: null,
+        clientId: null,
+        clientSecret: null
       });
 
       toast({
@@ -129,8 +131,8 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="text-sm text-muted-foreground">
-                      <p>Access Token: {account.accessToken.substring(0, 20)}...</p>
-                      <p>Public Key: {account.publicKey.substring(0, 20)}...</p>
+                      <p>Access Token: {account.accessToken?.substring(0, 20) || ''}...</p>
+                      <p>Public Key: {account.publicKey?.substring(0, 20) || ''}...</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -158,7 +160,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                 <Input
                   id="accessToken"
                   type="password"
-                  value={newAccount.accessToken}
+                  value={newAccount.accessToken || ''}
                   onChange={(e) => setNewAccount({...newAccount, accessToken: e.target.value})}
                   placeholder="APP_USR-..."
                 />
@@ -168,7 +170,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                 <Label htmlFor="publicKey">Public Key *</Label>
                 <Input
                   id="publicKey"
-                  value={newAccount.publicKey}
+                  value={newAccount.publicKey || ''}
                   onChange={(e) => setNewAccount({...newAccount, publicKey: e.target.value})}
                   placeholder="APP_USR-..."
                 />
@@ -178,7 +180,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                 <Label htmlFor="clientId">Client ID</Label>
                 <Input
                   id="clientId"
-                  value={newAccount.clientId}
+                  value={newAccount.clientId || ''}
                   onChange={(e) => setNewAccount({...newAccount, clientId: e.target.value})}
                   placeholder="123456789"
                 />
@@ -189,7 +191,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                 <Input
                   id="clientSecret"
                   type="password"
-                  value={newAccount.clientSecret}
+                  value={newAccount.clientSecret || ''}
                   onChange={(e) => setNewAccount({...newAccount, clientSecret: e.target.value})}
                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                 />
