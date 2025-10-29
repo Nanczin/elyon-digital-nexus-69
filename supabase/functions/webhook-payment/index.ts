@@ -143,133 +143,130 @@ serve(async (req) => {
         console.log('WEBHOOK_PAYMENT_DEBUG: Compra já existe:', purchaseId);
       }
 
-      // --- 5. Buscar dados do produto e template de email ---
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('name, access_url, email_template')
-        .eq('id', externalReference) // Assumindo externalReference é o product_id
+      // --- 5. Buscar o pagamento completo para obter o metadata do email transacional ---
+      const { data: paymentRecord, error: paymentRecordError } = await supabase
+        .from('payments')
+        .select('*, checkouts(user_id, products(name, description, member_area_link, file_url), form_fields)')
+        .eq('mp_payment_id', mpPaymentId.toString())
         .single();
 
-      if (productError || !product) {
-        console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao buscar produto ou produto não encontrado:', productError);
+      if (paymentRecordError || !paymentRecord) {
+        console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao buscar registro de pagamento completo ou não encontrado:', paymentRecordError);
         // Registrar falha na entrega
         await supabase.from('product_deliveries').insert({
           purchase_id: purchaseId,
           user_id: userId,
           status: 'failed',
-          error_message: `Produto ${externalReference} não encontrado ou erro ao buscar.`,
+          error_message: `Registro de pagamento ${mpPaymentId} não encontrado ou erro ao buscar.`,
         });
         return new Response(
-          JSON.stringify({ success: false, error: 'Produto não encontrado ou erro ao buscar' }),
+          JSON.stringify({ success: false, error: 'Registro de pagamento não encontrado ou erro ao buscar' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
         );
       }
+      console.log('WEBHOOK_PAYMENT_DEBUG: Registro de pagamento completo:', JSON.stringify(paymentRecord, null, 2));
 
-      // --- 6. Processar template com variáveis ---
-      const emailTemplate = product.email_template || `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Acesso ao Produto</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px;">
-            <h1 style="color: #2c3e50;">🎉 Pagamento Confirmado!</h1>
-            
-            <p>Olá, <strong>{{nome}}</strong>!</p>
-            
-            <p>Seu pagamento foi aprovado e você já pode acessar o produto:</p>
-            
-            <div style="background: #667eea; padding: 20px; border-radius: 8px; margin: 25px 0;">
-              <h2 style="color: white; margin: 0;">{{produto}}</h2>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea;">
-              <h3 style="margin-top: 0;">🔐 Suas Credenciais de Acesso</h3>
-              <p><strong>Usuário:</strong> {{username}}</p>
-              <p><strong>Senha:</strong> <code style="background: #fff; padding: 5px 10px; border-radius: 4px;">{{password}}</code></p>
-              <p><strong>Link:</strong> <a href="{{url_acesso}}" style="color: #667eea;">{{url_acesso}}</a></p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="{{url_acesso}}" style="background: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block;">
-                ACESSAR AGORA
-              </a>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              <strong>⚠️ Importante:</strong> Guarde essas credenciais em local seguro. Você pode alterá-las após o primeiro acesso.
-            </p>
-            
-            <p style="color: #666; font-size: 14px;">
-              Dúvidas? Entre em contato: <a href="mailto:{{suporte}}">{{suporte}}</a>
-            </p>
-          </div>
-        </body>
-        </html>
-      `; // Template padrão se não houver um no produto
+      // --- 6. Lógica de envio de e-mail transacional (após aprovação) ---
+      const emailTransactionalData = (paymentRecord?.metadata as any)?.email_transactional_data;
+      console.log('WEBHOOK_PAYMENT_DEBUG: emailTransactionalData do payment metadata:', emailTransactionalData);
 
-      const supportEmail = Deno.env.get('SUPPORT_EMAIL') || 'suporte@elyondigital.com'; // Definir um email de suporte padrão
+      if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
+        console.log('WEBHOOK_PAYMENT_DEBUG: Disparando e-mail transacional...');
+        const productName = emailTransactionalData.productName || paymentRecord.checkouts?.products?.name || 'Seu Produto';
+        const customerNameForEmail = (customerData as any).name || (customerData as any).email.split('@')[0];
+        const customerEmailForEmail = (customerData as any).email || null;
 
-      const processedHtmlBody = emailTemplate
-        .replace(/{{nome}}/g, customerName)
-        .replace(/{{produto}}/g, product.name)
-        .replace(/{{username}}/g, username || customerEmail)
-        .replace(/{{password}}/g, password || 'Senha gerada automaticamente')
-        .replace(/{{url_acesso}}/g, product.access_url || 'https://elyondigital.com/acesso')
-        .replace(/{{suporte}}/g, supportEmail);
+        const accessLink = emailTransactionalData.deliverableLink || paymentRecord.checkouts?.products?.member_area_link || paymentRecord.checkouts?.products?.file_url || '';
 
-      // --- 7. Chamar a Edge Function de envio de email (send-transactional-email) ---
-      if (!accessSent) { // Evitar reenvio se já foi enviado
-        console.log('WEBHOOK_PAYMENT_DEBUG: Chamando send-transactional-email...');
-        const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
-          'send-transactional-email',
-          {
-            body: {
-              to: customerEmail,
-              subject: `Seu acesso ao produto: ${product.name}`,
-              html: processedHtmlBody,
-              fromEmail: supportEmail,
-              fromName: 'Elyon Digital',
-              sellerUserId: checkout.user_id, // Assumindo que o checkout tem user_id do vendedor
+        const emailSubjectTemplate = emailTransactionalData.transactionalEmailSubject || 'Seu acesso ao produto Elyon Digital!';
+        const emailBodyTemplate = emailTransactionalData.transactionalEmailBody || 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital';
+
+        const finalSubject = emailSubjectTemplate
+          .replace(/{customer_name}/g, customerNameForEmail)
+          .replace(/{product_name}/g, productName);
+
+        const finalBody = emailBodyTemplate
+          .replace(/{customer_name}/g, customerNameForEmail)
+          .replace(/{product_name}/g, productName)
+          .replace(/{access_link}/g, accessLink);
+
+        if (customerEmailForEmail) {
+          try {
+            console.log('WEBHOOK_PAYMENT_DEBUG: Invoking send-transactional-email with:', {
+              to: customerEmailForEmail,
+              subject: finalSubject,
+              html: finalBody.replace(/\n/g, '<br/>'),
+              sellerUserId: emailTransactionalData.sellerUserId,
+            });
+            const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
+              'send-transactional-email',
+              {
+                body: {
+                  to: customerEmailForEmail,
+                  subject: finalSubject,
+                  html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
+                  sellerUserId: emailTransactionalData.sellerUserId,
+                }
+              }
+            );
+
+            if (emailSendError) {
+              console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
+              await supabase.from('product_deliveries').insert({
+                purchase_id: purchaseId,
+                user_id: userId,
+                status: 'failed',
+                error_message: `Erro ao invocar função de email: ${emailSendError.message}`,
+              });
+            } else if (!emailSendResult?.success) {
+              console.error('WEBHOOK_PAYMENT_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
+              await supabase.from('product_deliveries').insert({
+                purchase_id: purchaseId,
+                user_id: userId,
+                status: 'failed',
+                error_message: `Falha no envio do e-mail: ${emailSendResult?.error}`,
+              });
+            } else {
+              console.log('WEBHOOK_PAYMENT_DEBUG: E-mail transacional disparado com sucesso para:', customerEmailForEmail);
+              // --- 7. Atualizar access_sent e registrar em product_deliveries ---
+              await supabase.from('product_purchases').update({
+                access_sent: true,
+                access_sent_at: new Date().toISOString(),
+              }).eq('id', purchaseId);
+
+              await supabase.from('product_deliveries').insert({
+                purchase_id: purchaseId,
+                user_id: userId,
+                status: 'sent',
+                error_message: null,
+              });
             }
+          } catch (invokeError) {
+            console.error('WEBHOOK_PAYMENT_DEBUG: Exceção ao invocar send-transactional-email:', invokeError);
+            await supabase.from('product_deliveries').insert({
+              purchase_id: purchaseId,
+              user_id: userId,
+              status: 'failed',
+              error_message: `Exceção ao invocar função de email: ${invokeError.message}`,
+            });
           }
-        );
-
-        if (emailSendError) {
-          console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
-          await supabase.from('product_deliveries').insert({
-            purchase_id: purchaseId,
-            user_id: userId,
-            status: 'failed',
-            error_message: `Erro ao invocar função de email: ${emailSendError.message}`,
-          });
-        } else if (!emailSendResult?.success) {
-          console.error('WEBHOOK_PAYMENT_DEBUG: Falha no envio do e-mail transacional:', emailSendResult?.error);
-          await supabase.from('product_deliveries').insert({
-            purchase_id: purchaseId,
-            user_id: userId,
-            status: 'failed',
-            error_message: `Falha no envio do e-mail: ${emailSendResult?.error}`,
-          });
         } else {
-          console.log('WEBHOOK_PAYMENT_DEBUG: E-mail transacional disparado com sucesso para:', customerEmail);
-          // --- 8. Atualizar access_sent e registrar em product_deliveries ---
-          await supabase.from('product_purchases').update({
-            access_sent: true,
-            access_sent_at: new Date().toISOString(),
-          }).eq('id', purchaseId);
-
+          console.warn('WEBHOOK_PAYMENT_DEBUG: Não foi possível enviar e-mail transacional: email do cliente ausente.');
           await supabase.from('product_deliveries').insert({
             purchase_id: purchaseId,
             user_id: userId,
-            status: 'sent',
-            error_message: null,
+            status: 'failed',
+            error_message: 'Não foi possível enviar e-mail transacional: email do cliente ausente.',
           });
         }
       } else {
-        console.log('WEBHOOK_PAYMENT_DEBUG: Acesso já enviado para esta compra.');
+        console.log('WEBHOOK_PAYMENT_DEBUG: Envio de e-mail transacional desabilitado ou dados incompletos no metadata.');
+        await supabase.from('product_deliveries').insert({
+          purchase_id: purchaseId,
+          user_id: userId,
+          status: 'skipped',
+          error_message: 'Envio de e-mail transacional desabilitado ou dados incompletos no metadata.',
+        });
       }
     } else {
       console.log('WEBHOOK_PAYMENT_DEBUG: Pagamento não aprovado, ignorando envio de acesso.');

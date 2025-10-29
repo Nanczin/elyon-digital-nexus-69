@@ -295,7 +295,7 @@ const AdminCheckouts = () => {
       },
       sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true, // Carregar o novo campo
       transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initialFormData.transactionalEmailSubject, // Carregar assunto
-      transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.transactionalEmailBody.replace(/{access_link}/g, defaultAccessLink), // Carregar corpo e preencher link padrão
+      transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.transactionalEmailBody, // Carregar corpo como template puro
     };
   };
 
