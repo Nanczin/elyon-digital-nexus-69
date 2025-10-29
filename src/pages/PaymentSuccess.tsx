@@ -40,11 +40,10 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Centralized function to derive the deliverable link
   const deriveDeliverableLink = (
     product: CheckoutData['products'] | null,
     deliverableConfig: DeliverableConfig | null,
-    emailTransactionalDeliverableLink: string | null // From metadata, highest priority
+    emailTransactionalDeliverableLink: string | null
   ): string | null => {
     console.log('PAYMENT_SUCCESS_DEBUG: deriveDeliverableLink called with:', { product, deliverableConfig, emailTransactionalDeliverableLink });
     if (emailTransactionalDeliverableLink) {
@@ -63,7 +62,7 @@ const PaymentSuccess = () => {
     return null;
   };
 
-  const fetchAndVerifyPayment = async (mpIdToCheck: string, currentPaymentData: any) => {
+  const fetchAndVerifyPayment = async (mpIdToCheck: string) => {
     console.log('PAYMENT_SUCCESS_DEBUG: 7. Starting fetchAndVerifyPayment for MP ID:', mpIdToCheck);
     let fetchedPaymentFromDb: any = null;
 
@@ -86,7 +85,6 @@ const PaymentSuccess = () => {
           setPaymentStatus('completed');
           setIsChecking(false);
           clearPolling();
-          // REMOVIDO: window.history.replaceState({}, '', '/payment-success?status=approved');
           localStorage.removeItem('paymentData'); // Limpar localStorage ao completar
           console.log('PAYMENT_SUCCESS_DEBUG: 12. Status updated to COMPLETED (from Edge Function) and localStorage cleared.');
           fetchedPaymentFromDb = res.data.payment;
@@ -99,7 +97,6 @@ const PaymentSuccess = () => {
           console.log('PAYMENT_SUCCESS_DEBUG: 13. Status updated to FAILED (from Edge Function) and localStorage cleared.');
         } else {
           setLastDetail(res.data.status_detail || null);
-          // Do NOT stop checking if it's still pending, continue polling
           console.log('PAYMENT_SUCCESS_DEBUG: 14. Status still PENDING, last detail:', res.data.status_detail);
         }
       } else if (res.error) {
@@ -121,14 +118,9 @@ const PaymentSuccess = () => {
 
     if (fetchedPaymentFromDb) {
       console.log('PAYMENT_SUCCESS_DEBUG: 20. Processing fetchedPaymentFromDb for product/deliverable data.');
-      console.log('PAYMENT_SUCCESS_DEBUG: 20.1. fetchedPaymentFromDb.checkouts:', JSON.stringify(fetchedPaymentFromDb.checkouts, null, 2));
-      console.log('PAYMENT_SUCCESS_DEBUG: 20.2. fetchedPaymentFromDb.checkouts?.products:', JSON.stringify(fetchedPaymentFromDb.checkouts?.products, null, 2));
-      console.log('PAYMENT_SUCCESS_DEBUG: 20.3. fetchedPaymentFromDb.checkouts?.form_fields?.deliverable:', JSON.stringify(fetchedPaymentFromDb.checkouts?.form_fields?.deliverable, null, 2));
-
       const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] || null;
       const emailTransactionalDeliverableLink = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink || null;
       const currentCheckoutDeliverableConfig = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
-      
       const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
 
       setProductData(currentProduct);
@@ -142,11 +134,7 @@ const PaymentSuccess = () => {
       );
       setDeliverableLinkToDisplay(determinedLink);
       console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentCheckoutDeliverableConfig, determinedLink, currentSendTransactionalEmail });
-      console.log('PAYMENT_SUCCESS_DEBUG: 21.1. Derived currentProduct:', JSON.stringify(currentProduct, null, 2));
-      console.log('PAYMENT_SUCCESS_DEBUG: 21.2. Derived currentCheckoutDeliverableConfig:', JSON.stringify(currentCheckoutDeliverableConfig, null, 2));
-      console.log('PAYMENT_SUCCESS_DEBUG: 21.3. Final determinedLink (from fetchAndVerifyPayment):', determinedLink);
     } else {
-      // Ensure productData and checkoutDeliverable are reset if no payment is fetched
       setProductData(null);
       setCheckoutDeliverable(null);
       setDeliverableLinkToDisplay(null);
@@ -165,10 +153,9 @@ const PaymentSuccess = () => {
       setPaymentData(initialPaymentData);
       setSendTransactionalEmail(initialPaymentData.sendTransactionalEmail ?? true);
 
-      // Derive deliverable link immediately from localStorage data
       const productFromLocalStorage = initialPaymentData.payment?.checkouts?.products as CheckoutData['products'] || null;
       const checkoutDeliverableFromLocalStorage = initialPaymentData.payment?.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
-      const emailTransactionalDeliverableLinkFromLocalStorage = initialPaymentData.deliverableLink || null; // This is the pre-derived link from Checkout.tsx
+      const emailTransactionalDeliverableLinkFromLocalStorage = initialPaymentData.deliverableLink || null;
 
       const initialDeterminedLink = deriveDeliverableLink(
         productFromLocalStorage,
@@ -178,7 +165,6 @@ const PaymentSuccess = () => {
       setDeliverableLinkToDisplay(initialDeterminedLink);
 
       console.log('PAYMENT_SUCCESS_DEBUG: 2. Initialized from localStorage (initial effect):', { initialPaymentData, initialDeterminedLink, sendTransactionalEmail: initialPaymentData.sendTransactionalEmail });
-      console.log('PAYMENT_SUCCESS_DEBUG: 2.1. Full initialPaymentData from localStorage:', JSON.stringify(initialPaymentData, null, 2));
     }
 
     const urlStatus = searchParams.get('status');
@@ -197,12 +183,11 @@ const PaymentSuccess = () => {
       setPaymentStatus('pending');
       setIsChecking(false); // For PIX with QR, show QR immediately, not generic checking
       console.log('PAYMENT_SUCCESS_DEBUG: 5. Initial status: PENDING (PIX with QR code)');
-      // Start polling for PIX payments
       if (mpIdToCheck) {
         intervalRef.current = setInterval(() => {
           if (isMounted.current && paymentStatus === 'pending') {
             console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check (PIX): paymentStatus is PENDING, re-fetching...');
-            fetchAndVerifyPayment(mpIdToCheck, initialPaymentData);
+            fetchAndVerifyPayment(mpIdToCheck);
           } else {
             clearPolling();
           }
@@ -212,19 +197,17 @@ const PaymentSuccess = () => {
       setPaymentStatus('pending');
       setIsChecking(true);
       console.log('PAYMENT_SUCCESS_DEBUG: 6. Initial status: PENDING (default, starting check)');
-      fetchAndVerifyPayment(mpIdToCheck, initialPaymentData); // Initial check
+      fetchAndVerifyPayment(mpIdToCheck); // Initial check
       
-      // Start polling only if it's a payment that needs verification
       intervalRef.current = setInterval(() => {
-        if (isMounted.current && paymentStatus === 'pending') { // Only poll if still pending
+        if (isMounted.current && paymentStatus === 'pending') {
           console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check: paymentStatus is PENDING, re-fetching...');
-          fetchAndVerifyPayment(mpIdToCheck, initialPaymentData);
+          fetchAndVerifyPayment(mpIdToCheck);
         } else {
           clearPolling();
         }
-      }, 5000) as unknown as number; // Cast to number for setInterval return type
+      }, 5000) as unknown as number;
     } else {
-      // No payment data or MP ID, assume failed or invalid access
       setPaymentStatus('failed');
       setIsChecking(false);
       clearPolling();
@@ -237,24 +220,18 @@ const PaymentSuccess = () => {
       clearPolling();
       console.log('PAYMENT_SUCCESS_DEBUG: 25. Component unmounted or effect re-ran, interval cleared.');
     };
-  }, [searchParams, paymentStatus]); // Depend on searchParams and paymentStatus to re-evaluate initial state and polling
+  }, [searchParams, paymentStatus]);
 
-  // REMOVIDO: Este useEffect foi removido para evitar o redirecionamento automático
-  // useEffect(() => {
-  //   console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
-  //   let redirectTimer: NodeJS.Timeout;
-  //   if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
-  //     console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. Redirecting in 3 seconds...');
-  //     toast({
-  //       title: "Pagamento Aprovado! ✅",
-  //       description: "Redirecionando para o seu produto em 3 segundos...",
-  //     });
-  //     redirectTimer = setTimeout(() => {
-  //       window.location.href = deliverableLinkToDisplay; // Redirecionamento completo
-  //     }, 3000); // Redireciona após 3 segundos
-  //   }
-  //   return () => clearTimeout(redirectTimer); // Limpa o timer se o componente desmontar ou as dependências mudarem
-  // }, [paymentStatus, deliverableLinkToDisplay, toast]);
+  useEffect(() => {
+    console.log('PAYMENT_SUCCESS_DEBUG: Redirection useEffect triggered. Current values:', { paymentStatus, deliverableLinkToDisplay });
+    if (paymentStatus === 'completed' && deliverableLinkToDisplay) {
+      console.log('PAYMENT_SUCCESS_DEBUG: Payment completed and deliverable link found. User will stay on this page.');
+      toast({
+        title: "Pagamento Aprovado! ✅",
+        description: "Seu acesso ao produto está liberado. Clique no botão abaixo para acessá-lo.",
+      });
+    }
+  }, [paymentStatus, deliverableLinkToDisplay, toast]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -270,19 +247,14 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Função para definir o texto do botão do entregável
   const getDeliverableButtonText = (link: string | null) => {
-    if (!link) return 'Acessar Produto'; // Fallback genérico
-    
-    // Prioriza o nome do entregável configurado no checkout, depois o nome do produto base
+    if (!link) return 'Acessar Produto';
     if (checkoutDeliverable?.name) {
       return `Acessar ${checkoutDeliverable.name}`;
     }
     if (productData?.name) {
       return `Acessar ${productData.name}`;
     }
-    
-    // Fallback se nenhum nome for encontrado
     return 'Acessar Produto';
   };
 
@@ -330,10 +302,10 @@ const PaymentSuccess = () => {
                   Parabéns! Agora você tem acesso completo ao seu produto.
                 </p>
                 
-                {deliverableLinkToDisplay && ( // Usar deliverableLinkToDisplay diretamente
+                {deliverableLinkToDisplay && (
                   <div className="bg-white border border-green-200 rounded-lg p-6 space-y-4">
                     <h3 className="font-semibold text-lg text-gray-800">
-                      {checkoutDeliverable?.name || productData?.name || 'Seu Produto'} {/* Fallback para nome */}
+                      {checkoutDeliverable?.name || productData?.name || 'Seu Produto'}
                     </h3>
                     
                     {(checkoutDeliverable?.description || productData?.description) && (
@@ -365,7 +337,7 @@ const PaymentSuccess = () => {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h3 className="font-semibold text-green-800 mb-2">Importante:</h3>
                   <ul className="text-sm text-green-700 space-y-1 text-left">
-                    {sendTransactionalEmail && ( // Condicionalmente exibir a mensagem de e-mail
+                    {sendTransactionalEmail && (
                       <li>• Você também receberá um e-mail com os detalhes</li>
                     )}
                     <li>• Guarde este link para acessar quando quiser</li>
@@ -438,31 +410,28 @@ const PaymentSuccess = () => {
     if (paymentData?.paymentMethod === 'creditCard') {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-          <div className="container mx-auto px-4 max-w-2xl">
-            <Card className="border-blue-200">
-              <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <CreditCard className="h-8 w-8 text-blue-600 animate-pulse" />
-                </div>
-                <CardTitle className="text-2xl text-blue-700">
-                  Processando pagamento...
-                </CardTitle>
-                <p className="text-muted-foreground">
-                  Estamos processando seu pagamento aqui no checkout. Aguarde a confirmação, sem redirecionamento externo.
-                </p>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-sm text-muted-foreground mt-2">
-                  Status atual: {paymentStatus}{lastDetail ? ` (${lastDetail})` : ''}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="border-blue-200">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <CreditCard className="h-8 w-8 text-blue-600 animate-pulse" />
+              </div>
+              <CardTitle className="text-2xl text-blue-700">
+                Processando pagamento...
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Estamos processando seu pagamento aqui no checkout. Aguarde a confirmação, sem redirecionamento externo.
+              </p>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-sm text-muted-foreground mt-2">
+                Status atual: {paymentStatus}{lastDetail ? ` (${lastDetail})` : ''}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       );
     }
     
-    // Default pending state for PIX
     const primaryColor = paymentData?.checkoutStyles?.primaryColor || '#ec4899';
     const gradientColor = paymentData?.checkoutStyles?.gradientColor || primaryColor;
     return (
@@ -617,48 +586,29 @@ const PaymentSuccess = () => {
     );
   }
 
+  // Fallback return for unexpected payment statuses or initial states
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 max-w-2xl">
-        <Card className="border-green-200">
+        <Card className="border-gray-200">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-8 w-8 text-gray-600" />
             </div>
-            <CardTitle className="text-2xl text-green-700">
-              Pagamento Processado!
+            <CardTitle className="text-2xl text-gray-700">
+              Status do Pagamento Desconhecido
             </CardTitle>
             <p className="text-muted-foreground">
-              Seu pedido foi processado com sucesso
+              Não foi possível determinar o status do seu pagamento. Por favor, verifique seu e-mail ou entre em contato com o suporte.
             </p>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="text-center space-y-4">
-              <p className="text-lg">
-                Obrigado pela sua compra! Você receberá um e-mail com os detalhes do seu pedido e instruções de acesso.
-              </p>
-              
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-800 mb-2">Próximos passos:</h3>
-                <ul className="text-sm text-green-700 space-y-1 text-left">
-                  {sendTransactionalEmail && ( // Condicionalmente exibir a mensagem de e-mail
-                    <li>• Verifique seu e-mail (incluindo spam)</li>
-                  )}
-                  <li>• Acesse o produto através do link enviado</li>
-                  <li>• Entre em contato conosco se tiver dúvidas</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="text-center text-sm text-muted-foreground">
-              <p>
-                Precisa de ajuda? Entre em contato conosco através do WhatsApp ou e-mail.
-              </p>
-            </div>
+          <CardContent className="text-center">
+            <Button onClick={() => navigate('/')}>Voltar ao Início</Button>
           </CardContent>
         </Card>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default PaymentSuccess;
