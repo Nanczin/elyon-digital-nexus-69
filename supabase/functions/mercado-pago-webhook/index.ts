@@ -72,15 +72,6 @@ serve(async (req) => {
       
       // Try to get customer data from the checkout or create default
       if (checkoutId) {
-        // REMOVIDO: Não precisamos mais buscar checkoutData aqui para email, pois estará no metadata do payment
-        // const { data: checkoutData, error: checkoutDataError } = await supabase
-        //   .from('checkouts')
-        //   .select('user_id, form_fields, products(name, member_area_link, file_url)') // Selecionar user_id, form_fields e dados do produto
-        //   .eq('id', checkoutId)
-        //   .single();
-        
-        // if (checkoutDataError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar checkoutData:', checkoutDataError);
-
         // Create customer data from MP payment info
         customerData = {
           name: mpPayment.payer?.first_name && mpPayment.payer?.last_name 
@@ -202,9 +193,6 @@ serve(async (req) => {
 
           // Obter produto a partir do checkout
           let productId: string | null = null;
-          // let checkoutSellerUserId: string | null = null; // REMOVIDO: Agora vem do metadata do payment
-          // let checkoutFormFields: any = null; // REMOVIDO: Agora vem do metadata do payment
-          // let productData: any = null; // REMOVIDO: Agora vem do metadata do payment
           if (checkoutId) {
             console.log('WEBHOOK_MP_DEBUG: Buscando product_id para checkoutId:', checkoutId);
             const { data: checkoutRow, error: checkoutRowError } = await supabase
@@ -214,9 +202,6 @@ serve(async (req) => {
               .maybeSingle();
             if (checkoutRowError) console.error('WEBHOOK_MP_DEBUG: Erro ao buscar product_id do checkout:', checkoutRowError);
             productId = checkoutRow?.product_id || null;
-            // checkoutSellerUserId = checkoutRow?.user_id || null; // REMOVIDO
-            // checkoutFormFields = checkoutRow?.form_fields || null; // REMOVIDO
-            // productData = checkoutRow?.products || null; // REMOVIDO
           }
           console.log('WEBHOOK_MP_DEBUG: Product ID para ordem/acesso:', productId);
 
@@ -324,8 +309,8 @@ serve(async (req) => {
                   to: customerEmail,
                   subject: finalSubject,
                   html: finalBody.replace(/\n/g, '<br/>'),
-                  fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com',
-                  fromName: 'Elyon Digital',
+                  fromEmail: emailTransactionalData.fromEmail || 'noreply@elyondigital.com', // Usar fromEmail do metadata
+                  fromName: emailTransactionalData.fromName || 'Elyon Digital', // Usar fromName do metadata
                   sellerUserId: emailTransactionalData.sellerUserId,
                 });
                 const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
@@ -335,8 +320,8 @@ serve(async (req) => {
                       to: customerEmail,
                       subject: finalSubject,
                       html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                      fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
-                      fromName: 'Elyon Digital',
+                      fromEmail: emailTransactionalData.fromEmail || 'noreply@elyondigital.com', // Usar fromEmail do metadata
+                      fromName: emailTransactionalData.fromName || 'Elyon Digital', // Usar fromName do metadata
                       sellerUserId: emailTransactionalData.sellerUserId,
                     }
                   }

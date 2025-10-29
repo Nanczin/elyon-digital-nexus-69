@@ -104,9 +104,6 @@ serve(async (req) => {
 
         // Obter product_id, user_id do vendedor, form_fields e dados do produto
         let productId: string | null = null;
-        // let checkoutSellerUserId: string | null = null; // REMOVIDO: Agora vem do metadata do payment
-        // let checkoutFormFields: any = null; // REMOVIDO: Agora vem do metadata do payment
-        // let productData: any = null; // REMOVIDO: Agora vem do metadata do payment
 
         if (checkoutId) {
           const { data: chk, error: chkError } = await supabase
@@ -116,9 +113,6 @@ serve(async (req) => {
             .maybeSingle();
           if (chkError) console.error('VERIFY_MP_DEBUG: Erro ao buscar product_id do checkout:', chkError);
           productId = chk?.product_id || null;
-          // checkoutSellerUserId = chk?.user_id || null; // REMOVIDO
-          // checkoutFormFields = chk?.form_fields || null; // REMOVIDO
-          // productData = chk?.products || null; // REMOVIDO
         }
         console.log('VERIFY_MP_DEBUG: Product ID para pós-processamento:', productId);
 
@@ -293,8 +287,8 @@ serve(async (req) => {
                 to: customerEmail,
                 subject: finalSubject,
                 html: finalBody.replace(/\n/g, '<br/>'),
-                fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com',
-                fromName: 'Elyon Digital',
+                fromEmail: emailTransactionalData.fromEmail || 'noreply@elyondigital.com', // Usar fromEmail do metadata
+                fromName: emailTransactionalData.fromName || 'Elyon Digital', // Usar fromName do metadata
                 sellerUserId: emailTransactionalData.sellerUserId,
               });
               const { data: emailSendResult, error: emailSendError } = await supabase.functions.invoke(
@@ -304,8 +298,8 @@ serve(async (req) => {
                     to: customerEmail,
                     subject: finalSubject,
                     html: finalBody.replace(/\n/g, '<br/>'), // Converter quebras de linha para HTML
-                    fromEmail: emailTransactionalData.supportEmail || 'noreply@elyondigital.com', // Usar email de suporte do checkout ou um padrão
-                    fromName: 'Elyon Digital',
+                    fromEmail: emailTransactionalData.fromEmail || 'noreply@elyondigital.com', // Usar fromEmail do metadata
+                    fromName: emailTransactionalData.fromName || 'Elyon Digital', // Usar fromName do metadata
                     sellerUserId: emailTransactionalData.sellerUserId,
                   }
                 }
