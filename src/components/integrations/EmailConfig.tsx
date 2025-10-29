@@ -205,7 +205,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
             
             <div className="flex gap-2">
               <Button onClick={saveConfig} disabled={saving || loading} className="flex-1">
-                {saving ? 'Salvando...' : 'Salvar Configuração'}
+                {saving ? 'Salvando...' : (isConfigured ? 'Salvar Alterações' : 'Adicionar Configuração')}
               </Button>
               
               {isConfigured && (
