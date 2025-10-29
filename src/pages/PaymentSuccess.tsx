@@ -97,7 +97,7 @@ const PaymentSuccess = () => {
           console.log('PAYMENT_SUCCESS_DEBUG: 13. Status updated to FAILED (from Edge Function)');
         } else {
           setLastDetail(res.data.status_detail || null);
-          setIsChecking(false); // Stop checking if it's still pending after first check
+          // Do NOT stop checking if it's still pending, continue polling
           console.log('PAYMENT_SUCCESS_DEBUG: 14. Status still PENDING, last detail:', res.data.status_detail);
         }
       } else if (res.error) {
@@ -121,19 +121,19 @@ const PaymentSuccess = () => {
       console.log('PAYMENT_SUCCESS_DEBUG: 20.2. fetchedPaymentFromDb.checkouts?.products:', JSON.stringify(fetchedPaymentFromDb.checkouts?.products, null, 2));
       console.log('PAYMENT_SUCCESS_DEBUG: 20.3. fetchedPaymentFromDb.checkouts?.form_fields?.deliverable:', JSON.stringify(fetchedPaymentFromDb.checkouts?.form_fields?.deliverable, null, 2));
 
-      const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] | undefined;
+      const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] || null;
       const emailTransactionalDeliverableLink = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink || null;
-      const currentCheckoutDeliverableConfig = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
+      const currentCheckoutDeliverableConfig = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       
       const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
 
-      setProductData(currentProduct || null);
-      setCheckoutDeliverable(currentCheckoutDeliverableConfig || null);
+      setProductData(currentProduct);
+      setCheckoutDeliverable(currentCheckoutDeliverableConfig);
       setSendTransactionalEmail(currentSendTransactionalEmail);
 
       const determinedLink = deriveDeliverableLink(
-        currentProduct || null,
-        currentCheckoutDeliverableConfig || null,
+        currentProduct,
+        currentCheckoutDeliverableConfig,
         emailTransactionalDeliverableLink
       );
       setDeliverableLinkToDisplay(determinedLink);
@@ -156,13 +156,13 @@ const PaymentSuccess = () => {
       setSendTransactionalEmail(initialPaymentData.sendTransactionalEmail ?? true);
 
       // Derive deliverable link immediately from localStorage data
-      const productFromLocalStorage = initialPaymentData.payment?.checkouts?.products as CheckoutData['products'] | undefined;
-      const checkoutDeliverableFromLocalStorage = initialPaymentData.payment?.checkouts?.form_fields?.deliverable as DeliverableConfig | undefined;
+      const productFromLocalStorage = initialPaymentData.payment?.checkouts?.products as CheckoutData['products'] || null;
+      const checkoutDeliverableFromLocalStorage = initialPaymentData.payment?.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const emailTransactionalDeliverableLinkFromLocalStorage = initialPaymentData.deliverableLink || null; // This is the pre-derived link from Checkout.tsx
 
       const initialDeterminedLink = deriveDeliverableLink(
-        productFromLocalStorage || null,
-        checkoutDeliverableFromLocalStorage || null,
+        productFromLocalStorage,
+        checkoutDeliverableFromLocalStorage,
         emailTransactionalDeliverableLinkFromLocalStorage
       );
       setDeliverableLinkToDisplay(initialDeterminedLink);
@@ -186,6 +186,17 @@ const PaymentSuccess = () => {
       setPaymentStatus('pending');
       setIsChecking(false); // For PIX with QR, show QR immediately, not generic checking
       console.log('PAYMENT_SUCCESS_DEBUG: 5. Initial status: PENDING (PIX with QR code)');
+      // Start polling for PIX payments
+      if (mpIdToCheck) {
+        intervalRef.current = setInterval(() => {
+          if (isMounted.current && paymentStatus === 'pending') {
+            console.log('PAYMENT_SUCCESS_DEBUG: 23. Interval check (PIX): paymentStatus is PENDING, re-fetching...');
+            fetchAndVerifyPayment(mpIdToCheck, initialPaymentData);
+          } else {
+            clearPolling();
+          }
+        }, 5000) as unknown as number;
+      }
     } else if (mpIdToCheck) {
       setPaymentStatus('pending');
       setIsChecking(true);
@@ -214,7 +225,7 @@ const PaymentSuccess = () => {
       clearPolling();
       console.log('PAYMENT_SUCCESS_DEBUG: 25. Component unmounted or effect re-ran, interval cleared.');
     };
-  }, [searchParams]); // Depend on searchParams to re-evaluate initial state
+  }, [searchParams, paymentStatus]); // Depend on searchParams and paymentStatus to re-evaluate initial state and polling
 
   // Novo useEffect para lidar com o redirecionamento automático
   useEffect(() => {
