@@ -12,9 +12,6 @@ interface EmailRequest {
   to: string;
   subject: string;
   html: string;
-  // fromEmail and fromName are now optional, as we'll prioritize from smtp_config
-  fromEmail?: string;
-  fromName?: string;
   sellerUserId: string; // ID do usuário (vendedor) que configurou o SMTP
 }
 
@@ -54,39 +51,43 @@ serve(async (req) => {
     }
 
     const smtpConfig = integration?.smtp_config as any; // Cast para any para acessar propriedades
-    if (!smtpConfig || !smtpConfig.host || !smtpConfig.port || !smtpConfig.username || !smtpConfig.password || !smtpConfig.fromEmail) {
+    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
       console.error('SEND_EMAIL_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
       return new Response(
-        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (host, port, username, password, fromEmail são obrigatórios)' }),
+        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (email, appPassword, displayName são obrigatórios)' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // Priorizar fromEmail e fromName da configuração SMTP salva
-    const finalFromEmail = smtpConfig.fromEmail;
-    const finalFromName = smtpConfig.fromName || 'Elyon Digital'; // Fallback para nome padrão
+    // Derivar os campos SMTP da configuração simplificada, com fallbacks
+    const finalHost = smtpConfig.host || 'smtp.gmail.com'; // Padrão para Gmail
+    const finalPort = Number(smtpConfig.port || '587');
+    const finalSecure = smtpConfig.secure ?? true; // Padrão para true
+    const finalUsername = smtpConfig.email; // O email é o username
+    const finalPassword = smtpConfig.appPassword; // A senha do app é a senha
+    const finalFromEmail = smtpConfig.email; // O email é o remetente
+    const finalFromName = smtpConfig.displayName || 'Elyon Digital'; // Nome de exibição ou padrão
 
     console.log('SEND_EMAIL_DEBUG: SMTP Config loaded:', {
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      username: smtpConfig.username,
-      password: smtpConfig.password ? '***MASKED***' : 'MISSING',
+      host: finalHost,
+      port: finalPort,
+      username: finalUsername,
+      password: finalPassword ? '***MASKED***' : 'MISSING',
       fromEmail: finalFromEmail,
       fromName: finalFromName,
-      secure: smtpConfig.secure,
+      secure: finalSecure,
     });
     console.log('SEND_EMAIL_DEBUG: Email details:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING' });
-
 
     // 2. Configurar e enviar e-mail
     const client = new SmtpClient();
     try {
       await client.connect({
-        hostname: smtpConfig.host,
-        port: Number(smtpConfig.port),
-        tls: smtpConfig.secure, // Use the 'secure' flag from config
-        username: smtpConfig.username,
-        password: smtpConfig.password,
+        hostname: finalHost,
+        port: finalPort,
+        tls: finalSecure,
+        username: finalUsername,
+        password: finalPassword,
       });
 
       await client.send({

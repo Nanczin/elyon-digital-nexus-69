@@ -4,19 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Plus } from 'lucide-react'; // Importar ícones
+import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useIntegrations } from '@/hooks/useIntegrations';
-
-interface EmailConfig {
-  host: string;
-  port: string;
-  username: string;
-  password: string;
-  fromEmail: string;
-  fromName: string;
-  secure: boolean;
-}
+import { EmailConfig as SimplifiedEmailConfig } from '@/integrations/supabase/types'; // Importar a interface simplificada
 
 interface EmailConfigProps {
   children: React.ReactNode;
@@ -24,39 +15,30 @@ interface EmailConfigProps {
 
 const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
   const { emailConfig, saveIntegrations, loading } = useIntegrations();
-  const [newAccount, setNewAccount] = useState<EmailConfig>({ // Renomeado para newAccount
-    host: '',
-    port: '587',
-    username: '',
-    password: '',
-    fromEmail: '',
-    fromName: '',
-    secure: true
+  const [newAccount, setNewAccount] = useState<SimplifiedEmailConfig>({
+    email: '',
+    appPassword: '',
+    displayName: '',
   });
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  // Resetar o formulário de nova conta quando o diálogo abre ou fecha
   useEffect(() => {
     if (!isOpen) {
       setNewAccount({
-        host: '',
-        port: '587',
-        username: '',
-        password: '',
-        fromEmail: '',
-        fromName: '',
-        secure: true
+        email: '',
+        appPassword: '',
+        displayName: '',
       });
     }
   }, [isOpen]);
 
-  const addAccount = async () => { // Renomeado para addAccount
-    if (!newAccount.host || !newAccount.username || !newAccount.password || !newAccount.fromEmail) {
+  const addAccount = async () => {
+    if (!newAccount.email || !newAccount.appPassword || !newAccount.displayName) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios para a nova conta",
+        description: "Por favor, preencha todos os campos obrigatórios",
         variant: "destructive",
       });
       return;
@@ -64,14 +46,24 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
 
     try {
       setSaving(true);
-      await saveIntegrations({ emailConfig: newAccount }); // Salva a nova conta
+      // Construir o objeto smtp_config com os campos simplificados e os padrões SMTP
+      const smtpConfigPayload: SimplifiedEmailConfig = {
+        email: newAccount.email,
+        appPassword: newAccount.appPassword,
+        displayName: newAccount.displayName,
+        host: 'smtp.gmail.com', // Padrão para Gmail, pode ser ajustado se necessário
+        port: '587',
+        secure: true,
+      };
+
+      await saveIntegrations({ emailConfig: smtpConfigPayload });
       
       toast({
         title: "Sucesso",
         description: "Configuração de email salva com sucesso!",
       });
       
-      setIsOpen(false); // Fecha o diálogo após salvar
+      setIsOpen(false);
     } catch (error) {
       toast({
         title: "Erro",
@@ -83,10 +75,10 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
     }
   };
 
-  const removeCurrentAccount = async () => { // Nova função para remover a conta atual
+  const removeCurrentAccount = async () => {
     try {
       setSaving(true);
-      await saveIntegrations({ emailConfig: null }); // Remove a conta
+      await saveIntegrations({ emailConfig: null });
       
       toast({
         title: "Configuração removida",
@@ -103,7 +95,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
     }
   };
 
-  const isNewAccountFormValid = newAccount.host && newAccount.username && newAccount.password && newAccount.fromEmail;
+  const isNewAccountFormValid = newAccount.email && newAccount.appPassword && newAccount.displayName;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -116,14 +108,13 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Contas existentes (apenas uma, no caso do email) */}
           {emailConfig && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Conta Configurada</h3>
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center justify-between text-base">
-                    {emailConfig.fromName || emailConfig.fromEmail}
+                    {emailConfig.displayName || emailConfig.email}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -136,80 +127,51 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-sm text-muted-foreground">
-                    <p>Host: {emailConfig.host}</p>
-                    <p>Porta: {emailConfig.port}</p>
-                    <p>Email de Envio: {emailConfig.fromEmail}</p>
+                    <p>Email: {emailConfig.email}</p>
+                    <p>Nome de Exibição: {emailConfig.displayName}</p>
+                    {/* Não exibir a senha do app aqui por segurança */}
                   </div>
                 </CardContent>
               </Card>
             </div>
           )}
 
-          {/* Adicionar Nova Conta */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Adicionar Nova Conta</h3>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="host">Host SMTP *</Label>
-                  <Input
-                    id="host"
-                    value={newAccount.host}
-                    onChange={(e) => setNewAccount({...newAccount, host: e.target.value})}
-                    placeholder="smtp.exemplo.com"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="port">Porta *</Label>
-                  <Input
-                    id="port"
-                    value={newAccount.port}
-                    onChange={(e) => setNewAccount({...newAccount, port: e.target.value})}
-                    placeholder="587"
-                  />
-                </div>
-              </div>
-              
               <div>
-                <Label htmlFor="username">Usuário/Email *</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
-                  id="username"
-                  value={newAccount.username}
-                  onChange={(e) => setNewAccount({...newAccount, username: e.target.value})}
+                  id="email"
+                  type="email"
+                  value={newAccount.email}
+                  onChange={(e) => setNewAccount({...newAccount, email: e.target.value})}
                   placeholder="seu-email@exemplo.com"
                 />
               </div>
               
               <div>
-                <Label htmlFor="password">Senha *</Label>
+                <Label htmlFor="appPassword">Senha do App *</Label>
                 <Input
-                  id="password"
+                  id="appPassword"
                   type="password"
-                  value={newAccount.password}
-                  onChange={(e) => setNewAccount({...newAccount, password: e.target.value})}
-                  placeholder="sua-senha-ou-app-password"
+                  value={newAccount.appPassword}
+                  onChange={(e) => setNewAccount({...newAccount, appPassword: e.target.value})}
+                  placeholder="Sua senha de aplicativo (não a senha principal)"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Para Gmail, gere uma senha de app em Configurações de Segurança da sua conta Google.
+                </p>
               </div>
               
               <div>
-                <Label htmlFor="fromEmail">Email de Envio *</Label>
+                <Label htmlFor="displayName">Nome de Exibição *</Label>
                 <Input
-                  id="fromEmail"
-                  value={newAccount.fromEmail}
-                  onChange={(e) => setNewAccount({...newAccount, fromEmail: e.target.value})}
-                  placeholder="noreply@seudominio.com"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="fromName">Nome de Envio</Label>
-                <Input
-                  id="fromName"
-                  value={newAccount.fromName}
-                  onChange={(e) => setNewAccount({...newAccount, fromName: e.target.value})}
-                  placeholder="Sua Empresa"
+                  id="displayName"
+                  value={newAccount.displayName}
+                  onChange={(e) => setNewAccount({...newAccount, displayName: e.target.value})}
+                  placeholder="Nome da sua empresa ou seu nome"
                 />
               </div>
             </div>

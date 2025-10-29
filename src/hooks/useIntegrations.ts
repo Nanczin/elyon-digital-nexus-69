@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { EmailConfig as SimplifiedEmailConfig } from '@/integrations/supabase/types'; // Importar a interface simplificada
 
 interface MercadoPagoAccount {
   id: string;
@@ -26,22 +27,12 @@ interface UTMifyConfig {
   customDomain?: string;
 }
 
-interface EmailConfig {
-  host: string;
-  port: string;
-  username: string;
-  password: string;
-  fromEmail: string;
-  fromName: string;
-  secure: boolean;
-}
-
 export const useIntegrations = () => {
   const { user } = useAuth();
   const [mercadoPagoAccounts, setMercadoPagoAccounts] = useState<MercadoPagoAccount[]>([]);
   const [metaPixels, setMetaPixels] = useState<MetaPixel[]>([]);
   const [utmifyConfig, setUtmifyConfig] = useState<UTMifyConfig | null>(null);
-  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null);
+  const [emailConfig, setEmailConfig] = useState<SimplifiedEmailConfig | null>(null); // Usar a interface simplificada
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -78,7 +69,7 @@ export const useIntegrations = () => {
         setMercadoPagoAccounts(data.mercado_pago_access_token ? [{
           id: '1',
           name: 'Conta Principal',
-          accessToken: data.mercado_pago_access_token,
+          accessToken: data.mercado_pado_access_token,
           publicKey: data.mercado_pago_token_public || '',
           clientId: '',
           clientSecret: ''
@@ -99,7 +90,8 @@ export const useIntegrations = () => {
           customDomain: ''
         } : null);
 
-        setEmailConfig(data.smtp_config && typeof data.smtp_config === 'object' && Object.keys(data.smtp_config).length > 0 ? data.smtp_config as unknown as EmailConfig : null);
+        // Carregar a nova estrutura simplificada do smtp_config
+        setEmailConfig(data.smtp_config && typeof data.smtp_config === 'object' && Object.keys(data.smtp_config).length > 0 ? data.smtp_config as SimplifiedEmailConfig : null);
       }
     } catch (error) {
       console.error('Erro ao carregar integrações:', error);
@@ -112,7 +104,7 @@ export const useIntegrations = () => {
     mercadoPagoAccounts: MercadoPagoAccount[];
     metaPixels: MetaPixel[];
     utmifyConfig: UTMifyConfig | null;
-    emailConfig: EmailConfig | null;
+    emailConfig: SimplifiedEmailConfig | null; // Usar a interface simplificada
   }>) => {
     if (!user) return;
 
@@ -138,7 +130,7 @@ export const useIntegrations = () => {
       }
 
       if (updates.emailConfig !== undefined) {
-        integrationData.smtp_config = updates.emailConfig || {};
+        integrationData.smtp_config = updates.emailConfig || {}; // Salvar a nova estrutura
         setEmailConfig(updates.emailConfig);
       }
 
@@ -221,10 +213,9 @@ export const useIntegrations = () => {
 
   // Lógica atualizada para verificar se a configuração de e-mail está ativa
   const isEmailConfigured = emailConfig && 
-                             emailConfig.host && 
-                             emailConfig.username && 
-                             emailConfig.password && 
-                             emailConfig.fromEmail;
+                             emailConfig.email && 
+                             emailConfig.appPassword && 
+                             emailConfig.displayName;
 
   return {
     mercadoPagoAccounts,

@@ -38,6 +38,17 @@ export type ReservedRightsConfig = {
   text: string;
 };
 
+// Interface simplificada para a configuração de e-mail
+export interface EmailConfig {
+  email: string; // O e-mail que será usado como remetente e usuário SMTP
+  appPassword: string; // A senha do aplicativo (ou senha SMTP)
+  displayName: string; // O nome que aparecerá como remetente
+  // Campos SMTP padrão, que serão preenchidos automaticamente ou usados como fallback
+  host?: string;
+  port?: string;
+  secure?: boolean;
+}
+
 export type FormFields = {
   requireName?: boolean;
   requireEmail?: boolean;
@@ -356,7 +367,15 @@ export type Database = {
           price_original?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
