@@ -28,16 +28,30 @@ app.post('/send-email', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId, smtpConfig.email, smtpConfig.appPassword são obrigatórios)' });
   }
 
+  console.log('EMAIL_SERVICE_DEBUG: Received smtpConfig:', JSON.stringify(smtpConfig));
+
   try {
-    const transporter = nodemailer.createTransport({
+    let transporterOptions = {
       host: smtpConfig.host || "smtp.gmail.com",
       port: Number(smtpConfig.port || 587),
-      secure: smtpConfig.secure ?? true,
+      secure: smtpConfig.secure ?? false, // Default to false, will be overridden for 465
       auth: {
         user: smtpConfig.email,
         pass: smtpConfig.appPassword,
       },
-    });
+    };
+
+    // Specific handling for common Gmail ports
+    if (transporterOptions.port === 465) {
+      transporterOptions.secure = true; // Use SSL
+    } else if (transporterOptions.port === 587) {
+      transporterOptions.secure = false; // Use TLS
+      transporterOptions.requireTLS = true; // Explicitly require TLS for port 587
+    }
+
+    console.log('EMAIL_SERVICE_DEBUG: Nodemailer transporter options:', JSON.stringify(transporterOptions));
+
+    const transporter = nodemailer.createTransport(transporterOptions);
 
     const fromAddress = `${smtpConfig.displayName || 'Elyon Digital'} <${smtpConfig.email}>`;
 
@@ -55,7 +69,14 @@ app.post('/send-email', async (req, res) => {
     res.status(200).json({ success: true, message: `E-mail enviado para ${to} com sucesso!`, messageId: info.messageId });
   } catch (error) {
     console.error('EMAIL_SERVICE_DEBUG: Erro ao enviar e-mail via server.js:', error);
-    res.status(500).json({ success: false, error: 'Falha ao enviar e-mail.', details: error.message });
+    // Log more details from Nodemailer error if available
+    if (error.response) {
+      console.error('EMAIL_SERVICE_DEBUG: Nodemailer response error:', error.response);
+    }
+    if (error.responseCode) {
+      console.error('EMAIL_SERVICE_DEBUG: Nodemailer response code:', error.responseCode);
+    }
+    res.status(500).json({ success: false, error: 'Falha ao enviar e-mail.', details: error.message, nodemailerError: error.response || error.message });
   }
 });
 

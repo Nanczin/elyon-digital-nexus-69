@@ -59,8 +59,8 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
         appPassword: newAccount.appPassword,
         displayName: newAccount.displayName,
         host: 'smtp.gmail.com',
-        port: '587',
-        secure: true,
+        port: '465', // Alterado para 465
+        secure: true, // Alterado para true para a porta 465
       };
 
       await saveIntegrations({ emailConfig: smtpConfigPayload });
