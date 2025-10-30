@@ -1,6 +1,6 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
-module.exports = async (req, res) => {
+export default async function (req, res) {
   // Configurar cabeçalhos CORS para permitir requisições das Edge Functions do Supabase
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -67,4 +67,4 @@ module.exports = async (req, res) => {
     // Retornar um status 500 para indicar falha à Edge Function que chamou
     res.status(500).json({ success: false, error: 'Falha ao enviar e-mail.', details: error.message, nodemailerError: error.response || error.message });
   }
-};
+}
