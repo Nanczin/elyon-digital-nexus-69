@@ -89,8 +89,7 @@ serve(async (req) => {
       );
     }
     console.log('SEND_EMAIL_PROXY_DEBUG: URL completa do serviço de e-mail externo:', fullEmailServiceUrl.toString());
-
-    // Obter o token de bypass do Vercel dos segredos do Supabase
+    
     const vercelBypassToken = Deno.env.get('VERCEL_AUTOMATION_BYPASS_SECRET');
     if (!vercelBypassToken) {
       console.error('SEND_EMAIL_PROXY_DEBUG: VERCEL_AUTOMATION_BYPASS_SECRET não configurado no Supabase Secrets.');
@@ -102,6 +101,12 @@ serve(async (req) => {
     console.log('SEND_EMAIL_PROXY_DEBUG: VERCEL_AUTOMATION_BYPASS_SECRET obtido (length):', vercelBypassToken.length);
 
     console.log('SEND_EMAIL_PROXY_DEBUG: Enviando requisição para o serviço de e-mail externo:', fullEmailServiceUrl.toString());
+    console.log('SEND_EMAIL_PROXY_DEBUG: Headers da requisição para o serviço externo:', JSON.stringify({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${vercelBypassToken.substring(0, 5)}...`, // Mask token for logs
+    }));
+    console.log('SEND_EMAIL_PROXY_DEBUG: Body da requisição para o serviço externo (smtpConfig masked):', JSON.stringify({ to, subject, html: html.substring(0, 50) + '...', sellerUserId, smtpConfig: { ...smtpConfigToUse, appPassword: '***' } }, null, 2));
+
     let response;
     let result;
     let responseText; // To store raw text if not JSON
