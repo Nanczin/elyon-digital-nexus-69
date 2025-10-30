@@ -24,6 +24,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { to, sellerUserId }: TestEmailRequest = await req.json();
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: Dados recebidos:', { to, sellerUserId });
 
     if (!to || !sellerUserId) {
       console.error('TEST_EMAIL_CONNECTION_DEBUG: Dados incompletos:', { to, sellerUserId });
@@ -50,6 +51,8 @@ serve(async (req) => {
     }
 
     const smtpConfig = integration?.smtp_config as any;
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: smtpConfig do DB:', JSON.stringify(smtpConfig));
+
     if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
       console.error('TEST_EMAIL_CONNECTION_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
       return new Response(
@@ -80,9 +83,10 @@ serve(async (req) => {
           sellerUserId,
           smtpConfig // Passar o smtpConfig completo
         },
-        method: 'POST' // <--- Adicionado o método POST aqui
+        method: 'POST'
       }
     );
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: Resultado da invocação do proxy:', { proxyResult, proxyError });
 
     if (proxyError) {
       console.error('TEST_EMAIL_CONNECTION_DEBUG: Erro ao invocar send-email-proxy:', proxyError);
