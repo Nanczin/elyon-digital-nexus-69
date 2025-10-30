@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,18 +7,55 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+interface EmailRequest {
+  to: string;
+  subject: string;
+  html: string;
+  sellerUserId: string; // ID do usuário (vendedor) que configurou o SMTP
+}
+
 serve(async (req) => {
+  console.log('SEND_EMAIL_PROXY_DEBUG: Função send-transactional-email iniciada.');
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
 
   try {
-    const { to, subject, html, sellerUserId, smtpConfig } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!to || !subject || !html || !sellerUserId || !smtpConfig || !smtpConfig.email || !smtpConfig.appPassword) {
-      console.error('SEND_EMAIL_PROXY_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId, smtpConfig });
+    const { to, subject, html, sellerUserId }: EmailRequest = await req.json();
+
+    if (!to || !subject || !html || !sellerUserId) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
       return new Response(
-        JSON.stringify({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId, smtpConfig.email, smtpConfig.appPassword são obrigatórios)' }),
+        JSON.stringify({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId são obrigatórios)' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // 1. Buscar configurações SMTP do vendedor
+    console.log('SEND_EMAIL_PROXY_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
+    const { data: integration, error: integrationError } = await supabase
+      .from('integrations')
+      .select('smtp_config')
+      .eq('user_id', sellerUserId)
+      .maybeSingle();
+
+    if (integrationError) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    const smtpConfig = integration?.smtp_config as any;
+    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+      return new Response(
+        JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (email, appPassword, displayName são obrigatórios)' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -36,7 +74,7 @@ serve(async (req) => {
     let response;
     let result;
     try {
-      response = await fetch(`${emailServiceUrl}/send-email`, {
+      response = await fetch(`${emailServiceUrl}`, { // Removido '/send-email' pois a Vercel Function já é o endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
