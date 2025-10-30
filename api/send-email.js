@@ -1,8 +1,6 @@
 const nodemailer = require('nodemailer');
 
 module.exports = async (req, res) => {
-  console.log('EMAIL_SERVICE_DEBUG: Vercel Function api/send-email.js started.'); // Adicionado este log
-
   // Configurar cabeçalhos CORS para permitir requisições das Edge Functions do Supabase
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -15,18 +13,21 @@ module.exports = async (req, res) => {
 
   // Garantir que apenas requisições POST sejam processadas
   if (req.method !== 'POST') {
+    console.error('EMAIL_SERVICE_DEBUG: Method Not Allowed:', req.method);
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
-  const { to, subject, html, sellerUserId, smtpConfig } = req.body;
-
-  // Validação básica dos dados recebidos
-  if (!to || !subject || !html || !sellerUserId || !smtpConfig || !smtpConfig.email || !smtpConfig.appPassword) {
-    console.error('EMAIL_SERVICE_DEBUG: Dados de e-mail incompletos recebidos no proxy:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId, smtpConfig });
-    return res.status(400).json({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId, smtpConfig.email, smtpConfig.appPassword são obrigatórios)' });
-  }
-
   try {
+    console.log('EMAIL_SERVICE_DEBUG: Vercel Function api/send-email.js started.');
+
+    const { to, subject, html, sellerUserId, smtpConfig } = req.body;
+
+    // Validação básica dos dados recebidos
+    if (!to || !subject || !html || !sellerUserId || !smtpConfig || !smtpConfig.email || !smtpConfig.appPassword) {
+      console.error('EMAIL_SERVICE_DEBUG: Dados de e-mail incompletos recebidos no proxy:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId, smtpConfig });
+      return res.status(400).json({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId, smtpConfig.email, smtpConfig.appPassword são obrigatórios)' });
+    }
+
     // Configuração do transportador Nodemailer usando os dados do smtpConfig
     const transporterOptions = {
       host: smtpConfig.host || "smtp.gmail.com",
