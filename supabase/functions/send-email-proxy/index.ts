@@ -12,10 +12,11 @@ interface EmailRequest {
   subject: string;
   html: string;
   sellerUserId: string; // ID do usuário (vendedor) que configurou o SMTP
+  smtpConfig?: any; // Adicionado para receber a configuração SMTP diretamente
 }
 
 serve(async (req) => {
-  console.log('SEND_EMAIL_PROXY_DEBUG: Função send-transactional-email iniciada.');
+  console.log('SEND_EMAIL_PROXY_DEBUG: Função send-email-proxy iniciada.');
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
@@ -25,7 +26,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { to, subject, html, sellerUserId }: EmailRequest = await req.json();
+    const { to, subject, html, sellerUserId, smtpConfig: directSmtpConfig }: EmailRequest = await req.json();
 
     if (!to || !subject || !html || !sellerUserId) {
       console.error('SEND_EMAIL_PROXY_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
@@ -35,51 +36,70 @@ serve(async (req) => {
       );
     }
 
-    // 1. Buscar configurações SMTP do vendedor
-    console.log('SEND_EMAIL_PROXY_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
-    const { data: integration, error: integrationError } = await supabase
-      .from('integrations')
-      .select('smtp_config')
-      .eq('user_id', sellerUserId)
-      .maybeSingle();
+    let smtpConfigToUse = directSmtpConfig;
 
-    if (integrationError) {
-      console.error('SEND_EMAIL_PROXY_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+    // Se smtpConfig não foi passado diretamente (como no send-transactional-email), buscar do DB
+    if (!smtpConfigToUse) {
+      console.log('SEND_EMAIL_PROXY_DEBUG: smtpConfig não fornecido diretamente, buscando do DB para sellerUserId:', sellerUserId);
+      const { data: integration, error: integrationError } = await supabase
+        .from('integrations')
+        .select('smtp_config')
+        .eq('user_id', sellerUserId)
+        .maybeSingle();
+
+      if (integrationError) {
+        console.error('SEND_EMAIL_PROXY_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+      smtpConfigToUse = integration?.smtp_config as any;
     }
 
-    const smtpConfig = integration?.smtp_config as any;
-    if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
-      console.error('SEND_EMAIL_PROXY_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+    if (!smtpConfigToUse || !smtpConfigToUse.email || !smtpConfigToUse.appPassword || !smtpConfigToUse.displayName) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfigToUse));
       return new Response(
         JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (email, appPassword, displayName são obrigatórios)' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    const emailServiceUrl = Deno.env.get('EMAIL_SERVICE_URL');
-    if (!emailServiceUrl) {
+    const emailServiceUrlBase = Deno.env.get('EMAIL_SERVICE_URL');
+    if (!emailServiceUrlBase) {
       console.error('SEND_EMAIL_PROXY_DEBUG: Variável de ambiente EMAIL_SERVICE_URL não configurada.');
       return new Response(
         JSON.stringify({ success: false, error: 'Serviço de e-mail não configurado. Contate o administrador.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
-    console.log('SEND_EMAIL_PROXY_DEBUG: EMAIL_SERVICE_URL:', emailServiceUrl); // Log explícito da URL
+    console.log('SEND_EMAIL_PROXY_DEBUG: EMAIL_SERVICE_URL base:', emailServiceUrlBase);
 
-    console.log('SEND_EMAIL_PROXY_DEBUG: Enviando requisição para o serviço de e-mail externo:', emailServiceUrl);
+    // Construir a URL completa para a função Vercel
+    const vercelFunctionPath = '/api/send-email';
+    let fullEmailServiceUrl: URL;
+    try {
+      const baseUrl = new URL(emailServiceUrlBase);
+      fullEmailServiceUrl = new URL(vercelFunctionPath, baseUrl);
+    } catch (urlError) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: Erro ao construir URL completa:', urlError.message);
+      return new Response(
+        JSON.stringify({ success: false, error: `Erro na configuração da URL do serviço de e-mail: ${urlError.message}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    console.log('SEND_EMAIL_PROXY_DEBUG: URL completa do serviço de e-mail externo:', fullEmailServiceUrl.toString());
+
+    console.log('SEND_EMAIL_PROXY_DEBUG: Enviando requisição para o serviço de e-mail externo:', fullEmailServiceUrl.toString());
     let response;
     let result;
     try {
-      response = await fetch(`${emailServiceUrl}`, { // Removido '/send-email' pois a Vercel Function já é o endpoint
+      response = await fetch(fullEmailServiceUrl.toString(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ to, subject, html, sellerUserId, smtpConfig }),
+        body: JSON.stringify({ to, subject, html, sellerUserId, smtpConfig: smtpConfigToUse }),
       });
       console.log('SEND_EMAIL_PROXY_DEBUG: Resposta bruta do serviço externo (status):', response.status);
       result = await response.json();
@@ -92,7 +112,6 @@ serve(async (req) => {
       );
     }
 
-
     if (!response.ok) {
       console.error('SEND_EMAIL_PROXY_DEBUG: Erro do serviço de e-mail externo (response.ok é false):', result.error || response.statusText);
       return new Response(
@@ -101,11 +120,11 @@ serve(async (req) => {
       );
     }
 
-    if (!result?.success) { // Check if the external service explicitly returned success: false
+    if (!result?.success) {
       console.error('SEND_EMAIL_PROXY_DEBUG: Falha no envio de e-mail via proxy (result.success é false):', result?.error);
       return new Response(
         JSON.stringify({ success: false, error: result?.error || 'Falha ao enviar e-mail via proxy' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 } // Or result.status if available
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
