@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 
 module.exports = async (req, res) => {
+  console.log('EMAIL_SERVICE_DEBUG: Vercel Function api/send-email.js started.'); // Adicionado este log
+
   // Configurar cabeçalhos CORS para permitir requisições das Edge Functions do Supabase
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
