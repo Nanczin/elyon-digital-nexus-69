@@ -75,12 +75,9 @@ serve(async (req) => {
     }
     console.log('SEND_EMAIL_PROXY_DEBUG: EMAIL_SERVICE_URL base:', emailServiceUrlBase);
 
-    // Construir a URL completa para a função Vercel
-    // Removido a barra inicial do vercelFunctionPath para evitar barras duplas
     const vercelFunctionPath = 'api/send-email'; 
     let fullEmailServiceUrl: URL;
     try {
-      // Garantir que emailServiceUrlBase termina com uma barra para que a URL seja construída corretamente
       const baseUrlString = emailServiceUrlBase.endsWith('/') ? emailServiceUrlBase : `${emailServiceUrlBase}/`;
       const baseUrl = new URL(baseUrlString);
       fullEmailServiceUrl = new URL(vercelFunctionPath, baseUrl);
@@ -96,6 +93,7 @@ serve(async (req) => {
     console.log('SEND_EMAIL_PROXY_DEBUG: Enviando requisição para o serviço de e-mail externo:', fullEmailServiceUrl.toString());
     let response;
     let result;
+    let responseText; // To store raw text if not JSON
     try {
       response = await fetch(fullEmailServiceUrl.toString(), {
         method: 'POST',
@@ -105,8 +103,29 @@ serve(async (req) => {
         body: JSON.stringify({ to, subject, html, sellerUserId, smtpConfig: smtpConfigToUse }),
       });
       console.log('SEND_EMAIL_PROXY_DEBUG: Resposta bruta do serviço externo (status):', response.status);
-      result = await response.json();
-      console.log('SEND_EMAIL_PROXY_DEBUG: Resposta JSON do serviço externo:', JSON.stringify(result, null, 2));
+      console.log('SEND_EMAIL_PROXY_DEBUG: Content-Type da resposta:', response.headers.get('Content-Type'));
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('Content-Type');
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+        console.log('SEND_EMAIL_PROXY_DEBUG: Resposta JSON do serviço externo:', JSON.stringify(result, null, 2));
+      } else {
+        responseText = await response.text();
+        console.error('SEND_EMAIL_PROXY_DEBUG: Resposta não é JSON. Raw text:', responseText);
+        // If it's not JSON, and not a successful status, treat as an error
+        if (!response.ok) {
+          return new Response(
+            JSON.stringify({ success: false, error: `Serviço de e-mail externo retornou erro HTTP ${response.status} com resposta não-JSON.`, details: responseText }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
+          );
+        }
+        // If it's not JSON but status is OK, it's still an unexpected format
+        return new Response(
+          JSON.stringify({ success: false, error: `Serviço de e-mail externo retornou resposta não-JSON inesperada.`, details: responseText }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
     } catch (fetchError: any) {
       console.error('SEND_EMAIL_PROXY_DEBUG: Erro na chamada fetch para o serviço externo:', fetchError.message, 'Stack:', fetchError.stack);
       return new Response(
@@ -116,9 +135,9 @@ serve(async (req) => {
     }
 
     if (!response.ok) {
-      console.error('SEND_EMAIL_PROXY_DEBUG: Erro do serviço de e-mail externo (response.ok é false):', result.error || response.statusText);
+      console.error('SEND_EMAIL_PROXY_DEBUG: Erro do serviço de e-mail externo (response.ok é false):', result?.error || response.statusText);
       return new Response(
-        JSON.stringify({ success: false, error: result.error || 'Erro ao enviar e-mail via serviço externo' }),
+        JSON.stringify({ success: false, error: result?.error || 'Erro ao enviar e-mail via serviço externo' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
       );
     }
