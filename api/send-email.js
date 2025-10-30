@@ -36,6 +36,8 @@ module.exports = async (req, res) => {
       },
     };
 
+    console.log('EMAIL_SERVICE_DEBUG: Transporter Options (user/pass masked):', JSON.stringify({ ...transporterOptions, auth: { user: transporterOptions.auth.user, pass: '***' } }));
+
     const transporter = nodemailer.createTransport(transporterOptions);
     const fromAddress = `${smtpConfig.displayName || 'Elyon Digital'} <${smtpConfig.email}>`;
 
@@ -46,7 +48,9 @@ module.exports = async (req, res) => {
       html,
     };
 
+    console.log('EMAIL_SERVICE_DEBUG: Mail Options:', JSON.stringify(mailOptions));
     console.log(`EMAIL_SERVICE_DEBUG: Tentando enviar e-mail para: ${to} com assunto: "${subject}" (via Vercel Serverless Function)`);
+    
     const info = await transporter.sendMail(mailOptions);
     console.log('EMAIL_SERVICE_DEBUG: E-mail enviado: %s', info.messageId);
     
@@ -60,6 +64,7 @@ module.exports = async (req, res) => {
     if (error.responseCode) {
       console.error('EMAIL_SERVICE_DEBUG: Nodemailer response code:', error.responseCode);
     }
+    // Retornar um status 500 para indicar falha à Edge Function que chamou
     res.status(500).json({ success: false, error: 'Falha ao enviar e-mail.', details: error.message, nodemailerError: error.response || error.message });
   }
 };
