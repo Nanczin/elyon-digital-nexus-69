@@ -31,8 +31,8 @@ module.exports = async (req, res) => {
     // Configuração do transportador Nodemailer usando os dados do smtpConfig
     const transporterOptions = {
       host: smtpConfig.host || "smtp.gmail.com",
-      port: Number(smtpConfig.port || 465), // Padrão para 465 (SSL)
-      secure: smtpConfig.secure !== undefined ? smtpConfig.secure : true, // Padrão para true
+      port: Number(smtpConfig.port || 465), // Alterado para 465
+      secure: smtpConfig.secure !== undefined ? smtpConfig.secure : true, // Garantir true para 465
       auth: {
         user: smtpConfig.email,
         pass: smtpConfig.appPassword,
