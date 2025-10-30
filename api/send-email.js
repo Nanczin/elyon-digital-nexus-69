@@ -17,6 +17,22 @@ module.exports = async (req, res) => {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
+  // --- Verificação do token de bypass ---
+  const authHeader = req.headers.authorization;
+  const vercelBypassToken = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ') || !vercelBypassToken) {
+    console.error('EMAIL_SERVICE_DEBUG: Authorization header missing or VERCEL_AUTOMATION_BYPASS_SECRET not set.');
+    return res.status(401).json({ success: false, error: 'Unauthorized: Missing or invalid authorization token.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (token !== vercelBypassToken) {
+    console.error('EMAIL_SERVICE_DEBUG: Invalid authorization token provided.');
+    return res.status(403).json({ success: false, error: 'Forbidden: Invalid authorization token.' });
+  }
+  // --- Fim da verificação do token ---
+
   try {
     console.log('EMAIL_SERVICE_DEBUG: Vercel Function api/send-email.js started.');
 

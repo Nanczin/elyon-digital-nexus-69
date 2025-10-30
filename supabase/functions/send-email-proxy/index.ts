@@ -90,6 +90,17 @@ serve(async (req) => {
     }
     console.log('SEND_EMAIL_PROXY_DEBUG: URL completa do serviço de e-mail externo:', fullEmailServiceUrl.toString());
 
+    // Obter o token de bypass do Vercel dos segredos do Supabase
+    const vercelBypassToken = Deno.env.get('VERCEL_AUTOMATION_BYPASS_SECRET');
+    if (!vercelBypassToken) {
+      console.error('SEND_EMAIL_PROXY_DEBUG: VERCEL_AUTOMATION_BYPASS_SECRET não configurado no Supabase Secrets.');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token de bypass do Vercel não configurado. Contate o administrador.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    console.log('SEND_EMAIL_PROXY_DEBUG: VERCEL_AUTOMATION_BYPASS_SECRET obtido (length):', vercelBypassToken.length);
+
     console.log('SEND_EMAIL_PROXY_DEBUG: Enviando requisição para o serviço de e-mail externo:', fullEmailServiceUrl.toString());
     let response;
     let result;
@@ -99,6 +110,7 @@ serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${vercelBypassToken}`, // Adicionar o token de bypass aqui
         },
         body: JSON.stringify({ to, subject, html, sellerUserId, smtpConfig: smtpConfigToUse }),
       });
