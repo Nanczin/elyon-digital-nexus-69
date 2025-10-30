@@ -80,7 +80,7 @@ serve(async (req) => {
           sellerUserId,
           smtpConfig // Passar o smtpConfig completo
         },
-        method: 'POST'
+        method: 'POST' // <--- Adicionado o método POST aqui
       }
     );
 
