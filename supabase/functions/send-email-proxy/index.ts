@@ -76,10 +76,13 @@ serve(async (req) => {
     console.log('SEND_EMAIL_PROXY_DEBUG: EMAIL_SERVICE_URL base:', emailServiceUrlBase);
 
     // Construir a URL completa para a função Vercel
-    const vercelFunctionPath = '/api/send-email';
+    // Removido a barra inicial do vercelFunctionPath para evitar barras duplas
+    const vercelFunctionPath = 'api/send-email'; 
     let fullEmailServiceUrl: URL;
     try {
-      const baseUrl = new URL(emailServiceUrlBase);
+      // Garantir que emailServiceUrlBase termina com uma barra para que a URL seja construída corretamente
+      const baseUrlString = emailServiceUrlBase.endsWith('/') ? emailServiceUrlBase : `${emailServiceUrlBase}/`;
+      const baseUrl = new URL(baseUrlString);
       fullEmailServiceUrl = new URL(vercelFunctionPath, baseUrl);
     } catch (urlError) {
       console.error('SEND_EMAIL_PROXY_DEBUG: Erro ao construir URL completa:', urlError.message);
