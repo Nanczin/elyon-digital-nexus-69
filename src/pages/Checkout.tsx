@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +61,9 @@ const Checkout = () => {
 
       if (error) throw error;
       
+      console.log('CHECKOUT_FRONTEND_DEBUG: Checkout data fetched from DB:', JSON.stringify(data, null, 2));
+      console.log('CHECKOUT_FRONTEND_DEBUG: Checkout user_id from DB:', data.user_id);
+
       let orderBumpsWithProducts = [];
       if (data.order_bumps && Array.isArray(data.order_bumps)) {
         const orderBumps = data.order_bumps as unknown as OrderBump[];
@@ -121,7 +124,8 @@ const Checkout = () => {
         support_contact: data.support_contact || {},
         integrations: data.integrations || {},
         timer: data.timer as CheckoutData['timer'] || undefined,
-        products: data.products as CheckoutData['products'] // Cast explícito aqui
+        products: data.products as CheckoutData['products'], // Cast explícito aqui
+        user_id: data.user_id // Certifique-se de que user_id está sendo passado
       };
       
       console.log('Checkout Debug: Timer carregado do banco:', data.timer);
@@ -339,7 +343,7 @@ const Checkout = () => {
           deliverableLink: finalDeliverableLink || null, // Garantir que seja string ou null
           productName: productData?.name,
           productDescription: productData?.description,
-          sellerUserId: checkout?.user_id, // Passar o user_id do checkout (vendedor)
+          sellerUserId: checkout?.user_id || null, // Passar o user_id do checkout (vendedor), garantindo que seja null se não existir
           supportEmail: checkout?.support_contact?.email,
         }
       };
