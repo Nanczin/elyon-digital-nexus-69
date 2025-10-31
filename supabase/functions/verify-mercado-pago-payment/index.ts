@@ -335,7 +335,7 @@ serve(async (req) => {
             console.warn('VERIFY_MP_DEBUG: Não foi possível enviar e-mail transacional: email do cliente ausente.');
           }
         } else {
-          console.log('VERIFY_MP_DEBUG: Envio de e-mail transacional desabilitado ou dados incompletos no metadata.');
+          console.log('VERIFY_MP_DEBUG: Envio de e-mail transacional desabilitado ou dados incompletos no metadata. emailTransactionalData:', JSON.stringify(emailTransactionalData, null, 2));
         }
         // --- Fim da lógica de envio de e-mail transacional ---
 

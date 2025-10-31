@@ -61,6 +61,9 @@ serve(async (req) => {
     const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken, emailMetadata }: PaymentRequest = requestBody;
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 2. Raw amount received from requestBody:', amount, typeof amount);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 2.1. emailMetadata.sendTransactionalEmail (from frontend):', emailMetadata?.sendTransactionalEmail);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 2.2. emailMetadata.sellerUserId (from frontend):', emailMetadata?.sellerUserId);
+
 
     // Aplicar a conversão robusta sugerida para o 'amount' (que está em centavos)
     const numericAmountInCents = Number((amount || 0).toString().replace(",", "."));
