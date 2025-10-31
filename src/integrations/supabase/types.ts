@@ -178,6 +178,85 @@ export type Database = {
           },
         ]
       }
+      compras: {
+        Row: {
+          acesso_expira_em: string | null
+          cliente_documento: string | null
+          cliente_email: string
+          cliente_nome: string
+          cliente_telefone: string | null
+          created_at: string
+          email_entrega_id: string | null
+          entregavel_enviado: boolean | null
+          entregavel_enviado_em: string | null
+          id: string
+          mercadopago_order_id: string | null
+          mercadopago_payment_id: string
+          metodo_pagamento: string | null
+          moeda: string | null
+          password: string | null
+          produto_id: string | null
+          status_pagamento: string
+          updated_at: string
+          username: string | null
+          valor_pago: number
+          webhook_payload: Json | null
+        }
+        Insert: {
+          acesso_expira_em?: string | null
+          cliente_documento?: string | null
+          cliente_email: string
+          cliente_nome: string
+          cliente_telefone?: string | null
+          created_at?: string
+          email_entrega_id?: string | null
+          entregavel_enviado?: boolean | null
+          entregavel_enviado_em?: string | null
+          id?: string
+          mercadopago_order_id?: string | null
+          mercadopago_payment_id: string
+          metodo_pagamento?: string | null
+          password?: string | null
+          produto_id?: string | null
+          status_pagamento?: string
+          updated_at?: string
+          username?: string | null
+          valor_pago: number
+          webhook_payload?: Json | null
+        }
+        Update: {
+          acesso_expira_em?: string | null
+          cliente_documento?: string | null
+          cliente_email?: string
+          cliente_nome?: string
+          cliente_telefone?: string | null
+          created_at?: string
+          email_entrega_id?: string | null
+          entregavel_enviado?: boolean | null
+          entregavel_enviado_em?: string | null
+          id?: string
+          mercadopago_order_id?: string | null
+          mercadopago_payment_id?: string
+          metodo_pagamento?: string | null
+          moeda?: string | null
+          password?: string | null
+          produto_id?: string | null
+          status_pagamento?: string
+          updated_at?: string
+          username?: string | null
+          valor_pago?: number
+          webhook_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos_digitais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           cpf: string | null
@@ -255,6 +334,50 @@ export type Database = {
           utmify_code?: string | null
         }
         Relationships: []
+      }
+      logs_entrega: {
+        Row: {
+          assunto: string | null
+          compra_id: string | null
+          created_at: string
+          destinatario: string
+          erro_mensagem: string | null
+          id: string
+          status: string
+          tentativa_numero: number | null
+          tipo: string
+        }
+        Insert: {
+          assunto?: string | null
+          compra_id?: string | null
+          created_at?: string
+          destinatario: string
+          erro_mensagem?: string | null
+          id?: string
+          status: string
+          tentativa_numero?: number | null
+          tipo: string
+        }
+        Update: {
+          assunto?: string | null
+          compra_id?: string | null
+          created_at?: string
+          destinatario?: string
+          erro_mensagem?: string | null
+          id?: string
+          status?: string
+          tentativa_numero?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_entrega_compra_id_fkey"
+            columns: ["compra_id"]
+            isOneToOne: false
+            referencedRelation: "compras"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -376,6 +499,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      produtos_digitais: {
+        Row: {
+          acesso_expira_em: string | null
+          arquivo_url: string | null
+          created_at: string
+          descricao: string | null
+          email_assunto: string
+          email_template: string
+          gerar_credenciais: boolean | null
+          id: string
+          instrucoes_acesso: string | null
+          is_active: boolean | null
+          nome: string
+          prazo_acesso: number | null
+          preco: number
+          tipo_entregavel: string
+          updated_at: string
+          url_acesso: string | null
+        }
+        Insert: {
+          acesso_expira_em?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          email_assunto?: string
+          email_template: string
+          gerar_credenciais?: boolean | null
+          id?: string
+          instrucoes_acesso?: string | null
+          is_active?: boolean | null
+          nome: string
+          prazo_acesso?: number | null
+          preco: number
+          tipo_entregavel: string
+          updated_at?: string
+          url_acesso?: string | null
+        }
+        Update: {
+          acesso_expira_em?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          email_assunto?: string
+          email_template?: string
+          gerar_credenciais?: boolean | null
+          id?: string
+          instrucoes_acesso?: string | null
+          is_active?: boolean | null
+          nome?: string
+          prazo_acesso?: number | null
+          preco?: number
+          tipo_entregavel?: string
+          updated_at?: string
+          url_acesso?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
