@@ -27,14 +27,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { to, subject, html, sellerUserId, smtpConfig: directSmtpConfig }: EmailRequest = await req.json();
-
-    if (!to || !subject || !html || !sellerUserId) {
-      console.error('SEND_EMAIL_PROXY_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
-      return new Response(
-        JSON.stringify({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId são obrigatórios)' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+    console.log('SEND_EMAIL_PROXY_DEBUG: Dados recebidos:', { to, subject: subject.substring(0, 50) + '...', html: html.substring(0, 50) + '...', sellerUserId });
 
     let smtpConfigToUse = directSmtpConfig;
 
@@ -64,6 +57,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    console.log('SEND_EMAIL_PROXY_DEBUG: smtpConfig para uso (senha mascarada):', { ...smtpConfigToUse, appPassword: '***' });
+
 
     const emailServiceUrlBase = Deno.env.get('EMAIL_SERVICE_URL');
     if (!emailServiceUrlBase) {

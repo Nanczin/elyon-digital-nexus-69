@@ -65,7 +65,7 @@ serve(async (req) => {
     if (existingPaymentError) {
       console.error('VERIFY_MP_DEBUG: Erro ao buscar pagamento existente:', existingPaymentError);
     }
-    console.log('VERIFY_MP_DEBUG: Pagamento existente no DB:', existingPayment);
+    console.log('VERIFY_MP_DEBUG: Pagamento existente no DB:', JSON.stringify(existingPayment, null, 2));
 
     // Atualizar pagamento
     const calcStatus = status === 'approved' ? 'completed' : (status === 'rejected' ? 'failed' : 'pending');
@@ -93,7 +93,7 @@ serve(async (req) => {
       console.error('VERIFY_MP_DEBUG: Erro ao atualizar pagamento no DB:', updateError);
       return new Response(JSON.stringify({ success: false, error: 'Falha ao atualizar pagamento' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
     }
-    console.log('VERIFY_MP_DEBUG: Pagamento atualizado no DB:', payment);
+    console.log('VERIFY_MP_DEBUG: Pagamento atualizado no DB:', JSON.stringify(payment, null, 2));
 
     // Se aprovado, garantir criação de order e acesso (idempotente)
     if (status === 'approved') {
@@ -179,7 +179,7 @@ serve(async (req) => {
           }
         }
 
-        console.log('VERIFY_MP_DEBUG: Payment object before user_id update check:', payment);
+        console.log('VERIFY_MP_DEBUG: Payment object before user_id update check:', JSON.stringify(payment, null, 2));
         // Update payment user_id if a userId was resolved/created and payment exists and user_id is not already set
         if (userId && payment?.id && !payment?.user_id) { 
           const { error: payUserErr } = await supabase.from('payments').update({ user_id: userId }).eq('id', payment.id);
@@ -259,7 +259,7 @@ serve(async (req) => {
 
         // --- Lógica de envio de e-mail transacional (após aprovação) ---
         const emailTransactionalData = (payment?.metadata as any)?.email_transactional_data;
-        console.log('VERIFY_MP_DEBUG: emailTransactionalData do payment metadata:', emailTransactionalData);
+        console.log('VERIFY_MP_DEBUG: emailTransactionalData do payment metadata:', JSON.stringify(emailTransactionalData, null, 2));
 
         if (emailTransactionalData?.sendTransactionalEmail && emailTransactionalData?.sellerUserId) {
           console.log('VERIFY_MP_DEBUG: Disparando e-mail transacional...');

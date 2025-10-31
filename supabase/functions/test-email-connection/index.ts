@@ -49,6 +49,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+    console.log('TEST_EMAIL_CONNECTION_DEBUG: Configuração de integração obtida:', JSON.stringify(integration, null, 2));
+
 
     const smtpConfig = integration?.smtp_config as any;
     console.log('TEST_EMAIL_CONNECTION_DEBUG: smtpConfig do DB:', JSON.stringify(smtpConfig));

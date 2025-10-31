@@ -15,7 +15,7 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
-  console.log('SEND_EMAIL_DEBUG: Função send-transactional-email iniciada.');
+  console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: Função send-transactional-email iniciada.');
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
@@ -26,9 +26,10 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { to, subject, html, sellerUserId }: EmailRequest = await req.json();
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: Dados recebidos:', { to, subject: subject.substring(0, 50) + '...', html: html.substring(0, 50) + '...', sellerUserId });
 
     if (!to || !subject || !html || !sellerUserId) {
-      console.error('SEND_EMAIL_DEBUG: Dados de e-mail incompletos:', { to, subject, html: html ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
+      console.error('SEND_TRANSACTIONAL_EMAIL_DEBUG: Dados de e-mail incompletos:', { to, subject: subject ? 'HTML_PRESENT' : 'HTML_MISSING', sellerUserId });
       return new Response(
         JSON.stringify({ success: false, error: 'Dados de e-mail incompletos (to, subject, html, sellerUserId são obrigatórios)' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -36,7 +37,7 @@ serve(async (req) => {
     }
 
     // 1. Buscar configurações SMTP do vendedor
-    console.log('SEND_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: Buscando configurações SMTP para sellerUserId:', sellerUserId);
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('smtp_config')
@@ -44,24 +45,26 @@ serve(async (req) => {
       .maybeSingle();
 
     if (integrationError) {
-      console.error('SEND_EMAIL_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
+      console.error('SEND_TRANSACTIONAL_EMAIL_DEBUG: Erro ao buscar configurações de integração para remetente:', integrationError);
       return new Response(
         JSON.stringify({ success: false, error: 'Erro ao buscar configurações de e-mail do vendedor' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: Configuração de integração obtida:', JSON.stringify(integration, null, 2));
 
     const smtpConfig = integration?.smtp_config as any;
     if (!smtpConfig || !smtpConfig.email || !smtpConfig.appPassword || !smtpConfig.displayName) {
-      console.error('SEND_EMAIL_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
+      console.error('SEND_TRANSACTIONAL_EMAIL_DEBUG: Configurações SMTP incompletas ou ausentes para o vendedor:', sellerUserId, 'Config:', JSON.stringify(smtpConfig));
       return new Response(
         JSON.stringify({ success: false, error: 'Configurações SMTP do vendedor incompletas ou ausentes (email, appPassword, displayName são obrigatórios)' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: smtpConfig para uso (senha mascarada):', { ...smtpConfig, appPassword: '***' });
 
     // Chamar a função proxy para enviar o e-mail, passando o smtpConfig completo
-    console.log('SEND_EMAIL_DEBUG: Invocando função proxy send-email-proxy para enviar e-mail.');
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: Invocando função proxy send-email-proxy para enviar e-mail.');
     const { data: proxyResult, error: proxyError } = await supabase.functions.invoke(
       'send-email-proxy',
       {
@@ -69,9 +72,10 @@ serve(async (req) => {
         method: 'POST'
       }
     );
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: Resultado da invocação do proxy:', { proxyResult, proxyError });
 
     if (proxyError) {
-      console.error('SEND_EMAIL_DEBUG: Erro ao invocar send-email-proxy:', proxyError);
+      console.error('SEND_TRANSACTIONAL_EMAIL_DEBUG: Erro ao invocar send-email-proxy:', proxyError);
       return new Response(
         JSON.stringify({ success: false, error: proxyError.message || 'Erro ao enviar e-mail via proxy' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -79,21 +83,21 @@ serve(async (req) => {
     }
 
     if (!proxyResult?.success) {
-      console.error('SEND_EMAIL_DEBUG: Falha no envio de e-mail via proxy:', proxyResult?.error);
+      console.error('SEND_TRANSACTIONAL_EMAIL_DEBUG: Falha no envio de e-mail via proxy:', proxyResult?.error);
       return new Response(
         JSON.stringify({ success: false, error: proxyResult?.error || 'Falha ao enviar e-mail via proxy' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    console.log('SEND_EMAIL_DEBUG: E-mail enviado com sucesso via proxy.');
+    console.log('SEND_TRANSACTIONAL_EMAIL_DEBUG: E-mail enviado com sucesso via proxy.');
     return new Response(
       JSON.stringify({ success: true, message: 'E-mail enviado com sucesso' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error: any) {
-    console.error('SEND_EMAIL_DEBUG: Erro geral na função send-transactional-email:', error.message, 'Stack:', error.stack);
+    console.error('SEND_TRANSACTIONAL_EMAIL_DEBUG: Erro geral na função send-transactional-email:', error.message, 'Stack:', error.stack);
     return new Response(
       JSON.stringify({ success: false, error: error.message || 'Erro interno do servidor' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
