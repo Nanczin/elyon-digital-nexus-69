@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts"; // Updated Deno version
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"; // Updated Supabase JS version
 
 const corsHeaders = {
@@ -24,9 +24,9 @@ interface PaymentRequest {
   cardData?: {
     cardNumber?: string;
     cardholderName: string;
-    expirationMonth?: string;
-    expirationYear?: string;
-    securityCode?: string;
+    expirationMonth: string;
+    expirationYear: string;
+    securityCode: string;
     installments: number;
   };
   cardToken?: string; // Token gerado no frontend, se aplicável

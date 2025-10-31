@@ -1,11 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
-import { createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'; // Updated to 2.45.0 for consistency
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-signature, x-request-id',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS', // Adicionado OPTIONS para preflight
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 interface MercadoPagoWebhook {
@@ -50,7 +49,8 @@ const handler = async (req: Request): Promise<Response> => {
     const signature = req.headers.get('x-signature');
     const requestId = req.headers.get('x-request-id');
     
-    if (!validateWebhookSignature(body, signature, requestId)) {
+    // validateWebhookSignature is now async
+    if (!(await validateWebhookSignature(body, signature, requestId))) {
       console.error('❌ Assinatura do webhook inválida');
       return new Response('Unauthorized', { status: 401, headers: corsHeaders });
     }
@@ -101,12 +101,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-// Validar assinatura HMAC do Mercado Pago
-function validateWebhookSignature(
+// Validar assinatura HMAC do Mercado Pago usando Deno's native crypto.subtle
+async function validateWebhookSignature(
   body: string, 
   signature: string | null, 
   requestId: string | null
-): boolean {
+): Promise<boolean> {
   // Em desenvolvimento, você pode desabilitar a validação retornando true.
   // EM PRODUÇÃO, SEMPRE RETORNE false SE A ASSINATURA NÃO FOR VÁLIDA.
   if (!signature || !requestId) {
@@ -129,11 +129,29 @@ function validateWebhookSignature(
 
   // Montar string para validação
   const manifest = `id:${requestId};request-id:${requestId};ts:${ts};`;
-  const hmac = createHmac('sha256', secret);
-  hmac.update(manifest);
-  const expectedHash = hmac.digest('hex');
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const manifestData = encoder.encode(manifest);
 
-  return hash === expectedHash;
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, manifestData);
+    const expectedHash = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    return hash === expectedHash;
+  } catch (e) {
+    console.error('Erro ao validar assinatura HMAC:', e);
+    return false;
+  }
 }
 
 // Buscar detalhes do pagamento na API do Mercado Pago
@@ -172,7 +190,7 @@ async function processApprovedPayment(
     .from('compras')
     .select('id, entregavel_enviado')
     .eq('mercadopago_payment_id', paymentId)
-    .maybeSingle(); // Usar maybeSingle para lidar com 0 ou 1 resultado
+    .maybeSingle();
 
   if (existingPurchase?.entregavel_enviado) {
     console.log('ℹ️ Entregável já enviado para este pagamento');
