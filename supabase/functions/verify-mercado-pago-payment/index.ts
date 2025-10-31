@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"; // Updated Supabase JS version
+import { createClient } "https://esm.sh/@supabase/supabase-js@2.45.0"; // Updated Supabase JS version
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -298,7 +298,7 @@ serve(async (req) => {
             .replace(/{support_email}/g, supportEmail); // Substituição dinâmica aqui
 
           console.log('VERIFY_MP_DEBUG: Final Subject after replacement:', finalSubject);
-          console.log('VERIFY_MP_DEBUG: Final Body after replacement:', finalBody);
+          console.log('VERIFY_MP_DEBUG: Final Body after replacement (first 500 chars):', finalBody.substring(0, 500) + '...');
 
 
           if (customerEmail) {
