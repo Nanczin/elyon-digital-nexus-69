@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } "https://esm.sh/@supabase/supabase-js@2.45.0"; // Updated Supabase JS version
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"; // Corrected import statement
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
