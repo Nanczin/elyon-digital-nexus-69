@@ -71,15 +71,17 @@ export function setNestedValue<T extends object>(obj: T, path: string, value: an
       if (!Array.isArray(currentLevel[arrayName])) {
         currentLevel[arrayName] = [];
       }
+      // Sempre cria uma nova cópia do array para garantir a imutabilidade
       currentLevel[arrayName] = [...currentLevel[arrayName]];
 
       if (isLastKey) {
         currentLevel[arrayName][index] = value;
       } else {
         // Clona o objeto/array aninhado dentro do elemento do array
+        // Se o elemento não for um objeto/array, cria um novo objeto vazio para ele
         currentLevel[arrayName][index] = (typeof currentLevel[arrayName][index] === 'object' && currentLevel[arrayName][index] !== null)
           ? (Array.isArray(currentLevel[arrayName][index]) ? [...currentLevel[arrayName][index]] : { ...currentLevel[arrayName][index] })
-          : {};
+          : {}; // Garante que sempre seja um objeto para continuar o caminho
         currentLevel = currentLevel[arrayName][index];
       }
     } else {
@@ -88,9 +90,10 @@ export function setNestedValue<T extends object>(obj: T, path: string, value: an
         currentLevel[key] = value;
       } else {
         // Clona o objeto/array aninhado
+        // Se o valor não for um objeto/array, cria um novo objeto vazio para ele
         currentLevel[key] = (typeof currentLevel[key] === 'object' && currentLevel[key] !== null)
           ? (Array.isArray(currentLevel[key]) ? [...currentLevel[key]] : { ...currentLevel[key] })
-          : {};
+          : {}; // Garante que sempre seja um objeto para continuar o caminho
         currentLevel = currentLevel[key];
       }
     }

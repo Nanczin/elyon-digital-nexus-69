@@ -145,7 +145,8 @@ const AdminCheckouts = () => {
     setData: setCheckoutData,
     clearSavedData,
     loadData,
-    hasSavedData
+    hasSavedData,
+    forceLoad
   } = useAutoSave(getInitialFormData, { // Chamar getInitialFormData aqui
     key: autoSaveKey,
     debounceMs: 800,
@@ -229,26 +230,41 @@ const AdminCheckouts = () => {
   }, [getInitialFormData, products]); // Adicionado products como dependência
 
   // Efeito para carregar dados originais do checkout se estiver editando
-  // Este useEffect agora só carrega dados do DB se NÃO houver um rascunho salvo para o checkout atual.
   useEffect(() => {
+    console.log(`[AdminCheckouts] useEffect for editingCheckout. editingCheckout:`, editingCheckout);
     if (editingCheckout) {
-      if (!hasSavedData) {
-        console.log('AdminCheckouts: Carregando dados originais do DB para edição (sem rascunho).');
-        const originalData = loadOriginalCheckoutData(editingCheckout); // <--- This line
-        loadData(originalData);
+      const newKey = `checkout-edit-${editingCheckout.id}`;
+      if (autoSaveKey !== newKey) {
+        setAutoSaveKey(newKey);
+        // forceLoad será chamado pelo useAutoSave quando a chave mudar
       } else {
-        console.log('AdminCheckouts: Rascunho existente para edição carregado automaticamente.');
+        // Se a chave já é a correta, tentar carregar o rascunho.
+        // Se não houver rascunho, carregar os dados originais do DB.
+        if (!forceLoad()) { // Tenta carregar o rascunho
+          console.log(`[AdminCheckouts] No draft found for ${newKey}, loading original data.`);
+          const originalData = loadOriginalCheckoutData(editingCheckout);
+          loadData(originalData);
+        } else {
+          console.log(`[AdminCheckouts] Draft loaded for ${newKey}.`);
+        }
       }
     } else {
-      // Quando criando um novo checkout, garantir que a chave seja 'checkout-new'
-      // e que o formulário comece com os dados iniciais (ou rascunho 'checkout-new' se existir).
+      // Quando criando um novo checkout
       if (autoSaveKey !== 'checkout-new') {
         setAutoSaveKey('checkout-new');
+        // forceLoad será chamado pelo useAutoSave quando a chave mudar
+      } else {
+        // Se a chave já é 'checkout-new', e não há rascunho, useAutoSave já terá carregado initialDataFn().
+        // Se houver rascunho, ele já terá carregado o rascunho.
+        if (!hasSavedData) { // Verifica se já existe um rascunho para 'checkout-new'
+          console.log(`[AdminCheckouts] No draft found for 'checkout-new', initializing with fresh data.`);
+          loadData(getInitialFormData()); // Garante que o formulário comece limpo
+        } else {
+          console.log(`[AdminCheckouts] Draft loaded for 'checkout-new'.`);
+        }
       }
-      // Se já estamos em 'checkout-new' e não há rascunho, useAutoSave já terá carregado initialDataFn().
-      // Se houver rascunho, ele já terá carregado o rascunho.
     }
-  }, [editingCheckout, hasSavedData, loadData, autoSaveKey, getInitialFormData, loadOriginalCheckoutData]);
+  }, [editingCheckout, autoSaveKey, loadData, forceLoad, getInitialFormData, loadOriginalCheckoutData, hasSavedData]);
 
 
   // Salvar dados antes de navegar ou fechar a aba
@@ -264,8 +280,9 @@ const AdminCheckouts = () => {
           return value;
         });
         localStorage.setItem(autoSaveKey, dataToSave);
+        console.log(`[AdminCheckouts] Data saved to localStorage on beforeunload for key: ${autoSaveKey}`);
       } catch (error) {
-        console.error('Erro ao salvar dados antes de navegar:', error);
+        console.error(`[AdminCheckouts] Erro ao salvar dados antes de navegar para key: ${autoSaveKey}`, error);
       }
     };
 
@@ -359,9 +376,8 @@ const AdminCheckouts = () => {
   const handleEdit = (checkout: any) => {
     setEditingCheckout(checkout);
     
-    // Atualizar a chave do auto-save para o checkout específico
-    const newKey = `checkout-edit-${checkout.id}`;
-    setAutoSaveKey(newKey); // useAutoSave irá carregar o rascunho para esta chave (se existir)
+    // Ao iniciar a edição, a chave do auto-save será atualizada no useEffect
+    // e o useAutoSave tentará carregar o rascunho ou os dados originais.
     
     // Limpar o arquivo selecionado localmente ao iniciar a edição
     setSelectedDeliverableFile(null);
@@ -401,7 +417,13 @@ const AdminCheckouts = () => {
     return <Navigate to="/" replace />;
   }
   const handleInputChange = (path: string, value: any) => {
-    setCheckoutData(prev => setNestedValue(prev, path, value));
+    console.log(`[AdminCheckouts] handleInputChange: path=${path}, value=`, value);
+    setCheckoutData(prev => {
+      const newState = setNestedValue(prev, path, value);
+      console.log(`[AdminCheckouts] handleInputChange: Previous state reference:`, prev);
+      console.log(`[AdminCheckouts] handleInputChange: New state reference:`, newState);
+      return newState;
+    });
   };
 
   const handleFileChange = (file: File | null) => {
