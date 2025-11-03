@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast'; // Importando o hook useToast
+import { useToast } from '@/hooks/use-toast';
 import { withTimeout } from '@/utils/supabaseUtils';
 
 interface AuthContextType {
@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { React.ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [dismiss, toast]); // Adicionar dismiss e toast como dependências do useEffect
+  }, [dismiss, toast]);
 
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
