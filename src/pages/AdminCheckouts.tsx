@@ -24,7 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig, FormFields e os novos tipos
 import { Alert, AlertDescription } from '@/components/ui/alert'; // Importação adicionada
-import { setNestedValue } from '@/lib/utils'; // Importar setNestedValue
+import { setNestedValue, deepMerge } from '@/lib/utils'; // Importar setNestedValue e deepMerge
 
 const AdminCheckouts = () => {
   const {
@@ -63,10 +63,10 @@ const AdminCheckouts = () => {
         requireEmailConfirm: true,
         packages: [{
           id: 1,
-          name: '',
-          description: '',
-          topics: [''],
-          price: 0,
+          name: 'Pacote Básico', // Default name for the first package
+          description: 'Acesso essencial ao produto.',
+          topics: ['Acesso vitalício: ao conteúdo principal'],
+          price: 97.00, // Default price in Reais
           originalPrice: 0,
           mostSold: false
         }] as PackageConfig[],
@@ -109,7 +109,7 @@ const AdminCheckouts = () => {
         textColor: '#000000',
         headlineText: 'Sua transformação começa agora!',
         headlineColor: '#000000',
-        description: '',
+        description: 'Desbloqueie seu potencial com nosso produto exclusivo.', // Default description
         gradientColor: '#60a5fa',
         highlightColor: '#3b82f6'
       },
@@ -152,18 +152,22 @@ const AdminCheckouts = () => {
     showToast: true // Habilitar toast de salvamento automático
   });
   
-  // Efeito para carregar dados originais do checkout se estiver editando e não houver rascunho
+  // Efeito para carregar dados originais do checkout se estiver editando
   useEffect(() => {
-    if (editingCheckout && !hasSavedData) {
-      console.log('AdminCheckouts: Carregando dados originais do DB para edição (sem rascunho).');
+    if (editingCheckout) {
+      console.log('AdminCheckouts: Carregando dados originais do DB para edição.');
       const originalData = loadOriginalCheckoutData(editingCheckout);
       loadData(originalData);
-    } else if (!editingCheckout && !hasSavedData && autoSaveKey === 'checkout-new') {
-      // Se for um novo checkout e não houver rascunho, garantir que o initialFormData seja carregado
-      console.log('AdminCheckouts: Carregando initialFormData para novo checkout (sem rascunho).');
-      loadData(getInitialFormData()); // Chamar getInitialFormData aqui
+      // Após carregar os dados originais, limpar qualquer rascunho existente para esta chave
+      // para garantir que o formulário comece limpo com os dados do DB.
+      // O auto-save então começará a salvar as alterações para esta chave.
+      clearSavedData(); // Limpar o rascunho para esta chave específica
+    } else {
+      // Quando criando um novo checkout, garantir que a chave seja 'checkout-new'
+      setAutoSaveKey('checkout-new');
+      // Não é necessário chamar loadData(getInitialFormData()) aqui, o estado inicial do useAutoSave já lida com isso.
     }
-  }, [editingCheckout, hasSavedData, loadData, autoSaveKey, getInitialFormData]);
+  }, [editingCheckout, loadData, clearSavedData, getInitialFormData]); // Removido hasSavedData das dependências
 
 
   // Salvar dados antes de navegar ou fechar a aba
@@ -251,75 +255,67 @@ const AdminCheckouts = () => {
   };
 
 
-  const loadOriginalCheckoutData = (checkout: any) => {
-    // Converter preços de centavos para reais
+  const loadOriginalCheckoutData = useCallback((checkout: any) => {
+    const initial = getInitialFormData(); // Start with a full initial structure
+
+    // Convert prices from cents to reais
     const priceInReais = checkout.price ? checkout.price / 100 : 0;
     const promotionalPriceInReais = checkout.promotional_price ? checkout.promotional_price / 100 : 0;
-    
-    // Converter order bumps de centavos para reais
+
+    // Process order bumps
     const orderBumpsInReais = Array.isArray(checkout.order_bumps) ? checkout.order_bumps.map((bump: any) => ({
       ...bump,
       price: bump.price ? bump.price / 100 : 0,
       originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0,
       selectedProduct: bump.selectedProduct || ''
-    })) : getInitialFormData().order_bumps; // Usar getInitialFormData()
-    
+    })) : initial.order_bumps;
+
+    // Process packages
     const packagesFromDb = (checkout.form_fields as FormFields)?.packages;
-    const packagesConfig: PackageConfig[] = Array.isArray(packagesFromDb) ? packagesFromDb.map((pkg: any) => ({ // Cast pkg to any
-      id: pkg.id || Date.now(), // Ensure ID exists
+    const packagesConfig: PackageConfig[] = Array.isArray(packagesFromDb) ? packagesFromDb.map((pkg: any) => ({
+      id: pkg.id || Date.now(),
       name: pkg.name || '',
       description: pkg.description || '',
       topics: Array.isArray(pkg.topics) ? pkg.topics.filter((t: any) => typeof t === 'string') : [''],
       price: pkg.price ? pkg.price / 100 : priceInReais,
       originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
       mostSold: pkg.mostSold ?? false
-    })) : getInitialFormData().form_fields.packages; // Usar getInitialFormData()
+    })) : initial.form_fields.packages;
 
-    // Definir o arquivo selecionado localmente se houver um fileUrl existente
-    if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
-      // Não podemos recriar um objeto File a partir de uma URL, então apenas limpamos o estado local
-      // e o usuário precisará fazer upload novamente se quiser alterar o arquivo.
-      // O fileUrl existente será mantido no checkoutData.
-      setSelectedDeliverableFile(null); 
-    }
-
-
-    return {
-      name: checkout.products?.name || '',
+    // Merge DB data into the initial structure
+    const mergedData = deepMerge(initial, {
+      name: checkout.products?.name || '', // Use product name for form's 'name' field
       selectedProduct: checkout.product_id || '',
-      layout: 'horizontal', // Layout fixo como 'horizontal'
-      form_fields: { // Mapear para a nova estrutura aninhada
-        requireName: checkout.form_fields?.requireName ?? true,
-        requireCpf: checkout.form_fields?.requireCpf ?? true,
-        requirePhone: checkout.form_fields?.requirePhone ?? true,
-        requireEmail: checkout.form_fields?.requireEmail ?? true,
-        requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true,
-        packages: packagesConfig, // Usar os pacotes processados
-        guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || getInitialFormData().form_fields.guarantee,
-        reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || getInitialFormData().form_fields.reservedRights,
-        deliverable: {
-          type: checkout.form_fields?.deliverable?.type || 'none',
-          link: checkout.form_fields?.deliverable?.link || '',
-          fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
-          name: checkout.form_fields?.deliverable?.name || '',
-          description: checkout.form_fields?.deliverable?.description || ''
-        },
+      layout: checkout.layout || 'horizontal',
+      form_fields: {
+        ...checkout.form_fields,
+        packages: packagesConfig,
+        guarantee: checkout.form_fields?.guarantee || initial.form_fields.guarantee,
+        reservedRights: checkout.form_fields?.reservedRights || initial.form_fields.reservedRights,
+        deliverable: checkout.form_fields?.deliverable || initial.form_fields.deliverable,
         sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true,
-        transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || getInitialFormData().form_fields.transactionalEmailSubject,
-        transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || getInitialFormData().form_fields.transactionalEmailBody,
+        transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initial.form_fields.transactionalEmailSubject,
+        transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initial.form_fields.transactionalEmailBody,
       },
-      payment_methods: checkout.payment_methods || getInitialFormData().payment_methods,
+      payment_methods: checkout.payment_methods || initial.payment_methods,
       order_bumps: orderBumpsInReais,
       integrations: {
-        ...getInitialFormData().integrations,
+        ...initial.integrations,
         ...(checkout.integrations || {}),
         selectedEmailAccount: checkout.integrations?.selectedEmailAccount || '',
       },
-      support_contact: checkout.support_contact || getInitialFormData().support_contact,
-      styles: checkout.styles || getInitialFormData().styles,
-      timer: checkout.timer || getInitialFormData().timer,
-    };
-  };
+      support_contact: checkout.support_contact || initial.support_contact,
+      styles: {
+        ...checkout.styles,
+        description: checkout.styles?.description || checkout.products?.description || initial.styles.description, // Prioritize checkout description, then product, then default
+        headlineText: checkout.styles?.headlineText || checkout.products?.name || initial.styles.headlineText, // Prioritize checkout headline, then product name, then default
+      },
+      timer: checkout.timer || initial.timer,
+    });
+
+    console.log('AdminCheckouts: Merged data for editing:', JSON.stringify(mergedData, null, 2));
+    return mergedData;
+  }, [getInitialFormData, products]); // Adicionado products como dependência
 
   const resetToOriginal = () => {
     if (editingCheckout) {
@@ -427,8 +423,8 @@ const AdminCheckouts = () => {
     } : pkg);
     handleInputChange('form_fields.packages', packages);
   };
-  const addTopicToPackage = (packageId: number) => {
-    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
+  const addTopicToPackage = () => {
+    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === checkoutData.form_fields.packages[0].id ? {
       ...pkg,
       topics: [...pkg.topics, '']
     } : pkg);
@@ -858,7 +854,7 @@ const AdminCheckouts = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label>Tópicos do que será entregue</Label>
-                          <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage(pkg.id)}>
+                          <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage()}>
                             <Plus className="h-4 w-4 mr-2" />
                             Adicionar Tópico
                           </Button>
