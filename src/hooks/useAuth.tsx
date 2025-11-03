@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAdminLoading(true); // Inicia o carregamento específico de admin
       dismiss('admin-status-check-error');
 
-      const rpcTimeoutMs = 30000; // 30 segundos
+      const rpcTimeoutMs = 60000; // Aumentado para 60 segundos
       const maxAttempts = 3;
       const retryDelayMs = 2000; // 2 segundos
 
