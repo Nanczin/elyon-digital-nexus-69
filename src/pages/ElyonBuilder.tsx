@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom'; // Importar useNavigate
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Layout, Users, Palette, BarChart3, MessageSquare, Shield, Blocks, FileText, BookOpen, Settings, Upload, Folder, Copy, ExternalLink, Edit, Trash2, MoreVertical } from 'lucide-react';
@@ -32,6 +32,7 @@ const ElyonBuilder = () => {
   const [isEditProjectDialogOpen, setIsEditProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate(); // Inicializar useNavigate
 
   useEffect(() => {
     if (user && isAdmin) {
@@ -94,35 +95,29 @@ const ElyonBuilder = () => {
     }
   };
 
-  // Placeholder functions for new menu items
+  // Funções para navegar para as novas páginas
   const handleManageMembers = (projectId: string) => {
-    toast({ title: "Funcionalidade em breve", description: `Gerenciar membros do projeto ${projectId}` });
-    console.log(`Gerenciar membros do projeto ${projectId}`);
+    navigate(`/admin/projects/${projectId}/members`);
   };
 
   const handleManageContent = (projectId: string) => {
-    toast({ title: "Funcionalidade em breve", description: `Gerenciar conteúdo do projeto ${projectId}` });
-    console.log(`Gerenciar conteúdo do projeto ${projectId}`);
+    navigate(`/admin/projects/${projectId}/content`);
   };
 
   const handleManageDesign = (projectId: string) => {
-    toast({ title: "Funcionalidade em breve", description: `Gerenciar design do projeto ${projectId}` });
-    console.log(`Gerenciar design do projeto ${projectId}`);
+    navigate(`/admin/projects/${projectId}/design`);
   };
 
   const handleViewAnalytics = (projectId: string) => {
-    toast({ title: "Funcionalidade em breve", description: `Ver analytics do projeto ${projectId}` });
-    console.log(`Ver analytics do projeto ${projectId}`);
+    navigate(`/admin/projects/${projectId}/analytics`);
   };
 
   const handleManageCommunity = (projectId: string) => {
-    toast({ title: "Funcionalidade em breve", description: `Gerenciar comunidade do projeto ${projectId}` });
-    console.log(`Gerenciar comunidade do projeto ${projectId}`);
+    navigate(`/admin/projects/${projectId}/community`);
   };
 
   const handleProjectSettings = (projectId: string) => {
-    toast({ title: "Funcionalidade em breve", description: `Acessar configurações do projeto ${projectId}` });
-    console.log(`Acessar configurações do projeto ${projectId}`);
+    navigate(`/admin/projects/${projectId}/settings`);
   };
 
 
