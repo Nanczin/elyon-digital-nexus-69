@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings, Palette, BarChart3, MessageSquare } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -14,14 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { NewMemberDialog } from '@/components/elyon-builder/NewMemberDialog';
 import { ManageMemberAccessDialog } from '@/components/elyon-builder/ManageMemberAccessDialog';
 import { Switch } from '@/components/ui/switch';
-
-interface Project {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  primary_color: string;
-  secondary_color: string;
-}
+import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs'; // Importar o novo componente e a interface Project
 
 interface Member {
   id: string; // project_member_id
@@ -105,13 +97,12 @@ const ProjectMembersPage = () => {
 
       if (error) throw error;
 
-      // Para cada membro, buscar a data da última compra de um produto do projeto
       const membersWithPurchaseDates = await Promise.all((data || []).map(async (member: any) => {
         const { data: purchaseData, error: purchaseError } = await supabase
           .from('product_purchases')
           .select('created_at')
           .eq('user_id', member.user_id)
-          .in('product_id', member.product_access.map((pa: any) => pa.product_id)) // Apenas produtos que o membro tem acesso
+          .in('product_id', member.product_access.map((pa: any) => pa.product_id))
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -140,7 +131,7 @@ const ProjectMembersPage = () => {
   };
 
   useEffect(() => {
-    if (project) { // Só busca membros se o projeto já foi carregado
+    if (project) {
       fetchMembers();
     }
   }, [project]);
@@ -178,7 +169,7 @@ const ProjectMembersPage = () => {
         title: "Status atualizado!",
         description: `Membro agora está ${newStatus === 'active' ? 'ativo' : 'inativo'}.`,
       });
-      fetchMembers(); // Recarregar a lista
+      fetchMembers();
     } catch (error: any) {
       console.error('Erro ao atualizar status do membro:', error);
       toast({
@@ -202,7 +193,7 @@ const ProjectMembersPage = () => {
         title: "Membro removido!",
         description: `${memberName} foi removido do projeto.`,
       });
-      fetchMembers(); // Recarregar a lista
+      fetchMembers();
     } catch (error: any) {
       console.error('Erro ao remover membro:', error);
       toast({
@@ -275,174 +266,115 @@ const ProjectMembersPage = () => {
           </AlertDialog>
         </div>
 
-        {/* Tabs Navigation */}
-        <Tabs defaultValue="members" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="content" asChild>
-              <Link to={`/admin/projects/${projectId}/content`}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Conteúdo
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="members" asChild>
-              <Link to={`/admin/projects/${projectId}/members`}>
-                <Users className="mr-2 h-4 w-4" />
-                Membros
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="design" asChild>
-              <Link to={`/admin/projects/${projectId}/design`}>
-                <Palette className="mr-2 h-4 w-4" />
-                Design
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" asChild>
-              <Link to={`/admin/projects/${projectId}/analytics`}>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Analytics
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="community" asChild>
-              <Link to={`/admin/projects/${projectId}/community`}>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Comunidade
-              </Link>
-            </TabsTrigger>
-          </TabsList>
+        {/* Project Navigation Tabs */}
+        <ProjectNavigationTabs projectId={projectId!} activeTab="members" />
 
-          {/* Members Tab Content */}
-          <TabsContent value="members" className="mt-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Membros do Projeto</h2>
-                <p className="text-muted-foreground mt-1">
-                  Gerencie os usuários com acesso à sua área de membros
-                </p>
-              </div>
-              <NewMemberDialog projectId={projectId!} onMemberAdded={fetchMembers} />
+        {/* Members Content */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Membros do Projeto</h2>
+              <p className="text-muted-foreground mt-1">
+                Gerencie os usuários com acesso à sua área de membros
+              </p>
             </div>
+            <NewMemberDialog projectId={projectId!} onMemberAdded={fetchMembers} />
+          </div>
 
-            {members.length === 0 ? (
-              <Card className="min-h-[200px] flex items-center justify-center text-muted-foreground">
-                <CardContent className="py-8 text-center">
-                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p>Nenhum membro encontrado para este projeto.</p>
-                  <p className="text-sm mt-2">Adicione seu primeiro membro para começar.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {members.map(member => (
-                  <Card key={member.id} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <Users className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{member.profiles?.name || 'Nome Desconhecido'}</p>
-                        <p className="text-sm text-muted-foreground">{member.profiles?.email || 'Email Desconhecido'}</p>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>Membro desde: {format(new Date(member.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
-                          {member.last_purchase_date && (
-                            <>
-                              <span>•</span>
-                              <span>Última compra: {format(new Date(member.last_purchase_date), 'dd/MM/yyyy', { locale: ptBR })}</span>
-                            </>
-                          )}
-                        </div>
-                        {member.product_access.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            <span className="text-xs font-medium text-muted-foreground">Produtos:</span>
-                            {member.product_access.map((pa, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {pa.products?.name || 'Produto Desconhecido'}
-                              </Badge>
-                            ))}
-                          </div>
+          {members.length === 0 ? (
+            <Card className="min-h-[200px] flex items-center justify-center text-muted-foreground">
+              <CardContent className="py-8 text-center">
+                <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <p>Nenhum membro encontrado para este projeto.</p>
+                <p className="text-sm mt-2">Adicione seu primeiro membro para começar.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {members.map(member => (
+                <Card key={member.id} className="p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{member.profiles?.name || 'Nome Desconhecido'}</p>
+                      <p className="text-sm text-muted-foreground">{member.profiles?.email || 'Email Desconhecido'}</p>
+                      <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>Membro desde: {format(new Date(member.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                        {member.last_purchase_date && (
+                          <>
+                            <span>•</span>
+                            <span>Última compra: {format(new Date(member.last_purchase_date), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                          </>
                         )}
                       </div>
+                      {member.product_access.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <span className="text-xs font-medium text-muted-foreground">Produtos:</span>
+                          {member.product_access.map((pa, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {pa.products?.name || 'Produto Desconhecido'}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <Switch
-                        checked={member.status === 'active'}
-                        onCheckedChange={() => handleToggleMemberStatus(member.id, member.status)}
-                        title={member.status === 'active' ? 'Desativar Membro' : 'Ativar Membro'}
-                      />
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => openManageAccessDialog(member)}>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Gerenciar Acesso</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => console.log('Editar membro', member.id)}>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Configurações</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Remover Membro</span>
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza de que deseja remover "{member.profiles?.name || 'este membro'}" do projeto?
-                                  Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleRemoveMember(member.id, member.profiles?.name || 'Membro')}>
-                                  Remover
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Switch
+                      checked={member.status === 'active'}
+                      onCheckedChange={() => handleToggleMemberStatus(member.id, member.status)}
+                      title={member.status === 'active' ? 'Desativar Membro' : 'Ativar Membro'}
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => openManageAccessDialog(member)}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          <span>Gerenciar Acesso</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => console.log('Editar membro', member.id)}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Configurações</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Remover Membro</span>
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza de que deseja remover "{member.profiles?.name || 'este membro'}" do projeto?
+                                Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleRemoveMember(member.id, member.profiles?.name || 'Membro')}>
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                   </Card>
                 ))}
               </div>
-            )}
-          </TabsContent>
-
-          {/* Placeholder for other tabs */}
-          <TabsContent value="content" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Conteúdo do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="design" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Design do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="analytics" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Analytics do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="community" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Comunidade do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+          )}
+        </div>
       </div>
 
       {selectedMemberForAccess && (

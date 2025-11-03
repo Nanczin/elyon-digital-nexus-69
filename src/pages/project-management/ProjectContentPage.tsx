@@ -2,26 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, BookOpen, Users, Palette, BarChart3, MessageSquare, Plus, Trash2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, BookOpen, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-// import { useAuth } from '@/hooks/useAuth'; // Não é necessário aqui, o signOut é feito no Layout
-
-interface Project {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  primary_color: string;
-  secondary_color: string;
-}
+import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs'; // Importar o novo componente e a interface Project
 
 const ProjectContentPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  // const { signOut } = useAuth(); // Removido, pois o botão "Sair" não está na imagem
   const [project, setProject] = useState<Project | null>(null);
   const [loadingProject, setLoadingProject] = useState(true);
 
@@ -44,7 +34,7 @@ const ProjectContentPage = () => {
           description: error.message || "Não foi possível carregar os detalhes do projeto.",
           variant: "destructive",
         });
-        navigate('/admin/elyon-builder'); // Voltar se o projeto não for encontrado
+        navigate('/admin/elyon-builder');
       } finally {
         setLoadingProject(false);
       }
@@ -61,7 +51,7 @@ const ProjectContentPage = () => {
         title: "Projeto Excluído!",
         description: "O projeto foi removido com sucesso.",
       });
-      navigate('/admin/elyon-builder'); // Voltar para a lista de projetos
+      navigate('/admin/elyon-builder');
     } catch (error: any) {
       console.error('Erro ao excluir projeto:', error);
       toast({
@@ -72,11 +62,6 @@ const ProjectContentPage = () => {
     }
   };
 
-  // const handleSignOut = async () => { // Removido, pois o botão "Sair" não está na imagem
-  //   await signOut();
-  //   navigate('/'); 
-  // };
-
   if (loadingProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -86,7 +71,7 @@ const ProjectContentPage = () => {
   }
 
   if (!project) {
-    return null; // Ou uma mensagem de erro, já que o navigate já foi chamado
+    return null;
   }
 
   return (
@@ -105,11 +90,10 @@ const ProjectContentPage = () => {
             <p className="text-sm text-muted-foreground">Gerenciar projeto</p>
           </div>
         </div>
-        {/* Botão "Sair" removido conforme a imagem */}
       </header>
 
       <div className="container mx-auto p-6 flex-1">
-        <div className="flex justify-end mb-6"> {/* Botão Excluir Projeto */}
+        <div className="flex justify-end mb-6">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
@@ -135,98 +119,39 @@ const ProjectContentPage = () => {
           </AlertDialog>
         </div>
 
-        {/* Tabs Navigation */}
-        <Tabs defaultValue="content" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="content" asChild>
-              <Link to={`/admin/projects/${projectId}/content`}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Conteúdo
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="members" asChild>
-              <Link to={`/admin/projects/${projectId}/members`}>
-                <Users className="mr-2 h-4 w-4" />
-                Membros
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="design" asChild>
-              <Link to={`/admin/projects/${projectId}/design`}>
-                <Palette className="mr-2 h-4 w-4" />
-                Design
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" asChild>
-              <Link to={`/admin/projects/${projectId}/analytics`}>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Analytics
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="community" asChild>
-              <Link to={`/admin/projects/${projectId}/community`}>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Comunidade
-              </Link>
-            </TabsTrigger>
-          </TabsList>
+        {/* Project Navigation Tabs */}
+        <ProjectNavigationTabs projectId={projectId!} activeTab="content" />
 
-          {/* Content Tab */}
-          <TabsContent value="content" className="mt-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Módulos e Aulas</h2>
-                <p className="text-muted-foreground mt-1">
-                  Gerencie o conteúdo da sua área de membros
-                </p>
-                <p className="text-sm text-yellow-600 mt-2 flex items-center gap-1">
-                  <span className="text-lg">💡</span> Novos módulos são automaticamente liberados para todos os membros ativos
-                </p>
-              </div>
-              <Button 
-                style={{ 
-                  background: `linear-gradient(135deg, ${project.primary_color}, ${project.secondary_color})`,
-                  color: '#fff'
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Módulo
-              </Button>
+        {/* Content Tab Content */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Módulos e Aulas</h2>
+              <p className="text-muted-foreground mt-1">
+                Gerencie o conteúdo da sua área de membros
+              </p>
+              <p className="text-sm text-yellow-600 mt-2 flex items-center gap-1">
+                <span className="text-lg">💡</span> Novos módulos são automaticamente liberados para todos os membros ativos
+              </p>
             </div>
+            <Button 
+              style={{ 
+                background: `linear-gradient(135deg, ${project.primary_color}, ${project.secondary_color})`,
+                color: '#fff'
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Módulo
+            </Button>
+          </div>
 
-            <h3 className="text-xl font-semibold mb-4">Módulos</h3>
-            <Card className="min-h-[200px] flex items-center justify-center text-muted-foreground">
-              <CardContent className="py-8">
-                Nenhum módulo criado ainda.
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Placeholder for other tabs */}
-          <TabsContent value="members" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Membros do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="design" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Design do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="analytics" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Analytics do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="community" className="mt-6">
-            <Card>
-              <CardHeader><CardTitle>Comunidade do Projeto</CardTitle></CardHeader>
-              <CardContent>Funcionalidade em desenvolvimento.</CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <h3 className="text-xl font-semibold mb-4">Módulos</h3>
+          <Card className="min-h-[200px] flex items-center justify-center text-muted-foreground">
+            <CardContent className="py-8">
+              Nenhum módulo criado ainda.
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
