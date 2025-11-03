@@ -48,8 +48,8 @@ const AdminCheckouts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [currentTab, setCurrentTab] = useState('basic');
   
-  // Reestruturado initialFormData para espelhar a estrutura do banco de dados
-  const initialFormData = {
+  // Refatorado initialFormData para ser uma função que retorna um novo objeto
+  const getInitialFormData = () => ({
     name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
     selectedProduct: '',
     layout: 'horizontal' as string,
@@ -126,7 +126,8 @@ const AdminCheckouts = () => {
       color: '#dc2626',
       text: 'Oferta por tempo limitado'
     }
-  };
+  });
+  
   // Usar uma chave única por checkout ou "new" para novos
   // Manter a chave consistente mesmo quando o componente remonta
   const [autoSaveKey, setAutoSaveKey] = useState(() => {
@@ -140,9 +141,8 @@ const AdminCheckouts = () => {
     setData: setCheckoutData,
     clearSavedData,
     loadData,
-    forceLoad,
     hasSavedData
-  } = useAutoSave(initialFormData, {
+  } = useAutoSave(getInitialFormData, { // Chamar getInitialFormData aqui
     key: autoSaveKey,
     debounceMs: 800,
     showToast: true // Habilitar toast de salvamento automático
@@ -157,7 +157,7 @@ const AdminCheckouts = () => {
     } else if (!editingCheckout && !hasSavedData && autoSaveKey === 'checkout-new') {
       // Se for um novo checkout e não houver rascunho, garantir que o initialFormData seja carregado
       console.log('AdminCheckouts: Carregando initialFormData para novo checkout (sem rascunho).');
-      loadData(initialFormData);
+      loadData(getInitialFormData()); // Chamar getInitialFormData aqui
     }
   }, [editingCheckout, hasSavedData, loadData, autoSaveKey]);
 
@@ -251,7 +251,7 @@ const AdminCheckouts = () => {
       price: bump.price ? bump.price / 100 : 0,
       originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0,
       selectedProduct: bump.selectedProduct || ''
-    })) : initialFormData.order_bumps; // Usar initialFormData default
+    })) : getInitialFormData().order_bumps; // Usar getInitialFormData()
     
     const packagesFromDb = (checkout.form_fields as FormFields)?.packages;
     const packagesConfig: PackageConfig[] = Array.isArray(packagesFromDb) ? packagesFromDb.map((pkg: any) => ({ // Cast pkg to any
@@ -262,7 +262,7 @@ const AdminCheckouts = () => {
       price: pkg.price ? pkg.price / 100 : priceInReais,
       originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
       mostSold: pkg.mostSold ?? false
-    })) : initialFormData.form_fields.packages; // Usar initialFormData default
+    })) : getInitialFormData().form_fields.packages; // Usar getInitialFormData()
 
     return {
       name: checkout.products?.name || '',
@@ -275,8 +275,8 @@ const AdminCheckouts = () => {
         requireEmail: checkout.form_fields?.requireEmail ?? true,
         requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true,
         packages: packagesConfig, // Usar os pacotes processados
-        guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initialFormData.form_fields.guarantee,
-        reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.form_fields.reservedRights,
+        guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || getInitialFormData().form_fields.guarantee,
+        reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || getInitialFormData().form_fields.reservedRights,
         deliverable: {
           type: checkout.form_fields?.deliverable?.type || 'none',
           link: checkout.form_fields?.deliverable?.link || '',
@@ -286,19 +286,19 @@ const AdminCheckouts = () => {
           description: checkout.form_fields?.deliverable?.description || ''
         },
         sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true,
-        transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initialFormData.form_fields.transactionalEmailSubject,
-        transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.form_fields.transactionalEmailBody,
+        transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || getInitialFormData().form_fields.transactionalEmailSubject,
+        transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || getInitialFormData().form_fields.transactionalEmailBody,
       },
-      payment_methods: checkout.payment_methods || initialFormData.payment_methods,
+      payment_methods: checkout.payment_methods || getInitialFormData().payment_methods,
       order_bumps: orderBumpsInReais,
       integrations: {
-        ...initialFormData.integrations,
+        ...getInitialFormData().integrations,
         ...(checkout.integrations || {}),
         selectedEmailAccount: checkout.integrations?.selectedEmailAccount || '',
       },
-      support_contact: checkout.support_contact || initialFormData.support_contact,
-      styles: checkout.styles || initialFormData.styles,
-      timer: checkout.timer || initialFormData.timer,
+      support_contact: checkout.support_contact || getInitialFormData().support_contact,
+      styles: checkout.styles || getInitialFormData().styles,
+      timer: checkout.timer || getInitialFormData().timer,
     };
   };
 
@@ -313,7 +313,7 @@ const AdminCheckouts = () => {
         description: "Dados originais do checkout foram recarregados"
       });
     } else {
-      loadData(initialFormData); // Para novo checkout, resetar para initialFormData
+      loadData(getInitialFormData()); // Para novo checkout, resetar para initialFormData
       clearSavedData();
       toast({
         title: "Formulário limpo",
@@ -609,7 +609,7 @@ const AdminCheckouts = () => {
         }}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2" onClick={() => {
-              setEditingCheckout(null);
+               setEditingCheckout(null);
               setAutoSaveKey('checkout-new'); // Isso fará com que useAutoSave carregue o rascunho 'checkout-new' ou initialFormData
             }}>
               <Plus className="h-4 w-4" />
@@ -650,7 +650,7 @@ const AdminCheckouts = () => {
                           const originalData = loadOriginalCheckoutData(editingCheckout);
                           loadData(originalData);
                         } else {
-                          loadData(initialFormData);
+                          loadData(getInitialFormData());
                         }
                       }}
                       className="text-xs sm:text-sm"

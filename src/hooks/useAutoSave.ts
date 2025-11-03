@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './use-toast';
 import { deepMerge } from '@/lib/utils'; // Import deepMerge
 
@@ -9,7 +9,7 @@ interface AutoSaveOptions {
 }
 
 export const useAutoSave = <T extends object>( // Adicionado 'extends object' para compatibilidade com deepMerge
-  initialData: T,
+  initialDataFn: () => T, // Agora é uma função que retorna T
   options: AutoSaveOptions
 ) => {
   const [data, setData] = useState<T>(() => {
@@ -20,14 +20,14 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
         const parsedSavedData = JSON.parse(savedData);
         // Usar deepMerge para garantir que todos os campos de initialData existam,
         // preenchendo com os valores salvos se disponíveis.
-        return deepMerge(initialData, parsedSavedData);
+        return deepMerge(initialDataFn(), parsedSavedData); // Chamar initialDataFn
       } catch {
         // Se o parsing falhar (dados corrompidos), retorna initialData
-        return JSON.parse(JSON.stringify(initialData));
+        return JSON.parse(JSON.stringify(initialDataFn())); // Chamar initialDataFn
       }
     }
     // Se não houver dados salvos, retorna initialData
-    return JSON.parse(JSON.stringify(initialData));
+    return JSON.parse(JSON.stringify(initialDataFn())); // Chamar initialDataFn
   });
   
   const [hasSavedData, setHasSavedData] = useState<boolean>(() => {
@@ -79,12 +79,12 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
   const clearSavedData = () => {
     localStorage.removeItem(options.key);
     setHasSavedData(false);
-    setData(JSON.parse(JSON.stringify(initialData)));
+    setData(JSON.parse(JSON.stringify(initialDataFn()))); // Chamar initialDataFn
   };
 
   const loadData = (newData: T) => {
     // Garantir que os dados carregados sejam mesclados com a estrutura inicial
-    setData(deepMerge(initialData, JSON.parse(JSON.stringify(newData))));
+    setData(deepMerge(initialDataFn(), JSON.parse(JSON.stringify(newData)))); // Chamar initialDataFn
   };
 
   const forceLoad = () => {
@@ -93,7 +93,7 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
       try {
         const parsedData = JSON.parse(savedData);
         // Usar deepMerge aqui também para garantir a estrutura completa
-        setData(deepMerge(initialData, parsedData));
+        setData(deepMerge(initialDataFn(), parsedData)); // Chamar initialDataFn
         setHasSavedData(true);
         return true;
       } catch {
@@ -115,7 +115,7 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
       
       // 3. Mesclar o resultado com o initialData para garantir que a estrutura completa
       // esteja presente e preencher quaisquer valores padrão que possam estar faltando.
-      const finalState = deepMerge(initialData, mergedWithPrev);
+      const finalState = deepMerge(initialDataFn(), mergedWithPrev); // Chamar initialDataFn
       
       return JSON.parse(JSON.stringify(finalState)); // Retorna uma cópia profunda
     });
