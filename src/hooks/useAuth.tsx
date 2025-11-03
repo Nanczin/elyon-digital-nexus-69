@@ -7,7 +7,8 @@ import { withTimeout } from '@/utils/supabaseUtils';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  loading: boolean;
+  loading: boolean; // Indica se a sessão inicial foi carregada
+  isAdminLoading: boolean; // Indica se o status de admin está sendo verificado
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -20,34 +21,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(() => {
-    console.log('AUTH_DEBUG: Initializing AuthProvider, loading starts as true.');
-    return true;
-  });
+  const [loading, setLoading] = useState(true); // Começa como true, definido como false após a sessão ser conhecida
+  const [isAdminLoading, setIsAdminLoading] = useState(false); // Novo estado para o carregamento da verificação de admin
 
   const { toast, dismiss } = useToast();
 
+  // Efeito para carregar a sessão inicial e lidar com mudanças de estado de autenticação
   useEffect(() => {
     const handleAuthStateChange = async (event: string, currentSession: Session | null) => {
       console.log('AUTH_DEBUG: handleAuthStateChange event:', event);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      setLoading(false); // Define o carregamento global como false assim que a sessão é conhecida
+      console.log('AUTH_DEBUG: Global loading set to false after session update.');
+    };
 
-      if (currentSession?.user) {
-        console.log('AUTH_DEBUG: User is present, checking admin status with is_current_user_admin()...');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
+      await handleAuthStateChange('INITIAL_SESSION', initialSession);
+    }).catch(error => {
+      console.error('AUTH_DEBUG: Error in getSession:', error);
+      setLoading(false); // Garante que o loading seja false mesmo se getSession falhar
+    });
+
+    return () => subscription.unsubscribe();
+  }, []); // Dependências vazias para rodar apenas uma vez na montagem
+
+  // Novo efeito para verificar o status de administrador, dependente do 'user'
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        console.log('AUTH_DEBUG: User detected, starting admin status check...');
+        setIsAdminLoading(true); // Inicia o carregamento específico de admin
         let adminCheckSucceeded = false;
         let attempts = 0;
         const maxAttempts = 3;
         const initialDelayMs = 500;
         const retryDelayMs = 2000;
-        const rpcTimeoutMs = 30000; // Aumentado para 30 segundos
+        const rpcTimeoutMs = 30000;
 
         dismiss('admin-status-check-error');
 
         while (attempts < maxAttempts && !adminCheckSucceeded) {
           attempts++;
-          if (attempts === 1 && event === 'SIGNED_IN') {
-            console.log(`AUTH_DEBUG: Attempt ${attempts}: Initial delay of ${initialDelayMs}ms for SIGNED_IN event.`);
+          if (attempts === 1) {
+            console.log(`AUTH_DEBUG: Attempt ${attempts}: Initial delay of ${initialDelayMs}ms for admin check.`);
             await new Promise(resolve => setTimeout(resolve, initialDelayMs));
           } else if (attempts > 1) {
             console.log(`AUTH_DEBUG: Attempt ${attempts}: Retrying in ${retryDelayMs}ms...`);
@@ -100,26 +120,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
+        setIsAdminLoading(false); // Finaliza o carregamento específico de admin
+        console.log('AUTH_DEBUG: Admin status check completed, isAdminLoading set to false.');
       } else {
-        console.log('AUTH_DEBUG: No user present, setting isAdmin to false.');
+        console.log('AUTH_DEBUG: No user present for admin check, setting isAdmin to false and isAdminLoading to false.');
         setIsAdmin(false);
+        setIsAdminLoading(false);
       }
-      console.log('AUTH_DEBUG: Setting loading to false.');
-      setLoading(false);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
-      console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
-      await handleAuthStateChange('INITIAL_SESSION', initialSession);
-    }).catch(error => {
-      console.error('AUTH_DEBUG: Error in getSession:', error);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [dismiss, toast]);
+    checkAdminStatus();
+  }, [user, dismiss, toast]); // Depende de 'user' para ser executado novamente quando o usuário muda
 
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -186,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    isAdminLoading, // Inclui o novo estado no valor do contexto
     signUp,
     signIn,
     signOut,
