@@ -33,38 +33,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentSession?.user) {
         console.log('AUTH_DEBUG: User is present, checking admin status with is_current_user_admin()...');
-        try {
-          // Envolve a chamada RPC com um timeout de 5 segundos
-          const { data, error } = await withTimeout(
-            supabase.rpc('is_current_user_admin'), // Alterado para is_current_user_admin
-            5000, // 5 segundos de timeout
-            'Admin status check timed out'
-          );
-          if (error) {
-            console.error('AUTH_DEBUG: Error checking admin status:', error);
-            setIsAdmin(false);
-          } else {
-            // is_current_user_admin retorna um boolean diretamente
-            if (typeof data === 'boolean') {
-              setIsAdmin(data);
-              console.log('AUTH_DEBUG: is_current_user_admin RPC returned boolean:', data);
-            } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_current_user_admin' in data[0]) {
-              // Fallback para o caso de a resposta vir como array de objeto (comum em algumas versões do Supabase)
-              setIsAdmin(data[0].is_current_user_admin);
-              console.log('AUTH_DEBUG: is_current_user_admin RPC returned array object:', data[0].is_current_user_admin);
+        let adminCheckSucceeded = false;
+        let attempts = 0;
+        const maxAttempts = 2; // Tentar 2 vezes (1 inicial + 1 retry)
+        const retryDelayMs = 1500; // 1.5 segundos de atraso para a retry
+
+        while (attempts < maxAttempts && !adminCheckSucceeded) {
+          attempts++;
+          try {
+            const { data, error } = await withTimeout(
+              supabase.rpc('is_current_user_admin'),
+              5000, // 5 segundos de timeout
+              'Admin status check timed out'
+            );
+
+            if (error) {
+              console.error(`AUTH_DEBUG: Attempt ${attempts}: Error checking admin status:`, error);
+              if (attempts < maxAttempts && error.message === 'Admin status check timed out') {
+                console.log(`AUTH_DEBUG: Attempt ${attempts}: Timeout detected, retrying in ${retryDelayMs}ms...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+              } else {
+                setIsAdmin(false);
+              }
             } else {
-              console.warn('AUTH_DEBUG: is_current_user_admin RPC returned unexpected data format:', data);
+              if (typeof data === 'boolean') {
+                setIsAdmin(data);
+                console.log(`AUTH_DEBUG: Attempt ${attempts}: is_current_user_admin RPC returned boolean:`, data);
+                adminCheckSucceeded = true;
+              } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_current_user_admin' in data[0]) {
+                setIsAdmin(data[0].is_current_user_admin);
+                console.log(`AUTH_DEBUG: Attempt ${attempts}: is_current_user_admin RPC returned array object:`, data[0].is_current_user_admin);
+                adminCheckSucceeded = true;
+              } else {
+                console.warn(`AUTH_DEBUG: Attempt ${attempts}: is_current_user_admin RPC returned unexpected data format:`, data);
+                setIsAdmin(false);
+                adminCheckSucceeded = true; // Consider it handled, even if unexpected format
+              }
+            }
+          } catch (error: any) {
+            console.error(`AUTH_DEBUG: Attempt ${attempts}: Error in is_current_user_admin RPC call (catch block):`, error.message);
+            if (attempts < maxAttempts && error.message === 'Admin status check timed out') {
+              console.log(`AUTH_DEBUG: Attempt ${attempts}: Timeout detected, retrying in ${retryDelayMs}ms...`);
+              await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+            } else {
               setIsAdmin(false);
+              toast({
+                title: "Erro de autenticação",
+                description: `Não foi possível verificar o status de administrador: ${error.message}.`,
+                variant: "destructive",
+              });
             }
           }
-        } catch (error: any) { // Captura erros de timeout também
-          console.error('AUTH_DEBUG: Error in is_current_user_admin RPC call (catch block):', error.message);
-          setIsAdmin(false);
-          toast({
-            title: "Erro de autenticação",
-            description: `Não foi possível verificar o status de administrador: ${error.message}.`,
-            variant: "destructive",
-          });
         }
       } else {
         console.log('AUTH_DEBUG: No user present, setting isAdmin to false.');
