@@ -203,7 +203,7 @@ const LessonViewerPage = () => {
         </div>
       </header>
 
-      <div className="container mx-auto p-6 flex-1 max-w-4xl">
+      <div className="container mx-auto p-6 flex-1 max-w-6xl"> {/* Alterado de max-w-4xl para max-w-6xl */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
