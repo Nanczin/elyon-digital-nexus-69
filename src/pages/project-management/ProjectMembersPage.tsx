@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings, Palette } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings, Palette, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { NewMemberDialog } from '@/components/elyon-builder/NewMemberDialog';
-import { ManageMemberAccessDialog } from '@/components/elyon-builder/ManageMemberAccessDialog';
+import { ManageMemberAccessDialog } => '@/components/elyon-builder/ManageMemberAccessDialog';
 import { Switch } from '@/components/ui/switch';
 
 interface Project {
