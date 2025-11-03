@@ -62,15 +62,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('AUTH_DEBUG: Cleared previous retry timeout.');
     }
 
-    const checkAdminStatus = async () => {
-      if (!user) {
-        console.log('AUTH_DEBUG: No user present for admin check, setting isAdmin to false, isAdminLoading to false, and resetting retryCount.');
-        setIsAdmin(false);
-        setIsAdminLoading(false);
-        setRetryCount(0); // Reset retry count when no user
-        return;
-      }
+    // Se não há usuário, reseta o estado de admin e o contador de retentativas, e para a execução.
+    if (!user) {
+      console.log('AUTH_DEBUG: No user present, resetting admin state and retryCount to 0.');
+      setIsAdmin(false);
+      setIsAdminLoading(false);
+      setRetryCount(0); // Garante que retryCount seja 0 quando não há usuário
+      return; // Importante: para a execução do useEffect para este ciclo
+    }
 
+    // Se o usuário existe, procede com a verificação de status de administrador
+    const checkAdminStatus = async () => {
       console.log('AUTH_DEBUG: User detected, starting admin status check...');
       setIsAdminLoading(true); // Inicia o carregamento específico de admin
       dismiss('admin-status-check-error');
@@ -137,8 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Inicia a verificação ou retentativa
-    checkAdminStatus();
+    checkAdminStatus(); // Chama a função apenas se o usuário existe (devido ao 'return' antecipado)
 
     // Função de limpeza para o useEffect
     return () => {
