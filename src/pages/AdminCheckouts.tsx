@@ -146,18 +146,26 @@ const AdminCheckouts = () => {
     showToast: false
   });
   
-  // Verificar e carregar dados salvos quando o componente montar
+  // Efeito para carregar dados originais do checkout se estiver editando e não houver rascunho
   useEffect(() => {
-    // Não fazer nada aqui para evitar carregar automaticamente rascunhos corrompidos
-    // O carregamento será feito explicitamente na função handleEdit
-  }, []);
+    if (editingCheckout && !hasSavedData) {
+      console.log('AdminCheckouts: Carregando dados originais do DB para edição (sem rascunho).');
+      const originalData = loadOriginalCheckoutData(editingCheckout);
+      loadData(originalData);
+    } else if (!editingCheckout && !hasSavedData && autoSaveKey === 'checkout-new') {
+      // Se for um novo checkout e não houver rascunho, garantir que o initialFormData seja carregado
+      console.log('AdminCheckouts: Carregando initialFormData para novo checkout (sem rascunho).');
+      loadData(initialFormData);
+    }
+  }, [editingCheckout, hasSavedData, loadData, autoSaveKey]);
+
 
   // Salvar dados antes de navegar ou fechar a aba
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Forçar o salvamento dos dados atuais
       try {
-        localStorage.setItem(autoSaveKey, JSON.stringify(checkoutData));
+        localStorage.setItem(autoSaveKey, JSON.stringify(JSON.parse(JSON.stringify(checkoutData))));
       } catch (error) {
         console.error('Erro ao salvar dados antes de navegar:', error);
       }
@@ -166,9 +174,6 @@ const AdminCheckouts = () => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [autoSaveKey, checkoutData]);
-
-  // O auto-save handle carregamento automático para novos checkouts
-  // Para edição, usamos a função handleEdit que já carrega os dados corretamente
 
   useEffect(() => {
     if (user && isAdmin) {
@@ -298,17 +303,15 @@ const AdminCheckouts = () => {
   const resetToOriginal = () => {
     if (editingCheckout) {
       const originalData = loadOriginalCheckoutData(editingCheckout);
-      setCheckoutData(originalData);
-      
-      // Limpar apenas o localStorage da chave atual, mas manter a chave
-      clearSavedData();
+      loadData(originalData); // Usar loadData para sobrescrever o estado
+      clearSavedData(); // Limpar o rascunho do localStorage
       
       toast({
         title: "Dados recarregados",
         description: "Dados originais do checkout foram recarregados"
       });
     } else {
-      setCheckoutData(initialFormData);
+      loadData(initialFormData); // Para novo checkout, resetar para initialFormData
       clearSavedData();
       toast({
         title: "Formulário limpo",
@@ -321,37 +324,8 @@ const AdminCheckouts = () => {
     
     // Atualizar a chave do auto-save para o checkout específico
     const newKey = `checkout-edit-${checkout.id}`;
-    setAutoSaveKey(newKey);
+    setAutoSaveKey(newKey); // useAutoSave irá carregar o rascunho para esta chave (se existir)
     
-    // Verificar se há dados salvos em rascunho primeiro
-    const savedData = localStorage.getItem(newKey);
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        // Verificar se os dados salvos não estão vazios ou corrompidos
-        if (parsedData && parsedData.selectedProduct && Object.keys(parsedData).length > 5) {
-          console.log('Carregando dados salvos do rascunho para checkout:', checkout.id);
-          setCheckoutData(parsedData);
-          setIsDialogOpen(true);
-          return;
-        } else {
-          // Se os dados estão vazios ou corrompidos, remover do localStorage
-          localStorage.removeItem(newKey);
-          console.log('Dados salvos estavam corrompidos, removendo...');
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados salvos:', error);
-        localStorage.removeItem(newKey);
-      }
-    }
-    
-    // Se não há dados salvos válidos, carregar dados originais do checkout
-    console.log('Carregando dados originais do checkout:', checkout.id);
-    console.log('Timer do checkout carregado:', checkout.timer);
-    
-    const originalData = loadOriginalCheckoutData(checkout);
-    console.log('Timer nos dados processados:', originalData.timer);
-    setCheckoutData(originalData);
     setIsDialogOpen(true);
   };
   const handleDelete = async (checkoutId: string) => {
@@ -440,6 +414,10 @@ const AdminCheckouts = () => {
   };
   const removePackage = (id: number) => {
     const newPackages = checkoutData.packages.filter(pkg => pkg.id !== id);
+    if (newPackages.length === 0) {
+      toast({ title: "Erro", description: "Deve haver pelo menos um pacote.", variant: "destructive" });
+      return;
+    }
     handleInputChange('packages', newPackages);
   };
   const updatePackage = (id: number, field: string, value: any) => {
@@ -663,32 +641,16 @@ const AdminCheckouts = () => {
           // Quando fechar o diálogo, apenas resetar estado de edição mas manter rascunhos
           if (!open) {
             setEditingCheckout(null);
+            // Quando o diálogo é fechado, o useAutoSave já terá salvo o rascunho.
+            // Se for um novo checkout, o autoSaveKey será 'checkout-new'.
+            // Se for um checkout existente, o autoSaveKey será 'checkout-edit-ID'.
+            // Não precisamos fazer nada aqui, pois o useAutoSave gerencia o estado.
           }
         }}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2" onClick={() => {
-              // Salvar a chave atual antes de mudar
-              const currentKey = autoSaveKey;
-              
               setEditingCheckout(null);
-              setAutoSaveKey('checkout-new');
-              
-              // Só limpar se estamos mudando de contexto (de edição para novo)
-              if (currentKey.startsWith('checkout-edit-')) {
-                // Se estivermos editando, não limpar os dados salvos da edição
-                // Apenas trocar para o contexto de novo checkout
-                const newCheckoutData = localStorage.getItem('checkout-new');
-                if (newCheckoutData) {
-                  try {
-                    setCheckoutData(JSON.parse(newCheckoutData));
-                  } catch {
-                    // Se houver erro, usar dados iniciais
-                    setCheckoutData(initialFormData);
-                  }
-                } else {
-                  setCheckoutData(initialFormData);
-                }
-              }
+              setAutoSaveKey('checkout-new'); // Isso fará com que useAutoSave carregue o rascunho 'checkout-new' ou initialFormData
             }}>
               <Plus className="h-4 w-4" />
               Novo Checkout
@@ -723,7 +685,13 @@ const AdminCheckouts = () => {
                       size="sm" 
                       onClick={() => {
                         clearSavedData();
-                        handleEdit(editingCheckout); // Recarregar dados originais
+                        // Após limpar o rascunho, recarregar os dados originais do checkout
+                        if (editingCheckout) {
+                          const originalData = loadOriginalCheckoutData(editingCheckout);
+                          loadData(originalData);
+                        } else {
+                          loadData(initialFormData);
+                        }
                       }}
                       className="text-xs sm:text-sm"
                     >
