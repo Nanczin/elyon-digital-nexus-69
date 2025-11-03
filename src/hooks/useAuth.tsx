@@ -32,11 +32,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
-        console.log('AUTH_DEBUG: User is present, checking admin status...');
+        console.log('AUTH_DEBUG: User is present, checking admin status with is_current_user_admin()...');
         try {
           // Envolve a chamada RPC com um timeout de 5 segundos
           const { data, error } = await withTimeout(
-            supabase.rpc('is_admin'),
+            supabase.rpc('is_current_user_admin'), // Alterado para is_current_user_admin
             5000, // 5 segundos de timeout
             'Admin status check timed out'
           );
@@ -44,19 +44,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('AUTH_DEBUG: Error checking admin status:', error);
             setIsAdmin(false);
           } else {
+            // is_current_user_admin retorna um boolean diretamente
             if (typeof data === 'boolean') {
               setIsAdmin(data);
-              console.log('AUTH_DEBUG: is_admin RPC returned boolean:', data);
-            } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_admin' in data[0]) {
-              setIsAdmin(data[0].is_admin);
-              console.log('AUTH_DEBUG: is_admin RPC returned array object:', data[0].is_admin);
+              console.log('AUTH_DEBUG: is_current_user_admin RPC returned boolean:', data);
+            } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_current_user_admin' in data[0]) {
+              // Fallback para o caso de a resposta vir como array de objeto (comum em algumas versões do Supabase)
+              setIsAdmin(data[0].is_current_user_admin);
+              console.log('AUTH_DEBUG: is_current_user_admin RPC returned array object:', data[0].is_current_user_admin);
             } else {
-              console.warn('AUTH_DEBUG: is_admin RPC returned unexpected data format:', data);
+              console.warn('AUTH_DEBUG: is_current_user_admin RPC returned unexpected data format:', data);
               setIsAdmin(false);
             }
           }
         } catch (error: any) { // Captura erros de timeout também
-          console.error('AUTH_DEBUG: Error in is_admin RPC call (catch block):', error.message);
+          console.error('AUTH_DEBUG: Error in is_current_user_admin RPC call (catch block):', error.message);
           setIsAdmin(false);
           toast({
             title: "Erro de autenticação",
