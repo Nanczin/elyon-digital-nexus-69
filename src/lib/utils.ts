@@ -37,3 +37,36 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 
   return output;
 }
+
+/**
+ * Atualiza um valor aninhado em um objeto de forma imutável.
+ * Retorna um novo objeto com o valor no caminho especificado atualizado.
+ *
+ * @param obj O objeto original.
+ * @param path O caminho da propriedade a ser atualizada (ex: 'form_fields.packages[0].name').
+ * @param value O novo valor.
+ * @returns Um novo objeto com a propriedade atualizada.
+ */
+export function setNestedValue<T extends object>(obj: T, path: string, value: any): T {
+  const keys = path.split('.');
+  const newObj = { ...obj }; // Cópia superficial do nível superior
+
+  let current: any = newObj;
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (i === keys.length - 1) {
+      current[key] = value;
+    } else {
+      // Se o valor da chave atual não for um objeto ou for null/undefined,
+      // inicialize-o como um objeto vazio para evitar erros.
+      // Garanta que estamos sempre trabalhando em uma cópia.
+      if (typeof current[key] !== 'object' || current[key] === null || Array.isArray(current[key])) {
+        current[key] = {};
+      } else {
+        current[key] = { ...current[key] }; // Cópia profunda do objeto aninhado
+      }
+      current = current[key];
+    }
+  }
+  return newObj;
+}

@@ -24,6 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig, FormFields e os novos tipos
 import { Alert, AlertDescription } from '@/components/ui/alert'; // Importação adicionada
+import { setNestedValue } from '@/lib/utils'; // Importar setNestedValue
 
 const AdminCheckouts = () => {
   const {
@@ -144,7 +145,7 @@ const AdminCheckouts = () => {
   } = useAutoSave(initialFormData, {
     key: autoSaveKey,
     debounceMs: 800,
-    showToast: false
+    showToast: true // Habilitar toast de salvamento automático
   });
   
   // Efeito para carregar dados originais do checkout se estiver editando e não houver rascunho
@@ -362,32 +363,7 @@ const AdminCheckouts = () => {
     return <Navigate to="/" replace />;
   }
   const handleInputChange = (path: string, value: any) => {
-    setCheckoutData(prev => {
-      const keys = path.split('.');
-      const newData = {
-        ...prev
-      };
-      let current: any = newData;
-      let oldCurrent: any = prev;
-      
-      // Get old value for history
-      for (let i = 0; i < keys.length - 1; i++) {
-        oldCurrent = oldCurrent?.[keys[i]];
-        current[keys[i]] = {
-          ...current[keys[i]]
-        };
-        current = current[keys[i]];
-      }
-      
-      const oldValue = oldCurrent?.[keys[keys.length - 1]];
-      current[keys[keys.length - 1]] = value;
-      
-      // Only add to history if value actually changed
-      if (oldValue !== value) {
-      }
-      
-      return newData;
-    });
+    setCheckoutData(prev => setNestedValue(prev, path, value));
   };
 
   const handleFileChange = (file: File | null) => {
