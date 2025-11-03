@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings, Palette } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
