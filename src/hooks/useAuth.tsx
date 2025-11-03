@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { withTimeout } from '@/utils/supabaseUtils'; // Importando o novo utilitário
+import { useToast } from '@/hooks/use-toast'; // Importando o hook useToast
+import { withTimeout } from '@/utils/supabaseUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AUTH_DEBUG: Initializing AuthProvider, loading starts as true.');
     return true;
   });
+
+  // Chamar o hook useToast aqui para obter a instância correta
+  const { toast, dismiss } = useToast();
 
   useEffect(() => {
     const handleAuthStateChange = async (event: string, currentSession: Session | null) => {
@@ -35,22 +38,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('AUTH_DEBUG: User is present, checking admin status with is_current_user_admin()...');
         let adminCheckSucceeded = false;
         let attempts = 0;
-        const maxAttempts = 3; // Aumentado para 3 tentativas (1 inicial + 2 retries)
-        const initialDelayMs = 500; // Pequeno atraso inicial antes da primeira tentativa
-        const retryDelayMs = 2000; // 2 segundos de atraso para as retries
-        const rpcTimeoutMs = 10000; // Aumentado o timeout da RPC para 10 segundos
+        const maxAttempts = 3;
+        const initialDelayMs = 500;
+        const retryDelayMs = 2000;
+        const rpcTimeoutMs = 10000;
 
-        // Limpar qualquer toast anterior relacionado à verificação de admin
-        toast.dismiss('admin-status-check-error');
+        // Usar o dismiss da instância do hook
+        dismiss('admin-status-check-error');
 
         while (attempts < maxAttempts && !adminCheckSucceeded) {
           attempts++;
           if (attempts === 1 && event === 'SIGNED_IN') {
-            // Adicionar um pequeno atraso inicial apenas para a primeira tentativa durante o evento SIGNED_IN
             console.log(`AUTH_DEBUG: Attempt ${attempts}: Initial delay of ${initialDelayMs}ms for SIGNED_IN event.`);
             await new Promise(resolve => setTimeout(resolve, initialDelayMs));
           } else if (attempts > 1) {
-            // Atraso para as retries
             console.log(`AUTH_DEBUG: Attempt ${attempts}: Retrying in ${retryDelayMs}ms...`);
             await new Promise(resolve => setTimeout(resolve, retryDelayMs));
           }
@@ -58,15 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data, error } = await withTimeout(
               supabase.rpc('is_current_user_admin'),
-              rpcTimeoutMs, // Usar o timeout aumentado
+              rpcTimeoutMs,
               'Admin status check timed out'
             );
 
             if (error) {
               console.error(`AUTH_DEBUG: Attempt ${attempts}: Error checking admin status:`, error);
-              if (attempts === maxAttempts) { // Mostrar toast apenas após todas as tentativas falharem
+              if (attempts === maxAttempts) {
                 setIsAdmin(false);
-                toast({
+                toast({ // Usar o toast da instância do hook
                   id: 'admin-status-check-error',
                   title: "Erro de autenticação",
                   description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
@@ -85,14 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               } else {
                 console.warn(`AUTH_DEBUG: Attempt ${attempts}: is_current_user_admin RPC returned unexpected data format:`, data);
                 setIsAdmin(false);
-                adminCheckSucceeded = true; // Considerar como tratado, mesmo que o formato seja inesperado
+                adminCheckSucceeded = true;
               }
             }
           } catch (error: any) {
             console.error(`AUTH_DEBUG: Attempt ${attempts}: Error in is_current_user_admin RPC call (catch block):`, error.message);
-            if (attempts === maxAttempts) { // Mostrar toast apenas após todas as tentativas falharem
+            if (attempts === maxAttempts) {
               setIsAdmin(false);
-              toast({
+              toast({ // Usar o toast da instância do hook
                 id: 'admin-status-check-error',
                 title: "Erro de autenticação",
                 description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
@@ -109,20 +110,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     };
 
-    // Configurar o listener de mudança de estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
-    // Também verificar a sessão existente na montagem
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
       await handleAuthStateChange('INITIAL_SESSION', initialSession);
     }).catch(error => {
       console.error('AUTH_DEBUG: Error in getSession:', error);
-      setLoading(false); // Garantir que loading seja false mesmo se getSession falhar
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [dismiss, toast]); // Adicionar dismiss e toast como dependências do useEffect
 
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -139,13 +138,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
-      toast({
+      toast({ // Usar o toast da instância do hook
         title: "Erro no cadastro",
         description: error.message,
         variant: "destructive",
       });
     } else {
-      toast({
+      toast({ // Usar o toast da instância do hook
         title: "Cadastro realizado!",
         description: "Verifique seu email para confirmar a conta.",
       });
@@ -161,13 +160,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
-      toast({
+      toast({ // Usar o toast da instância do hook
         title: "Erro no login",
         description: error.message,
         variant: "destructive",
       });
     } else {
-        toast({
+        toast({ // Usar o toast da instância do hook
             title: "Login realizado!",
             description: "Redirecionando para o dashboard...",
         });
@@ -179,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
-    toast({
+    toast({ // Usar o toast da instância do hook
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
