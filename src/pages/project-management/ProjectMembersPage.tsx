@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Removido 'Link' pois não é mais usado diretamente para navegação de abas
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, CheckCircle, XCircle, Trash2, MoreVertical, Settings } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, Trash2, MoreVertical, Settings } from 'lucide-react'; // Removido CheckCircle, XCircle
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
