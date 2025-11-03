@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Removido 'Link' pois não é mais usado diretamente para navegação de abas
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, Trash2, MoreVertical, Settings } from 'lucide-react'; // Removido CheckCircle, XCircle
+import { ArrowLeft, Users, UserPlus, Mail, Calendar, BookOpen, Trash2, MoreVertical, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -13,7 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { NewMemberDialog } from '@/components/elyon-builder/NewMemberDialog';
 import { ManageMemberAccessDialog } from '@/components/elyon-builder/ManageMemberAccessDialog';
 import { Switch } from '@/components/ui/switch';
-import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs'; // Importar o novo componente e a interface Project
+import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs';
 
 interface Member {
   id: string; // project_member_id
@@ -78,7 +78,8 @@ const ProjectMembersPage = () => {
     if (!projectId) return;
     setLoadingMembers(true);
     try {
-      const { data, error } = await supabase
+      // 1. Buscar membros do projeto e seus perfis
+      const { data: membersData, error: membersError } = await supabase
         .from('project_members')
         .select(`
           id,
@@ -86,23 +87,44 @@ const ProjectMembersPage = () => {
           role,
           status,
           created_at,
-          profiles (name, email),
-          product_access (
-            product_id,
-            products (name)
-          )
+          profiles (name, email)
         `)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      const membersWithPurchaseDates = await Promise.all((data || []).map(async (member: any) => {
+      // 2. Buscar todos os produtos que pertencem a este projeto
+      const { data: projectProductsData, error: productsError } = await supabase
+        .from('products')
+        .select('id, name')
+        .eq('project_id', projectId);
+
+      if (productsError) throw productsError;
+      const projectProductIds = projectProductsData?.map(p => p.id) || [];
+
+      // 3. Para cada membro, buscar seus acessos a produtos e a data da última compra
+      const membersWithDetails = await Promise.all((membersData || []).map(async (member: any) => {
+        // Buscar acessos a produtos para este membro, filtrando pelos produtos deste projeto
+        const { data: memberAccessData, error: memberAccessError } = await supabase
+          .from('product_access')
+          .select(`
+            product_id,
+            products (name)
+          `)
+          .eq('user_id', member.user_id)
+          .in('product_id', projectProductIds); // Filtrar por produtos deste projeto
+
+        if (memberAccessError) {
+          console.error(`Erro ao buscar acesso a produtos para o membro ${member.user_id}:`, memberAccessError.message);
+        }
+
+        // Buscar a data da última compra para este membro para qualquer produto que ele tenha acesso neste projeto
         const { data: purchaseData, error: purchaseError } = await supabase
           .from('product_purchases')
           .select('created_at')
           .eq('user_id', member.user_id)
-          .in('product_id', member.product_access.map((pa: any) => pa.product_id)) // Apenas produtos que o membro tem acesso
+          .in('product_id', (memberAccessData || []).map(pa => pa.product_id)) // Apenas produtos que o membro tem acesso
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -114,10 +136,11 @@ const ProjectMembersPage = () => {
         return {
           ...member,
           last_purchase_date: purchaseData?.created_at || null,
+          product_access: memberAccessData || [],
         };
       }));
 
-      setMembers(membersWithPurchaseDates as Member[]);
+      setMembers(membersWithDetails as Member[]);
     } catch (error: any) {
       console.error('Erro ao carregar membros:', error);
       toast({
