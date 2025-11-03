@@ -459,6 +459,7 @@ export type Database = {
           name: string
           price: number
           price_original: number | null
+          project_id: string | null // Adicionada nova coluna project_id
           updated_at: string
         }
         Insert: {
@@ -475,6 +476,7 @@ export type Database = {
           name: string
           price: number
           price_original?: number | null
+          project_id?: string | null // Adicionada nova coluna project_id
           updated_at?: string
         }
         Update: {
@@ -491,9 +493,17 @@ export type Database = {
           name?: string
           price?: number
           price_original?: number | null
+          project_id?: string | null // Adicionada nova coluna project_id
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_user_id_fkey"
             columns: ["user_id"]
