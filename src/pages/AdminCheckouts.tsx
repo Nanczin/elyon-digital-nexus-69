@@ -47,83 +47,84 @@ const AdminCheckouts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [currentTab, setCurrentTab] = useState('basic');
   
+  // Reestruturado initialFormData para espelhar a estrutura do banco de dados
   const initialFormData = {
-    name: '',
+    name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
     selectedProduct: '',
-    layout: 'horizontal' as string, // Layout fixo como 'horizontal'
-    customerFields: {
+    layout: 'horizontal' as string,
+    form_fields: { // Corresponde à coluna 'form_fields' na tabela 'checkouts'
       requireName: true,
       requireCpf: true,
       requirePhone: true,
       requireEmail: true,
-      requireEmailConfirm: true
+      requireEmailConfirm: true,
+      packages: [{
+        id: 1,
+        name: '',
+        description: '',
+        topics: [''],
+        price: 0,
+        originalPrice: 0,
+        mostSold: false
+      }] as PackageConfig[],
+      guarantee: {
+        enabled: true,
+        days: 7,
+        description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
+      } as GuaranteeConfig,
+      reservedRights: {
+        enabled: true,
+        text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
+      } as ReservedRightsConfig,
+      deliverable: {
+        type: 'none' as 'none' | 'link' | 'upload',
+        link: '',
+        file: null as File | null, // 'file' é temporário para o estado do formulário, não é salvo no DB
+        fileUrl: '',
+        name: '',
+        description: ''
+      } as DeliverableConfig & { file: File | null },
+      sendTransactionalEmail: true,
+      transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!',
+      transactionalEmailBody: 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital'
+    } as FormFields & { deliverable: DeliverableConfig & { file: File | null } },
+    payment_methods: { // Corresponde à coluna 'payment_methods'
+      pix: true,
+      creditCard: true,
+      maxInstallments: 12,
+      installmentsWithInterest: false
     },
-    packages: [{
-      id: 1,
-      name: '',
-      description: '',
-      topics: [''],
-      price: 0,
-      originalPrice: 0,
-      mostSold: false
-    }] as PackageConfig[], // Tipado explicitamente
-    orderBumps: [{
+    order_bumps: [{ // Corresponde à coluna 'order_bumps'
       id: 1,
       selectedProduct: '',
       price: 0,
       originalPrice: 0,
       enabled: false
     }],
-    guarantee: {
-      enabled: true,
-      days: 7,
-      description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
-    } as GuaranteeConfig, // Tipado explicitamente
-    reservedRights: {
-      enabled: true,
-      text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
-    } as ReservedRightsConfig, // Tipado explicitamente
-    paymentMethods: {
-      pix: true,
-      creditCard: true,
-      maxInstallments: 12,
-      installmentsWithInterest: false
-    },
-    integrations: {
-      selectedMercadoPagoAccount: '',
-      selectedMetaPixel: '',
-      selectedEmailAccount: '', // <-- Adicionado
-    },
-    support_contact: {
-      email: ''
-    },
-    styles: {
+    styles: { // Corresponde à coluna 'styles'
       backgroundColor: '#ffffff',
       primaryColor: '#3b82f6',
       textColor: '#000000',
       headlineText: 'Sua transformação começa agora!',
       headlineColor: '#000000',
-      description: '', // A descrição principal do checkout vive aqui
+      description: '',
       gradientColor: '#60a5fa',
       highlightColor: '#3b82f6'
     },
-    timer: {
+    integrations: { // Corresponde à coluna 'integrations'
+      selectedMercadoPagoAccount: '',
+      selectedMetaPixel: '',
+      selectedEmailAccount: '',
+    },
+    support_contact: { // Corresponde à coluna 'support_contact'
+      email: ''
+    },
+    timer: { // Corresponde à coluna 'timer'
       enabled: false,
       duration: 15,
       color: '#dc2626',
       text: 'Oferta por tempo limitado'
-    },
-    deliverable: { // New deliverable field
-      type: 'none' as 'none' | 'link' | 'upload',
-      link: '',
-      file: null as File | null,
-      fileUrl: '',
-      name: '', // Adicionado nome para o entregável
-      description: '' // Adicionado descrição para o entregável
-    } as DeliverableConfig & { file: File | null }, // Explicitly type deliverable
-    sendTransactionalEmail: true, // Novo campo para e-mail transacional
-    transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!', // Assunto padrão
-    transactionalEmailBody: 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital' // Corpo padrão
+    }
   };
   // Usar uma chave única por checkout ou "new" para novos
   // Manter a chave consistente mesmo quando o componente remonta
@@ -249,7 +250,7 @@ const AdminCheckouts = () => {
       price: bump.price ? bump.price / 100 : 0,
       originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0,
       selectedProduct: bump.selectedProduct || ''
-    })) : initialFormData.orderBumps; // Use initialFormData default
+    })) : initialFormData.order_bumps; // Usar initialFormData default
     
     const packagesFromDb = (checkout.form_fields as FormFields)?.packages;
     const packagesConfig: PackageConfig[] = Array.isArray(packagesFromDb) ? packagesFromDb.map((pkg: any) => ({ // Cast pkg to any
@@ -260,43 +261,43 @@ const AdminCheckouts = () => {
       price: pkg.price ? pkg.price / 100 : priceInReais,
       originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
       mostSold: pkg.mostSold ?? false
-    })) : initialFormData.packages; // Use initialFormData default
+    })) : initialFormData.form_fields.packages; // Usar initialFormData default
 
     return {
       name: checkout.products?.name || '',
       selectedProduct: checkout.product_id || '',
       layout: 'horizontal', // Layout fixo como 'horizontal'
-      customerFields: {
+      form_fields: { // Mapear para a nova estrutura aninhada
         requireName: checkout.form_fields?.requireName ?? true,
         requireCpf: checkout.form_fields?.requireCpf ?? true,
         requirePhone: checkout.form_fields?.requirePhone ?? true,
         requireEmail: checkout.form_fields?.requireEmail ?? true,
-        requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true
+        requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true,
+        packages: packagesConfig, // Usar os pacotes processados
+        guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initialFormData.form_fields.guarantee,
+        reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.form_fields.reservedRights,
+        deliverable: {
+          type: checkout.form_fields?.deliverable?.type || 'none',
+          link: checkout.form_fields?.deliverable?.link || '',
+          file: null,
+          fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
+          name: checkout.form_fields?.deliverable?.name || '',
+          description: checkout.form_fields?.deliverable?.description || ''
+        },
+        sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true,
+        transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initialFormData.form_fields.transactionalEmailSubject,
+        transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.form_fields.transactionalEmailBody,
       },
-      packages: packagesConfig, // Usar os pacotes processados
-      orderBumps: orderBumpsInReais,
-      guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initialFormData.guarantee, // Usar initialFormData default e cast
-      reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initialFormData.reservedRights, // Usar initialFormData default e cast
-      paymentMethods: checkout.payment_methods || initialFormData.paymentMethods,
-      integrations: { // <-- Atualizado
-        ...initialFormData.integrations, // Garante que todos os campos padrão de integração estejam presentes
-        ...(checkout.integrations || {}), // Mescla as integrações existentes
-        selectedEmailAccount: checkout.integrations?.selectedEmailAccount || '', // <-- Carrega o campo
+      payment_methods: checkout.payment_methods || initialFormData.payment_methods,
+      order_bumps: orderBumpsInReais,
+      integrations: {
+        ...initialFormData.integrations,
+        ...(checkout.integrations || {}),
+        selectedEmailAccount: checkout.integrations?.selectedEmailAccount || '',
       },
       support_contact: checkout.support_contact || initialFormData.support_contact,
       styles: checkout.styles || initialFormData.styles,
       timer: checkout.timer || initialFormData.timer,
-      deliverable: {
-        type: checkout.form_fields?.deliverable?.type || 'none',
-        link: checkout.form_fields?.deliverable?.link || '',
-        file: null, // Always null when loading from DB, as files are not stored in state
-        fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
-        name: checkout.form_fields?.deliverable?.name || '', // Novo campo
-        description: checkout.form_fields?.deliverable?.description || '' // Novo campo
-      },
-      sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true, // Carregar o novo campo
-      transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initialFormData.transactionalEmailSubject, // Carregar assunto
-      transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initialFormData.transactionalEmailBody, // Carregar corpo como template puro
     };
   };
 
@@ -392,16 +393,19 @@ const AdminCheckouts = () => {
   const handleFileChange = (file: File | null) => {
     setCheckoutData(prev => ({
       ...prev,
-      deliverable: {
-        ...prev.deliverable,
-        file: file,
-        fileUrl: file ? prev.deliverable.fileUrl : '' // Clear fileUrl if file is removed
+      form_fields: {
+        ...prev.form_fields,
+        deliverable: {
+          ...prev.form_fields.deliverable,
+          file: file,
+          fileUrl: file ? prev.form_fields.deliverable.fileUrl : '' // Clear fileUrl if file is removed
+        }
       }
     }));
   };
 
   const addPackage = () => {
-    const newPackages = [...checkoutData.packages, {
+    const newPackages = [...checkoutData.form_fields.packages, {
       id: Date.now(),
       name: '',
       description: '',
@@ -410,75 +414,75 @@ const AdminCheckouts = () => {
       originalPrice: 0,
       mostSold: false
     }] as PackageConfig[]; // Tipado explicitamente
-    handleInputChange('packages', newPackages);
+    handleInputChange('form_fields.packages', newPackages);
   };
   const removePackage = (id: number) => {
-    const newPackages = checkoutData.packages.filter(pkg => pkg.id !== id);
+    const newPackages = checkoutData.form_fields.packages.filter(pkg => pkg.id !== id);
     if (newPackages.length === 0) {
       toast({ title: "Erro", description: "Deve haver pelo menos um pacote.", variant: "destructive" });
       return;
     }
-    handleInputChange('packages', newPackages);
+    handleInputChange('form_fields.packages', newPackages);
   };
   const updatePackage = (id: number, field: string, value: any) => {
-    const packages = checkoutData.packages.map(pkg => pkg.id === id ? {
+    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === id ? {
       ...pkg,
       [field]: value
     } : pkg);
-    handleInputChange('packages', packages);
+    handleInputChange('form_fields.packages', packages);
   };
   const addTopicToPackage = (packageId: number) => {
-    const packages = checkoutData.packages.map(pkg => pkg.id === packageId ? {
+    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
       ...pkg,
       topics: [...pkg.topics, '']
     } : pkg);
-    handleInputChange('packages', packages);
+    handleInputChange('form_fields.packages', packages);
   };
   const removeTopicFromPackage = (packageId: number, topicIndex: number) => {
-    const packages = checkoutData.packages.map(pkg => pkg.id === packageId ? {
+    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
       ...pkg,
       topics: pkg.topics.filter((_, index) => index !== topicIndex)
     } : pkg);
-    handleInputChange('packages', packages);
+    handleInputChange('form_fields.packages', packages);
   };
   const updatePackageTopic = (packageId: number, topicIndex: number, value: string) => {
-    const packages = checkoutData.packages.map(pkg => pkg.id === packageId ? {
+    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
       ...pkg,
       topics: pkg.topics.map((topic, index) => index === topicIndex ? value : topic)
     } : pkg);
-    handleInputChange('packages', packages);
+    handleInputChange('form_fields.packages', packages);
   };
   const addOrderBump = () => {
-    const newOrderBumps = [...checkoutData.orderBumps, {
+    const newOrderBumps = [...checkoutData.order_bumps, {
       id: Date.now(),
       selectedProduct: '',
       price: 0,
       originalPrice: 0,
       enabled: false
     }];
-    handleInputChange('orderBumps', newOrderBumps);
+    handleInputChange('order_bumps', newOrderBumps);
   };
   const removeOrderBump = (id: number) => {
-    const newOrderBumps = checkoutData.orderBumps.filter(bump => bump.id !== id);
-    handleInputChange('orderBumps', newOrderBumps);
+    const newOrderBumps = checkoutData.order_bumps.filter(bump => bump.id !== id);
+    handleInputChange('order_bumps', newOrderBumps);
   };
   const updateOrderBump = (id: number, field: string, value: any) => {
-    const orderBumps = checkoutData.orderBumps.map(bump => bump.id === id ? {
+    const orderBumps = checkoutData.order_bumps.map(bump => bump.id === id ? {
       ...bump,
       [field]: value
     } : bump);
-    handleInputChange('orderBumps', orderBumps);
+    handleInputChange('order_bumps', orderBumps);
   };
   const loadProductAsOrderBump = (bumpId: number, productData: any) => {
     if (productData === 'manual') {
       // Reset to manual configuration
-      const orderBumps = checkoutData.orderBumps.map(bump => bump.id === bumpId ? {
+      const orderBumps = checkoutData.order_bumps.map(bump => bump.id === bumpId ? {
         ...bump,
         price: 0,
         originalPrice: 0,
         selectedProduct: ''
       } : bump);
-      handleInputChange('orderBumps', orderBumps);
+      handleInputChange('order_bumps', orderBumps);
       return;
     }
 
@@ -496,13 +500,13 @@ const AdminCheckouts = () => {
         discountedPrice: discountedPriceInReais
       });
       
-      const orderBumps = checkoutData.orderBumps.map(bump => bump.id === bumpId ? {
+      const orderBumps = checkoutData.order_bumps.map(bump => bump.id === bumpId ? {
         ...bump,
         price: discountedPriceInReais,
         originalPrice: priceInReais,
         selectedProduct: product.id
       } : bump);
-      handleInputChange('orderBumps', orderBumps);
+      handleInputChange('order_bumps', orderBumps);
     }
   };
   const handleSubmit = async (e: React.FormEvent) => {
@@ -517,7 +521,7 @@ const AdminCheckouts = () => {
     }
 
     // NEW VALIDATION: Ensure main package price is greater than zero
-    const mainPackagePrice = checkoutData.packages[0]?.price;
+    const mainPackagePrice = checkoutData.form_fields.packages[0]?.price;
     if (mainPackagePrice === undefined || mainPackagePrice <= 0) {
       toast({
         title: "Erro",
@@ -531,11 +535,11 @@ const AdminCheckouts = () => {
     try {
       console.log('Timer sendo salvo:', checkoutData.timer);
 
-      let deliverableFileUrl = checkoutData.deliverable.fileUrl;
-      if (checkoutData.deliverable.type === 'upload' && checkoutData.deliverable.file) {
-        deliverableFileUrl = await uploadFile(checkoutData.deliverable.file, 'checkout-deliverables');
-      } else if (checkoutData.deliverable.type === 'link') {
-        deliverableFileUrl = checkoutData.deliverable.link;
+      let deliverableFileUrl = checkoutData.form_fields.deliverable.fileUrl;
+      if (checkoutData.form_fields.deliverable.type === 'upload' && checkoutData.form_fields.deliverable.file) {
+        deliverableFileUrl = await uploadFile(checkoutData.form_fields.deliverable.file, 'checkout-deliverables');
+      } else if (checkoutData.form_fields.deliverable.type === 'link') {
+        deliverableFileUrl = checkoutData.form_fields.deliverable.link;
       } else {
         deliverableFileUrl = ''; // Clear if type is 'none'
       }
@@ -543,53 +547,33 @@ const AdminCheckouts = () => {
       const checkoutPayload = {
         user_id: user?.id, // Adicionar user_id
         product_id: checkoutData.selectedProduct,
-        price: Math.round(checkoutData.packages[0]?.price * 100) || 0, // Aplicar Math.round
-        promotional_price: checkoutData.packages[0]?.originalPrice ? Math.round(checkoutData.packages[0].originalPrice * 100) : null, // Aplicar Math.round
+        price: Math.round(checkoutData.form_fields.packages[0]?.price * 100) || 0, // Aplicar Math.round
+        promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null, // Aplicar Math.round
         form_fields: {
-          ...checkoutData.customerFields,
-          packages: checkoutData.packages.map(pkg => ({ // Convert package prices to cents
+          ...checkoutData.form_fields, // Usar o objeto form_fields já estruturado
+          packages: checkoutData.form_fields.packages.map(pkg => ({ // Converter preços de pacotes para centavos
             ...pkg,
             price: Math.round(pkg.price * 100), // Aplicar Math.round
             originalPrice: Math.round((pkg.originalPrice || 0) * 100) // Aplicar Math.round
           })),
-          guarantee: checkoutData.guarantee,
-          reservedRights: checkoutData.reservedRights,
-          deliverable: { // Save deliverable data
-            type: checkoutData.deliverable.type,
-            link: checkoutData.deliverable.type === 'link' ? checkoutData.deliverable.link : null,
-            fileUrl: deliverableFileUrl, // This will be the uploaded URL or the provided link
-            name: checkoutData.deliverable.name || null, // Novo campo
-            description: checkoutData.deliverable.description || null // Novo campo
-          },
-          sendTransactionalEmail: checkoutData.sendTransactionalEmail, // Salvar o novo campo
-          transactionalEmailSubject: checkoutData.transactionalEmailSubject, // Salvar assunto
-          transactionalEmailBody: checkoutData.transactionalEmailBody, // Salvar corpo
+          deliverable: { // Salvar dados do entregável
+            ...checkoutData.form_fields.deliverable,
+            link: checkoutData.form_fields.deliverable.type === 'link' ? checkoutData.form_fields.deliverable.link : null,
+            fileUrl: deliverableFileUrl, // URL do arquivo carregado ou link direto
+            file: undefined // Remover propriedade temporária 'file'
+          }
         },
-        payment_methods: checkoutData.paymentMethods,
-        order_bumps: checkoutData.orderBumps.map(bump => ({
+        payment_methods: checkoutData.payment_methods, // Usar o objeto payment_methods já estruturado
+        order_bumps: checkoutData.order_bumps.map(bump => ({
           ...bump,
           price: Math.round(bump.price * 100), // Converter para centavos e aplicar Math.round
           originalPrice: Math.round((bump.originalPrice || 0) * 100) // Converter para centavos e aplicar Math.round
         })),
-        styles: {
-          backgroundColor: checkoutData.styles?.backgroundColor || '#ffffff',
-          primaryColor: checkoutData.styles?.primaryColor || '#3b82f6',
-          textColor: checkoutData.styles?.textColor || '#000000',
-          headlineText: checkoutData.styles?.headlineText || 'Sua transformação começa agora!',
-          headlineColor: checkoutData.styles?.headlineColor || '#000000',
-          highlightColor: checkoutData.styles?.highlightColor || checkoutData.styles?.primaryColor || '#3b82f6', // Corrigido aqui
-          description: checkoutData.styles?.description || '',
-          gradientColor: checkoutData.styles?.gradientColor || '#60a5fa'
-        },
+        styles: checkoutData.styles, // Usar o objeto styles já estruturado
         layout: 'horizontal', // Layout fixo como 'horizontal'
-        support_contact: {
-          email: checkoutData.support_contact?.email || ''
-        },
-        integrations: { // <-- Atualizado
-          ...checkoutData.integrations,
-          selectedEmailAccount: checkoutData.integrations?.selectedEmailAccount || null, // <-- Salva o campo
-        },
-        timer: checkoutData.timer || null
+        support_contact: checkoutData.support_contact, // Usar o objeto support_contact já estruturado
+        integrations: checkoutData.integrations, // Usar o objeto integrations já estruturado
+        timer: checkoutData.timer || null // Usar o objeto timer já estruturado
       };
 
       console.log('DEBUG: Final checkoutPayload before DB operation:', JSON.stringify(checkoutPayload, null, 2)); // Log detalhado
@@ -777,35 +761,35 @@ const AdminCheckouts = () => {
                           <Label>Nome Completo</Label>
                           <p className="text-sm text-muted-foreground">Obrigatório no checkout</p>
                         </div>
-                        <Switch checked={checkoutData.customerFields?.requireName ?? true} onCheckedChange={checked => handleInputChange('customerFields.requireName', checked)} />
+                        <Switch checked={checkoutData.form_fields?.requireName ?? true} onCheckedChange={checked => handleInputChange('form_fields.requireName', checked)} />
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>CPF</Label>
                           <p className="text-sm text-muted-foreground">Documento obrigatório</p>
                         </div>
-                        <Switch checked={checkoutData.customerFields?.requireCpf ?? true} onCheckedChange={checked => handleInputChange('customerFields.requireCpf', checked)} />
+                        <Switch checked={checkoutData.form_fields?.requireCpf ?? true} onCheckedChange={checked => handleInputChange('form_fields.requireCpf', checked)} />
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Telefone</Label>
                           <p className="text-sm text-muted-foreground">Número de contato</p>
                         </div>
-                        <Switch checked={checkoutData.customerFields?.requirePhone ?? true} onCheckedChange={checked => handleInputChange('customerFields.requirePhone', checked)} />
+                        <Switch checked={checkoutData.form_fields?.requirePhone ?? true} onCheckedChange={checked => handleInputChange('form_fields.requirePhone', checked)} />
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Email</Label>
                           <p className="text-sm text-muted-foreground">Email principal</p>
                         </div>
-                        <Switch checked={checkoutData.customerFields?.requireEmail ?? true} onCheckedChange={checked => handleInputChange('customerFields.requireEmail', checked)} />
+                        <Switch checked={checkoutData.form_fields?.requireEmail ?? true} onCheckedChange={checked => handleInputChange('form_fields.requireEmail', checked)} />
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Confirmar Email</Label>
                           <p className="text-sm text-muted-foreground">Campo de confirmação</p>
                         </div>
-                        <Switch checked={checkoutData.customerFields?.requireEmailConfirm ?? true} onCheckedChange={checked => handleInputChange('customerFields.requireEmailConfirm', checked)} />
+                        <Switch checked={checkoutData.form_fields?.requireEmailConfirm ?? true} onCheckedChange={checked => handleInputChange('form_fields.requireEmailConfirm', checked)} />
                       </div>
                     </div>
                   </div>
@@ -820,13 +804,13 @@ const AdminCheckouts = () => {
                     </Button>
                   </div>
                   
-                  {checkoutData.packages.map((pkg, index) => <Card key={pkg.id} className="p-4">
+                  {checkoutData.form_fields.packages.map((pkg, index) => <Card key={pkg.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold flex items-center gap-2">
                           <Package className="h-4 w-4" />
                           Pacote {index + 1}
                         </h4>
-                        {checkoutData.packages.length > 1 && <Button type="button" variant="destructive" size="sm" onClick={() => removePackage(pkg.id)}>
+                        {checkoutData.form_fields.packages.length > 1 && <Button type="button" variant="destructive" size="sm" onClick={() => removePackage(pkg.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>}
                       </div>
@@ -905,7 +889,7 @@ const AdminCheckouts = () => {
                     </Button>
                   </div>
                   
-                  {checkoutData.orderBumps.map((bump, index) => <Card key={bump.id} className="p-4">
+                  {checkoutData.order_bumps.map((bump, index) => <Card key={bump.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold flex items-center gap-2">
                           <DollarSign className="h-4 w-4" />
@@ -992,17 +976,17 @@ const AdminCheckouts = () => {
                         <Shield className="h-5 w-5" />
                         Garantia
                       </h3>
-                      <Switch checked={checkoutData.guarantee.enabled} onCheckedChange={checked => handleInputChange('guarantee.enabled', checked)} />
+                      <Switch checked={checkoutData.form_fields.guarantee.enabled} onCheckedChange={checked => handleInputChange('form_fields.guarantee.enabled', checked)} />
                     </div>
                     
-                    {checkoutData.guarantee.enabled && <>
+                    {checkoutData.form_fields.guarantee.enabled && <>
                         <div className="space-y-2">
                           <Label>Dias de Garantia</Label>
-                          <Input type="number" value={checkoutData.guarantee.days} onChange={e => handleInputChange('guarantee.days', Number(e.target.value))} placeholder="7" />
+                          <Input type="number" value={checkoutData.form_fields.guarantee.days} onChange={e => handleInputChange('form_fields.guarantee.days', Number(e.target.value))} placeholder="7" />
                         </div>
                         <div className="space-y-2">
                           <Label>Descrição da Garantia</Label>
-                          <Textarea value={checkoutData.guarantee.description} onChange={e => handleInputChange('guarantee.description', e.target.value)} placeholder="Descreva a garantia..." rows={3} />
+                          <Textarea value={checkoutData.form_fields.guarantee.description} onChange={e => handleInputChange('form_fields.guarantee.description', e.target.value)} placeholder="Descreva a garantia..." rows={3} />
                         </div>
                       </>}
                     
@@ -1013,12 +997,12 @@ const AdminCheckouts = () => {
                         <FileText className="h-5 w-5" />
                         Direitos Reservados
                       </h3>
-                      <Switch checked={checkoutData.reservedRights.enabled} onCheckedChange={checked => handleInputChange('reservedRights.enabled', checked)} />
+                      <Switch checked={checkoutData.form_fields.reservedRights.enabled} onCheckedChange={checked => handleInputChange('form_fields.reservedRights.enabled', checked)} />
                     </div>
                     
-                    {checkoutData.reservedRights.enabled && <div className="space-y-2">
+                    {checkoutData.form_fields.reservedRights.enabled && <div className="space-y-2">
                         <Label>Texto dos Direitos Reservados</Label>
-                        <Textarea value={checkoutData.reservedRights.text} onChange={e => handleInputChange('reservedRights.text', e.target.value)} placeholder="Texto dos direitos reservados..." rows={3} />
+                        <Textarea value={checkoutData.form_fields.reservedRights.text} onChange={e => handleInputChange('form_fields.reservedRights.text', e.target.value)} placeholder="Texto dos direitos reservados..." rows={3} />
                       </div>}
                   </div>
                 </TabsContent>
@@ -1033,7 +1017,7 @@ const AdminCheckouts = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                          <Checkbox id="pix" checked={checkoutData.paymentMethods.pix} onCheckedChange={checked => handleInputChange('paymentMethods.pix', checked)} />
+                          <Checkbox id="pix" checked={checkoutData.payment_methods.pix} onCheckedChange={checked => handleInputChange('payment_methods.pix', checked)} />
                           <div className="flex items-center gap-2">
                             <Smartphone className="h-5 w-5 text-green-600" />
                             <div>
@@ -1045,7 +1029,7 @@ const AdminCheckouts = () => {
                         
                         <div className="space-y-3 p-4 border rounded-lg">
                           <div className="flex items-center space-x-3">
-                            <Checkbox id="creditCard" checked={checkoutData.paymentMethods.creditCard} onCheckedChange={checked => handleInputChange('paymentMethods.creditCard', checked)} />
+                            <Checkbox id="creditCard" checked={checkoutData.payment_methods.creditCard} onCheckedChange={checked => handleInputChange('payment_methods.creditCard', checked)} />
                             <div className="flex items-center gap-2">
                               <CreditCard className="h-5 w-5 text-blue-600" />
                               <div>
@@ -1055,13 +1039,13 @@ const AdminCheckouts = () => {
                             </div>
                           </div>
                           
-                          {checkoutData.paymentMethods.creditCard && (
+                          {checkoutData.payment_methods.creditCard && (
                             <div className="ml-8 space-y-3 pt-3 border-t">
                               <div className="space-y-2">
                                 <Label htmlFor="maxInstallments" className="text-sm">Máximo de Parcelas</Label>
                                 <Select 
-                                  value={String(checkoutData.paymentMethods.maxInstallments || 12)} 
-                                  onValueChange={value => handleInputChange('paymentMethods.maxInstallments', parseInt(value))}
+                                  value={String(checkoutData.payment_methods.maxInstallments || 12)} 
+                                  onValueChange={value => handleInputChange('payment_methods.maxInstallments', parseInt(value))}
                                 >
                                   <SelectTrigger id="maxInstallments">
                                     <SelectValue />
@@ -1079,15 +1063,15 @@ const AdminCheckouts = () => {
                               <div className="flex items-center space-x-3">
                                 <Checkbox 
                                   id="installmentsWithInterest" 
-                                  checked={checkoutData.paymentMethods.installmentsWithInterest || false} 
-                                  onCheckedChange={checked => handleInputChange('paymentMethods.installmentsWithInterest', checked)} 
+                                  checked={checkoutData.payment_methods.installmentsWithInterest || false} 
+                                  onCheckedChange={checked => handleInputChange('payment_methods.installmentsWithInterest', checked)} 
                                 />
                                 <Label htmlFor="installmentsWithInterest" className="text-sm">
                                   Cobrar juros nas parcelas
                                 </Label>
                               </div>
                               <p className="text-xs text-muted-foreground ml-7">
-                                {checkoutData.paymentMethods.installmentsWithInterest 
+                                {checkoutData.payment_methods.installmentsWithInterest 
                                   ? "As taxas de juros serão aplicadas conforme a configuração do Mercado Pago"
                                   : "Todas as parcelas serão sem juros"}
                               </p>
@@ -1096,7 +1080,7 @@ const AdminCheckouts = () => {
                         </div>
                       </div>
                       
-                      {!checkoutData.paymentMethods.pix && !checkoutData.paymentMethods.creditCard && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      {!checkoutData.payment_methods.pix && !checkoutData.payment_methods.creditCard && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <p className="text-sm text-yellow-800">
                             ⚠️ Selecione pelo menos uma forma de pagamento
                           </p>
@@ -1429,8 +1413,8 @@ const AdminCheckouts = () => {
                     <div className="space-y-4">
                       <Label>Tipo de Entregável</Label>
                       <Select 
-                        value={checkoutData.deliverable.type} 
-                        onValueChange={value => handleInputChange('deliverable.type', value)}
+                        value={checkoutData.form_fields.deliverable.type} 
+                        onValueChange={value => handleInputChange('form_fields.deliverable.type', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo de entregável" />
@@ -1443,14 +1427,14 @@ const AdminCheckouts = () => {
                       </Select>
                     </div>
 
-                    {checkoutData.deliverable.type !== 'none' && ( // Mostrar nome/descrição se não for 'none'
+                    {checkoutData.form_fields.deliverable.type !== 'none' && ( // Mostrar nome/descrição se não for 'none'
                       <>
                         <div className="space-y-2">
                           <Label htmlFor="deliverableName">Nome do Entregável</Label>
                           <Input 
                             id="deliverableName" 
-                            value={checkoutData.deliverable.name || ''} 
-                            onChange={e => handleInputChange('deliverable.name', e.target.value)} 
+                            value={checkoutData.form_fields.deliverable.name || ''} 
+                            onChange={e => handleInputChange('form_fields.deliverable.name', e.target.value)} 
                             placeholder="Ex: E-book Exclusivo" 
                           />
                         </div>
@@ -1458,8 +1442,8 @@ const AdminCheckouts = () => {
                           <Label htmlFor="deliverableDescription">Descrição do Entregável</Label>
                           <Textarea 
                             id="deliverableDescription" 
-                            value={checkoutData.deliverable.description || ''} 
-                            onChange={e => handleInputChange('deliverable.description', e.target.value)} 
+                            value={checkoutData.form_fields.deliverable.description || ''} 
+                            onChange={e => handleInputChange('form_fields.deliverable.description', e.target.value)} 
                             placeholder="Uma breve descrição do que o cliente receberá." 
                             rows={3}
                           />
@@ -1467,38 +1451,38 @@ const AdminCheckouts = () => {
                       </>
                     )}
 
-                    {checkoutData.deliverable.type === 'link' && (
+                    {checkoutData.form_fields.deliverable.type === 'link' && (
                       <div className="space-y-2">
                         <Label htmlFor="deliverableLink">Link do Entregável *</Label>
                         <Input 
                           id="deliverableLink" 
                           type="url" 
-                          value={checkoutData.deliverable.link || ''} 
-                          onChange={e => handleInputChange('deliverable.link', e.target.value)} 
+                          value={checkoutData.form_fields.deliverable.link || ''} 
+                          onChange={e => handleInputChange('form_fields.deliverable.link', e.target.value)} 
                           placeholder="https://exemplo.com/meu-ebook.pdf" 
                           required 
                         />
                       </div>
                     )}
 
-                    {checkoutData.deliverable.type === 'upload' && (
+                    {checkoutData.form_fields.deliverable.type === 'upload' && (
                       <div className="space-y-2">
                         <Label htmlFor="deliverableFile">Arquivo Entregável *</Label>
                         <Input 
                           id="deliverableFile" 
                           type="file" 
                           onChange={e => handleFileChange(e.target.files?.[0] || null)} 
-                          required={!checkoutData.deliverable.fileUrl}
+                          required={!checkoutData.form_fields.deliverable.fileUrl}
                         />
-                        {checkoutData.deliverable.fileUrl && (
+                        {checkoutData.form_fields.deliverable.fileUrl && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                             <Link className="h-4 w-4" />
-                            <span>Arquivo atual: <a href={checkoutData.deliverable.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                            <span>Arquivo atual: <a href={checkoutData.form_fields.deliverable.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
                             <Button 
                               type="button" 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => handleInputChange('deliverable.fileUrl', '')}
+                              onClick={() => handleInputChange('form_fields.deliverable.fileUrl', '')}
                               className="h-6 px-2 text-destructive hover:text-destructive"
                             >
                               <XCircle className="h-3 w-3 mr-1" /> Remover
@@ -1529,8 +1513,8 @@ const AdminCheckouts = () => {
                           </p>
                         </div>
                         <Switch 
-                          checked={checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config'} 
-                          onCheckedChange={checked => handleInputChange('sendTransactionalEmail', checked)} 
+                          checked={checkoutData.form_fields.sendTransactionalEmail && isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config'} 
+                          onCheckedChange={checked => handleInputChange('form_fields.sendTransactionalEmail', checked)} 
                           disabled={!isEmailIntegrationConfigured || checkoutData.integrations?.selectedEmailAccount !== 'default-email-config'}
                         />
                       </div>
@@ -1551,14 +1535,14 @@ const AdminCheckouts = () => {
                         </Alert>
                       )}
 
-                      {checkoutData.sendTransactionalEmail && isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config' && (
+                      {checkoutData.form_fields.sendTransactionalEmail && isEmailIntegrationConfigured && checkoutData.integrations?.selectedEmailAccount === 'default-email-config' && (
                         <div className="space-y-4 pl-6 border-l-2 border-gray-200">
                           <div className="space-y-2">
                             <Label htmlFor="emailSubject">Assunto do E-mail</Label>
                             <Input 
                               id="emailSubject" 
-                              value={checkoutData.transactionalEmailSubject || ''} 
-                              onChange={e => handleInputChange('transactionalEmailSubject', e.target.value)} 
+                              value={checkoutData.form_fields.transactionalEmailSubject || ''} 
+                              onChange={e => handleInputChange('form_fields.transactionalEmailSubject', e.target.value)} 
                               placeholder="Seu acesso ao produto Elyon Digital!" 
                             />
                             <p className="text-xs text-muted-foreground">
@@ -1569,8 +1553,8 @@ const AdminCheckouts = () => {
                             <Label htmlFor="emailBody">Corpo do E-mail</Label>
                             <Textarea 
                               id="emailBody" 
-                              value={checkoutData.transactionalEmailBody || ''} 
-                              onChange={e => handleInputChange('transactionalEmailBody', e.target.value)} 
+                              value={checkoutData.form_fields.transactionalEmailBody || ''} 
+                              onChange={e => handleInputChange('form_fields.transactionalEmailBody', e.target.value)} 
                               placeholder="Olá {customer_name},..." 
                               rows={8}
                             />

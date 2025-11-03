@@ -3,13 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCheckoutIntegrations } from '@/hooks/useCheckoutIntegrations';
-import { CheckoutData, CustomerData, OrderBump, PaymentMethods, FormFields } from '@/components/checkout/CheckoutLayoutProps';
+import { CheckoutData, CustomerData, OrderBump, PaymentMethods } from '@/components/checkout/CheckoutLayoutProps';
 import { CardData } from '@/components/checkout/CreditCardForm';
 import HorizontalLayout from '@/components/checkout/HorizontalLayout';
 import MosaicLayout from '@/components/checkout/MosaicLayout';
 import { createCardToken } from '@mercadopago/sdk-react';
 import { toCents } from '@/utils/textFormatting';
-import { DeliverableConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig
+import { DeliverableConfig, FormFields, PackageConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
 
 const Checkout = () => {
   const { checkoutId } = useParams();
@@ -104,6 +104,16 @@ const Checkout = () => {
         console.warn('Não foi possível carregar a chave pública do Mercado Pago:', e);
       }
 
+      // Mapear form_fields para a estrutura esperada, convertendo preços de pacotes
+      const formFieldsData = (data.form_fields || {}) as FormFields;
+      const packagesConfig: PackageConfig[] = Array.isArray(formFieldsData.packages) 
+        ? formFieldsData.packages.map(pkg => ({
+            ...pkg,
+            price: pkg.price / 100, // Convert package price to reais
+            originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : 0, // Convert original price to reais
+          }))
+        : [];
+
       const transformedData: CheckoutData = {
         id: data.id,
         product_id: data.product_id,
@@ -111,12 +121,8 @@ const Checkout = () => {
         promotional_price: data.promotional_price ? data.promotional_price / 100 : null, // Convert promotional price to Reais
         layout: data.layout || 'horizontal',
         form_fields: {
-          ...(data.form_fields as FormFields || {}),
-          packages: (data.form_fields as FormFields)?.packages?.map(pkg => ({
-            ...pkg,
-            price: pkg.price / 100, // Convert package price to reais
-            originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : 0, // Convert original price to reais
-          })) || [],
+          ...formFieldsData,
+          packages: packagesConfig, // Usar os pacotes processados
         },
         payment_methods: data.payment_methods as PaymentMethods || {},
         order_bumps: orderBumpsWithProducts,
@@ -169,7 +175,7 @@ const Checkout = () => {
     if (!checkout) return 0;
     
     let basePrice = 0;
-    const packages = (checkout.form_fields as FormFields)?.packages; // Cast explícito aqui
+    const packages = checkout.form_fields?.packages; // Agora acessado via form_fields
 
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
@@ -224,7 +230,7 @@ const Checkout = () => {
   };
 
   const validateForm = () => {
-    const fields = checkout?.form_fields || {};
+    const fields = checkout?.form_fields || {}; // Agora acessado via form_fields
     
     if (fields.requireName && !customerData.name.trim()) {
       toast({ title: "Erro", description: "Nome é obrigatório", variant: "destructive" });
@@ -315,7 +321,7 @@ const Checkout = () => {
       
       // Obter dados do produto e entregável para passar para a Edge Function
       const productData = checkout?.products as CheckoutData['products'];
-      const checkoutDeliverable = checkout?.form_fields?.deliverable as DeliverableConfig | undefined;
+      const checkoutDeliverable = checkout?.form_fields?.deliverable as DeliverableConfig | undefined; // Acessado via form_fields
       const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
         ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
         : productData?.member_area_link || productData?.file_url;
@@ -337,9 +343,9 @@ const Checkout = () => {
         paymentMethod: selectedPaymentMethod,
         // Adicionar dados de e-mail transacional e entregável ao metadata
         emailMetadata: {
-          sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true,
-          transactionalEmailSubject: checkout?.form_fields?.transactionalEmailSubject,
-          transactionalEmailBody: checkout?.form_fields?.transactionalEmailBody,
+          sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true, // Acessado via form_fields
+          transactionalEmailSubject: checkout?.form_fields?.transactionalEmailSubject, // Acessado via form_fields
+          transactionalEmailBody: checkout?.form_fields?.transactionalEmailBody, // Acessado via form_fields
           deliverableLink: finalDeliverableLink || null, // Garantir que seja string ou null
           productName: productData?.name,
           productDescription: productData?.description,
@@ -495,7 +501,7 @@ const Checkout = () => {
   const calculateSavings = () => {
     if (!checkout) return 0;
     
-    const packages = (checkout.form_fields as FormFields)?.packages; // Cast explícito aqui
+    const packages = checkout.form_fields?.packages; // Agora acessado via form_fields
     if (packages && packages.length > 0) {
       const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
       if (selectedPkg && (parseFloat(String(selectedPkg.originalPrice)) || 0) > (parseFloat(String(selectedPkg.price)) || 0)) {
