@@ -101,30 +101,35 @@ export function ManageMemberAccessDialog({
   const handleSaveAccess = async () => {
     setSaving(true);
     try {
-      // Remover acessos que foram desmarcados
-      const productsToRemoveAccess = projectProducts.filter(product => 
-        !memberProductAccess.has(product.id) && // Não está no conjunto de acessos atuais
-        memberProductAccess.has(product.id) !== // E tinha acesso antes (para evitar tentar remover o que nunca teve)
-        new Set((await supabase.from('product_access').select('product_id').eq('user_id', memberId).in('product_id', [product.id])).data?.map(a => a.product_id) || []).has(product.id)
+      // Buscar os acessos atuais do banco de dados para comparação
+      const { data: existingAccessRecords, error: fetchExistingError } = await supabase
+        .from('product_access')
+        .select('product_id')
+        .eq('user_id', memberId)
+        .in('product_id', projectProducts.map(p => p.id)); // Apenas produtos deste projeto
+
+      if (fetchExistingError) throw fetchExistingError;
+      const existingAccessProductIds = new Set(existingAccessRecords?.map(a => a.product_id) || []);
+
+      const productsToRevokeAccess = projectProducts.filter(product => 
+        existingAccessProductIds.has(product.id) && !memberProductAccess.has(product.id)
       );
 
-      if (productsToRemoveAccess.length > 0) {
+      if (productsToRevokeAccess.length > 0) {
         const { error: deleteError } = await supabase
           .from('product_access')
           .delete()
           .eq('user_id', memberId)
-          .in('product_id', productsToRemoveAccess.map(p => p.id));
+          .in('product_id', productsToRevokeAccess.map(p => p.id));
         if (deleteError) throw deleteError;
       }
 
-      // Adicionar acessos que foram marcados
-      const productsToAddAccess = projectProducts.filter(product => 
-        memberProductAccess.has(product.id) && // Está no conjunto de acessos atuais
-        !new Set((await supabase.from('product_access').select('product_id').eq('user_id', memberId).in('product_id', [product.id])).data?.map(a => a.product_id) || []).has(product.id)
+      const productsToGrantAccess = projectProducts.filter(product => 
+        !existingAccessProductIds.has(product.id) && memberProductAccess.has(product.id)
       );
 
-      if (productsToAddAccess.length > 0) {
-        const newAccessEntries = productsToAddAccess.map(product => ({
+      if (productsToGrantAccess.length > 0) {
+        const newAccessEntries = productsToGrantAccess.map(product => ({
           user_id: memberId,
           product_id: product.id,
           source: 'project_member_manual_access',
