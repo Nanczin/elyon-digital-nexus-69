@@ -49,7 +49,7 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
  */
 export function setNestedValue<T extends object>(obj: T, path: string, value: any): T {
   const keys = path.split('.');
-  const newObj = JSON.parse(JSON.stringify(obj)); // Começa com uma cópia profunda para garantir imutabilidade
+  let newObj: T = { ...obj }; // Começa com uma cópia rasa do objeto de nível superior
 
   let current: any = newObj;
   for (let i = 0; i < keys.length; i++) {
@@ -60,20 +60,18 @@ export function setNestedValue<T extends object>(obj: T, path: string, value: an
       const arrayKey = arrayIndexMatch[1];
       const index = parseInt(arrayIndexMatch[2], 10);
 
+      // Garante que o array exista e cria uma nova cópia para imutabilidade
+      current[arrayKey] = Array.isArray(current[arrayKey]) ? [...current[arrayKey]] : [];
+
       if (i === keys.length - 1) {
         // Última parte do caminho é um elemento de array
-        if (!Array.isArray(current[arrayKey])) {
-          current[arrayKey] = []; // Inicializa se não for um array
-        }
         current[arrayKey][index] = value;
       } else {
         // Parte intermediária do caminho é um elemento de array
-        if (!Array.isArray(current[arrayKey])) {
-          current[arrayKey] = [];
-        }
-        if (typeof current[arrayKey][index] !== 'object' || current[arrayKey][index] === null) {
-          current[arrayKey][index] = {}; // Inicializa se não for um objeto
-        }
+        // Garante que o elemento no índice seja um objeto e cria uma nova cópia
+        current[arrayKey][index] = (typeof current[arrayKey][index] === 'object' && current[arrayKey][index] !== null)
+          ? { ...current[arrayKey][index] }
+          : {};
         current = current[arrayKey][index];
       }
     } else {
@@ -81,9 +79,10 @@ export function setNestedValue<T extends object>(obj: T, path: string, value: an
       if (i === keys.length - 1) {
         current[key] = value;
       } else {
-        if (typeof current[key] !== 'object' || current[key] === null) {
-          current[key] = {}; // Inicializa se não for um objeto
-        }
+        // Garante que o objeto aninhado exista e cria uma nova cópia
+        current[key] = (typeof current[key] === 'object' && current[key] !== null)
+          ? { ...current[key] }
+          : {};
         current = current[key];
       }
     }
