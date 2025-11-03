@@ -24,6 +24,7 @@ import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Label } from '@/components/ui/label'; // Importação adicionada
 
 const projectSchema = z.object({
   name: z.string().min(1, 'Nome do projeto é obrigatório'),
