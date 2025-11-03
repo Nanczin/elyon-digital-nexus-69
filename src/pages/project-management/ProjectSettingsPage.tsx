@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } => 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Settings } from 'lucide-react';
