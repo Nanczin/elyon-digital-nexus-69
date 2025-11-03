@@ -35,25 +35,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('AUTH_DEBUG: User is present, checking admin status with is_current_user_admin()...');
         let adminCheckSucceeded = false;
         let attempts = 0;
-        const maxAttempts = 2; // Tentar 2 vezes (1 inicial + 1 retry)
-        const retryDelayMs = 1500; // 1.5 segundos de atraso para a retry
+        const maxAttempts = 3; // Aumentado para 3 tentativas (1 inicial + 2 retries)
+        const initialDelayMs = 500; // Pequeno atraso inicial antes da primeira tentativa
+        const retryDelayMs = 2000; // 2 segundos de atraso para as retries
+        const rpcTimeoutMs = 10000; // Aumentado o timeout da RPC para 10 segundos
+
+        // Limpar qualquer toast anterior relacionado à verificação de admin
+        toast.dismiss('admin-status-check-error');
 
         while (attempts < maxAttempts && !adminCheckSucceeded) {
           attempts++;
+          if (attempts === 1 && event === 'SIGNED_IN') {
+            // Adicionar um pequeno atraso inicial apenas para a primeira tentativa durante o evento SIGNED_IN
+            console.log(`AUTH_DEBUG: Attempt ${attempts}: Initial delay of ${initialDelayMs}ms for SIGNED_IN event.`);
+            await new Promise(resolve => setTimeout(resolve, initialDelayMs));
+          } else if (attempts > 1) {
+            // Atraso para as retries
+            console.log(`AUTH_DEBUG: Attempt ${attempts}: Retrying in ${retryDelayMs}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+          }
+
           try {
             const { data, error } = await withTimeout(
               supabase.rpc('is_current_user_admin'),
-              5000, // 5 segundos de timeout
+              rpcTimeoutMs, // Usar o timeout aumentado
               'Admin status check timed out'
             );
 
             if (error) {
               console.error(`AUTH_DEBUG: Attempt ${attempts}: Error checking admin status:`, error);
-              if (attempts < maxAttempts && error.message === 'Admin status check timed out') {
-                console.log(`AUTH_DEBUG: Attempt ${attempts}: Timeout detected, retrying in ${retryDelayMs}ms...`);
-                await new Promise(resolve => setTimeout(resolve, retryDelayMs));
-              } else {
+              if (attempts === maxAttempts) { // Mostrar toast apenas após todas as tentativas falharem
                 setIsAdmin(false);
+                toast({
+                  id: 'admin-status-check-error',
+                  title: "Erro de autenticação",
+                  description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
+                  variant: "destructive",
+                });
               }
             } else {
               if (typeof data === 'boolean') {
@@ -67,19 +85,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               } else {
                 console.warn(`AUTH_DEBUG: Attempt ${attempts}: is_current_user_admin RPC returned unexpected data format:`, data);
                 setIsAdmin(false);
-                adminCheckSucceeded = true; // Consider it handled, even if unexpected format
+                adminCheckSucceeded = true; // Considerar como tratado, mesmo que o formato seja inesperado
               }
             }
           } catch (error: any) {
             console.error(`AUTH_DEBUG: Attempt ${attempts}: Error in is_current_user_admin RPC call (catch block):`, error.message);
-            if (attempts < maxAttempts && error.message === 'Admin status check timed out') {
-              console.log(`AUTH_DEBUG: Attempt ${attempts}: Timeout detected, retrying in ${retryDelayMs}ms...`);
-              await new Promise(resolve => setTimeout(resolve, retryDelayMs));
-            } else {
+            if (attempts === maxAttempts) { // Mostrar toast apenas após todas as tentativas falharem
               setIsAdmin(false);
               toast({
+                id: 'admin-status-check-error',
                 title: "Erro de autenticação",
-                description: `Não foi possível verificar o status de administrador: ${error.message}.`,
+                description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
                 variant: "destructive",
               });
             }
@@ -90,19 +106,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAdmin(false);
       }
       console.log('AUTH_DEBUG: Setting loading to false.');
-      setLoading(false); // Esta linha será sempre alcançada
+      setLoading(false);
     };
 
-    // Set up auth state listener
+    // Configurar o listener de mudança de estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
-    // Also check for existing session on mount
+    // Também verificar a sessão existente na montagem
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
       await handleAuthStateChange('INITIAL_SESSION', initialSession);
     }).catch(error => {
       console.error('AUTH_DEBUG: Error in getSession:', error);
-      setLoading(false); // Ensure loading is false even if getSession fails
+      setLoading(false); // Garantir que loading seja false mesmo se getSession falhar
     });
 
     return () => subscription.unsubscribe();
