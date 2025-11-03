@@ -219,12 +219,14 @@ export function ModuleCard({ module, onModuleEdited, onModuleDeleted, onLessonSa
         )}
       </CardContent>
 
-      <NewLessonDialog
-        moduleId={module.id}
-        onLessonSaved={onLessonSaved}
-        open={isNewLessonDialogOpen}
-        onOpenChange={setIsNewLessonDialogOpen}
-      />
+      {isNewLessonDialogOpen && ( // Renderização condicional
+        <NewLessonDialog
+          moduleId={module.id}
+          onLessonSaved={onLessonSaved}
+          open={isNewLessonDialogOpen}
+          onOpenChange={setIsNewLessonDialogOpen}
+        />
+      )}
 
       {editingLesson && (
         <NewLessonDialog
