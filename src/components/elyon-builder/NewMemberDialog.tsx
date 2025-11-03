@@ -16,18 +16,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 import { UserPlus, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { generateRandomString } from '@/utils/authUtils'; // Vamos criar este utilitário
+import { generateRandomString } from '@/utils/authUtils';
 
 const newMemberSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
+  role: z.enum(['member', 'admin']).default('member'), // Adicionado campo de função
 });
 
 type NewMemberForm = z.infer<typeof newMemberSchema>;
@@ -48,7 +50,8 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
     defaultValues: {
       name: '',
       email: '',
-      password: generateRandomString(12), // Gerar senha inicial
+      password: generateRandomString(12),
+      role: 'member', // Função padrão
     },
   });
 
@@ -60,6 +63,7 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
     setLoading(true);
     try {
       // 1. Criar usuário no Supabase Auth
+      // O trigger 'handle_new_user' no banco de dados cuidará da criação do perfil (tabela 'profiles').
       const { data: userAuth, error: authError } = await supabase.auth.admin.createUser({
         email: data.email,
         password: data.password,
@@ -76,28 +80,13 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
         throw new Error('Erro ao obter ID do novo usuário.');
       }
 
-      // 2. Criar entrada na tabela profiles (se o trigger handle_new_user não fizer isso)
-      // O trigger `handle_new_user` já deve cuidar disso, mas podemos adicionar um fallback
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: newUserId,
-          email: data.email,
-          name: data.name,
-          role: 'user', // Padrão para 'user'
-        }, { onConflict: 'user_id' });
-
-      if (profileError) {
-        console.warn('Erro ao criar/atualizar perfil (pode ser redundante se trigger ativo):', profileError.message);
-      }
-
-      // 3. Adicionar membro ao projeto na tabela project_members
+      // 2. Adicionar membro ao projeto na tabela project_members
       const { error: memberError } = await supabase
         .from('project_members')
         .insert({
           project_id: projectId,
           user_id: newUserId,
-          role: 'member',
+          role: data.role, // Usar a função selecionada no formulário
           status: 'active',
         });
 
@@ -105,7 +94,7 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
         throw new Error(memberError.message);
       }
 
-      // 4. Conceder acesso a todos os produtos (módulos) publicados do projeto
+      // 3. Conceder acesso a todos os produtos (módulos) publicados do projeto
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('id')
@@ -135,13 +124,14 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
 
       toast({
         title: 'Membro adicionado!',
-        description: `${data.name} foi adicionado ao projeto com sucesso.`,
+        description: `${data.name} foi adicionado ao projeto com sucesso com a função de ${data.role}.`,
       });
       
       form.reset({
         name: '',
         email: '',
-        password: generateRandomString(12), // Gerar nova senha para o próximo
+        password: generateRandomString(12),
+        role: 'member', // Resetar para a função padrão
       });
       setOpen(false);
       onMemberAdded?.();
@@ -237,6 +227,28 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
                     <RefreshCw className="mr-2 h-3 w-3" />
                     Gerar Senha Forte
                   </Button>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Função no Projeto *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a função" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="member">Membro</SelectItem>
+                      <SelectItem value="admin">Administrador do Projeto</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
