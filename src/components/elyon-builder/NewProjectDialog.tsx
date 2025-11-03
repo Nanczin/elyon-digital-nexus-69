@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,7 +24,8 @@ import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Label } from '@/components/ui/label'; // Importação adicionada
+import { Label } from '@/components/ui/label';
+import { Project } from '@/pages/ElyonBuilder'; // Importar a interface Project
 
 const projectSchema = z.object({
   name: z.string().min(1, 'Nome do projeto é obrigatório'),
@@ -38,10 +39,12 @@ type ProjectForm = z.infer<typeof projectSchema>;
 
 interface NewProjectDialogProps {
   onProjectCreated?: () => void;
+  initialProjectData?: Project | null; // Nova prop para edição
+  open?: boolean; // Controla o estado de abertura do diálogo
+  onOpenChange?: (open: boolean) => void; // Callback para mudança de estado de abertura
 }
 
-export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
-  const [open, setOpen] = useState(false);
+export function NewProjectDialog({ onProjectCreated, initialProjectData, open, onOpenChange }: NewProjectDialogProps) {
   const [loading, setLoading] = useState(false);
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -56,6 +59,28 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
       secondaryColor: '#60a5fa',
     },
   });
+
+  // Efeito para preencher o formulário quando initialProjectData muda (modo de edição)
+  useEffect(() => {
+    if (initialProjectData) {
+      form.reset({
+        name: initialProjectData.name,
+        description: initialProjectData.description || '',
+        primaryColor: initialProjectData.primary_color,
+        secondaryColor: initialProjectData.secondary_color,
+        // Não podemos preencher o campo de arquivo (logo) diretamente
+      });
+      setSelectedLogoFile(null); // Limpar arquivo selecionado ao carregar dados existentes
+    } else {
+      form.reset({
+        name: '',
+        description: '',
+        primaryColor: '#3b82f6',
+        secondaryColor: '#60a5fa',
+      });
+      setSelectedLogoFile(null); // Limpar arquivo selecionado para novo projeto
+    }
+  }, [initialProjectData, form]);
 
   const uploadFile = async (file: File, folder: string, userId: string) => {
     const fileExt = file.name.split('.').pop();
@@ -85,53 +110,72 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
       return;
     }
 
-    // Defensive check: ensure user.id is a string
-    const currentUserId = user.id as string; // Explicitly cast to string
-    console.log('NEW_PROJECT_DEBUG: User ID from useAuth:', currentUserId); // Adicionado log aqui
-
+    const currentUserId = user.id as string;
     setLoading(true);
-    let logoUrl: string | null = null;
+    let logoUrl: string | null = initialProjectData?.logo_url || null; // Manter logo existente se não houver novo upload
 
     try {
       if (selectedLogoFile) {
-        logoUrl = await uploadFile(selectedLogoFile, 'project-logos', currentUserId); // Use currentUserId
+        logoUrl = await uploadFile(selectedLogoFile, 'project-logos', currentUserId);
       }
 
-      // Gerar uma URL de acesso única para o projeto
-      const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
-      const accessUrl = `${window.location.origin}/member-area/${slug}-${Date.now().toString().slice(-5)}`; // Exemplo simples
+      if (initialProjectData) {
+        // Modo de edição
+        const { error } = await supabase
+          .from('projects')
+          .update({
+            name: data.name,
+            description: data.description || null,
+            logo_url: logoUrl,
+            primary_color: data.primaryColor,
+            secondary_color: data.secondaryColor,
+            // access_url e status não são editáveis por este diálogo
+          })
+          .eq('id', initialProjectData.id);
 
-      const { error } = await supabase
-        .from('projects')
-        .insert([{
-          user_id: currentUserId, // Use currentUserId here
-          name: data.name,
-          description: data.description || null,
-          access_url: accessUrl,
-          logo_url: logoUrl,
-          primary_color: data.primaryColor,
-          secondary_color: data.secondaryColor,
-          status: 'active'
-        }]);
+        if (error) throw error;
 
-      if (error) {
-        throw error;
+        toast({
+          title: 'Projeto atualizado!',
+          description: 'As informações do projeto foram salvas com sucesso.',
+        });
+      } else {
+        // Modo de criação
+        const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
+        const accessUrl = `${window.location.origin}/member-area/${slug}-${Date.now().toString().slice(-5)}`;
+
+        const { error } = await supabase
+          .from('projects')
+          .insert([{
+            user_id: currentUserId,
+            name: data.name,
+            description: data.description || null,
+            access_url: accessUrl,
+            logo_url: logoUrl,
+            primary_color: data.primaryColor,
+            secondary_color: data.secondaryColor,
+            status: 'active'
+          }]);
+
+        if (error) {
+          throw error;
+        }
+        
+        toast({
+          title: 'Projeto criado!',
+          description: 'Sua nova área de membros foi criada com sucesso.',
+        });
       }
-      
-      toast({
-        title: 'Projeto criado!',
-        description: 'Sua nova área de membros foi criada com sucesso.',
-      });
       
       form.reset();
       setSelectedLogoFile(null);
-      setOpen(false);
+      onOpenChange?.(false); // Fechar o diálogo usando a prop
       onProjectCreated?.();
     } catch (error: any) {
-      console.error('Erro ao criar projeto:', error);
+      console.error('Erro ao salvar projeto:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao criar projeto. Tente novamente.',
+        description: error.message || 'Erro ao salvar projeto. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -140,16 +184,19 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button className="gradient-button">
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Projeto
-        </Button>
+        {/* Renderiza o botão de trigger apenas se não estiver no modo de edição (open é controlado externamente) */}
+        {!initialProjectData && (
+          <Button className="gradient-button">
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Projeto
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Criar Novo Projeto</DialogTitle>
+          <DialogTitle>{initialProjectData ? 'Editar Projeto' : 'Criar Novo Projeto'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -196,6 +243,9 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
               {selectedLogoFile && (
                 <p className="text-xs text-muted-foreground mt-1">Arquivo selecionado: {selectedLogoFile.name}</p>
               )}
+              {initialProjectData?.logo_url && !selectedLogoFile && (
+                <p className="text-xs text-muted-foreground mt-1">Logo atual: <a href={initialProjectData.logo_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -234,11 +284,11 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
             </div>
             
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Criando...' : 'Criar Projeto'}
+                {loading ? (initialProjectData ? 'Atualizando...' : 'Criando...') : (initialProjectData ? 'Salvar Alterações' : 'Criar Projeto')}
               </Button>
             </div>
           </form>

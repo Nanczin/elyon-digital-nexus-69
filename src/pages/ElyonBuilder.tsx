@@ -3,14 +3,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Layout, Users, Palette, BarChart3, MessageSquare, Shield, Blocks, FileText, BookOpen, Settings, Upload, Folder, Copy, ExternalLink } from 'lucide-react';
-import { NewProjectDialog } from '@/components/elyon-builder/NewProjectDialog'; // Importar o novo diálogo
+import { Plus, Layout, Users, Palette, BarChart3, MessageSquare, Shield, Blocks, FileText, BookOpen, Settings, Upload, Folder, Copy, ExternalLink, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { NewProjectDialog } from '@/components/elyon-builder/NewProjectDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-interface Project {
+export interface Project {
   id: string;
   name: string;
   description: string | null;
@@ -26,6 +28,9 @@ const ElyonBuilder = () => {
   const { user, isAdmin, loading } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
+  const [isEditProjectDialogOpen, setIsEditProjectDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,6 +71,61 @@ const ElyonBuilder = () => {
     });
   };
 
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setIsEditProjectDialogOpen(true);
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      await supabase.from('projects').delete().eq('id', projectId);
+      toast({
+        title: "Projeto Excluído!",
+        description: "O projeto foi removido com sucesso.",
+      });
+      fetchProjects(); // Recarregar a lista de projetos
+    } catch (error: any) {
+      console.error('Erro ao excluir projeto:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível excluir o projeto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Placeholder functions for new menu items
+  const handleManageMembers = (projectId: string) => {
+    toast({ title: "Funcionalidade em breve", description: `Gerenciar membros do projeto ${projectId}` });
+    console.log(`Gerenciar membros do projeto ${projectId}`);
+  };
+
+  const handleManageContent = (projectId: string) => {
+    toast({ title: "Funcionalidade em breve", description: `Gerenciar conteúdo do projeto ${projectId}` });
+    console.log(`Gerenciar conteúdo do projeto ${projectId}`);
+  };
+
+  const handleManageDesign = (projectId: string) => {
+    toast({ title: "Funcionalidade em breve", description: `Gerenciar design do projeto ${projectId}` });
+    console.log(`Gerenciar design do projeto ${projectId}`);
+  };
+
+  const handleViewAnalytics = (projectId: string) => {
+    toast({ title: "Funcionalidade em breve", description: `Ver analytics do projeto ${projectId}` });
+    console.log(`Ver analytics do projeto ${projectId}`);
+  };
+
+  const handleManageCommunity = (projectId: string) => {
+    toast({ title: "Funcionalidade em breve", description: `Gerenciar comunidade do projeto ${projectId}` });
+    console.log(`Gerenciar comunidade do projeto ${projectId}`);
+  };
+
+  const handleProjectSettings = (projectId: string) => {
+    toast({ title: "Funcionalidade em breve", description: `Acessar configurações do projeto ${projectId}` });
+    console.log(`Acessar configurações do projeto ${projectId}`);
+  };
+
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
@@ -90,7 +150,7 @@ const ElyonBuilder = () => {
             Gerencie suas áreas de membros em um só lugar
           </p>
         </div>
-        <NewProjectDialog onProjectCreated={fetchProjects} />
+        <NewProjectDialog onProjectCreated={fetchProjects} open={isNewProjectDialogOpen} onOpenChange={setIsNewProjectDialogOpen} />
       </div>
 
       {loadingProjects ? (
@@ -106,7 +166,7 @@ const ElyonBuilder = () => {
             <p className="text-muted-foreground mb-4">
               Crie sua primeira área de membros para começar.
             </p>
-            <NewProjectDialog onProjectCreated={fetchProjects}>
+            <NewProjectDialog onProjectCreated={fetchProjects} open={isNewProjectDialogOpen} onOpenChange={setIsNewProjectDialogOpen}>
               <Button className="gradient-button">
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Novo Projeto
@@ -169,13 +229,84 @@ const ElyonBuilder = () => {
                     Acessar
                   </Button>
                 </div>
-                <Button variant="ghost" className="w-full justify-start text-primary hover:text-primary/80">
-                  Gerenciar Projeto
-                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-center">
+                      <Blocks className="h-4 w-4 mr-2" />
+                      Gerenciar Projeto
+                      <MoreVertical className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => handleEditProject(project)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Editar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleManageMembers(project.id)}>
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Membros</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleManageContent(project.id)}>
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      <span>Conteúdo</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleManageDesign(project.id)}>
+                      <Palette className="mr-2 h-4 w-4" />
+                      <span>Design</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleViewAnalytics(project.id)}>
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      <span>Analytics</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleManageCommunity(project.id)}>
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <span>Comunidade</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleProjectSettings(project.id)}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configurações</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Excluir</span>
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza de que deseja excluir o projeto "{project.name}"?
+                            Esta ação não pode ser desfeita e todos os dados associados serão perdidos.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteProject(project.id)}>
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Diálogo de Edição de Projeto */}
+      {editingProject && (
+        <NewProjectDialog 
+          initialProjectData={editingProject} 
+          onProjectCreated={fetchProjects} 
+          open={isEditProjectDialogOpen} 
+          onOpenChange={setIsEditProjectDialogOpen} 
+        />
       )}
     </div>
   );
