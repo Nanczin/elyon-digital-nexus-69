@@ -85,12 +85,15 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
       return;
     }
 
+    // Defensive check: ensure user.id is a string
+    const currentUserId = user.id as string; // Explicitly cast to string
+
     setLoading(true);
     let logoUrl: string | null = null;
 
     try {
       if (selectedLogoFile) {
-        logoUrl = await uploadFile(selectedLogoFile, 'project-logos', user.id);
+        logoUrl = await uploadFile(selectedLogoFile, 'project-logos', currentUserId); // Use currentUserId
       }
 
       // Gerar uma URL de acesso única para o projeto
@@ -100,7 +103,7 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
       const { error } = await supabase
         .from('projects')
         .insert([{
-          user_id: user.id,
+          user_id: currentUserId, // Use currentUserId here
           name: data.name,
           description: data.description || null,
           access_url: accessUrl,
