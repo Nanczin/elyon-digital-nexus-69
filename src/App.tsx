@@ -19,6 +19,7 @@ import Customers from "./pages/Customers";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Checkout from "./pages/Checkout";
+import ElyonBuilder from "./pages/ElyonBuilder"; // Importando o novo componente
 
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/checkouts" element={<AdminCheckouts />} />
               <Route path="/admin/integrations" element={<AdminIntegrations />} />
+              <Route path="/admin/elyon-builder" element={<ElyonBuilder />} /> {/* Nova rota */}
               <Route path="/sales" element={<Sales />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/customers" element={<Customers />} />
