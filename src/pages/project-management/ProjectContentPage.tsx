@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, BookOpen, Users, Palette, BarChart3, MessageSquare, Plus, Trash2, LogOut } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, Palette, BarChart3, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { useAuth } from '@/hooks/useAuth'; // Importar useAuth para o signOut
+// import { useAuth } from '@/hooks/useAuth'; // Não é necessário aqui, o signOut é feito no Layout
 
 interface Project {
   id: string;
@@ -21,7 +21,7 @@ const ProjectContentPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signOut } = useAuth(); // Obter signOut do useAuth
+  // const { signOut } = useAuth(); // Removido, pois o botão "Sair" não está na imagem
   const [project, setProject] = useState<Project | null>(null);
   const [loadingProject, setLoadingProject] = useState(true);
 
@@ -72,10 +72,10 @@ const ProjectContentPage = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/'); // Redirecionar para a página inicial após o logout
-  };
+  // const handleSignOut = async () => { // Removido, pois o botão "Sair" não está na imagem
+  //   await signOut();
+  //   navigate('/'); 
+  // };
 
   if (loadingProject) {
     return (
@@ -105,14 +105,11 @@ const ProjectContentPage = () => {
             <p className="text-sm text-muted-foreground">Gerenciar projeto</p>
           </div>
         </div>
-        <Button variant="ghost" onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair
-        </Button>
+        {/* Botão "Sair" removido conforme a imagem */}
       </header>
 
       <div className="container mx-auto p-6 flex-1">
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-6"> {/* Botão Excluir Projeto */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
