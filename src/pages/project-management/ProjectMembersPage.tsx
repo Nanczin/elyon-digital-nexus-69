@@ -102,7 +102,7 @@ const ProjectMembersPage = () => {
           .from('product_purchases')
           .select('created_at')
           .eq('user_id', member.user_id)
-          .in('product_id', member.product_access.map((pa: any) => pa.product_id))
+          .in('product_id', member.product_access.map((pa: any) => pa.product_id)) // Apenas produtos que o membro tem acesso
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -131,7 +131,7 @@ const ProjectMembersPage = () => {
   };
 
   useEffect(() => {
-    if (project) {
+    if (project) { // Só busca membros se o projeto já foi carregado
       fetchMembers();
     }
   }, [project]);
@@ -169,7 +169,7 @@ const ProjectMembersPage = () => {
         title: "Status atualizado!",
         description: `Membro agora está ${newStatus === 'active' ? 'ativo' : 'inativo'}.`,
       });
-      fetchMembers();
+      fetchMembers(); // Recarregar a lista
     } catch (error: any) {
       console.error('Erro ao atualizar status do membro:', error);
       toast({
@@ -193,7 +193,7 @@ const ProjectMembersPage = () => {
         title: "Membro removido!",
         description: `${memberName} foi removido do projeto.`,
       });
-      fetchMembers();
+      fetchMembers(); // Recarregar a lista
     } catch (error: any) {
       console.error('Erro ao remover membro:', error);
       toast({
@@ -366,12 +366,12 @@ const ProjectMembersPage = () => {
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </div>
