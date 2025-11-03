@@ -3,10 +3,68 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Layout, Users, Palette, BarChart3, MessageSquare, Shield, Blocks, FileText, BookOpen, Settings, Upload } from 'lucide-react';
+import { Plus, Layout, Users, Palette, BarChart3, MessageSquare, Shield, Blocks, FileText, BookOpen, Settings, Upload, Folder, Copy, ExternalLink } from 'lucide-react';
+import { NewProjectDialog } from '@/components/elyon-builder/NewProjectDialog'; // Importar o novo diálogo
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  access_url: string;
+  logo_url: string | null;
+  primary_color: string;
+  secondary_color: string;
+  status: string;
+  created_at: string;
+}
 
 const ElyonBuilder = () => {
   const { user, isAdmin, loading } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchProjects();
+    }
+  }, [user, isAdmin]);
+
+  const fetchProjects = async () => {
+    if (!user?.id) return;
+    setLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar projetos:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível carregar seus projetos.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Link Copiado!",
+      description: "O link de acesso ao projeto foi copiado para a área de transferência.",
+    });
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
@@ -20,103 +78,105 @@ const ElyonBuilder = () => {
     return <Navigate to="/" replace />;
   }
 
-  const features = [
-    {
-      icon: Layout,
-      title: 'Gestão de Projetos',
-      description: 'Crie e gerencie suas áreas de membros distintas, cada uma com sua própria configuração e conteúdo.',
-      buttonText: 'Gerenciar Projetos',
-      action: () => console.log('Gerenciar Projetos')
-    },
-    {
-      icon: BookOpen,
-      title: 'Gestão de Conteúdo',
-      description: 'Organize seu conteúdo em módulos e aulas, suportando vídeos, PDFs, imagens e texto/HTML.',
-      buttonText: 'Gerenciar Conteúdo',
-      action: () => console.log('Gerenciar Conteúdo')
-    },
-    {
-      icon: Users,
-      title: 'Gestão de Membros',
-      description: 'Adicione membros, controle o acesso a módulos específicos e gerencie o status de cada usuário.',
-      buttonText: 'Gerenciar Membros',
-      action: () => console.log('Gerenciar Membros')
-    },
-    {
-      icon: Palette,
-      title: 'Personalização de Design',
-      description: 'Personalize o logo, cores, fontes e textos da página de login para alinhar à sua marca.',
-      buttonText: 'Personalizar Design',
-      action: () => console.log('Personalizar Design')
-    },
-    {
-      icon: BarChart3,
-      title: 'Analytics',
-      description: 'Monitore métricas chave como total de membros, aulas concluídas e atividade na comunidade.',
-      buttonText: 'Ver Relatórios',
-      action: () => console.log('Ver Relatórios')
-    },
-    {
-      icon: MessageSquare,
-      title: 'Comunidade',
-      description: 'Modere posts e comentários criados pelos membros dentro dos módulos de conteúdo.',
-      buttonText: 'Moderar Comunidade',
-      action: () => console.log('Moderar Comunidade')
-    },
-    {
-      icon: Shield,
-      title: 'Segurança',
-      description: 'Gerencie a segurança dos seus projetos e dados, incluindo a exclusão de áreas de membros.',
-      buttonText: 'Configurar Segurança',
-      action: () => console.log('Configurar Segurança')
-    },
-    {
-      icon: Upload,
-      title: 'Upload de Arquivos',
-      description: 'Armazene seus vídeos, PDFs e imagens de forma segura para uso em suas aulas.',
-      buttonText: 'Gerenciar Arquivos',
-      action: () => console.log('Gerenciar Arquivos')
-    },
-  ];
-
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <Blocks className="h-8 w-8 text-primary" />
-          Elyon Builder
-        </h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl">
-          Plataforma no-code e white label para criar e gerenciar suas próprias áreas de membros personalizadas, focando na entrega de conteúdo e na experiência do usuário.
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Blocks className="h-8 w-8 text-primary" />
+            Meus Projetos
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl">
+            Gerencie suas áreas de membros em um só lugar
+          </p>
+        </div>
+        <NewProjectDialog onProjectCreated={fetchProjects} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {features.map((feature, index) => {
-          const IconComponent = feature.icon;
-          return (
-            <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
-              <CardHeader>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <IconComponent className="h-6 w-6 text-primary" />
+      {loadingProjects ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="ml-3 text-muted-foreground">Carregando projetos...</p>
+        </div>
+      ) : projects.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Folder className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum projeto encontrado</h3>
+            <p className="text-muted-foreground mb-4">
+              Crie sua primeira área de membros para começar.
+            </p>
+            <NewProjectDialog onProjectCreated={fetchProjects}>
+              <Button className="gradient-button">
+                <Plus className="mr-2 h-4 w-4" />
+                Criar Novo Projeto
+              </Button>
+            </NewProjectDialog>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <Card key={project.id} className="hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div className="flex items-center gap-3">
+                  {project.logo_url ? (
+                    <img src={project.logo_url} alt="Project Logo" className="h-10 w-10 object-contain rounded-md" />
+                  ) : (
+                    <div className="h-10 w-10 bg-primary/10 rounded-md flex items-center justify-center">
+                      <Folder className="h-5 w-5 text-primary" />
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <CardTitle className="text-xl">{project.name}</CardTitle>
+                    {project.description && (
+                      <CardDescription className="text-sm text-muted-foreground line-clamp-1">
+                        {project.description}
+                      </CardDescription>
+                    )}
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </div>
-                <CardDescription className="min-h-[60px]">
-                  {feature.description}
-                </CardDescription>
+                <div 
+                  className="h-3 w-3 rounded-full" 
+                  style={{ backgroundColor: project.status === 'active' ? '#22c55e' : '#ef4444' }} 
+                  title={`Status: ${project.status}`}
+                ></div>
               </CardHeader>
-              <CardContent>
-                <Button onClick={feature.action} className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  {feature.buttonText}
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Criado em {format(new Date(project.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleCopyLink(project.access_url)}
+                    className="flex-1"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Link
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={() => window.open(project.access_url, '_blank')}
+                    className="flex-1"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${project.primary_color}, ${project.secondary_color})`,
+                      color: '#fff'
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Acessar
+                  </Button>
+                </div>
+                <Button variant="ghost" className="w-full justify-start text-primary hover:text-primary/80">
+                  Gerenciar Projeto
                 </Button>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
