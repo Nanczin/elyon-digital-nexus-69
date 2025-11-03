@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { NewMemberDialog } from '@/components/elyon-builder/NewMemberDialog';
 import { ManageMemberAccessDialog } from '@/components/elyon-builder/ManageMemberAccessDialog';
+import { EditMemberDialog } from '@/components/elyon-builder/EditMemberDialog'; // Importar o novo diálogo
 import { Switch } from '@/components/ui/switch';
 import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs';
 
@@ -45,6 +46,8 @@ const ProjectMembersPage = () => {
   const [isNewMemberDialogOpen, setIsNewMemberDialogOpen] = useState(false);
   const [isManageAccessDialogOpen, setIsManageAccessDialogOpen] = useState(false);
   const [selectedMemberForAccess, setSelectedMemberForAccess] = useState<Member | null>(null);
+  const [isEditMemberDialogOpen, setIsEditMemberDialogOpen] = useState(false); // Novo estado para o diálogo de edição
+  const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<Member | null>(null); // Novo estado para o membro a ser editado
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -232,6 +235,12 @@ const ProjectMembersPage = () => {
     setIsManageAccessDialogOpen(true);
   };
 
+  // Nova função para abrir o diálogo de edição de membro
+  const openEditMemberDialog = (member: Member) => {
+    setSelectedMemberForEdit(member);
+    setIsEditMemberDialogOpen(true);
+  };
+
   if (loadingProject || loadingMembers) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -362,7 +371,7 @@ const ProjectMembersPage = () => {
                           <BookOpen className="mr-2 h-4 w-4" />
                           <span>Gerenciar Acesso</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => console.log('Editar membro', member.id)}>
+                        <DropdownMenuItem onClick={() => openEditMemberDialog(member)}> {/* Chama a nova função */}
                           <Settings className="mr-2 h-4 w-4" />
                           <span>Configurações</span>
                         </DropdownMenuItem>
@@ -408,6 +417,22 @@ const ProjectMembersPage = () => {
           memberId={selectedMemberForAccess.user_id}
           memberName={selectedMemberForAccess.profiles?.name || 'Membro'}
           onAccessUpdated={fetchMembers}
+        />
+      )}
+
+      {selectedMemberForEdit && ( // Renderiza o novo diálogo de edição
+        <EditMemberDialog
+          open={isEditMemberDialogOpen}
+          onOpenChange={setIsEditMemberDialogOpen}
+          projectId={projectId!}
+          memberId={selectedMemberForEdit.id} // Passa o ID da entrada em project_members
+          initialMemberData={{
+            userId: selectedMemberForEdit.user_id,
+            name: selectedMemberForEdit.profiles?.name || '',
+            email: selectedMemberForEdit.profiles?.email || '',
+            role: selectedMemberForEdit.role as 'member' | 'admin',
+          }}
+          onMemberUpdated={fetchMembers}
         />
       )}
     </div>
