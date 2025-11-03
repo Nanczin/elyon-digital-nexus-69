@@ -104,17 +104,23 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
     const fileName = `${userId}/${Date.now()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    console.log('NEW_LESSON_DIALOG_DEBUG: Attempting file upload:', { fileName, filePath, bucket: 'builder-assets' });
+
+    const { data, error: uploadError } = await supabase.storage
       .from('builder-assets')
       .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('NEW_LESSON_DIALOG_DEBUG: Upload Error:', uploadError);
+      throw uploadError;
+    }
 
-    const { data } = supabase.storage
+    const { data: publicUrlData } = supabase.storage
       .from('builder-assets')
       .getPublicUrl(filePath);
 
-    return data.publicUrl;
+    console.log('NEW_LESSON_DIALOG_DEBUG: File uploaded successfully. Public URL:', publicUrlData.publicUrl);
+    return publicUrlData.publicUrl;
   };
 
   const onSubmit = async (data: LessonForm) => {
@@ -130,14 +136,25 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
     const currentUserId = user.id as string;
     setLoading(true);
     let contentUrl: string | null = initialLessonData?.content_url || null;
+    let textContent: string | null = data.text_content || null;
 
     try {
       if (selectedFile) {
+        console.log('NEW_LESSON_DIALOG_DEBUG: Uploading selected file...');
         contentUrl = await uploadFile(selectedFile, 'lesson-content', currentUserId);
-      } else if (data.content_type !== 'text' && data.content_url) {
+        textContent = null; // Clear text content if a file is uploaded
+      } else if (data.content_type !== 'text' && data.content_type !== 'html' && data.content_url) {
+        console.log('NEW_LESSON_DIALOG_DEBUG: Using provided content URL...');
         contentUrl = data.content_url;
+        textContent = null; // Clear text content if a URL is provided
+      } else if (data.content_type === 'text' || data.content_type === 'html') {
+        console.log('NEW_LESSON_DIALOG_DEBUG: Using provided text content...');
+        contentUrl = null; // Clear content URL if text/html content is provided
+        textContent = data.text_content || null;
       } else {
+        console.log('NEW_LESSON_DIALOG_DEBUG: No file or URL provided, clearing content_url.');
         contentUrl = null;
+        textContent = null;
       }
 
       const lessonPayload = {
@@ -147,12 +164,12 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
         duration_minutes: data.duration_minutes || null,
         content_type: data.content_type,
         content_url: contentUrl,
-        text_content: data.content_type === 'text' || data.content_type === 'html' ? data.text_content || null : null,
+        text_content: textContent,
         status: data.status,
         order_index: data.order_index,
       };
 
-      console.log('NEW_LESSON_DIALOG_DEBUG: Lesson Payload before DB operation:', JSON.stringify(lessonPayload, null, 2));
+      console.log('NEW_LESSON_DIALOG_DEBUG: Final Lesson Payload before DB operation:', JSON.stringify(lessonPayload, null, 2));
 
       if (initialLessonData) {
         const { error } = await supabase
@@ -160,7 +177,10 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
           .update(lessonPayload)
           .eq('id', initialLessonData.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('NEW_LESSON_DIALOG_DEBUG: Supabase Update Error:', error);
+          throw error;
+        }
 
         toast({
           title: 'Aula atualizada!',
@@ -172,6 +192,7 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
           .insert([lessonPayload]);
 
         if (error) {
+          console.error('NEW_LESSON_DIALOG_DEBUG: Supabase Insert Error:', error);
           throw error;
         }
         
@@ -186,7 +207,7 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
       onOpenChange?.(false);
       onLessonSaved?.();
     } catch (error: any) {
-      console.error('Erro ao salvar aula:', error);
+      console.error('NEW_LESSON_DIALOG_DEBUG: Erro ao salvar aula:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao salvar aula. Tente novamente.',

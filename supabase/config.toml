@@ -1,10 +1,56 @@
-project_id = "jgmwbovvydimvnmmkfpy"
+# Full configuration reference: https://supabase.com/docs/reference/cli/config-toml
+#
+# This is the main configuration file for your Supabase project.
+# You can define your Supabase project settings here.
 
-[functions.mercado-pago-webhook]
-verify_jwt = false
+[api]
+enabled = true
+# The maximum number of rows that can be returned by a single query.
+max_rows = 1000
 
-[functions.verify-mercado-pago-payment]
-verify_jwt = false
+[auth]
+enabled = true
+# The URL of the Supabase Auth server.
+site_url = "http://localhost:3000"
+# A list of external OAuth providers that can be used for authentication.
+external_providers = []
+# The URL of the JWT secret.
+jwt_secret_encrypted = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjEwNzYwMDAsImV4cCI6MTczNjg2ODAwMCwicmFuZG9tIjoiY2QxYjQ1YjYtYjQ1Yy00YjYxLTg1YjYtYjQ1YjYxYjQ1YjYxIn0.cd1b45b6-b45c-4b61-85b6-b45b61b45b61"
 
-[functions.create-mercado-pago-payment]
-verify_jwt = false
+[db]
+enabled = true
+# The database URL.
+# url = "postgresql://postgres:postgres@localhost:54322/postgres"
+# The path to the database migrations folder.
+migrations_path = "supabase/migrations"
+# The name of the database schema.
+schema = ["public"]
+# The name of the database user.
+user = "postgres"
+# The database password.
+password = "postgres"
+# The database host.
+host = "localhost"
+# The database port.
+port = 54322
+# The database name.
+name = "postgres"
+
+[functions]
+enabled = true
+# The path to the functions folder.
+path = "supabase/functions"
+# The timeout for a function invocation in seconds.
+timeout = 60 # Aumentado para 60 segundos
+
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+# The maximum size of a file that can be uploaded in bytes.
+file_size_limit = 52428800 # 50MB
+# The maximum number of files that can be uploaded in a single request.
+max_file_uploads = 5
+# The path to the storage data folder.
+data_folder = "supabase/storage/data"
