@@ -18,42 +18,47 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(() => {
+    console.log('AUTH_DEBUG: Initializing AuthProvider, loading starts as true.');
+    return true;
+  });
 
   useEffect(() => {
     const handleAuthStateChange = async (event: string, currentSession: Session | null) => {
+      console.log('AUTH_DEBUG: handleAuthStateChange event:', event);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
+        console.log('AUTH_DEBUG: User is present, checking admin status...');
         try {
           const { data, error } = await supabase.rpc('is_admin');
           if (error) {
-            console.error('Error checking admin status:', error);
+            console.error('AUTH_DEBUG: Error checking admin status:', error);
             setIsAdmin(false);
           } else {
-            // A função RPC 'is_admin' retorna um booleano diretamente.
-            // No entanto, defensivamente, verificamos se o resultado pode vir
-            // encapsulado em um array de objetos, como [{ is_admin: true }].
             if (typeof data === 'boolean') {
               setIsAdmin(data);
+              console.log('AUTH_DEBUG: is_admin RPC returned boolean:', data);
             } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_admin' in data[0]) {
-              // Se for um array como [{ is_admin: true }]
               setIsAdmin(data[0].is_admin);
+              console.log('AUTH_DEBUG: is_admin RPC returned array object:', data[0].is_admin);
             } else {
-              console.warn('RPC is_admin returned unexpected data format:', data);
+              console.warn('AUTH_DEBUG: is_admin RPC returned unexpected data format:', data);
               setIsAdmin(false);
             }
           }
         } catch (error) {
-          console.error('Error checking admin status (catch block):', error);
+          console.error('AUTH_DEBUG: Error in is_admin RPC call (catch block):', error);
           setIsAdmin(false);
         }
       } else {
+        console.log('AUTH_DEBUG: No user present, setting isAdmin to false.');
         setIsAdmin(false);
       }
-      setLoading(false);
+      console.log('AUTH_DEBUG: Setting loading to false.');
+      setLoading(false); // This should always be reached
     };
 
     // Set up auth state listener
@@ -61,7 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Also check for existing session on mount
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
       await handleAuthStateChange('INITIAL_SESSION', initialSession);
+    }).catch(error => {
+      console.error('AUTH_DEBUG: Error in getSession:', error);
+      setLoading(false); // Ensure loading is false even if getSession fails
     });
 
     return () => subscription.unsubscribe();
