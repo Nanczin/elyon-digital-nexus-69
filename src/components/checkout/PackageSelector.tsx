@@ -77,7 +77,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           console.log('RadioGroup onChange:', value, typeof value);
           onSelectPackage(parseInt(value));
         }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch"
+        className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
       >
         {validPackages.map((pkg) => {
           const isSelected = selectedPackage === pkg.id;
