@@ -64,9 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkAdminStatus = async () => {
       if (!user) {
-        console.log('AUTH_DEBUG: No user present for admin check, setting isAdmin to false and isAdminLoading to false.');
+        console.log('AUTH_DEBUG: No user present for admin check, setting isAdmin to false, isAdminLoading to false, and resetting retryCount.');
         setIsAdmin(false);
         setIsAdminLoading(false);
+        setRetryCount(0); // Reset retry count when no user
         return;
       }
 
@@ -94,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             setIsAdmin(false);
             setIsAdminLoading(false);
+            setRetryCount(0); // Reset retry count after max attempts
             toast({
               id: 'admin-status-check-error',
               title: "Erro de autenticação",
@@ -124,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setIsAdmin(false);
           setIsAdminLoading(false);
+          setRetryCount(0); // Reset retry count after max attempts
           toast({
             id: 'admin-status-check-error',
             title: "Erro de autenticação",
