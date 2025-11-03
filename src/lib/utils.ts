@@ -49,43 +49,54 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
  */
 export function setNestedValue<T extends object>(obj: T, path: string, value: any): T {
   const keys = path.split('.');
-  let newObj: T = { ...obj }; // Começa com uma cópia rasa do objeto de nível superior
+  if (keys.length === 0) {
+    return value; // Caso base: se o caminho estiver vazio, substitui o objeto inteiro
+  }
 
-  let current: any = newObj;
-  for (let i = 0; i < keys.length; i++) {
-    let key = keys[i];
-    let arrayIndexMatch = key.match(/(\w+)\[(\d+)\]/); // Verifica por padrão de índice de array como 'packages[0]'
+  // Cria uma cópia rasa do nível atual para manter a imutabilidade
+  const newObj = Array.isArray(obj) ? [...obj] : { ...obj };
 
-    if (arrayIndexMatch) {
-      const arrayKey = arrayIndexMatch[1];
-      const index = parseInt(arrayIndexMatch[2], 10);
+  const currentKey = keys[0];
+  const remainingPath = keys.slice(1).join('.');
 
-      // Garante que o array exista e cria uma nova cópia para imutabilidade
-      current[arrayKey] = Array.isArray(current[arrayKey]) ? [...current[arrayKey]] : [];
+  const arrayMatch = currentKey.match(/(\w+)\[(\d+)\]/);
 
-      if (i === keys.length - 1) {
-        // Última parte do caminho é um elemento de array
-        current[arrayKey][index] = value;
-      } else {
-        // Parte intermediária do caminho é um elemento de array
-        // Garante que o elemento no índice seja um objeto e cria uma nova cópia
-        current[arrayKey][index] = (typeof current[arrayKey][index] === 'object' && current[arrayKey][index] !== null)
-          ? { ...current[arrayKey][index] }
-          : {};
-        current = current[arrayKey][index];
-      }
+  if (arrayMatch) {
+    const arrayName = arrayMatch[1];
+    const index = parseInt(arrayMatch[2], 10);
+
+    // Garante que a propriedade seja um array e cria uma nova cópia dele
+    if (!Array.isArray((newObj as any)[arrayName])) {
+      (newObj as any)[arrayName] = [];
+    }
+    const newArray = [...(newObj as any)[arrayName]];
+
+    if (remainingPath) {
+      // Recursão para objeto/array aninhado dentro do elemento do array
+      newArray[index] = setNestedValue(
+        (newArray[index] && typeof newArray[index] === 'object' && newArray[index] !== null) ? newArray[index] : {},
+        remainingPath,
+        value
+      );
     } else {
-      // Chave de objeto regular
-      if (i === keys.length - 1) {
-        current[key] = value;
-      } else {
-        // Garante que o objeto aninhado exista e cria uma nova cópia
-        current[key] = (typeof current[key] === 'object' && current[key] !== null)
-          ? { ...current[key] }
-          : {};
-        current = current[key];
-      }
+      // Última parte do caminho é um elemento do array
+      newArray[index] = value;
+    }
+    (newObj as any)[arrayName] = newArray;
+  } else {
+    // Chave de objeto regular
+    if (remainingPath) {
+      // Recursão para objeto aninhado
+      newObj[currentKey as keyof T] = setNestedValue(
+        (newObj[currentKey as keyof T] && typeof newObj[currentKey as keyof T] === 'object' && newObj[currentKey as keyof T] !== null) ? newObj[currentKey as keyof T] : {},
+        remainingPath,
+        value
+      ) as T[keyof T];
+    } else {
+      // Última parte do caminho é uma chave regular
+      newObj[currentKey as keyof T] = value;
     }
   }
+
   return newObj;
 }

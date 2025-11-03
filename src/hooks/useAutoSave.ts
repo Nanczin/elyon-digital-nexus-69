@@ -15,19 +15,20 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
   const [data, setData] = useState<T>(() => {
     // Tentar carregar dados salvos do localStorage
     const savedData = localStorage.getItem(options.key);
+    const initialData = initialDataFn(); // Obter uma cópia fresca dos dados iniciais
     if (savedData) {
       try {
         const parsedSavedData = JSON.parse(savedData);
         // Usar deepMerge para garantir que todos os campos de initialData existam,
         // preenchendo com os valores salvos se disponíveis.
-        return deepMerge(initialDataFn(), parsedSavedData); // Chamar initialDataFn
+        return deepMerge(initialData, parsedSavedData);
       } catch {
         // Se o parsing falhar (dados corrompidos), retorna initialData
-        return initialDataFn(); // Chamar initialDataFn
+        return initialData;
       }
     }
     // Se não houver dados salvos, retorna initialData
-    return initialDataFn(); // Chamar initialDataFn
+    return initialData;
   });
   
   const [hasSavedData, setHasSavedData] = useState<boolean>(() => {
