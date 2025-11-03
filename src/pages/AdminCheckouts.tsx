@@ -47,6 +47,7 @@ const AdminCheckouts = () => {
   const [checkouts, setCheckouts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [currentTab, setCurrentTab] = useState('basic');
+  const [selectedDeliverableFile, setSelectedDeliverableFile] = useState<File | null>(null); // Novo estado para o arquivo
   
   // Refatorado initialFormData para ser uma função que retorna um novo objeto
   const getInitialFormData = () => ({
@@ -80,15 +81,14 @@ const AdminCheckouts = () => {
       deliverable: {
         type: 'none' as 'none' | 'link' | 'upload',
         link: '',
-        file: null as File | null, // 'file' é temporário para o estado do formulário, não é salvo no DB
         fileUrl: '',
         name: '',
         description: ''
-      } as DeliverableConfig & { file: File | null },
+      } as DeliverableConfig,
       sendTransactionalEmail: true,
       transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!',
       transactionalEmailBody: 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital'
-    } as FormFields & { deliverable: DeliverableConfig & { file: File | null } },
+    } as FormFields,
     payment_methods: { // Corresponde à coluna 'payment_methods'
       pix: true,
       creditCard: true,
@@ -167,7 +167,7 @@ const AdminCheckouts = () => {
     const handleBeforeUnload = () => {
       // Forçar o salvamento dos dados atuais
       try {
-        localStorage.setItem(autoSaveKey, JSON.stringify(JSON.parse(JSON.stringify(checkoutData))));
+        localStorage.setItem(autoSaveKey, JSON.stringify(checkoutData)); // Apenas stringify, sem parse(stringify)
       } catch (error) {
         console.error('Erro ao salvar dados antes de navegar:', error);
       }
@@ -264,6 +264,15 @@ const AdminCheckouts = () => {
       mostSold: pkg.mostSold ?? false
     })) : getInitialFormData().form_fields.packages; // Usar getInitialFormData()
 
+    // Definir o arquivo selecionado localmente se houver um fileUrl existente
+    if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
+      // Não podemos recriar um objeto File a partir de uma URL, então apenas limpamos o estado local
+      // e o usuário precisará fazer upload novamente se quiser alterar o arquivo.
+      // O fileUrl existente será mantido no checkoutData.
+      setSelectedDeliverableFile(null); 
+    }
+
+
     return {
       name: checkout.products?.name || '',
       selectedProduct: checkout.product_id || '',
@@ -280,7 +289,6 @@ const AdminCheckouts = () => {
         deliverable: {
           type: checkout.form_fields?.deliverable?.type || 'none',
           link: checkout.form_fields?.deliverable?.link || '',
-          file: null,
           fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
           name: checkout.form_fields?.deliverable?.name || '',
           description: checkout.form_fields?.deliverable?.description || ''
@@ -307,6 +315,7 @@ const AdminCheckouts = () => {
       const originalData = loadOriginalCheckoutData(editingCheckout);
       loadData(originalData); // Usar loadData para sobrescrever o estado
       clearSavedData(); // Limpar o rascunho do localStorage
+      setSelectedDeliverableFile(null); // Limpar arquivo local
       
       toast({
         title: "Dados recarregados",
@@ -315,6 +324,7 @@ const AdminCheckouts = () => {
     } else {
       loadData(getInitialFormData()); // Para novo checkout, resetar para initialFormData
       clearSavedData();
+      setSelectedDeliverableFile(null); // Limpar arquivo local
       toast({
         title: "Formulário limpo",
         description: "Formulário resetado para valores padrão"
@@ -328,6 +338,9 @@ const AdminCheckouts = () => {
     const newKey = `checkout-edit-${checkout.id}`;
     setAutoSaveKey(newKey); // useAutoSave irá carregar o rascunho para esta chave (se existir)
     
+    // Limpar o arquivo selecionado localmente ao iniciar a edição
+    setSelectedDeliverableFile(null);
+
     setIsDialogOpen(true);
   };
   const handleDelete = async (checkoutId: string) => {
@@ -367,17 +380,13 @@ const AdminCheckouts = () => {
   };
 
   const handleFileChange = (file: File | null) => {
-    setCheckoutData(prev => ({
-      ...prev,
-      form_fields: {
-        ...prev.form_fields,
-        deliverable: {
-          ...prev.form_fields.deliverable,
-          file: file,
-          fileUrl: file ? prev.form_fields.deliverable.fileUrl : '' // Clear fileUrl if file is removed
-        }
-      }
-    }));
+    setSelectedDeliverableFile(file);
+    // Se um novo arquivo é selecionado, limpar o fileUrl existente no estado do checkout
+    // para que o novo upload gere uma nova URL.
+    // Se o arquivo for null (removido), manter o fileUrl existente ou limpá-lo se for o caso.
+    if (file) {
+      handleInputChange('form_fields.deliverable.fileUrl', '');
+    }
   };
 
   const addPackage = () => {
@@ -512,8 +521,8 @@ const AdminCheckouts = () => {
       console.log('Timer sendo salvo:', checkoutData.timer);
 
       let deliverableFileUrl = checkoutData.form_fields.deliverable.fileUrl;
-      if (checkoutData.form_fields.deliverable.type === 'upload' && checkoutData.form_fields.deliverable.file) {
-        deliverableFileUrl = await uploadFile(checkoutData.form_fields.deliverable.file, 'checkout-deliverables');
+      if (checkoutData.form_fields.deliverable.type === 'upload' && selectedDeliverableFile) { // Usar selectedDeliverableFile
+        deliverableFileUrl = await uploadFile(selectedDeliverableFile, 'checkout-deliverables');
       } else if (checkoutData.form_fields.deliverable.type === 'link') {
         deliverableFileUrl = checkoutData.form_fields.deliverable.link;
       } else {
@@ -536,7 +545,7 @@ const AdminCheckouts = () => {
             ...checkoutData.form_fields.deliverable,
             link: checkoutData.form_fields.deliverable.type === 'link' ? checkoutData.form_fields.deliverable.link : null,
             fileUrl: deliverableFileUrl, // URL do arquivo carregado ou link direto
-            file: undefined // Remover propriedade temporária 'file'
+            // 'file' não existe mais aqui
           }
         },
         payment_methods: checkoutData.payment_methods, // Usar o objeto payment_methods já estruturado
@@ -576,6 +585,7 @@ const AdminCheckouts = () => {
       setIsDialogOpen(false);
       setEditingCheckout(null);
       clearSavedData(); // Limpar dados salvos após salvar com sucesso
+      setSelectedDeliverableFile(null); // Limpar arquivo local após salvar
       fetchCheckouts();
     } catch (error: any) { // Improved error logging
       console.error('Detailed error saving checkout:', error);
@@ -1448,7 +1458,7 @@ const AdminCheckouts = () => {
                           id="deliverableFile" 
                           type="file" 
                           onChange={e => handleFileChange(e.target.files?.[0] || null)} 
-                          required={!checkoutData.form_fields.deliverable.fileUrl}
+                          required={!checkoutData.form_fields.deliverable.fileUrl && !selectedDeliverableFile} // Condição de required
                         />
                         {checkoutData.form_fields.deliverable.fileUrl && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -1459,6 +1469,21 @@ const AdminCheckouts = () => {
                               variant="ghost" 
                               size="sm" 
                               onClick={() => handleInputChange('form_fields.deliverable.fileUrl', '')}
+                              className="h-6 px-2 text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Remover
+                            </Button>
+                          </div>
+                        )}
+                        {selectedDeliverableFile && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Upload className="h-4 w-4" />
+                            <span>Novo arquivo selecionado: {selectedDeliverableFile.name}</span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setSelectedDeliverableFile(null)}
                               className="h-6 px-2 text-destructive hover:text-destructive"
                             >
                               <XCircle className="h-3 w-3 mr-1" /> Remover

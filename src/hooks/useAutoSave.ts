@@ -23,11 +23,11 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
         return deepMerge(initialDataFn(), parsedSavedData); // Chamar initialDataFn
       } catch {
         // Se o parsing falhar (dados corrompidos), retorna initialData
-        return JSON.parse(JSON.stringify(initialDataFn())); // Chamar initialDataFn
+        return initialDataFn(); // Chamar initialDataFn
       }
     }
     // Se não houver dados salvos, retorna initialData
-    return JSON.parse(JSON.stringify(initialDataFn())); // Chamar initialDataFn
+    return initialDataFn(); // Chamar initialDataFn
   });
   
   const [hasSavedData, setHasSavedData] = useState<boolean>(() => {
@@ -53,8 +53,8 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
     // Salvar com debounce
     timeoutRef.current = setTimeout(() => {
       try {
-        // Fazer cópia profunda antes de salvar para evitar referências compartilhadas
-        localStorage.setItem(options.key, JSON.stringify(JSON.parse(JSON.stringify(data))));
+        // Apenas stringify, sem parse(stringify)
+        localStorage.setItem(options.key, JSON.stringify(data));
         setHasSavedData(true);
         
         if (options.showToast) {
@@ -79,12 +79,12 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
   const clearSavedData = () => {
     localStorage.removeItem(options.key);
     setHasSavedData(false);
-    setData(JSON.parse(JSON.stringify(initialDataFn()))); // Chamar initialDataFn
+    setData(initialDataFn()); // Chamar initialDataFn
   };
 
   const loadData = (newData: T) => {
     // Garantir que os dados carregados sejam mesclados com a estrutura inicial
-    setData(deepMerge(initialDataFn(), JSON.parse(JSON.stringify(newData)))); // Chamar initialDataFn
+    setData(deepMerge(initialDataFn(), newData)); // Chamar initialDataFn
   };
 
   const forceLoad = () => {
@@ -117,7 +117,7 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
       // esteja presente e preencher quaisquer valores padrão que possam estar faltando.
       const finalState = deepMerge(initialDataFn(), mergedWithPrev); // Chamar initialDataFn
       
-      return JSON.parse(JSON.stringify(finalState)); // Retorna uma cópia profunda
+      return finalState; // Retorna o estado final
     });
   };
 
