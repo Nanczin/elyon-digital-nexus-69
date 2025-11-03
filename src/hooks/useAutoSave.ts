@@ -105,17 +105,20 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
     return false;
   };
 
-  const setDataSafe = (newData: T | ((prev: T) => T)) => {
-    if (typeof newData === 'function') {
-      setData(prev => {
-        const result = (newData as Function)(prev);
-        // Aplicar deepMerge com initialData para garantir a estrutura completa
-        return deepMerge(initialData, JSON.parse(JSON.stringify(result)));
-      });
-    } else {
-      // Aplicar deepMerge com initialData para garantir a estrutura completa
-      setData(deepMerge(initialData, JSON.parse(JSON.stringify(newData))));
-    }
+  const setDataSafe = (updater: T | ((prev: T) => T)) => {
+    setData(prev => {
+      // 1. Obter os novos dados (se for uma função, executa-a com o estado anterior)
+      const newPartialData = typeof updater === 'function' ? updater(prev) : updater;
+      
+      // 2. Mesclar os novos dados sobre o estado anterior para preservar campos não tocados
+      const mergedWithPrev = deepMerge(prev, newPartialData);
+      
+      // 3. Mesclar o resultado com o initialData para garantir que a estrutura completa
+      // esteja presente e preencher quaisquer valores padrão que possam estar faltando.
+      const finalState = deepMerge(initialData, mergedWithPrev);
+      
+      return JSON.parse(JSON.stringify(finalState)); // Retorna uma cópia profunda
+    });
   };
 
   return {
