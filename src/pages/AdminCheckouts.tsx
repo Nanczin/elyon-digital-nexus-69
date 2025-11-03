@@ -84,7 +84,7 @@ const AdminCheckouts = () => {
           link: '',
           fileUrl: '',
           name: '',
-          description: ''
+          description: '',
         } as DeliverableConfig,
         sendTransactionalEmail: true,
         transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!',
@@ -150,7 +150,7 @@ const AdminCheckouts = () => {
   } = useAutoSave(getInitialFormData, { // Chamar getInitialFormData aqui
     key: autoSaveKey,
     debounceMs: 800,
-    showToast: true // Habilitar toast de salvamento automático
+    showToast: false // Alterado para false para desativar o toast
   });
   
   const loadOriginalCheckoutData = useCallback((checkout: any) => {
