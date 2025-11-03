@@ -87,6 +87,7 @@ export function NewProjectDialog({ onProjectCreated }: NewProjectDialogProps) {
 
     // Defensive check: ensure user.id is a string
     const currentUserId = user.id as string; // Explicitly cast to string
+    console.log('NEW_PROJECT_DEBUG: User ID from useAuth:', currentUserId); // Adicionado log aqui
 
     setLoading(true);
     let logoUrl: string | null = null;
