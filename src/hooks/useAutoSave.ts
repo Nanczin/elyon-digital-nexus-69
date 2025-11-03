@@ -54,8 +54,14 @@ export const useAutoSave = <T extends object>( // Adicionado 'extends object' pa
     // Salvar com debounce
     timeoutRef.current = setTimeout(() => {
       try {
-        // Apenas stringify, sem parse(stringify)
-        localStorage.setItem(options.key, JSON.stringify(data));
+        // Usar uma função replacer para JSON.stringify para excluir objetos File
+        const dataToSave = JSON.stringify(data, (key, value) => {
+          if (value instanceof File) {
+            return undefined; // Exclui objetos File da serialização
+          }
+          return value;
+        });
+        localStorage.setItem(options.key, dataToSave);
         setHasSavedData(true);
         
         if (options.showToast) {

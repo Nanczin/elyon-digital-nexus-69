@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -50,83 +50,87 @@ const AdminCheckouts = () => {
   const [selectedDeliverableFile, setSelectedDeliverableFile] = useState<File | null>(null); // Novo estado para o arquivo
   
   // Refatorado initialFormData para ser uma função que retorna um novo objeto
-  const getInitialFormData = () => ({
-    name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
-    selectedProduct: '',
-    layout: 'horizontal' as string,
-    form_fields: { // Corresponde à coluna 'form_fields' na tabela 'checkouts'
-      requireName: true,
-      requireCpf: true,
-      requirePhone: true,
-      requireEmail: true,
-      requireEmailConfirm: true,
-      packages: [{
+  const getInitialFormData = useCallback(() => {
+    const initial = {
+      name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
+      selectedProduct: '',
+      layout: 'horizontal' as string,
+      form_fields: { // Corresponde à coluna 'form_fields' na tabela 'checkouts'
+        requireName: true,
+        requireCpf: true,
+        requirePhone: true,
+        requireEmail: true,
+        requireEmailConfirm: true,
+        packages: [{
+          id: 1,
+          name: '',
+          description: '',
+          topics: [''],
+          price: 0,
+          originalPrice: 0,
+          mostSold: false
+        }] as PackageConfig[],
+        guarantee: {
+          enabled: true,
+          days: 7,
+          description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
+        } as GuaranteeConfig,
+        reservedRights: {
+          enabled: true,
+          text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
+        } as ReservedRightsConfig,
+        deliverable: {
+          type: 'none' as 'none' | 'link' | 'upload',
+          link: '',
+          fileUrl: '',
+          name: '',
+          description: ''
+        } as DeliverableConfig,
+        sendTransactionalEmail: true,
+        transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!',
+        transactionalEmailBody: 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital'
+      } as FormFields,
+      payment_methods: { // Corresponde à coluna 'payment_methods'
+        pix: true,
+        creditCard: true,
+        maxInstallments: 12,
+        installmentsWithInterest: false
+      },
+      order_bumps: [{ // Corresponde à coluna 'order_bumps'
         id: 1,
-        name: '',
-        description: '',
-        topics: [''],
+        selectedProduct: '',
         price: 0,
         originalPrice: 0,
-        mostSold: false
-      }] as PackageConfig[],
-      guarantee: {
-        enabled: true,
-        days: 7,
-        description: 'Garantia de 7 Dias. Se não gostar, devolvemos seu dinheiro sem burocracia.'
-      } as GuaranteeConfig,
-      reservedRights: {
-        enabled: true,
-        text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
-      } as ReservedRightsConfig,
-      deliverable: {
-        type: 'none' as 'none' | 'link' | 'upload',
-        link: '',
-        fileUrl: '',
-        name: '',
-        description: ''
-      } as DeliverableConfig,
-      sendTransactionalEmail: true,
-      transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!',
-      transactionalEmailBody: 'Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto "{product_name}" está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital'
-    } as FormFields,
-    payment_methods: { // Corresponde à coluna 'payment_methods'
-      pix: true,
-      creditCard: true,
-      maxInstallments: 12,
-      installmentsWithInterest: false
-    },
-    order_bumps: [{ // Corresponde à coluna 'order_bumps'
-      id: 1,
-      selectedProduct: '',
-      price: 0,
-      originalPrice: 0,
-      enabled: false
-    }],
-    styles: { // Corresponde à coluna 'styles'
-      backgroundColor: '#ffffff',
-      primaryColor: '#3b82f6',
-      textColor: '#000000',
-      headlineText: 'Sua transformação começa agora!',
-      headlineColor: '#000000',
-      description: '',
-      gradientColor: '#60a5fa',
-      highlightColor: '#3b82f6'
-    },
-    integrations: { // Corresponde à coluna 'integrations'
-      selectedMercadoPagoAccount: '',
-      selectedMetaPixel: '',
-      selectedEmailAccount: '',
-    },
-    support_contact: { // Corresponde à coluna 'support_contact'
-      email: ''
-    },
-    timer: { // Corresponde à coluna 'timer'
-      enabled: false,
-      duration: 15,
-      color: '#dc2626',
-      text: 'Oferta por tempo limitado'
-    }
-  });
+        enabled: false
+      }],
+      styles: { // Corresponde à coluna 'styles'
+        backgroundColor: '#ffffff',
+        primaryColor: '#3b82f6',
+        textColor: '#000000',
+        headlineText: 'Sua transformação começa agora!',
+        headlineColor: '#000000',
+        description: '',
+        gradientColor: '#60a5fa',
+        highlightColor: '#3b82f6'
+      },
+      integrations: { // Corresponde à coluna 'integrations'
+        selectedMercadoPagoAccount: '',
+        selectedMetaPixel: '',
+        selectedEmailAccount: '',
+      },
+      support_contact: { // Corresponde à coluna 'support_contact'
+        email: ''
+      },
+      timer: { // Corresponde à coluna 'timer'
+        enabled: false,
+        duration: 15,
+        color: '#dc2626',
+        text: 'Oferta por tempo limitado'
+      }
+    };
+    // Deep clone the initial object to ensure a fresh start every time
+    return JSON.parse(JSON.stringify(initial));
+  }, []);
   
   // Usar uma chave única por checkout ou "new" para novos
   // Manter a chave consistente mesmo quando o componente remonta
@@ -159,7 +163,7 @@ const AdminCheckouts = () => {
       console.log('AdminCheckouts: Carregando initialFormData para novo checkout (sem rascunho).');
       loadData(getInitialFormData()); // Chamar getInitialFormData aqui
     }
-  }, [editingCheckout, hasSavedData, loadData, autoSaveKey]);
+  }, [editingCheckout, hasSavedData, loadData, autoSaveKey, getInitialFormData]);
 
 
   // Salvar dados antes de navegar ou fechar a aba
@@ -167,7 +171,14 @@ const AdminCheckouts = () => {
     const handleBeforeUnload = () => {
       // Forçar o salvamento dos dados atuais
       try {
-        localStorage.setItem(autoSaveKey, JSON.stringify(checkoutData)); // Apenas stringify, sem parse(stringify)
+        // Usar uma função replacer para JSON.stringify para excluir objetos File
+        const dataToSave = JSON.stringify(checkoutData, (key, value) => {
+          if (value instanceof File) {
+            return undefined; // Exclui objetos File da serialização
+          }
+          return value;
+        });
+        localStorage.setItem(autoSaveKey, dataToSave);
       } catch (error) {
         console.error('Erro ao salvar dados antes de navegar:', error);
       }

@@ -49,53 +49,51 @@ export function deepMerge<T extends object>(target: T, source: Partial<T>): T {
  */
 export function setNestedValue<T extends object>(obj: T, path: string, value: any): T {
   const keys = path.split('.');
-  const numKeys = keys.length;
-
-  if (numKeys === 0) {
-    return value; // Se o caminho estiver vazio, substitui o objeto inteiro
+  if (keys.length === 0) {
+    return value;
   }
 
-  // Função auxiliar recursiva para atualizar o objeto de forma imutável
-  const update = (currentObj: any, currentKeys: string[], depth: number): any => {
-    const key = currentKeys[depth];
-    const isLastKey = depth === numKeys - 1;
+  // Cria uma cópia rasa do objeto raiz para iniciar a atualização imutável
+  const newRoot = Array.isArray(obj) ? [...obj] : { ...obj };
+  let currentLevel: any = newRoot;
 
-    // Verifica se a chave é um acesso a array (ex: 'packages[0]')
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const isLastKey = i === keys.length - 1;
+
     const arrayMatch = key.match(/(\w+)\[(\d+)\]/);
+
     if (arrayMatch) {
       const arrayName = arrayMatch[1];
       const index = parseInt(arrayMatch[2], 10);
 
-      // Garante que `currentObj[arrayName]` é um array e cria uma nova cópia
-      const newArray = Array.isArray(currentObj[arrayName]) ? [...currentObj[arrayName]] : [];
-
-      // Garante que o elemento no índice exista e seja um objeto se for necessário recursão
-      if (isLastKey) {
-        newArray[index] = value;
-      } else {
-        newArray[index] = update(
-          (newArray[index] && typeof newArray[index] === 'object' && newArray[index] !== null) ? newArray[index] : {},
-          currentKeys,
-          depth + 1
-        );
+      // Garante que o array exista e cria uma nova cópia dele
+      if (!Array.isArray(currentLevel[arrayName])) {
+        currentLevel[arrayName] = [];
       }
+      currentLevel[arrayName] = [...currentLevel[arrayName]];
 
-      // Retorna uma nova cópia do objeto pai com o novo array
-      return { ...currentObj, [arrayName]: newArray };
-
-    } else {
-      // Acesso a propriedade de objeto regular
       if (isLastKey) {
-        return { ...currentObj, [key]: value };
+        currentLevel[arrayName][index] = value;
       } else {
-        // Garante que o objeto aninhado exista e cria uma nova cópia
-        const nextObj = (currentObj[key] && typeof currentObj[key] === 'object' && currentObj[key] !== null)
-          ? currentObj[key]
+        // Clona o objeto/array aninhado dentro do elemento do array
+        currentLevel[arrayName][index] = (typeof currentLevel[arrayName][index] === 'object' && currentLevel[arrayName][index] !== null)
+          ? (Array.isArray(currentLevel[arrayName][index]) ? [...currentLevel[arrayName][index]] : { ...currentLevel[arrayName][index] })
           : {};
-        return { ...currentObj, [key]: update(nextObj, currentKeys, depth + 1) };
+        currentLevel = currentLevel[arrayName][index];
+      }
+    } else {
+      // Chave de objeto regular
+      if (isLastKey) {
+        currentLevel[key] = value;
+      } else {
+        // Clona o objeto/array aninhado
+        currentLevel[key] = (typeof currentLevel[key] === 'object' && currentLevel[key] !== null)
+          ? (Array.isArray(currentLevel[key]) ? [...currentLevel[key]] : { ...currentLevel[key] })
+          : {};
+        currentLevel = currentLevel[key];
       }
     }
-  };
-
-  return update(obj, keys, 0);
+  }
+  return newRoot as T;
 }
