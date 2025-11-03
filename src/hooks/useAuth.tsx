@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { withTimeout } from '@/utils/supabaseUtils'; // Importando o novo utilitário
 
 interface AuthContextType {
   user: User | null;
@@ -33,7 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentSession?.user) {
         console.log('AUTH_DEBUG: User is present, checking admin status...');
         try {
-          const { data, error } = await supabase.rpc('is_admin');
+          // Envolve a chamada RPC com um timeout de 5 segundos
+          const { data, error } = await withTimeout(
+            supabase.rpc('is_admin'),
+            5000, // 5 segundos de timeout
+            'Admin status check timed out'
+          );
           if (error) {
             console.error('AUTH_DEBUG: Error checking admin status:', error);
             setIsAdmin(false);
@@ -49,16 +55,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setIsAdmin(false);
             }
           }
-        } catch (error) {
-          console.error('AUTH_DEBUG: Error in is_admin RPC call (catch block):', error);
+        } catch (error: any) { // Captura erros de timeout também
+          console.error('AUTH_DEBUG: Error in is_admin RPC call (catch block):', error.message);
           setIsAdmin(false);
+          toast({
+            title: "Erro de autenticação",
+            description: `Não foi possível verificar o status de administrador: ${error.message}.`,
+            variant: "destructive",
+          });
         }
       } else {
         console.log('AUTH_DEBUG: No user present, setting isAdmin to false.');
         setIsAdmin(false);
       }
       console.log('AUTH_DEBUG: Setting loading to false.');
-      setLoading(false); // This should always be reached
+      setLoading(false); // Esta linha será sempre alcançada
     };
 
     // Set up auth state listener
@@ -119,10 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     } else {
-      toast({
-        title: "Login realizado!",
-        description: "Redirecionando para o dashboard...",
-      });
+        toast({
+            title: "Login realizado!",
+            description: "Redirecionando para o dashboard...",
+        });
     }
 
     return { error };
