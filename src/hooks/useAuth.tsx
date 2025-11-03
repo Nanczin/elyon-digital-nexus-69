@@ -23,37 +23,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleAuthStateChange = async (event: string, currentSession: Session | null) => {
-      try { // Adicionado try-catch abrangente
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
 
-        if (currentSession?.user) {
-          try {
-            const { data, error } = await supabase.rpc('is_admin');
-            if (error) {
-              console.error('Error checking admin status:', error);
-              setIsAdmin(false);
-            } else {
-              setIsAdmin(data || false);
-            }
-          } catch (error) {
-            console.error('Error checking admin status (catch block):', error);
+      if (currentSession?.user) {
+        try {
+          const { data, error } = await supabase.rpc('is_admin');
+          if (error) {
+            console.error('Error checking admin status:', error);
             setIsAdmin(false);
+          } else {
+            setIsAdmin(data || false);
           }
-        } else {
+        } catch (error) {
+          console.error('Error checking admin status (catch block):', error);
           setIsAdmin(false);
         }
-      } catch (unexpectedError) {
-        console.error('An unexpected error occurred during auth state change:', unexpectedError);
-        // Optionally, show a toast or handle this critical error
-        toast({
-          title: "Erro crítico de autenticação",
-          description: "Ocorreu um erro inesperado ao carregar o estado de autenticação. Por favor, tente novamente.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false); // Garante que o estado de carregamento seja sempre finalizado
+      } else {
+        setIsAdmin(false);
       }
+      setLoading(false);
     };
 
     // Set up auth state listener
