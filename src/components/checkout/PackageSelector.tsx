@@ -85,7 +85,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           return (
             <div 
               key={pkg.id}
-              className={`relative cursor-pointer transition-all duration-300 h-full rounded-2xl overflow-hidden ${
+              className={`relative cursor-pointer transition-all duration-300 rounded-2xl overflow-hidden ${
                 isSelected 
                   ? 'scale-[1.03] shadow-2xl' 
                   : 'hover:scale-[1.01] hover:shadow-xl'
@@ -102,7 +102,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
               />
               <label 
                 htmlFor={`package-${pkg.id}`}
-                className={`relative rounded-2xl p-8 bg-white backdrop-blur-sm transition-all duration-300 border-2 flex flex-col cursor-pointer block h-full ${
+                className={`relative rounded-2xl p-8 bg-white backdrop-blur-sm transition-all duration-300 border-2 flex flex-col cursor-pointer block ${
                   isSelected ? 'border-2 shadow-lg' : 'border-gray-100 hover:border-gray-200'
                 }`}
                 style={{
