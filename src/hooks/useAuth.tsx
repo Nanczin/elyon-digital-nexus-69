@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   });
 
-  // Chamar o hook useToast aqui para obter a instância correta
   const { toast, dismiss } = useToast();
 
   useEffect(() => {
@@ -41,9 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const maxAttempts = 3;
         const initialDelayMs = 500;
         const retryDelayMs = 2000;
-        const rpcTimeoutMs = 10000;
+        const rpcTimeoutMs = 30000; // Aumentado para 30 segundos
 
-        // Usar o dismiss da instância do hook
         dismiss('admin-status-check-error');
 
         while (attempts < maxAttempts && !adminCheckSucceeded) {
@@ -67,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.error(`AUTH_DEBUG: Attempt ${attempts}: Error checking admin status:`, error);
               if (attempts === maxAttempts) {
                 setIsAdmin(false);
-                toast({ // Usar o toast da instância do hook
+                toast({
                   id: 'admin-status-check-error',
                   title: "Erro de autenticação",
                   description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
@@ -93,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error(`AUTH_DEBUG: Attempt ${attempts}: Error in is_current_user_admin RPC call (catch block):`, error.message);
             if (attempts === maxAttempts) {
               setIsAdmin(false);
-              toast({ // Usar o toast da instância do hook
+              toast({
                 id: 'admin-status-check-error',
                 title: "Erro de autenticação",
                 description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
@@ -138,13 +136,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
-      toast({ // Usar o toast da instância do hook
+      toast({
         title: "Erro no cadastro",
         description: error.message,
         variant: "destructive",
       });
     } else {
-      toast({ // Usar o toast da instância do hook
+      toast({
         title: "Cadastro realizado!",
         description: "Verifique seu email para confirmar a conta.",
       });
@@ -160,13 +158,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
-      toast({ // Usar o toast da instância do hook
+      toast({
         title: "Erro no login",
         description: error.message,
         variant: "destructive",
       });
     } else {
-        toast({ // Usar o toast da instância do hook
+        toast({
             title: "Login realizado!",
             description: "Redirecionando para o dashboard...",
         });
@@ -178,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
-    toast({ // Usar o toast da instância do hook
+    toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
