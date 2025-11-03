@@ -62,64 +62,29 @@ export function NewMemberDialog({ projectId, onMemberAdded }: NewMemberDialogPro
   const onSubmit = async (data: NewMemberForm) => {
     setLoading(true);
     try {
-      // 1. Criar usuário no Supabase Auth
-      // O trigger 'handle_new_user' no banco de dados cuidará da criação do perfil (tabela 'profiles').
-      const { data: userAuth, error: authError } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true, // Confirmar e-mail automaticamente
-        user_metadata: { name: data.name },
-      });
-
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      const newUserId = userAuth.user?.id;
-      if (!newUserId) {
-        throw new Error('Erro ao obter ID do novo usuário.');
-      }
-
-      // 2. Adicionar membro ao projeto na tabela project_members
-      const { error: memberError } = await supabase
-        .from('project_members')
-        .insert({
-          project_id: projectId,
-          user_id: newUserId,
-          role: data.role, // Usar a função selecionada no formulário
-          status: 'active',
-        });
-
-      if (memberError) {
-        throw new Error(memberError.message);
-      }
-
-      // 3. Conceder acesso a todos os produtos (módulos) publicados do projeto
-      const { data: products, error: productsError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('is_active', true); // Apenas produtos ativos/publicados
-
-      if (productsError) {
-        console.error('Erro ao buscar produtos do projeto para acesso automático:', productsError.message);
-        // Não impede a criação do membro, mas loga o erro
-      } else if (products && products.length > 0) {
-        const accessEntries = products.map(product => ({
-          user_id: newUserId,
-          product_id: product.id,
-          source: 'project_member_auto_access',
-        }));
-
-        const { error: accessError } = await supabase
-          .from('product_access')
-          .insert(accessEntries);
-
-        if (accessError) {
-          console.error('Erro ao conceder acesso automático aos produtos:', accessError.message);
-        } else {
-          console.log(`Acesso concedido a ${products.length} produtos para o novo membro.`);
+      // Chamar a Edge Function para criar o membro
+      const { data: edgeFunctionResult, error: edgeFunctionError } = await supabase.functions.invoke(
+        'create-project-member',
+        {
+          body: {
+            email: data.email,
+            password: data.password,
+            name: data.name,
+            role: data.role,
+            projectId: projectId,
+          },
+          method: 'POST',
         }
+      );
+
+      if (edgeFunctionError) {
+        console.error('Erro ao invocar Edge Function create-project-member:', edgeFunctionError);
+        throw new Error(edgeFunctionError.message);
+      }
+
+      if (!edgeFunctionResult?.success) {
+        console.error('Edge Function create-project-member retornou erro:', edgeFunctionResult?.error);
+        throw new Error(edgeFunctionResult?.error || 'Erro desconhecido ao criar membro.');
       }
 
       toast({
