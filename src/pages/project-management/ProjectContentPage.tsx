@@ -70,6 +70,7 @@ const ProjectContentPage = () => {
         .order('order_index', { foreignTable: 'lessons', ascending: true }); // Ordenar aulas dentro dos módulos
 
       if (modulesError) throw modulesError;
+      console.log('PROJECT_CONTENT_PAGE_DEBUG: Fetched modules and lessons:', JSON.stringify(modulesData, null, 2));
       setModules(modulesData || []);
     } catch (error: any) {
       console.error('Erro ao carregar módulos e aulas:', error);

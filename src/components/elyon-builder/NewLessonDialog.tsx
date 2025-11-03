@@ -28,7 +28,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Label } from '@/components/ui/label';
 import { Tables } from '@/integrations/supabase/types';
-import { FormDescription } from '@/components/ui/form'; // Importação adicionada
+import { FormDescription } from '@/components/ui/form';
 
 const lessonSchema = z.object({
   title: z.string().min(1, 'Título da aula é obrigatório'),
@@ -151,6 +151,8 @@ export function NewLessonDialog({ moduleId, onLessonSaved, initialLessonData, op
         status: data.status,
         order_index: data.order_index,
       };
+
+      console.log('NEW_LESSON_DIALOG_DEBUG: Lesson Payload before DB operation:', JSON.stringify(lessonPayload, null, 2));
 
       if (initialLessonData) {
         const { error } = await supabase
