@@ -1,19 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Removido 'Link'
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, BookOpen, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Plus, Trash2, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs'; // Importar o novo componente e a interface Project
+import ProjectNavigationTabs, { Project } from '@/components/project-management/ProjectNavigationTabs';
+import { NewModuleDialog } from '@/components/elyon-builder/NewModuleDialog';
+import { ModuleCard } from '@/components/elyon-builder/ModuleCard';
+import { Tables } from '@/integrations/supabase/types';
+
+interface ModuleWithLessons extends Tables<'modules'> {
+  lessons: Tables<'lessons'>[];
+}
 
 const ProjectContentPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [project, setProject] = useState<Project | null>(null);
+  const [modules, setModules] = useState<ModuleWithLessons[]>([]);
   const [loadingProject, setLoadingProject] = useState(true);
+  const [loadingModules, setLoadingModules] = useState(true);
+  const [isNewModuleDialogOpen, setIsNewModuleDialogOpen] = useState(false);
+  const [isEditModuleDialogOpen, setIsEditModuleDialogOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState<Tables<'modules'> | null>(null);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -43,6 +55,40 @@ const ProjectContentPage = () => {
     fetchProjectDetails();
   }, [projectId, navigate, toast]);
 
+  const fetchModulesAndLessons = async () => {
+    if (!projectId) return;
+    setLoadingModules(true);
+    try {
+      const { data: modulesData, error: modulesError } = await supabase
+        .from('modules')
+        .select(`
+          *,
+          lessons (*)
+        `)
+        .eq('project_id', projectId)
+        .order('order_index', { ascending: true })
+        .order('order_index', { foreignTable: 'lessons', ascending: true }); // Ordenar aulas dentro dos módulos
+
+      if (modulesError) throw modulesError;
+      setModules(modulesData || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar módulos e aulas:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível carregar os módulos e aulas.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingModules(false);
+    }
+  };
+
+  useEffect(() => {
+    if (project) {
+      fetchModulesAndLessons();
+    }
+  }, [project]);
+
   const handleDeleteProject = async () => {
     if (!projectId) return;
     try {
@@ -57,6 +103,53 @@ const ProjectContentPage = () => {
       toast({
         title: "Erro",
         description: error.message || "Não foi possível excluir o projeto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditModule = (module: Tables<'modules'>) => {
+    setEditingModule(module);
+    setIsEditModuleDialogOpen(true);
+  };
+
+  const handleDeleteModule = async (moduleId: string, moduleTitle: string) => {
+    try {
+      await supabase.from('modules').delete().eq('id', moduleId);
+      toast({
+        title: "Módulo excluído!",
+        description: `O módulo "${moduleTitle}" foi removido com sucesso.`,
+      });
+      fetchModulesAndLessons();
+    } catch (error: any) {
+      console.error('Erro ao excluir módulo:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível excluir o módulo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleModuleStatusChange = async (moduleId: string, newStatus: 'draft' | 'published') => {
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .update({ status: newStatus })
+        .eq('id', moduleId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status atualizado!",
+        description: `Módulo agora está ${newStatus === 'published' ? 'publicado' : 'em rascunho'}.`,
+      });
+      fetchModulesAndLessons();
+    } catch (error: any) {
+      console.error('Erro ao atualizar status do módulo:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar o status do módulo.",
         variant: "destructive",
       });
     }
@@ -131,28 +224,62 @@ const ProjectContentPage = () => {
                 Gerencie o conteúdo da sua área de membros
               </p>
               <p className="text-sm text-yellow-600 mt-2 flex items-center gap-1">
-                <span className="text-lg">💡</span> Novos módulos são automaticamente liberados para todos os membros ativos
+                <Lightbulb className="h-4 w-4" /> Novos módulos são automaticamente liberados para todos os membros ativos
               </p>
             </div>
-            <Button 
-              style={{ 
-                background: `linear-gradient(135deg, ${project.primary_color}, ${project.secondary_color})`,
-                color: '#fff'
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Módulo
-            </Button>
+            <NewModuleDialog 
+              projectId={projectId!} 
+              onModuleSaved={fetchModulesAndLessons} 
+              open={isNewModuleDialogOpen} 
+              onOpenChange={setIsNewModuleDialogOpen} 
+            />
           </div>
 
           <h3 className="text-xl font-semibold mb-4">Módulos</h3>
-          <Card className="min-h-[200px] flex items-center justify-center text-muted-foreground">
-            <CardContent className="py-8">
-              Nenhum módulo criado ainda.
-            </CardContent>
-          </Card>
+          {loadingModules ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="ml-3 text-muted-foreground">Carregando módulos...</p>
+            </div>
+          ) : modules.length === 0 ? (
+            <Card className="min-h-[200px] flex items-center justify-center text-muted-foreground">
+              <CardContent className="py-8 text-center">
+                <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <p>Nenhum módulo criado ainda.</p>
+                <p className="text-sm mt-2">Crie seu primeiro módulo para organizar o conteúdo.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {modules.map(module => (
+                <ModuleCard
+                  key={module.id}
+                  module={module}
+                  onModuleEdited={() => handleEditModule(module)}
+                  onModuleDeleted={() => handleDeleteModule(module.id, module.title)}
+                  onLessonSaved={fetchModulesAndLessons}
+                  onLessonDeleted={fetchModulesAndLessons}
+                  onModuleStatusChange={handleModuleStatusChange}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {editingModule && (
+        <NewModuleDialog
+          projectId={projectId!}
+          initialModuleData={editingModule}
+          onModuleSaved={() => {
+            setIsEditModuleDialogOpen(false);
+            setEditingModule(null);
+            fetchModulesAndLessons();
+          }}
+          open={isEditModuleDialogOpen}
+          onOpenChange={setIsEditModuleDialogOpen}
+        />
+      )}
     </div>
   );
 };

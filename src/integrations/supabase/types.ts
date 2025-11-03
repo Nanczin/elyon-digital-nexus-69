@@ -349,6 +349,59 @@ export type Database = {
         }
         Relationships: []
       }
+      lessons: {
+        Row: {
+          content_type: string
+          content_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          module_id: string
+          order_index: number | null
+          status: string | null
+          text_content: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          module_id: string
+          order_index?: number | null
+          status?: string | null
+          text_content?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          module_id?: string
+          order_index?: number | null
+          status?: string | null
+          text_content?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logs_entrega: {
         Row: {
           assunto: string | null
@@ -389,6 +442,50 @@ export type Database = {
             columns: ["compra_id"]
             isOneToOne: false
             referencedRelation: "compras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number | null
+          project_id: string
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          project_id: string
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          project_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
