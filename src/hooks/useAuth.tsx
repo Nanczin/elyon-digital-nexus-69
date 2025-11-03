@@ -33,7 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error checking admin status:', error);
             setIsAdmin(false);
           } else {
-            setIsAdmin(data || false);
+            // A função RPC 'is_admin' retorna um booleano diretamente.
+            // No entanto, defensivamente, verificamos se o resultado pode vir
+            // encapsulado em um array de objetos, como [{ is_admin: true }].
+            if (typeof data === 'boolean') {
+              setIsAdmin(data);
+            } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_admin' in data[0]) {
+              // Se for um array como [{ is_admin: true }]
+              setIsAdmin(data[0].is_admin);
+            } else {
+              console.warn('RPC is_admin returned unexpected data format:', data);
+              setIsAdmin(false);
+            }
           }
         } catch (error) {
           console.error('Error checking admin status (catch block):', error);
