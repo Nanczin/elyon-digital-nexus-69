@@ -28,6 +28,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Label } from '@/components/ui/label';
 import { Tables } from '@/integrations/supabase/types';
+import { FormDescription } from '@/components/ui/form'; // Importação adicionada
 
 const lessonSchema = z.object({
   title: z.string().min(1, 'Título da aula é obrigatório'),

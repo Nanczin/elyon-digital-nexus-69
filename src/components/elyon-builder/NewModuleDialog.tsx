@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Label } from '@/components/ui/label';
 import { Tables } from '@/integrations/supabase/types';
+import { FormDescription } from '@/components/ui/form'; // Importação adicionada
 
 const moduleSchema = z.object({
   title: z.string().min(1, 'Título do módulo é obrigatório'),
@@ -233,7 +234,7 @@ export function NewModuleDialog({ projectId, onModuleSaved, initialModuleData, o
                 <p className="text-xs text-muted-foreground mt-1">Arquivo selecionado: {selectedBannerFile.name}</p>
               )}
               {initialModuleData?.banner_url && !selectedBannerFile && (
-                <p className="text-xs text-muted-foreground mt-1">Banner atual: <a href={initialModuleData.banner_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>
+                <p className className="text-xs text-muted-foreground mt-1">Banner atual: <a href={initialModuleData.banner_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>
               )}
             </div>
 
