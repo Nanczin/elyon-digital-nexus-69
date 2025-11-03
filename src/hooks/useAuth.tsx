@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Novo efeito para verificar o status de administrador, dependente do 'user'
   useEffect(() => {
+    console.log('AUTH_DEBUG: useEffect for admin status check triggered.'); // Adicionado para depuração
     const checkAdminStatus = async () => {
       if (user) {
         console.log('AUTH_DEBUG: User detected, starting admin status check...');
@@ -75,14 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           try {
+            console.log(`AUTH_DEBUG: Attempt ${attempts}: Invoking 'is_current_user_admin' RPC...`);
             const { data, error } = await withTimeout(
               supabase.rpc('is_current_user_admin'),
               rpcTimeoutMs,
-              'Admin status check timed out'
+              `Admin status check timed out after ${rpcTimeoutMs}ms` // Mensagem de timeout mais específica
             );
 
             if (error) {
-              console.error(`AUTH_DEBUG: Attempt ${attempts}: Error checking admin status:`, error);
+              console.error(`AUTH_DEBUG: Attempt ${attempts}: Error checking admin status:`, error); // Usar 'attempts' aqui
               if (attempts === maxAttempts) {
                 setIsAdmin(false);
                 toast({
@@ -103,12 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 adminCheckSucceeded = true;
               } else {
                 console.warn(`AUTH_DEBUG: Attempt ${attempts}: is_current_user_admin RPC returned unexpected data format:`, data);
-                setIsAdmin(false);
-                adminCheckSucceeded = true;
+                setIsAdmin(false); // Padrão para falso se o formato for inesperado
+                adminCheckSucceeded = true; // Considerar como "tratado" para parar as retentativas
               }
             }
           } catch (error: any) {
-            console.error(`AUTH_DEBUG: Attempt ${attempts}: Error in is_current_user_admin RPC call (catch block):`, error.message);
+            console.error(`AUTH_DEBUG: Attempt ${attempts}: Error in is_current_user_admin RPC call (catch block):`, error.message); // Usar 'attempts' aqui
             if (attempts === maxAttempts) {
               setIsAdmin(false);
               toast({
