@@ -123,6 +123,7 @@ export type Database = {
           id: string
           integrations: Json | null
           layout: string
+          name: string | null; /* Adicionada nova coluna 'name' */
           order_bumps: Json | null
           payment_methods: Json | null
           price: number
@@ -140,6 +141,7 @@ export type Database = {
           id?: string
           integrations?: Json | null
           layout?: string
+          name?: string | null; /* Adicionada nova coluna 'name' */
           order_bumps?: Json | null
           payment_methods?: Json | null
           price: number
@@ -157,6 +159,7 @@ export type Database = {
           id?: string
           integrations?: Json | null
           layout?: string
+          name?: string | null; /* Adicionada nova coluna 'name' */
           order_bumps?: Json | null
           payment_methods?: Json | null
           price?: number

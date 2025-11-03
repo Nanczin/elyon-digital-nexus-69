@@ -189,7 +189,7 @@ const AdminCheckouts = () => {
 
 
     return deepMerge(initial, { // Usar deepMerge para garantir que todos os campos padrão estejam presentes
-      name: checkout.products?.name || '',
+      name: checkout.name || checkout.products?.name || '', // Carregar o novo campo 'name'
       selectedProduct: checkout.product_id || '',
       layout: 'horizontal', // Layout fixo como 'horizontal'
       form_fields: { // Mapear para a nova estrutura aninhada
@@ -376,8 +376,9 @@ const AdminCheckouts = () => {
   const handleEdit = (checkout: any) => {
     setEditingCheckout(checkout);
     
-    // Ao iniciar a edição, a chave do auto-save será atualizada no useEffect
-    // e o useAutoSave tentará carregar o rascunho ou os dados originais.
+    // Atualizar a chave do auto-save para o checkout específico
+    const newKey = `checkout-edit-${checkout.id}`;
+    setAutoSaveKey(newKey); // useAutoSave irá carregar o rascunho para esta chave (se existir)
     
     // Limpar o arquivo selecionado localmente ao iniciar a edição
     setSelectedDeliverableFile(null);
@@ -578,6 +579,7 @@ const AdminCheckouts = () => {
 
       const checkoutPayload = {
         user_id: user?.id, // Adicionar user_id
+        name: checkoutData.name, // Salvar o novo campo 'name'
         product_id: checkoutData.selectedProduct,
         price: Math.round(checkoutData.form_fields.packages[0]?.price * 100) || 0, // Aplicar Math.round
         promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null, // Aplicar Math.round
@@ -1656,7 +1658,7 @@ const AdminCheckouts = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold cursor-pointer hover:text-primary transition-colors text-sm sm:text-base line-clamp-2" 
                          onClick={() => window.open(`/checkout/${checkout.id}`, '_blank')}>
-                        {checkout.products?.name || 'Produto não encontrado'}
+                        {checkout.name || checkout.products?.name || 'Produto não encontrado'} {/* Exibir o novo campo 'name' */}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Preço: R$ {(checkout.price / 100).toFixed(2)}
