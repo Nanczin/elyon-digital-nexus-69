@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, MoreVertical, BookOpen, Video, FileText, Image, Code, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit, Trash2, MoreVertical, BookOpen, Video, FileText, Image, Code, Clock, ChevronDown, ChevronUp, Eye } from 'lucide-react'; // Importado o ícone Eye
 import { Tables } from '@/integrations/supabase/types';
 import { NewLessonDialog } from './NewLessonDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { useNavigate } from 'react-router-dom'; // Importado useNavigate
 
 interface ModuleCardProps {
   module: Tables<'modules'> & { lessons: Tables<'lessons'>[] };
@@ -26,6 +27,7 @@ export function ModuleCard({ module, onModuleEdited, onModuleDeleted, onLessonSa
   const [editingLesson, setEditingLesson] = useState<Tables<'lessons'> | null>(null);
   const [isLessonsExpanded, setIsLessonsExpanded] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate(); // Inicializado useNavigate
 
   const handleEditLesson = (lesson: Tables<'lessons'>) => {
     setEditingLesson(lesson);
@@ -54,6 +56,10 @@ export function ModuleCard({ module, onModuleEdited, onModuleDeleted, onLessonSa
         variant: "destructive",
       });
     }
+  };
+
+  const handleViewLesson = (lesson: Tables<'lessons'>) => {
+    navigate(`/admin/projects/${module.project_id}/modules/${module.id}/lessons/${lesson.id}`);
   };
 
   const getContentTypeIcon = (contentType: string) => {
@@ -182,6 +188,10 @@ export function ModuleCard({ module, onModuleEdited, onModuleDeleted, onLessonSa
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onClick={() => handleViewLesson(lesson)}> {/* Novo item de menu */}
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>Acessar Aula</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditLesson(lesson)}>
                           <Edit className="mr-2 h-4 w-4" />
                           <span>Editar</span>
@@ -219,14 +229,12 @@ export function ModuleCard({ module, onModuleEdited, onModuleDeleted, onLessonSa
         )}
       </CardContent>
 
-      {isNewLessonDialogOpen && ( // Renderização condicional
-        <NewLessonDialog
-          moduleId={module.id}
-          onLessonSaved={onLessonSaved}
-          open={isNewLessonDialogOpen}
-          onOpenChange={setIsNewLessonDialogOpen}
-        />
-      )}
+      <NewLessonDialog
+        moduleId={module.id}
+        onLessonSaved={onLessonSaved}
+        open={isNewLessonDialogOpen}
+        onOpenChange={setIsNewLessonDialogOpen}
+      />
 
       {editingLesson && (
         <NewLessonDialog

@@ -19,7 +19,7 @@ import Customers from "./pages/Customers";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Checkout from "./pages/Checkout";
-import ElyonBuilder from "./pages/ElyonBuilder"; // Importando o novo componente
+import ElyonBuilder from "./pages/ElyonBuilder";
 
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
@@ -31,6 +31,7 @@ import ProjectDesignPage from "./pages/project-management/ProjectDesignPage";
 import ProjectAnalyticsPage from "./pages/project-management/ProjectAnalyticsPage";
 import ProjectCommunityPage from "./pages/project-management/ProjectCommunityPage";
 import ProjectSettingsPage from "./pages/project-management/ProjectSettingsPage";
+import LessonViewerPage from "./pages/project-management/LessonViewerPage"; // Importando a nova página de visualização de aulas
 
 
 const queryClient = new QueryClient();
@@ -52,15 +53,16 @@ const App = () => (
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/checkouts" element={<AdminCheckouts />} />
               <Route path="/admin/integrations" element={<AdminIntegrations />} />
-              <Route path="/admin/elyon-builder" element={<ElyonBuilder />} /> {/* Nova rota */}
+              <Route path="/admin/elyon-builder" element={<ElyonBuilder />} />
               
-              {/* Novas rotas para gerenciamento de projetos */}
+              {/* Rotas para gerenciamento de projetos */}
               <Route path="/admin/projects/:projectId/members" element={<ProjectMembersPage />} />
               <Route path="/admin/projects/:projectId/content" element={<ProjectContentPage />} />
               <Route path="/admin/projects/:projectId/design" element={<ProjectDesignPage />} />
               <Route path="/admin/projects/:projectId/analytics" element={<ProjectAnalyticsPage />} />
               <Route path="/admin/projects/:projectId/community" element={<ProjectCommunityPage />} />
               <Route path="/admin/projects/:projectId/settings" element={<ProjectSettingsPage />} />
+              <Route path="/admin/projects/:projectId/modules/:moduleId/lessons/:lessonId" element={<LessonViewerPage />} /> {/* Nova rota para visualização de aulas */}
 
               <Route path="/sales" element={<Sales />} />
               <Route path="/reports" element={<Reports />} />
