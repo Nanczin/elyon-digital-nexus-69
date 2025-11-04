@@ -27,7 +27,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       id: 'welcome',
       title: 'Boas-vindas e orientações iniciais',
       description: 'Comece sua jornada aqui! Orientações essenciais para aproveitar ao máximo o Método Remãe.',
-      banner_url: '/lovable-uploads/60aef8b0-cab0-4f83-87eb-eced18d89bff.png', // Exemplo de imagem
+      banner_url: '/lovable-uploads/60aef8b0-cab0-4a0b-817b-81cb3e2b0760.png', // Exemplo de imagem
       isCompleted: true,
     },
     {
