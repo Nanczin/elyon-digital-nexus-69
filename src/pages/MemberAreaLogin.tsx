@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client'; // Ainda usa o cliente principal para buscar settings
 import { Tables } from '@/integrations/supabase/types';
 import { deepMerge } from '@/lib/utils';
+import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth'; // Usar o novo hook de autenticação
 
 type PlatformSettings = Tables<'platform_settings'>;
 
@@ -40,7 +40,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaLogin = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { signIn, user } = useAuth();
+  const { signIn, user } = useMemberAreaAuth(); // Usar useMemberAreaAuth
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,6 +79,8 @@ const MemberAreaLogin = () => {
     const checkAccessAndRedirect = async () => {
       if (user && memberAreaId) {
         // Check if the logged-in user has access to this specific member area
+        // Note: This check uses the main Supabase client to access the 'profiles' table,
+        // as 'memberAreaSupabase' might not have the necessary RLS for 'profiles' directly.
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('member_area_id')
