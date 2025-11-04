@@ -37,11 +37,18 @@ serve(async (req) => {
     }
 
     // 1. Criar usuário no Supabase Auth
+    // Certifique-se de que o email_confirm está true para evitar problemas de autenticação
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirmar o email
-      user_metadata: { name, first_name: name.split(' ')[0], last_name: name.split(' ').slice(1).join(' ') },
+      user_metadata: { 
+        name, 
+        first_name: name.split(' ')[0], 
+        last_name: name.split(' ').slice(1).join(' ') || '',
+        member_area_id: memberAreaId, // Passar member_area_id para o user_metadata
+        status: isActive ? 'active' : 'inactive' // Passar status para o user_metadata
+      },
     });
 
     if (authError) {
@@ -61,20 +68,26 @@ serve(async (req) => {
     }
     console.log('EDGE_FUNCTION_DEBUG: Usuário auth.users criado com ID:', newUserId);
 
-    // 2. Atualizar o perfil do usuário (o trigger handle_new_user já cria, mas precisamos adicionar member_area_id e status)
+    // 2. O trigger handle_new_user já cria o perfil.
+    // Precisamos garantir que o perfil seja atualizado com member_area_id e status,
+    // que agora são passados via user_metadata e podem ser lidos pelo trigger.
+    // No entanto, para garantir que o perfil seja atualizado *imediatamente* com os dados mais recentes,
+    // e para evitar qualquer race condition com o trigger, faremos um UPDATE explícito aqui.
+    // O trigger handle_new_user já foi modificado para incluir member_area_id e status do raw_user_meta_data.
+    // Então, este UPDATE pode ser simplificado ou até removido se o trigger for suficiente.
+    // Por segurança, vamos manter um UPDATE para garantir que os dados estejam corretos.
     const { error: profileUpdateError } = await supabase
       .from('profiles')
-      .update({ 
-        member_area_id: memberAreaId, 
+      .update({
+        member_area_id: memberAreaId,
         status: isActive ? 'active' : 'inactive',
-        name: name, // Garantir que o nome seja atualizado
-        email: email, // Garantir que o email seja atualizado
+        name: name,
+        email: email,
       })
       .eq('user_id', newUserId);
 
     if (profileUpdateError) {
       console.error('EDGE_FUNCTION_DEBUG: Erro ao atualizar perfil:', profileUpdateError);
-      // Tentar reverter a criação do usuário se o perfil não puder ser atualizado
       await supabase.auth.admin.deleteUser(newUserId);
       return new Response(
         JSON.stringify({ success: false, error: profileUpdateError.message || 'Falha ao atualizar perfil do membro.' }),
@@ -98,8 +111,6 @@ serve(async (req) => {
 
       if (insertAccessError) {
         console.error('EDGE_FUNCTION_DEBUG: Erro ao inserir acessos aos módulos:', insertAccessError);
-        // Não revertemos a criação do usuário aqui, pois o perfil já foi criado.
-        // O acesso pode ser corrigido manualmente ou por outra lógica.
         return new Response(
           JSON.stringify({ success: false, error: insertAccessError.message || 'Falha ao conceder acesso aos módulos.' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
