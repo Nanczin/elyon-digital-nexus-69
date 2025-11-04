@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navigate, useParams, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client'; // Ainda usa o cliente principal para buscar settings e módulos
+import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, BookOpen, User, MessageSquare, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
+import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut } from 'lucide-react';
 import { deepMerge } from '@/lib/utils';
-import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth'; // Usar o novo hook de autenticação
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Importar Avatar e AvatarFallback
+import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Import AvatarImage
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog'; // Import the new dialog
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -222,13 +224,31 @@ const MemberAreaDashboard = () => {
           )}
           <span className="text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
         </div>
-        <Button onClick={signOut} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
-          <Avatar className="h-9 w-9 border border-gray-200">
-            <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
-              {userInitial}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
+              <Avatar className="h-9 w-9 border border-gray-200">
+                <AvatarImage src={user?.user_metadata?.avatar_url || undefined} alt={userName} />
+                <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
+                  {userInitial}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48" style={{ backgroundColor: cardBackground, color: textColor }}>
+            <ProfileSettingsDialog memberAreaId={memberAreaId || ''}>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Configurações de Perfil</span>
+              </DropdownMenuItem>
+            </ProfileSettingsDialog>
+            <DropdownMenuSeparator style={{ backgroundColor: secondaryTextColor + '40' }} />
+            <DropdownMenuItem onClick={signOut} className="text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* SEÇÃO DE BOAS-VINDAS */}
