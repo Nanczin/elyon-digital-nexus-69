@@ -1,14 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { withTimeout } from '@/utils/supabaseUtils';
+import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  loading: boolean; // Indica se a sessão inicial foi carregada
-  isAdminLoading: boolean; // Mantido para compatibilidade, mas será sempre false
+  loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -20,46 +18,54 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true); // Começa como true, definido como false após a sessão ser conhecida
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  // isAdminLoading não é mais necessário, mas mantido como false para compatibilidade
-  const isAdminLoading = false; 
 
-  const { toast } = useToast();
-
-  // Efeito para carregar a sessão inicial e lidar com mudanças de estado de autenticação
   useEffect(() => {
     const handleAuthStateChange = async (event: string, currentSession: Session | null) => {
-      console.log('AUTH_DEBUG: handleAuthStateChange event:', event);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      setLoading(false); // Define o carregamento global como false assim que a sessão é conhecida
-      console.log('AUTH_DEBUG: Global loading set to false after session update.');
-      
-      // Verifica o status de administrador diretamente do user_metadata
-      const userRole = currentSession?.user?.user_metadata?.role;
-      setIsAdmin(userRole === 'admin');
-      console.log('AUTH_DEBUG: Admin status set from user_metadata:', userRole === 'admin');
+
+      if (currentSession?.user) {
+        try {
+          const { data, error } = await supabase.rpc('is_admin');
+          if (error) {
+            console.error('Error checking admin status:', error);
+            setIsAdmin(false);
+          } else {
+            // A função RPC 'is_admin' retorna um booleano diretamente.
+            // No entanto, defensivamente, verificamos se o resultado pode vir
+            // encapsulado em um array de objetos, como [{ is_admin: true }].
+            if (typeof data === 'boolean') {
+              setIsAdmin(data);
+            } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_admin' in data[0]) {
+              // Se for um array como [{ is_admin: true }]
+              setIsAdmin(data[0].is_admin);
+            } else {
+              console.warn('RPC is_admin returned unexpected data format:', data);
+              setIsAdmin(false);
+            }
+          }
+        } catch (error) {
+          console.error('Error checking admin status (catch block):', error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
     };
 
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
-    // Adicionando um tempo limite para a recuperação da sessão inicial
-    withTimeout(supabase.auth.getSession(), 15000, 'Initial session retrieval timed out').then(async ({ data: { session: initialSession } }) => {
-      console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
+    // Also check for existing session on mount
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       await handleAuthStateChange('INITIAL_SESSION', initialSession);
-    }).catch(error => {
-      console.error('AUTH_DEBUG: Error in getSession:', error);
-      setLoading(false); // Garante que o loading seja false mesmo se getSession falhar
-      toast({
-        title: "Erro de carregamento",
-        description: `Não foi possível carregar a sessão inicial: ${error.message}. Por favor, tente recarregar a página.`,
-        variant: "destructive",
-      });
     });
 
     return () => subscription.unsubscribe();
-  }, []); // Dependências vazias para rodar apenas uma vez na montagem
+  }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -70,8 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          name: name,
-          role: 'user' // Define o papel padrão para novos usuários
+          name: name
         }
       }
     });
@@ -105,10 +110,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     } else {
-        toast({
-            title: "Login realizado!",
-            description: "Redirecionando para o dashboard...",
-        });
+      toast({
+        title: "Login realizado!",
+        description: "Redirecionando para o dashboard...",
+      });
     }
 
     return { error };
@@ -127,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
-    isAdminLoading, // Sempre false
     signUp,
     signIn,
     signOut,

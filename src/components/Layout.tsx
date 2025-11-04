@@ -18,21 +18,18 @@ const Layout: React.FC<LayoutProps> = ({
   const {
     user,
     signOut,
-    loading, // Estado de carregamento global (sessão estabelecida)
-    isAdminLoading // Novo estado para o carregamento do status de admin
+    loading // Obter o estado de carregamento do useAuth
   } = useAuth();
   const location = useLocation();
   const navigate = useNavigate(); // Inicializar useNavigate aqui
   const isAuthPage = location.pathname.startsWith('/auth');
   const isCheckoutPage = location.pathname.startsWith('/checkout') || location.pathname === '/payment-success';
   
-  // Se for uma página de autenticação ou checkout, renderize os filhos diretamente
   if (isAuthPage || isCheckoutPage) {
     return <>{children}</>;
   }
 
-  // Se o carregamento global ainda estiver ativo, mostre um spinner
-  // Isso garante que o restante da UI só seja renderizado após o `loading` ser `false`
+  // Se ainda estiver carregando o estado de autenticação, mostre um spinner
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -46,7 +43,6 @@ const Layout: React.FC<LayoutProps> = ({
     navigate('/'); // Redirecionar para a página inicial após o logout
   };
 
-  // Se não há usuário logado e não é uma página de autenticação/checkout, mostre o layout público
   if (!user) {
     return <div className="min-h-screen bg-background">
         <nav className="border-b bg-card">
@@ -98,7 +94,6 @@ const Layout: React.FC<LayoutProps> = ({
       </div>;
   }
 
-  // Se o usuário está logado, mostre o layout com sidebar
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
