@@ -686,9 +686,9 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
             <CardContent className="p-4">
               <Collapsible open={isOpen} onOpenChange={() => toggleLesson(lesson.id)}>
                 <div className="flex items-center justify-between mb-3">
-                  <div>
+                  <div className="flex-1 flex flex-col"> {/* Adicionado flex-1 flex-col */}
                     <h3 className="font-semibold">{lesson.title}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground min-h-[1.25rem]"> {/* Adicionado min-h */}
                       {lesson.description?.trim() ? `${lesson.description.trim().substring(0, 100)}${lesson.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
                     </p>
                     {lesson.duration_minutes && lesson.duration_minutes > 0 && (

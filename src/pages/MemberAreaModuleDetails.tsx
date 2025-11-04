@@ -289,9 +289,9 @@ const MemberAreaModuleDetails = () => {
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <Video className="h-6 w-6" style={{ color: primaryColor }} />
-                        <div>
+                        <div className="flex-1 flex flex-col"> {/* Adicionado flex-1 flex-col */}
                           <h4 className="font-semibold text-lg" style={{ color: textColor }}>{lesson.title}</h4>
-                          <p className="text-sm" style={{ color: secondaryTextColor}}>
+                          <p className="text-sm min-h-[1.25rem]" style={{ color: secondaryTextColor}}> {/* Adicionado min-h */}
                             {lesson.description?.trim() ? `${lesson.description.trim().substring(0, 80)}${lesson.description.trim().length > 80 ? '...' : ''}` : 'Nenhuma descrição'}
                           </p>
                           {lesson.duration_minutes && lesson.duration_minutes > 0 && (
