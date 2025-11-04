@@ -31,21 +31,21 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCommunity from "./pages/AdminCommunity";
 import AdminMemberAreas from "./pages/AdminMemberAreas";
 import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails"; // Importar a nova página de detalhes
-import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
-import { useEffect } from "react";
+// import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
+// import { useEffect } from "react";
 
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { globalFontFamily } = useGlobalPlatformSettings();
+  // const { globalFontFamily } = useGlobalPlatformSettings(); // Removido daqui
 
-  useEffect(() => {
-    if (globalFontFamily) {
-      // Aplica a fonte ao elemento raiz (<html>) para que afete todo o documento
-      document.documentElement.style.setProperty('--global-font-family', globalFontFamily);
-    }
-  }, [globalFontFamily]);
+  // useEffect(() => {
+  //   if (globalFontFamily) {
+  //     // Aplica a fonte ao elemento raiz (<html>) para que afete todo o documento
+  //     document.documentElement.style.setProperty('--global-font-family', globalFontFamily);
+  //   }
+  // }, [globalFontFamily]);
 
   return (
     <QueryClientProvider client={queryClient}>

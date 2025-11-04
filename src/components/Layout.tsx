@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, useLocation, useNavigate } from 'react-router-dom'; // Importar useNavigate
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'; // Im
 import { AppSidebar } from '@/components/AppSidebar';
 import { User, Settings, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useGlobalPlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o hook aqui
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,16 @@ const Layout: React.FC<LayoutProps> = ({
   const isAuthPage = location.pathname.startsWith('/auth');
   const isCheckoutPage = location.pathname.startsWith('/checkout') || location.pathname === '/payment-success';
   
+  // Chamar o hook useGlobalPlatformSettings dentro do Layout
+  const { globalFontFamily } = useGlobalPlatformSettings();
+
+  useEffect(() => {
+    if (globalFontFamily) {
+      // Aplica a fonte ao elemento raiz (<html>) para que afete todo o documento
+      document.documentElement.style.setProperty('--global-font-family', globalFontFamily);
+    }
+  }, [globalFontFamily]);
+
   if (isAuthPage || isCheckoutPage) {
     return <>{children}</>;
   }
