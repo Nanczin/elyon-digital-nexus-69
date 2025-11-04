@@ -220,7 +220,7 @@ const MemberAreaDashboard = () => {
               </AvatarFallback>
             </Avatar>
           )}
-          <span className="text-lg font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
+          <span className="text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
         </div>
         <Button onClick={signOut} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
           <Avatar className="h-9 w-9 border border-gray-200">
