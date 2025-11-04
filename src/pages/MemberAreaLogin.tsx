@@ -20,19 +20,19 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
   logo_url: null,
   login_title: 'Bem-vindo à sua Área de Membros',
   login_subtitle: 'Acesse seu conteúdo exclusivo',
-  global_font_family: 'Inter', // Default font
+  global_font_family: 'Nunito', // Default font
   colors: {
-    background_login: '#F0F2F5', // Light beige/off-white
-    card_login: '#FFFFFF',      // White
-    header_background: '#FFFFFF', // White
-    header_border: '#E5E7EB',   // Light gray
-    button_background: '#E98B8B', // Pinkish-red from image
-    text_primary: '#1F2937',    // Dark gray
-    text_header: '#1F2937',     // Dark gray
-    text_cards: '#1F2937',      // Dark gray
-    text_secondary: '#6B7280',  // Medium gray
-    checkmark_background: '#D1FAE5', // Light green for badge background
-    checkmark_icon: '#059669',     // Darker green for checkmark icon
+    background_login: 'hsl(var(--member-area-background))',
+    card_login: 'hsl(var(--member-area-card-background))',
+    header_background: 'hsl(var(--member-area-header-background))',
+    header_border: 'hsl(var(--member-area-header-border))',
+    button_background: 'hsl(var(--member-area-primary))',
+    text_primary: 'hsl(var(--member-area-text-dark))',
+    text_header: 'hsl(var(--member-area-text-dark))',
+    text_cards: 'hsl(var(--member-area-text-dark))',
+    text_secondary: 'hsl(var(--member-area-text-muted))',
+    checkmark_background: 'hsl(var(--member-area-checkmark-background))',
+    checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
   },
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -123,11 +123,11 @@ const MemberAreaLogin = () => {
     <div 
       className="min-h-screen flex items-center justify-center p-4"
       style={{ 
-        backgroundColor: currentSettings.colors?.background_login || '#F0F2F5',
-        fontFamily: currentSettings.global_font_family || 'Inter'
+        backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
+        fontFamily: currentSettings.global_font_family || 'Nunito'
       }}
     >
-      <Card className="w-full max-w-md" style={{ backgroundColor: currentSettings.colors?.card_login || '#FFFFFF' }}>
+      <Card className="w-full max-w-md" style={{ backgroundColor: currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))' }}>
         <CardHeader className="text-center space-y-4">
           {currentSettings.logo_url && (
             <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center">
@@ -139,10 +139,10 @@ const MemberAreaLogin = () => {
             </div>
           )}
           <div>
-            <CardTitle className="text-2xl font-bold" style={{ color: currentSettings.colors?.text_primary || '#1F2937' }}>
+            <CardTitle className="text-2xl font-bold" style={{ color: currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))' }}>
               {currentSettings.login_title || 'Bem-vindo à sua Área de Membros'}
             </CardTitle>
-            <CardDescription style={{ color: currentSettings.colors?.text_secondary || '#6B7280' }}>
+            <CardDescription style={{ color: currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))' }}>
               {currentSettings.login_subtitle || 'Acesse seu conteúdo exclusivo'}
             </CardDescription>
           </div>
@@ -150,7 +150,7 @@ const MemberAreaLogin = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" style={{ color: currentSettings.colors?.text_primary || '#1F2937' }}>Email</Label>
+              <Label htmlFor="email" style={{ color: currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))' }}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -162,7 +162,7 @@ const MemberAreaLogin = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" style={{ color: currentSettings.colors?.text_primary || '#1F2937' }}>Senha</Label>
+              <Label htmlFor="password" style={{ color: currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))' }}>Senha</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -180,9 +180,9 @@ const MemberAreaLogin = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" style={{ color: currentSettings.colors?.text_secondary || '#6B7280' }} />
+                    <EyeOff className="h-4 w-4" style={{ color: currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))' }} />
                   ) : (
-                    <Eye className="h-4 w-4" style={{ color: currentSettings.colors?.text_secondary || '#6B7280' }} />
+                    <Eye className="h-4 w-4" style={{ color: currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))' }} />
                   )}
                 </Button>
               </div>
@@ -192,16 +192,16 @@ const MemberAreaLogin = () => {
               type="submit" 
               className="w-full" 
               disabled={loading}
-              style={{ backgroundColor: currentSettings.colors?.button_background || '#E98B8B', color: '#FFFFFF' }} // Botão com texto branco
+              style={{ backgroundColor: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))', color: '#FFFFFF' }} // Botão com texto branco
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm" style={{ color: currentSettings.colors?.text_secondary || '#6B7280' }}>
+            <p className="text-sm" style={{ color: currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))' }}>
               Esqueceu sua senha?{' '}
-              <Link to={`/auth/forgot-password?memberAreaId=${memberAreaId}`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || '#E98B8B' }}>
+              <Link to={`/auth/forgot-password?memberAreaId=${memberAreaId}`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))' }}>
                 Recuperar senha
               </Link>
             </p>

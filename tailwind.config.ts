@@ -68,6 +68,18 @@ export default {
 					dark: 'hsl(var(--elyon-dark))',
 					success: 'hsl(var(--elyon-success))',
 					slate: 'hsl(var(--elyon-slate))'
+				},
+				/* Member Area specific colors */
+				memberArea: {
+					background: 'hsl(var(--member-area-background))',
+					header: 'hsl(var(--member-area-header-background))',
+					'header-border': 'hsl(var(--member-area-header-border))',
+					card: 'hsl(var(--member-area-card-background))',
+					primary: 'hsl(var(--member-area-primary))',
+					'text-dark': 'hsl(var(--member-area-text-dark))',
+					'text-muted': 'hsl(var(--member-area-text-muted))',
+					'checkmark-bg': 'hsl(var(--member-area-checkmark-background))',
+					'checkmark-icon': 'hsl(var(--member-area-checkmark-icon))',
 				}
 			},
 			backgroundImage: {

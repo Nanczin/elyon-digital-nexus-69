@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
 import { Tables } from '@/integrations/supabase/types';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Importar Avatar e AvatarFallback
 
 interface MemberAreaPreviewContentProps {
   settings: any; // Usar o tipo PlatformSettings de AdminDesign.tsx
@@ -12,16 +13,17 @@ interface MemberAreaPreviewContentProps {
 }
 
 const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ settings, onLogout, memberArea, modules }) => {
-  const primaryColor = settings.colors?.button_background || '#E98B8B'; // Usar a nova cor padrão
-  const textColor = settings.colors?.text_primary || '#1F2937';
-  const secondaryTextColor = settings.colors?.text_secondary || '#6B7280';
-  const cardBackground = settings.colors?.card_login || '#FFFFFF';
-  const fontFamily = settings.global_font_family || 'Inter';
-  const checkmarkBgColor = settings.colors?.checkmark_background || '#D1FAE5';
-  const checkmarkIconColor = settings.colors?.checkmark_icon || '#059669';
+  const primaryColor = settings.colors?.button_background || 'hsl(var(--member-area-primary))';
+  const textColor = settings.colors?.text_primary || 'hsl(var(--member-area-text-dark))';
+  const secondaryTextColor = settings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
+  const cardBackground = settings.colors?.card_login || 'hsl(var(--member-area-card-background))';
+  const fontFamily = settings.global_font_family || 'Nunito';
+  const checkmarkBgColor = settings.colors?.checkmark_background || 'hsl(var(--member-area-checkmark-background))';
+  const checkmarkIconColor = settings.colors?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))';
 
   // Placeholder para o nome do usuário logado
   const userName = "Estevão Venancio Garcia"; 
+  const userInitial = userName.charAt(0).toUpperCase();
 
   // Dados de módulos de exemplo se não houver módulos reais
   const defaultModules = [
@@ -60,7 +62,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
     <div 
       className="w-full h-full flex flex-col overflow-auto p-4" 
       style={{ 
-        backgroundColor: settings.colors?.background_login || '#F0F2F5',
+        backgroundColor: settings.colors?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: fontFamily 
       }}
     >
@@ -68,9 +70,9 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       <header 
         className="flex items-center justify-between p-4 mb-6 rounded-lg shadow-sm"
         style={{ 
-          backgroundColor: settings.colors?.header_background || '#FFFFFF',
-          borderBottom: `1px solid ${settings.colors?.header_border || '#E5E7EB'}`,
-          color: settings.colors?.text_header || '#1F2937'
+          backgroundColor: settings.colors?.header_background || 'hsl(var(--member-area-header-background))',
+          borderBottom: `1px solid ${settings.colors?.header_border || 'hsl(var(--member-area-header-border))'}`,
+          color: settings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
         <div className="flex items-center space-x-3">
@@ -81,10 +83,14 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
               className="h-8 w-8 object-contain" 
             />
           )}
-          <span className="text-lg font-semibold">{memberArea?.name || "Área de Membros RE-MÃE"}</span>
+          <span className="text-lg font-semibold">Área de Membros RE-MÃE</span>
         </div>
-        <Button onClick={onLogout} variant="ghost" size="sm" style={{ color: secondaryTextColor }}>
-          {userName.charAt(0).toUpperCase()}
+        <Button onClick={onLogout} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-memberArea-primary text-white text-sm font-semibold">
+              {userInitial}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </header>
 
@@ -101,10 +107,10 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
           {modulesToDisplay.map((module) => (
             <Card 
               key={module.id} 
-              className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl"
               style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
             >
-              <div className="relative aspect-video w-full bg-gray-200">
+              <div className="relative aspect-video w-full bg-gray-200 h-48">
                 {module.banner_url && (
                   <img 
                     src={module.banner_url} 
@@ -121,15 +127,15 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                   </div>
                 )}
               </div>
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
                 <h3 className="text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}>
                   {module.title}
                 </h3>
-                <p className="text-sm" style={{ color: secondaryTextColor }}>
+                <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
                   {module.description}
                 </p>
                 <Button 
-                  className="w-full flex items-center justify-center gap-2" 
+                  className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold" 
                   style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                 >
                   Acessar Módulo <ArrowRight className="h-4 w-4" />

@@ -63,8 +63,19 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 48 96% 53%;
 
+    /* Member Area specific colors (HSL values derived from hex) */
+    --member-area-background: 24 40% 97%; /* #FAF6F3 */
+    --member-area-header-background: 0 0% 100%; /* #FFFFFF */
+    --member-area-header-border: 210 10% 90%; /* #E5E7EB */
+    --member-area-card-background: 0 0% 100%; /* #FFFFFF */
+    --member-area-primary: 4 50% 78%; /* #EBA9A4 */
+    --member-area-text-dark: 0 0% 16%; /* #2A2A2A */
+    --member-area-text-muted: 0 0% 40%; /* #676767 */
+    --member-area-checkmark-background: 142 50% 89%; /* #D1FAE5 */
+    --member-area-checkmark-icon: 142 80% 40%; /* #63C68B */
+
     /* Global Font Family */
-    --global-font-family: 'Inter', sans-serif; /* Default fallback */
+    --global-font-family: 'Nunito', sans-serif; /* Default fallback */
   }
 
   .dark {
@@ -107,6 +118,17 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 215 25% 18%;
     --sidebar-ring: 48 96% 53%;
+
+    /* Member Area specific colors in dark mode (adjust as needed, or keep light for contrast) */
+    --member-area-background: 215 25% 10%; /* Darker background for dark mode */
+    --member-area-header-background: 215 25% 15%;
+    --member-area-header-border: 215 25% 20%;
+    --member-area-card-background: 215 25% 15%;
+    --member-area-primary: 4 50% 78%; /* Keep pink */
+    --member-area-text-dark: 0 0% 90%; /* Lighter text */
+    --member-area-text-muted: 0 0% 60%;
+    --member-area-checkmark-background: 142 50% 30%;
+    --member-area-checkmark-icon: 142 80% 60%;
   }
 }
 

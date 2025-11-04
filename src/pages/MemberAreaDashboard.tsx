@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Check, BookOpen, User, MessageSquare, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
 import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth'; // Usar o novo hook de autenticação
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Importar Avatar e AvatarFallback
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -21,19 +22,19 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
   logo_url: null,
   login_title: 'Bem-vindo à sua Área de Membros',
   login_subtitle: 'Acesse seu conteúdo exclusivo',
-  global_font_family: 'Inter', // Default font
+  global_font_family: 'Nunito', // Default font
   colors: {
-    background_login: '#F0F2F5', // Light beige/off-white
-    card_login: '#FFFFFF',      // White
-    header_background: '#FFFFFF', // White
-    header_border: '#E5E7EB',   // Light gray
-    button_background: '#E98B8B', // Pinkish-red from image
-    text_primary: '#1F2937',    // Dark gray
-    text_header: '#1F2937',     // Dark gray
-    text_cards: '#1F2937',      // Dark gray
-    text_secondary: '#6B7280',  // Medium gray
-    checkmark_background: '#D1FAE5', // Light green for badge background
-    checkmark_icon: '#059669',     // Darker green for checkmark icon
+    background_login: 'hsl(var(--member-area-background))',
+    card_login: 'hsl(var(--member-area-card-background))',
+    header_background: 'hsl(var(--member-area-header-background))',
+    header_border: 'hsl(var(--member-area-header-border))',
+    button_background: 'hsl(var(--member-area-primary))',
+    text_primary: 'hsl(var(--member-area-text-dark))',
+    text_header: 'hsl(var(--member-area-text-dark))',
+    text_cards: 'hsl(var(--member-area-text-dark))',
+    text_secondary: 'hsl(var(--member-area-text-muted))',
+    checkmark_background: 'hsl(var(--member-area-checkmark-background))',
+    checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
   },
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -41,7 +42,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaDashboard = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { user, loading: authLoading, signOut } = useMemberAreaAuth(); // Removido refreshUserSession
+  const { user, loading: authLoading, signOut } = useMemberAreaAuth();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -90,8 +91,6 @@ const MemberAreaDashboard = () => {
       }
 
       // 3. Check if user has access to this specific member area
-      // Note: This check uses the main Supabase client to access the 'profiles' table,
-      // as 'memberAreaSupabase' might not have the necessary RLS for 'profiles' directly.
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('member_area_id')
@@ -138,13 +137,12 @@ const MemberAreaDashboard = () => {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
-        // If not authenticated, redirect to login
         toast({ title: "Não autenticado", description: "Faça login para acessar a área de membros.", variant: "destructive" });
-        return; // Prevent further execution until redirected
+        return;
       }
       fetchMemberAreaAndContent();
     }
-  }, [user, authLoading, fetchMemberAreaAndContent, toast]); // Removido refreshUserSession das dependências
+  }, [user, authLoading, fetchMemberAreaAndContent, toast]);
 
   if (authLoading || loading) {
     return (
@@ -159,7 +157,6 @@ const MemberAreaDashboard = () => {
   }
 
   if (!hasAccess) {
-    // If user is logged in but doesn't have access to this specific member area
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md text-center">
@@ -179,31 +176,32 @@ const MemberAreaDashboard = () => {
   }
 
   const currentSettings = settings || getDefaultSettings(memberAreaId || '');
-  const primaryColor = currentSettings.colors?.button_background || '#E98B8B';
-  const textColor = currentSettings.colors?.text_primary || '#1F2937';
-  const secondaryTextColor = currentSettings.colors?.text_secondary || '#6B7280';
-  const cardBackground = currentSettings.colors?.card_login || '#FFFFFF';
-  const fontFamily = currentSettings.global_font_family || 'Inter';
-  const checkmarkBgColor = currentSettings.colors?.checkmark_background || '#D1FAE5';
-  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || '#059669';
+  const primaryColor = currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))';
+  const textColor = currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))';
+  const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
+  const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';
+  const fontFamily = currentSettings.global_font_family || 'Nunito';
+  const checkmarkBgColor = currentSettings.colors?.checkmark_background || 'hsl(var(--member-area-checkmark-background))';
+  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div 
-      className="w-full h-full flex flex-col overflow-auto p-4 min-h-screen" 
+      className="w-full min-h-screen flex flex-col p-8" 
       style={{ 
-        backgroundColor: currentSettings.colors?.background_login || '#F0F2F5',
+        backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: fontFamily 
       }}
     >
-      {/* Header da Área de Membros */}
+      {/* HEADER */}
       <header 
-        className="flex items-center justify-between p-4 mb-6 rounded-lg shadow-sm"
+        className="flex items-center justify-between p-4 mb-12 rounded-lg shadow-sm"
         style={{ 
-          backgroundColor: currentSettings.colors?.header_background || '#FFFFFF',
-          borderBottom: `1px solid ${currentSettings.colors?.header_border || '#E5E7EB'}`,
-          color: currentSettings.colors?.text_header || '#1F2937'
+          backgroundColor: currentSettings.colors?.header_background || 'hsl(var(--member-area-header-background))',
+          borderBottom: `1px solid ${currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))'}`,
+          color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
         <div className="flex items-center space-x-3">
@@ -214,33 +212,38 @@ const MemberAreaDashboard = () => {
               className="h-8 w-8 object-contain" 
             />
           )}
-          <span className="text-lg font-semibold">{memberArea?.name || "Área de Membros RE-MÃE"}</span>
+          <span className="text-lg font-semibold">Área de Membros RE-MÃE</span>
         </div>
-        <Button onClick={signOut} variant="ghost" size="sm" style={{ color: secondaryTextColor }}>
-          {user?.email?.charAt(0).toUpperCase() || 'E'}
+        <Button onClick={signOut} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-memberArea-primary text-white text-sm font-semibold">
+              {userInitial}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </header>
 
-      {/* Conteúdo Principal */}
-      <div className="flex-1 p-4 space-y-6">
-        <h1 className="text-3xl font-bold" style={{ color: textColor }}>
-          Bem-vindo(a), {userName}!
+      {/* SEÇÃO DE BOAS-VINDAS */}
+      <div className="flex-1 px-4 space-y-6 mb-16">
+        <h1 className="text-5xl font-semibold leading-tight" style={{ color: textColor }}>
+          Olá, {userName}!
         </h1>
-        <p className="text-lg" style={{ color: secondaryTextColor }}>
-          Sua jornada de aprendizado começa agora. Escolha um módulo para explorar.
+        <p className="text-xl font-normal leading-relaxed" style={{ color: secondaryTextColor }}>
+          Bem-vinda à sua área de membros. Escolha um módulo para começar.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* CARDS DE MÓDULOS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
           {modules.length === 0 ? (
-            <p className="text-muted-foreground">Nenhum módulo disponível para você ainda.</p>
+            <p className="text-memberArea-text-muted">Nenhum módulo disponível para você ainda.</p>
           ) : (
             modules.map((module) => (
               <Card 
                 key={module.id} 
-                className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-                style={{ backgroundColor: cardBackground, color: currentSettings.colors?.text_cards || textColor }}
+                className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
+                style={{ backgroundColor: cardBackground }}
               >
-                <div className="relative aspect-video w-full bg-gray-200">
+                <div className="relative aspect-video w-full bg-gray-200 h-48"> {/* ~55% do card */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -248,7 +251,7 @@ const MemberAreaDashboard = () => {
                       className="w-full h-full object-cover" 
                     />
                   )}
-                  {/* Placeholder para o badge de concluído - ajustar a lógica real depois */}
+                  {/* Placeholder para o badge de concluído */}
                   {module.title.includes('Boas-vindas') || module.title.includes('30 Dias') || module.title.includes('Exercícios') ? ( // Exemplo de condição
                     <div 
                       className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
@@ -258,16 +261,16 @@ const MemberAreaDashboard = () => {
                     </div>
                   ) : null}
                 </div>
-                <CardContent className="p-6 space-y-4">
-                  <h3 className="text-xl font-bold" style={{ color: currentSettings.colors?.text_cards || textColor }}>
+                <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]"> {/* Ajustar altura para o restante */}
+                  <h3 className="text-xl font-bold" style={{ color: textColor }}>
                     {module.title}
                   </h3>
-                  <p className="text-sm" style={{ color: secondaryTextColor }}>
+                  <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
                     {module.description}
                   </p>
                   <Button 
-                    className="w-full flex items-center justify-center gap-2" 
-                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} // Botão com texto branco
+                    className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold" 
+                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                     asChild
                   >
                     <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
