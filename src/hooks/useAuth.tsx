@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean; // Indica se a sessão inicial foi carregada
-  isAdminLoading: boolean; // Indica se o status de admin está sendo verificado
+  isAdminLoading: boolean; // Mantido para compatibilidade, mas será sempre false
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -20,13 +20,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true); // Começa como true, definido como false após a sessão ser conhecida
-  const [isAdminLoading, setIsAdminLoading] = useState(false); // Novo estado para o carregamento da verificação de admin
-  const [retryCount, setRetryCount] = useState(0); // Novo estado para controlar as retentativas
+  const [isAdmin, setIsAdmin] = useState(false);
+  // isAdminLoading não é mais necessário, mas mantido como false para compatibilidade
+  const isAdminLoading = false; 
 
-  const { toast, dismiss } = useToast();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref para o timeout de retentativa
+  const { toast } = useToast();
 
   // Efeito para carregar a sessão inicial e lidar com mudanças de estado de autenticação
   useEffect(() => {
@@ -34,8 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('AUTH_DEBUG: handleAuthStateChange event:', event);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      setLoading(false); // <--- Esta é a linha chave
+      setLoading(false); // Define o carregamento global como false assim que a sessão é conhecida
       console.log('AUTH_DEBUG: Global loading set to false after session update.');
+      
+      // Verifica o status de administrador diretamente do user_metadata
+      const userRole = currentSession?.user?.user_metadata?.role;
+      setIsAdmin(userRole === 'admin');
+      console.log('AUTH_DEBUG: Admin status set from user_metadata:', userRole === 'admin');
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
@@ -57,106 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []); // Dependências vazias para rodar apenas uma vez na montagem
 
-  // Novo efeito para verificar o status de administrador, dependente do 'user' e 'retryCount'
-  useEffect(() => {
-    console.log('AUTH_DEBUG: useEffect for admin status check triggered. User:', user?.id, 'Retry Count:', retryCount);
-    
-    // Limpa qualquer timeout de retentativa anterior
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-      console.log('AUTH_DEBUG: Cleared previous retry timeout.');
-    }
-
-    // Se não há usuário, reseta o estado de admin e o contador de retentativas, e para a execução.
-    if (!user) {
-      console.log('AUTH_DEBUG: No user present, resetting admin state and retryCount to 0.');
-      setIsAdmin(false);
-      setIsAdminLoading(false);
-      setRetryCount(0); // Garante que retryCount seja 0 quando não há usuário
-      return; // Importante: para a execução do useEffect para este ciclo
-    }
-
-    // Se o usuário existe, procede com a verificação de status de administrador
-    const checkAdminStatus = async () => {
-      console.log('AUTH_DEBUG: User detected, starting admin status check...');
-      setIsAdminLoading(true); // Inicia o carregamento específico de admin
-      dismiss('admin-status-check-error');
-
-      const rpcTimeoutMs = 30000; // Revertido para 30 segundos
-      const maxAttempts = 3;
-      const retryDelayMs = 2000; // 2 segundos
-
-      try {
-        console.log(`AUTH_DEBUG: Attempt ${retryCount + 1}: Invoking 'is_current_user_admin' RPC...`);
-        const { data, error } = await withTimeout(
-          supabase.rpc('is_current_user_admin'),
-          rpcTimeoutMs,
-          `Admin status check timed out after ${rpcTimeoutMs}ms`
-        );
-
-        if (error) {
-          console.error(`AUTH_DEBUG: Attempt ${retryCount + 1}: Error checking admin status:`, error);
-          if (retryCount < maxAttempts - 1) {
-            console.log(`AUTH_DEBUG: Attempt ${retryCount + 1}: Scheduling retry in ${retryDelayMs}ms...`);
-            timeoutRef.current = setTimeout(() => setRetryCount(prev => prev + 1), retryDelayMs);
-          } else {
-            setIsAdmin(false);
-            setIsAdminLoading(false);
-            setRetryCount(0); // Reset retry count after max attempts
-            toast({
-              id: 'admin-status-check-error',
-              title: "Erro de autenticação",
-              description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
-              variant: "destructive",
-            });
-          }
-        } else {
-          if (typeof data === 'boolean') {
-            setIsAdmin(data);
-            console.log(`AUTH_DEBUG: Attempt ${retryCount + 1}: is_current_user_admin RPC returned boolean:`, data);
-          } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_current_user_admin' in data[0]) {
-            setIsAdmin(data[0].is_current_user_admin);
-            console.log(`AUTH_DEBUG: Attempt ${retryCount + 1}: is_current_user_admin RPC returned array object:`, data[0].is_current_user_admin);
-          } else {
-            console.warn(`AUTH_DEBUG: Attempt ${retryCount + 1}: is_current_user_admin RPC returned unexpected data format:`, data);
-            setIsAdmin(false);
-          }
-          setIsAdminLoading(false);
-          setRetryCount(0); // Reset retry count on success
-          console.log('AUTH_DEBUG: Admin status check completed successfully, isAdminLoading set to false.');
-        }
-      } catch (error: any) {
-        console.error(`AUTH_DEBUG: Attempt ${retryCount + 1}: Error in is_current_user_admin RPC call (catch block):`, error.message);
-        if (retryCount < maxAttempts - 1) {
-          console.log(`AUTH_DEBUG: Attempt ${retryCount + 1}: Scheduling retry in ${retryDelayMs}ms...`);
-          timeoutRef.current = setTimeout(() => setRetryCount(prev => prev + 1), retryDelayMs);
-        } else {
-          setIsAdmin(false);
-          setIsAdminLoading(false);
-          setRetryCount(0); // Reset retry count after max attempts
-          toast({
-            id: 'admin-status-check-error',
-            title: "Erro de autenticação",
-            description: `Não foi possível verificar o status de administrador após ${maxAttempts} tentativas: ${error.message}.`,
-            variant: "destructive",
-          });
-        }
-      }
-    };
-
-    checkAdminStatus(); // Chama a função apenas se o usuário existe (devido ao 'return' antecipado)
-
-    // Função de limpeza para o useEffect
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-        console.log('AUTH_DEBUG: useEffect cleanup: Cleared pending retry timeout.');
-      }
-    };
-  }, [user, retryCount, dismiss, toast]); // Depende de 'user' e 'retryCount'
-
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
@@ -166,7 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          name: name
+          name: name,
+          role: 'user' // Define o papel padrão para novos usuários
         }
       }
     });
@@ -222,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
-    isAdminLoading,
+    isAdminLoading, // Sempre false
     signUp,
     signIn,
     signOut,
