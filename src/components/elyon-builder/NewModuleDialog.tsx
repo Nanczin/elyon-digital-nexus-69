@@ -234,7 +234,7 @@ export function NewModuleDialog({ projectId, onModuleSaved, initialModuleData, o
                 <p className="text-xs text-muted-foreground mt-1">Arquivo selecionado: {selectedBannerFile.name}</p>
               )}
               {initialModuleData?.banner_url && !selectedBannerFile && (
-                <p className className="text-xs text-muted-foreground mt-1">Banner atual: <a href={initialModuleData.banner_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>
+                <p className="text-xs text-muted-foreground mt-1">Banner atual: <a href={initialModuleData.banner_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>
               )}
             </div>
 
