@@ -82,11 +82,11 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
             <img 
               src={settings.logo_url} 
               alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-12 w-12 object-contain" 
+              className="h-16 w-16 object-contain" 
             />
           ) : (
-            <Avatar className="h-12 w-12 border border-gray-200">
-              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg font-semibold">
+            <Avatar className="h-16 w-16 border border-gray-200">
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-xl font-semibold">
                 {memberAreaNameInitials}
               </AvatarFallback>
             </Avatar>
