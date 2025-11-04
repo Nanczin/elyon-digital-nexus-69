@@ -50,59 +50,59 @@ const App = () => {
   // }, [globalFontFamily]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-            
-              <Routes>
-                {/* Rotas de autenticação que NÃO usam o Layout principal */}
-                <Route path="/auth/login" element={<AuthLogin />} />
-                <Route path="/auth/register" element={<AuthRegister />} />
+    <AuthProvider> {/* AuthProvider agora envolve todos os outros provedores */}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
+          <BrowserRouter>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              
+                <Routes>
+                  {/* Rotas de autenticação que NÃO usam o Layout principal */}
+                  <Route path="/auth/login" element={<AuthLogin />} />
+                  <Route path="/auth/register" element={<AuthRegister />} />
 
-                {/* Rotas que usam o Layout principal da Elyon */}
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/products" element={<AdminProducts />} />
-                  <Route path="/admin/checkouts" element={<AdminCheckouts />} />
-                  <Route path="/admin/integrations" element={<AdminIntegrations />} />
-                  
-                  {/* Rotas de administração da Área de Membros (ainda usam o Layout principal) */}
-                  <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
-                  <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
-                    <Route path="content" element={<AdminContent />} />
-                    <Route path="members" element={<AdminMembers />} />
-                    <Route path="design" element={<AdminDesign />} />
-                    <Route path="analytics" element={<AdminAnalytics />} />
-                    <Route path="community" element={<AdminCommunity />} />
+                  {/* Rotas que usam o Layout principal da Elyon */}
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/products" element={<AdminProducts />} />
+                    <Route path="/admin/checkouts" element={<AdminCheckouts />} />
+                    <Route path="/admin/integrations" element={<AdminIntegrations />} />
+                    
+                    {/* Rotas de administração da Área de Membros (ainda usam o Layout principal) */}
+                    <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
+                    <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
+                      <Route path="content" element={<AdminContent />} />
+                      <Route path="members" element={<AdminMembers />} />
+                      <Route path="design" element={<AdminDesign />} />
+                      <Route path="analytics" element={<AdminAnalytics />} />
+                      <Route path="community" element={<AdminCommunity />} />
+                    </Route>
+
+                    <Route path="/sales" element={<Sales />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/customers" element={<Customers />} />
+                    <Route path="/payments" element={<Payments />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/checkout/:checkoutId" element={<Checkout />} />
+                    
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
                   </Route>
 
-                  <Route path="/sales" element={<Sales />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/payments" element={<Payments />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/checkout/:checkoutId" element={<Checkout />} />
-                  
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-
-                {/* Rotas públicas da Área de Membros (NÃO usam o Layout principal) */}
-                <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
-                <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
-              </Routes>
-            
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                  {/* Rotas públicas da Área de Membros (NÃO usam o Layout principal) */}
+                  <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
+                  <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
+                </Routes>
+              
+            </TooltipProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 };
 
