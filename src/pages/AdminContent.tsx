@@ -686,19 +686,13 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
             <CardContent className="p-4">
               <Collapsible open={isOpen} onOpenChange={() => toggleLesson(lesson.id)}>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex-1 flex flex-col"> {/* Adicionado flex-1 flex-col */}
-                    <h3 className="font-semibold">{lesson.title}</h3>
-                    <p className="text-sm text-muted-foreground"> {/* Removido min-h */}
-                      {lesson.description?.trim()}
-                    </p>
-                    {lesson.duration_minutes && lesson.duration_minutes > 0 && (
-                      <div className="flex items-center text-xs text-muted-foreground mt-1">
-                        <Clock className="h-3 w-3 mr-1" /> {lesson.duration_minutes} min
-                      </div>
+                  <div className="flex-1 flex flex-col">
+                    <h3 className="font-semibold truncate">{lesson.title}</h3>
+                    {lesson.description?.trim() && (
+                      <p className="text-sm text-muted-foreground truncate">
+                        {lesson.description.trim()}
+                      </p>
                     )}
-                    <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
-                      {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
-                    </Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>

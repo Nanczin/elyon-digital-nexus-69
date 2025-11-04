@@ -289,15 +289,12 @@ const MemberAreaModuleDetails = () => {
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <Video className="h-6 w-6" style={{ color: primaryColor }} />
-                        <div className="flex-1 flex flex-col"> {/* Adicionado flex-1 flex-col */}
-                          <h4 className="font-semibold text-lg" style={{ color: textColor }}>{lesson.title}</h4>
-                          <p className="text-sm" style={{ color: secondaryTextColor}}> {/* Removido min-h */}
-                            {lesson.description?.trim()}
-                          </p>
-                          {lesson.duration_minutes && lesson.duration_minutes > 0 && (
-                            <div className="flex items-center text-xs mt-1" style={{ color: secondaryTextColor }}>
-                              <Clock className="h-3 w-3 mr-1" /> {lesson.duration_minutes} min
-                            </div>
+                        <div className="flex-1 flex flex-col">
+                          <h4 className="font-semibold text-lg truncate" style={{ color: textColor }}>{lesson.title}</h4>
+                          {lesson.description?.trim() && (
+                            <p className="text-sm truncate" style={{ color: secondaryTextColor}}>
+                              {lesson.description.trim()}
+                            </p>
                           )}
                         </div>
                       </div>
