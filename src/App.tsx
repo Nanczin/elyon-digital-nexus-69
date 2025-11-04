@@ -19,6 +19,7 @@ import Customers from "./pages/Customers";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Checkout from "./pages/Checkout";
+import Suporte from "./pages/Suporte"; // Importando a nova página de Suporte
 
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/payments" element={<Payments />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/checkout/:checkoutId" element={<Checkout />} />
+              <Route path="/suporte" element={<Suporte />} /> {/* Nova rota para Suporte */}
               
               <Route path="/payment-success" element={<PaymentSuccess />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
