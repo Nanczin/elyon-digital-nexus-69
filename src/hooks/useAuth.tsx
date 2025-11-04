@@ -34,18 +34,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('AUTH_DEBUG: handleAuthStateChange event:', event);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      setLoading(false); // Define o carregamento global como false assim que a sessão é conhecida
+      setLoading(false); // <--- Esta é a linha chave
       console.log('AUTH_DEBUG: Global loading set to false after session update.');
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+    // Adicionando um tempo limite para a recuperação da sessão inicial
+    withTimeout(supabase.auth.getSession(), 15000, 'Initial session retrieval timed out').then(async ({ data: { session: initialSession } }) => {
       console.log('AUTH_DEBUG: getSession resolved, calling handleAuthStateChange for INITIAL_SESSION.');
       await handleAuthStateChange('INITIAL_SESSION', initialSession);
     }).catch(error => {
       console.error('AUTH_DEBUG: Error in getSession:', error);
       setLoading(false); // Garante que o loading seja false mesmo se getSession falhar
+      toast({
+        title: "Erro de carregamento",
+        description: `Não foi possível carregar a sessão inicial: ${error.message}. Por favor, tente recarregar a página.`,
+        variant: "destructive",
+      });
     });
 
     return () => subscription.unsubscribe();
