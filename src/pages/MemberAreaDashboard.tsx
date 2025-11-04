@@ -41,7 +41,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaDashboard = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, isAdmin } = useAuth(); // Adicionado isAdmin
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -157,23 +157,30 @@ const MemberAreaDashboard = () => {
   }
 
   if (!hasAccess) {
-    // If user is logged in but doesn't have access to this specific member area
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle>Acesso Negado</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p>Você não tem permissão para acessar esta área de membros.</p>
-            <Button onClick={() => signOut()}>Sair</Button>
-            <Button asChild variant="outline">
-              <Link to="/">Voltar para o Início</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    // Se o usuário está logado mas não tem acesso a esta área de membros específica
+    // Se o usuário for um administrador, redirecioná-lo para a lista de áreas de membros do admin
+    if (isAdmin) {
+      toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros como membro. Redirecionando para o painel de áreas de membros.", variant: "destructive" });
+      return <Navigate to="/admin/member-areas" replace />;
+    } else {
+      // Para membros comuns sem acesso, exibir a tela atual de "Acesso Negado"
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <Card className="w-full max-w-md text-center">
+            <CardHeader>
+              <CardTitle>Acesso Negado</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>Você não tem permissão para acessar esta área de membros.</p>
+              <Button onClick={() => signOut()}>Sair</Button>
+              <Button asChild variant="outline">
+                <Link to="/">Voltar para o Início</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
   }
 
   const currentSettings = settings || getDefaultSettings(memberAreaId || '');

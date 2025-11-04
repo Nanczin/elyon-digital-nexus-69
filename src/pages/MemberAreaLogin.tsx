@@ -9,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { deepMerge } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast'; // Importar useToast
 
 type PlatformSettings = Tables<'platform_settings'>;
 
@@ -40,7 +41,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaLogin = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { signIn, user } = useAuth();
+  const { signIn, user, isAdmin } = useAuth(); // Adicionado isAdmin
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,6 +49,7 @@ const MemberAreaLogin = () => {
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const { toast } = useToast(); // Inicializado useToast
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -87,15 +89,30 @@ const MemberAreaLogin = () => {
 
         if (profileError) {
           console.error('Error checking user profile for member area access:', profileError);
-          // Continue to login page if error, or redirect to generic dashboard
+          // Se houver erro e o usuário for admin, redirecionar para o painel de admin
+          if (isAdmin) {
+            toast({ title: "Erro de Acesso", description: "Não foi possível verificar seu acesso. Redirecionando para o painel de áreas de membros.", variant: "destructive" });
+            navigate('/admin/member-areas', { replace: true });
+          }
+          // Caso contrário, permitir que permaneça na página de login (talvez precise logar como membro)
         } else if (profile?.member_area_id === memberAreaId) {
-          navigate(`/membros/${memberAreaId}`);
+          navigate(`/membros/${memberAreaId}`, { replace: true }); // Redirecionar para o dashboard se já logado e com acesso
+        } else {
+          // Usuário está logado mas NÃO tem acesso a ESTA área de membros
+          if (isAdmin) {
+            toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros como membro. Redirecionando para o painel de áreas de membros.", variant: "destructive" });
+            navigate('/admin/member-areas', { replace: true });
+          } else {
+            // Para membros comuns, se estiverem logados mas sem acesso a esta área específica,
+            // devem ser redirecionados para a página inicial ou uma página de acesso negado genérica.
+            toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros.", variant: "destructive" });
+            navigate('/', { replace: true });
+          }
         }
       }
     };
     checkAccessAndRedirect();
-  }, [user, memberAreaId, navigate]);
-
+  }, [user, memberAreaId, navigate, isAdmin, toast]); // Adicionado isAdmin e toast às dependências
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
