@@ -6,7 +6,7 @@ const SUPABASE_URL = "https://jgmwbovvydimvnmmkfpy.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImV4cCI6MjA2ODE2NTc1Nn0.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k";
 
 // Este cliente é exclusivo para a área de membros, usando uma chave de armazenamento diferente.
-export const memberAreaSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHable_KEY, {
+export const memberAreaSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storageKey: 'sb-member-area-session', // Chave de armazenamento diferente
     storage: localStorage,
