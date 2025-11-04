@@ -593,6 +593,7 @@ export type Database = {
           user_id: string
           status: string; /* Adicionada nova coluna 'status' */
           login_url: string | null; /* Adicionada nova coluna 'login_url' */
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Insert: {
           avatar_url?: string | null
@@ -604,7 +605,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           status?: string; /* Adicionada nova coluna 'status' */
-          login_url?: string | null; /* Adicionada nova coluna 'login' */
+          login_url?: string | null; /* Adicionada nova coluna 'login_url' */
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Update: {
           avatar_url?: string | null
@@ -617,6 +619,7 @@ export type Database = {
           user_id?: string
           status?: string; /* Adicionada nova coluna 'status' */
           login_url?: string | null; /* Adicionada nova coluna 'login_url' */
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Relationships: []
       }

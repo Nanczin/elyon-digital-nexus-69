@@ -34,6 +34,8 @@ import AdminMemberAreas from "./pages/AdminMemberAreas";
 import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails"; // Importar a nova página de detalhes
 import MemberAreaLogin from "./pages/MemberAreaLogin"; // Importar a nova página de login da área de membros
 import MemberAreaDashboard from "./pages/MemberAreaDashboard"; // Importar a nova página de dashboard da área de membros
+import MemberAreaModuleDetails from "./pages/MemberAreaModuleDetails"; // Importar a nova página de detalhes do módulo
+import MemberAreaLesson from "./pages/MemberAreaLesson"; // Importar a nova página de aula
 // import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
 // import { useEffect } from "react";
 
@@ -98,6 +100,8 @@ const App = () => {
                   <Route element={<MemberAreaAuthProvider> <Outlet /> </MemberAreaAuthProvider>}> {/* Envolver com o novo provedor */}
                     <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
                     <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
+                    <Route path="/membros/:memberAreaId/modules/:moduleId" element={<MemberAreaModuleDetails />} /> {/* Nova rota para detalhes do módulo */}
+                    <Route path="/membros/:memberAreaId/modules/:moduleId/lessons/:lessonId" element={<MemberAreaLesson />} /> {/* Nova rota para a aula */}
                   </Route>
                 </Routes>
               
