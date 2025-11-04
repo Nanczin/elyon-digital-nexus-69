@@ -485,37 +485,48 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted }: { memberAr
     <div className="space-y-4">
       {modules.map(module => (
         <Card key={module.id}>
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold">{module.title}</h3>
-              <p className="text-sm text-muted-foreground">{module.description?.substring(0, 100)}...</p>
-              <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">
-                {module.status === 'published' ? 'Publicado' : 'Rascunho'}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => onEditModule(module)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza que deseja excluir o módulo <strong>"{module.title}"</strong>? Todas as aulas e acessos associados também serão excluídos. Esta ação é irreversível.
+          <CardContent className="p-4">
+            {module.banner_url && (
+              <div className="aspect-video mb-3 rounded-lg overflow-hidden">
+                <img 
+                  src={module.banner_url} 
+                  alt={module.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{module.title}</h3>
+                <p className="text-sm text-muted-foreground">{module.description?.substring(0, 100)}...</p>
+                <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">
+                  {module.status === 'published' ? 'Publicado' : 'Rascunho'}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => onEditModule(module)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir o módulo <strong>"{module.title}"</strong>? Todas as aulas e acessos associados também serão excluídos. Esta ação é irreversível.
                     </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)}>Excluir</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </CardContent>
         </Card>
