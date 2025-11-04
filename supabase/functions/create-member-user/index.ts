@@ -46,7 +46,7 @@ serve(async (req) => {
       user_metadata: { 
         name, 
         first_name: name.split(' ')[0], 
-        last_name: name.split(' ').slice(1).join(' ') || '',
+        last_name: name.split(' ').slice(1).join(' ') || '', // Ajustado para robustez
         member_area_id: memberAreaId, // Passar member_area_id para o user_metadata
         status: isActive ? 'active' : 'inactive' // Passar status para o user_metadata
       },
