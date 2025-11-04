@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-// import { useAuth } from './useAuth'; // Removido: useAuth não é necessário aqui
 import { useLocation, useParams } from 'react-router-dom';
 
 type PlatformSettings = Tables<'platform_settings'>;
@@ -9,7 +8,6 @@ type PlatformSettings = Tables<'platform_settings'>;
 const DEFAULT_FONT_FAMILY = 'Inter, sans-serif';
 
 export const useGlobalPlatformSettings = () => {
-  // const { user, isAdmin } = useAuth(); // Removido: useAuth não é necessário aqui
   const location = useLocation();
   const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
 
@@ -20,8 +18,11 @@ export const useGlobalPlatformSettings = () => {
     setLoadingSettings(true);
     let currentMemberAreaId: string | null = null;
 
-    // Tenta extrair memberAreaId da URL para páginas de administração de área de membros
-    if (location.pathname.startsWith('/admin/member-areas/') && urlMemberAreaId) {
+    // Prioriza memberAreaId da URL se estiver em uma rota de área de membros
+    const memberAreaMatch = location.pathname.match(/\/membros\/([^/]+)/);
+    if (memberAreaMatch && memberAreaMatch[1]) {
+      currentMemberAreaId = memberAreaMatch[1];
+    } else if (location.pathname.startsWith('/admin/member-areas/') && urlMemberAreaId) {
       currentMemberAreaId = urlMemberAreaId;
     }
 
