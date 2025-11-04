@@ -691,6 +691,11 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                     <p className="text-sm text-muted-foreground">
                       {lesson.description?.trim() ? `${lesson.description.trim().substring(0, 100)}${lesson.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
                     </p>
+                    {lesson.duration_minutes && lesson.duration_minutes > 0 && (
+                      <div className="flex items-center text-xs text-muted-foreground mt-1">
+                        <Clock className="h-3 w-3 mr-1" /> {lesson.duration_minutes} min
+                      </div>
+                    )}
                     <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
                       {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
                     </Badge>
