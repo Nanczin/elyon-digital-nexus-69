@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // Importar useNavigate
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'; // Importar Outlet
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'; // Importar SidebarTrigger
@@ -10,12 +10,10 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useGlobalPlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o hook aqui
 
 interface LayoutProps {
-  children: React.ReactNode;
+  // children: React.ReactNode; // Removido, agora usa Outlet
 }
 
-const Layout: React.FC<LayoutProps> = ({
-  children
-}) => {
+const Layout: React.FC<LayoutProps> = () => {
   const {
     user,
     signOut,
@@ -25,36 +23,10 @@ const Layout: React.FC<LayoutProps> = ({
   const navigate = useNavigate(); // Inicializar useNavigate aqui
   const isAuthPage = location.pathname.startsWith('/auth');
   const isCheckoutPage = location.pathname.startsWith('/checkout') || location.pathname === '/payment-success';
-  const isMemberAreaRoute = location.pathname.startsWith('/membros/') && !location.pathname.includes('/login');
   
-  // Chamar o hook useGlobalPlatformSettings dentro do Layout
-  const { settings: platformSettings, loadingSettings } = useGlobalPlatformSettings();
-
-  useEffect(() => {
-    // Resetar estilos para o padrão do tema se não for uma rota de área de membros
-    if (!isMemberAreaRoute) {
-      document.documentElement.style.removeProperty('--global-font-family');
-      document.body.style.removeProperty('background-color');
-      // Adicione aqui outras propriedades CSS que você queira resetar
-    } else if (platformSettings && !loadingSettings) {
-      // Aplicar estilos da área de membros
-      if (platformSettings.global_font_family) {
-        document.documentElement.style.setProperty('--global-font-family', platformSettings.global_font_family);
-      } else {
-        document.documentElement.style.removeProperty('--global-font-family');
-      }
-      if (platformSettings.colors?.background_login) {
-        document.body.style.setProperty('background-color', platformSettings.colors.background_login);
-      } else {
-        document.body.style.removeProperty('background-color');
-      }
-      // Você pode adicionar mais estilos aqui, como cores de header, etc.
-    }
-  }, [platformSettings, loadingSettings, isMemberAreaRoute]);
-
-  if (isAuthPage || isCheckoutPage) {
-    return <>{children}</>;
-  }
+  // O Layout principal não aplicará mais estilos globais da área de membros.
+  // As páginas da área de membros aplicarão seus próprios estilos.
+  const { loadingSettings } = useGlobalPlatformSettings(); // Ainda pode ser útil para outras lógicas globais
 
   // Se ainda estiver carregando o estado de autenticação ou as configurações da plataforma, mostre um spinner
   if (authLoading || loadingSettings) {
@@ -116,7 +88,7 @@ const Layout: React.FC<LayoutProps> = ({
         </nav>
         {/* Conditional padding for main based on path */}
         <main className={location.pathname === '/' ? "flex-1 overflow-auto" : "mobile-container py-4 sm:py-6 lg:py-8"}>
-          {children}
+          <Outlet /> {/* Renderiza o conteúdo da rota aninhada aqui */}
         </main>
       </div>;
   }
@@ -124,33 +96,19 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        {/* A sidebar só aparece se não for uma rota de área de membros */}
-        {!isMemberAreaRoute && <AppSidebar />}
+        <AppSidebar />
         <div className="flex-1 flex flex-col"> {/* Nova div para envolver header e main */}
           <header 
             className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0 gap-2 sm:gap-4"
-            style={isMemberAreaRoute && platformSettings?.colors?.header_background ? { 
-              backgroundColor: platformSettings.colors.header_background,
-              borderColor: platformSettings.colors.header_border || 'hsl(var(--border))',
-              color: platformSettings.colors.text_header || 'hsl(var(--foreground))'
-            } : undefined}
           >
             <div className="flex items-center gap-2"> {/* Novo wrapper para logo e trigger */}
-              {!isMemberAreaRoute && <SidebarTrigger className="flex-shrink-0" />} {/* Botão de recolher/abrir */}
+              <SidebarTrigger className="flex-shrink-0" /> {/* Botão de recolher/abrir */}
               <Link to="/" className="flex items-center space-x-2">
-                {isMemberAreaRoute && platformSettings?.logo_url ? (
-                  <img 
-                    src={platformSettings.logo_url} 
-                    alt="Member Area Logo" 
-                    className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
-                  />
-                ) : (
-                  <img 
-                    src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
-                    alt="Elyon Logo" 
-                    className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
-                  />
-                )}
+                <img 
+                  src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
+                  alt="Elyon Logo" 
+                  className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 hover-scale animate-fade-in flex-shrink-0" 
+                />
               </Link>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 ml-auto">
@@ -178,8 +136,8 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
           </header>
           {/* Conditional padding for main based on path */}
-          <main className={location.pathname === '/' || isMemberAreaRoute ? "flex-1 overflow-auto p-0" : "flex-1 overflow-auto mobile-container py-4 sm:py-6 lg:py-8"}>
-            {children}
+          <main className={location.pathname === '/' ? "flex-1 overflow-auto p-0" : "flex-1 overflow-auto mobile-container py-4 sm:py-6 lg:py-8"}>
+            <Outlet /> {/* Renderiza o conteúdo da rota aninhada aqui */}
           </main>
         </div>
       </div>
