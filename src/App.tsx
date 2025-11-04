@@ -50,10 +50,10 @@ const App = () => {
   // }, [globalFontFamily]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
-        <BrowserRouter> {/* AuthProvider agora envolve BrowserRouter */}
-          <AuthProvider>
+    <AuthProvider> {/* AuthProvider agora envolve todos os outros provedores */}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
+          <BrowserRouter>
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -99,10 +99,10 @@ const App = () => {
                 </Routes>
               
             </TooltipProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 };
 
