@@ -237,10 +237,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
     setLoadingMembers(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select(`
-        *,
-        member_access(module_id)
-      `)
+      .select(`*`) // Simplified select to avoid nested RLS issues for now
       .eq('member_area_id', currentMemberAreaId) // Filter by memberAreaId
       .order('created_at', { ascending: false });
     

@@ -37,7 +37,8 @@ serve(async (req) => {
     }
 
     // 1. Criar usuário no Supabase Auth
-    // Certifique-se de que o email_confirm está true para evitar problemas de autenticação
+    // O trigger 'handle_new_user' será acionado e criará o perfil em 'public.profiles'
+    // usando os dados de 'user_metadata'.
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -68,35 +69,7 @@ serve(async (req) => {
     }
     console.log('EDGE_FUNCTION_DEBUG: Usuário auth.users criado com ID:', newUserId);
 
-    // 2. O trigger handle_new_user já cria o perfil.
-    // Precisamos garantir que o perfil seja atualizado com member_area_id e status,
-    // que agora são passados via user_metadata e podem ser lidos pelo trigger.
-    // No entanto, para garantir que o perfil seja atualizado *imediatamente* com os dados mais recentes,
-    // e para evitar qualquer race condition com o trigger, faremos um UPDATE explícito aqui.
-    // O trigger handle_new_user já foi modificado para incluir member_area_id e status do raw_user_meta_data.
-    // Então, este UPDATE pode ser simplificado ou até removido se o trigger for suficiente.
-    // Por segurança, vamos manter um UPDATE para garantir que os dados estejam corretos.
-    const { error: profileUpdateError } = await supabase
-      .from('profiles')
-      .update({
-        member_area_id: memberAreaId,
-        status: isActive ? 'active' : 'inactive',
-        name: name,
-        email: email,
-      })
-      .eq('user_id', newUserId);
-
-    if (profileUpdateError) {
-      console.error('EDGE_FUNCTION_DEBUG: Erro ao atualizar perfil:', profileUpdateError);
-      await supabase.auth.admin.deleteUser(newUserId);
-      return new Response(
-        JSON.stringify({ success: false, error: profileUpdateError.message || 'Falha ao atualizar perfil do membro.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-    console.log('EDGE_FUNCTION_DEBUG: Perfil atualizado para user_id:', newUserId, 'com memberAreaId:', memberAreaId, 'e status:', isActive);
-
-    // 3. Conceder acesso aos módulos
+    // 2. Conceder acesso aos módulos
     const accessInserts = selectedModules.map((moduleId: string) => ({
       user_id: newUserId,
       module_id: moduleId,
@@ -111,6 +84,9 @@ serve(async (req) => {
 
       if (insertAccessError) {
         console.error('EDGE_FUNCTION_DEBUG: Erro ao inserir acessos aos módulos:', insertAccessError);
+        // Se a inserção de acesso falhar, o usuário e o perfil já foram criados.
+        // Podemos optar por não reverter o usuário, mas logar o erro.
+        // Ou, se for crítico, deletar o usuário aqui também. Por enquanto, apenas logar.
         return new Response(
           JSON.stringify({ success: false, error: insertAccessError.message || 'Falha ao conceder acesso aos módulos.' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
