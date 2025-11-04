@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams, Link } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,12 +66,28 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
     setLoading(true);
     try {
       if (member) {
-        // Update existing member
+        // Update existing member profile
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ name, status: isActive ? 'active' : 'inactive' })
           .eq('user_id', member.user_id);
         if (profileError) throw profileError;
+
+        // Update user_metadata in auth.users table
+        const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+          member.user_id,
+          {
+            data: {
+              name: name,
+              first_name: name.split(' ')[0],
+              last_name: name.split(' ').slice(1).join(' ') || '',
+            },
+          }
+        );
+        if (authUpdateError) {
+          console.error('Error updating auth.users metadata:', authUpdateError);
+          throw authUpdateError; // Re-throw to be caught by the outer catch block
+        }
 
         // Update member_access
         // First, delete all existing access for this user in this member area
