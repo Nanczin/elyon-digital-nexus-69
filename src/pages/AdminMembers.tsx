@@ -99,7 +99,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
         toast({ title: "Sucesso", description: "Membro atualizado com sucesso!" });
 
       } else {
-        // Create new member
+        // Create new member using Edge Function
         if (!email || (!password && !generatePassword) || !name) {
           toast({ title: "Erro", description: "Preencha todos os campos obrigatórios.", variant: "destructive" });
           setLoading(false);
@@ -113,43 +113,27 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
           return;
         }
 
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email,
-          password: finalPassword,
-          email_confirm: true, // Auto-confirm email
-          user_metadata: { name }
+        // Chamar a Edge Function para criar o usuário
+        const { data, error: edgeFunctionError } = await supabase.functions.invoke('create-member-user', {
+          body: {
+            name,
+            email,
+            password: finalPassword,
+            memberAreaId,
+            selectedModules,
+            isActive,
+          },
+          method: 'POST',
         });
 
-        if (authError) throw authError;
-        const newUserId = authData.user?.id;
+        if (edgeFunctionError) {
+          console.error('Error invoking create-member-user Edge Function:', edgeFunctionError);
+          throw new Error(edgeFunctionError.message || 'Erro ao invocar função de criação de membro.');
+        }
 
-        // Create profile entry (handle_new_user trigger should do this, but ensure status)
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ status: isActive ? 'active' : 'inactive' })
-          .eq('user_id', newUserId);
-        if (profileError) console.error('Error updating profile status:', profileError);
-
-        // Grant access to all published modules by default for new members in this member area
-        const { data: publishedModules, error: modulesError } = await supabase
-          .from('modules')
-          .select('id')
-          .eq('status', 'published')
-          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
-        if (modulesError) throw modulesError;
-
-        const defaultAccessInserts = publishedModules?.map(module => ({
-          user_id: newUserId,
-          module_id: module.id,
-          is_active: true,
-          member_area_id: memberAreaId, // Ensure member_area_id is set
-        })) || [];
-
-        if (defaultAccessInserts.length > 0) {
-          const { error: accessError } = await supabase
-            .from('member_access')
-            .insert(defaultAccessInserts);
-          if (accessError) throw accessError;
+        if (!data?.success) {
+          console.error('Edge Function returned error:', data?.error);
+          throw new Error(data?.error || 'Falha na Edge Function ao criar membro.');
         }
 
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
