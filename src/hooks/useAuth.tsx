@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  refreshUserSession: () => Promise<void>; // Adicionado
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -121,6 +122,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // navigate('/'); // REMOVIDO: A navegação será feita no componente Layout
   };
 
+  // Nova função para atualizar a sessão do usuário
+  const refreshUserSession = async () => {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error('Erro ao atualizar sessão do usuário:', error);
+    } else if (data.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+      console.log('Sessão do usuário atualizada com sucesso.');
+    }
+  };
+
   const value = {
     user,
     session,
@@ -129,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     isAdmin,
+    refreshUserSession, // Expondo a nova função
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
