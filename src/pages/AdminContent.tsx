@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon } from 'lucide-react'; // Adicionado ImageIcon
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,25 @@ import { Badge } from '@/components/ui/badge';
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
 type Lesson = Tables<'lessons'>;
+
+// Função auxiliar para upload de arquivos
+const uploadFile = async (file: File, subfolder: string) => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${crypto.randomUUID()}.${fileExt}`;
+  const filePath = `lesson-content/${subfolder}/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('member-area-content') // Usando o bucket existente
+    .upload(filePath, file);
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage
+    .from('member-area-content')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
 
 // Componente para o formulário de Módulo
 const ModuleFormDialog = ({ 
@@ -67,24 +86,6 @@ const ModuleFormDialog = ({
     if (e.target.files && e.target.files[0]) {
       setBannerFile(e.target.files[0]);
     }
-  };
-
-  const uploadFile = async (file: File, folder: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${folder}/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('member-area-content')
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage
-      .from('member-area-content')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   };
 
   const handleSave = async () => {
@@ -215,7 +216,9 @@ const LessonFormDialog = ({
   const [contentType, setContentType] = useState(editingLesson?.content_type || 'video_link');
   const [contentUrl, setContentUrl] = useState(editingLesson?.content_url || '');
   const [textContent, setTextContent] = useState(editingLesson?.text_content || '');
-  const [status, setStatus] = useState(editingLesson?.status === 'published');
+  const [videoFile, setVideoFile] = useState<File | null>(null); // Novo estado para upload de vídeo
+  const [pdfFile, setPdfFile] = useState<File | null>(null);     // Novo estado para upload de PDF
+  const [imageFile, setImageFile] = useState<File | null>(null); // Novo estado para upload de imagem
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -230,6 +233,9 @@ const LessonFormDialog = ({
       setContentUrl(editingLesson.content_url || '');
       setTextContent(editingLesson.text_content || '');
       setStatus(editingLesson.status === 'published');
+      setVideoFile(null); // Limpar arquivos ao editar
+      setPdfFile(null);
+      setImageFile(null);
     } else {
       setModuleId(selectedModuleId || '');
       setTitle('');
@@ -239,8 +245,21 @@ const LessonFormDialog = ({
       setContentUrl('');
       setTextContent('');
       setStatus(false);
+      setVideoFile(null);
+      setPdfFile(null);
+      setImageFile(null);
     }
   }, [editingLesson, selectedModuleId]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'video' | 'pdf' | 'image') => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (fileType === 'video') setVideoFile(file);
+      else if (fileType === 'pdf') setPdfFile(file);
+      else if (fileType === 'image') setImageFile(file);
+      setContentUrl(''); // Limpar URL existente ao selecionar novo arquivo
+    }
+  };
 
   const handleSave = async () => {
     if (!user?.id || !moduleId || !title || !contentType) {
@@ -250,14 +269,34 @@ const LessonFormDialog = ({
 
     setLoading(true);
     try {
+      let finalContentUrl = contentUrl;
+      let finalTextContent = textContent;
+
+      if (contentType === 'video_upload' && videoFile) {
+        finalContentUrl = await uploadFile(videoFile, 'lesson-videos');
+        finalTextContent = ''; // Limpar texto se for upload de vídeo
+      } else if (contentType === 'pdf_upload' && pdfFile) {
+        finalContentUrl = await uploadFile(pdfFile, 'lesson-pdfs');
+        finalTextContent = ''; // Limpar texto se for upload de PDF
+      } else if (contentType === 'image_upload' && imageFile) {
+        finalContentUrl = await uploadFile(imageFile, 'lesson-images');
+        finalTextContent = ''; // Limpar texto se for upload de imagem
+      } else if (contentType === 'text_content') {
+        finalContentUrl = ''; // Limpar URL se for texto
+      } else if (contentType === 'video_link' && !contentUrl) {
+        toast({ title: "Erro", description: "A URL do vídeo é obrigatória.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         module_id: moduleId,
         title,
         description,
         duration_minutes: durationMinutes,
         content_type: contentType,
-        content_url: contentUrl,
-        text_content: textContent,
+        content_url: finalContentUrl,
+        text_content: finalTextContent,
         status: status ? 'published' : 'draft',
         order_index: editingLesson?.order_index || 0, // Preserve order or set default
       };
@@ -331,15 +370,42 @@ const LessonFormDialog = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="video_link">Vídeo (Link)</SelectItem>
+              <SelectItem value="video_upload">Vídeo (Upload)</SelectItem>
+              <SelectItem value="pdf_upload">PDF (Upload)</SelectItem>
+              <SelectItem value="image_upload">Imagem (Upload)</SelectItem>
               <SelectItem value="text_content">Texto HTML</SelectItem>
-              {/* Adicione outros tipos conforme necessário */}
             </SelectContent>
           </Select>
         </div>
+        
         {contentType === 'video_link' && (
           <div className="space-y-2">
             <Label htmlFor="contentUrl">URL do Vídeo *</Label>
             <Input id="contentUrl" type="url" value={contentUrl} onChange={(e) => setContentUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." required />
+          </div>
+        )}
+        {contentType === 'video_upload' && (
+          <div className="space-y-2">
+            <Label htmlFor="videoFile">Upload de Vídeo *</Label>
+            <Input id="videoFile" type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'video')} required={!editingLesson?.content_url} />
+            {videoFile && <p className="text-sm text-muted-foreground">Arquivo selecionado: {videoFile.name}</p>}
+            {editingLesson?.content_url && !videoFile && <p className="text-sm text-muted-foreground">Vídeo atual: <a href={editingLesson.content_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>}
+          </div>
+        )}
+        {contentType === 'pdf_upload' && (
+          <div className="space-y-2">
+            <Label htmlFor="pdfFile">Upload de PDF *</Label>
+            <Input id="pdfFile" type="file" accept="application/pdf" onChange={(e) => handleFileUpload(e, 'pdf')} required={!editingLesson?.content_url} />
+            {pdfFile && <p className="text-sm text-muted-foreground">Arquivo selecionado: {pdfFile.name}</p>}
+            {editingLesson?.content_url && !pdfFile && <p className="text-sm text-muted-foreground">PDF atual: <a href={editingLesson.content_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>}
+          </div>
+        )}
+        {contentType === 'image_upload' && (
+          <div className="space-y-2">
+            <Label htmlFor="imageFile">Upload de Imagem *</Label>
+            <Input id="imageFile" type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} required={!editingLesson?.content_url} />
+            {imageFile && <p className="text-sm text-muted-foreground">Arquivo selecionado: {imageFile.name}</p>}
+            {editingLesson?.content_url && !imageFile && <p className="text-sm text-muted-foreground">Imagem atual: <a href={editingLesson.content_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></p>}
           </div>
         )}
         {contentType === 'text_content' && (
@@ -507,6 +573,79 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
     }
   };
 
+  const renderLessonContent = (lesson: Lesson) => {
+    if (!lesson.content_url && !lesson.text_content) {
+      return <p className="text-muted-foreground text-sm">Nenhum conteúdo para esta aula.</p>;
+    }
+
+    switch (lesson.content_type) {
+      case 'video_link':
+        // Embed YouTube/Vimeo links
+        const youtubeMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
+        const vimeoMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
+
+        if (youtubeMatch && youtubeMatch[1]) {
+          return (
+            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={lesson.title}
+              ></iframe>
+            </div>
+          );
+        } else if (vimeoMatch && vimeoMatch[1]) {
+          return (
+            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                title={lesson.title}
+              ></iframe>
+            </div>
+          );
+        }
+        return <p className="text-red-500 text-sm">Link de vídeo inválido ou não suportado.</p>;
+
+      case 'video_upload':
+        return (
+          <video controls className="w-full h-auto rounded-lg">
+            <source src={lesson.content_url || ''} type="video/mp4" />
+            Seu navegador não suporta a tag de vídeo.
+          </video>
+        );
+
+      case 'pdf_upload':
+        return (
+          <div className="relative w-full" style={{ paddingTop: '100%' }}> {/* 1:1 aspect ratio for PDF */}
+            <iframe
+              className="absolute top-0 left-0 w-full h-full rounded-lg"
+              src={lesson.content_url || ''}
+              frameBorder="0"
+              title={lesson.title}
+            ></iframe>
+          </div>
+        );
+
+      case 'image_upload':
+        return (
+          <img src={lesson.content_url || ''} alt={lesson.title} className="w-full h-auto object-contain rounded-lg" />
+        );
+
+      case 'text_content':
+        return <div dangerouslySetInnerHTML={{ __html: lesson.text_content || '' }} className="prose prose-sm max-w-none" />;
+
+      default:
+        return <p className="text-muted-foreground text-sm">Tipo de conteúdo desconhecido.</p>;
+    }
+  };
+
   if (loading) return <p>Carregando aulas...</p>;
   if (lessons.length === 0) return <p className="text-muted-foreground">Nenhuma aula criada para este módulo.</p>;
 
@@ -514,38 +653,50 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
     <div className="space-y-4">
       {lessons.map(lesson => (
         <Card key={lesson.id}>
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold">{lesson.title}</h3>
-              <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100)}...</p>
-              <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
-                {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-semibold">{lesson.title}</h3>
+                <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100)}...</p>
+                <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
+                  {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
                     </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)}>Excluir</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
+            {lesson.content_url && (
+              <div className="mt-4 border rounded-lg overflow-hidden">
+                {renderLessonContent(lesson)}
+              </div>
+            )}
+            {lesson.text_content && lesson.content_type === 'text_content' && (
+              <div className="mt-4 border rounded-lg p-4">
+                {renderLessonContent(lesson)}
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}
