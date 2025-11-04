@@ -81,6 +81,13 @@ const MemberAreaLogin = () => {
     const checkAccessAndRedirect = async () => {
       if (user && memberAreaId) {
         // Check if the logged-in user has access to this specific member area
+        // Prioritize admin access
+        if (isAdmin && user.user_metadata?.member_area_id === memberAreaId) {
+          navigate(`/membros/${memberAreaId}`, { replace: true });
+          return;
+        }
+
+        // For regular members, check if their profile is linked to this member area
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('member_area_id')
@@ -89,22 +96,22 @@ const MemberAreaLogin = () => {
 
         if (profileError) {
           console.error('Error checking user profile for member area access:', profileError);
-          // Se houver erro e o usuário for admin, redirecionar para o painel de admin
+          // If there's an error and the user is an admin, redirect to the admin member areas panel
           if (isAdmin) {
             toast({ title: "Erro de Acesso", description: "Não foi possível verificar seu acesso. Redirecionando para o painel de áreas de membros.", variant: "destructive" });
             navigate('/admin/member-areas', { replace: true });
           }
-          // Caso contrário, permitir que permaneça na página de login (talvez precise logar como membro)
+          // Otherwise, allow them to stay on the login page (they might need to log in as a member)
         } else if (profile?.member_area_id === memberAreaId) {
-          navigate(`/membros/${memberAreaId}`, { replace: true }); // Redirecionar para o dashboard se já logado e com acesso
+          navigate(`/membros/${memberAreaId}`, { replace: true }); // Redirect to dashboard if already logged in and has access
         } else {
-          // Usuário está logado mas NÃO tem acesso a ESTA área de membros
+          // User is logged in but does NOT have access to THIS member area
           if (isAdmin) {
             toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros como membro. Redirecionando para o painel de áreas de membros.", variant: "destructive" });
             navigate('/admin/member-areas', { replace: true });
           } else {
-            // Para membros comuns, se estiverem logados mas sem acesso a esta área específica,
-            // devem ser redirecionados para a página inicial ou uma página de acesso negado genérica.
+            // For regular members, if they are logged in but don't have access to this specific area,
+            // they should be redirected to the home page or a generic access denied page.
             toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros.", variant: "destructive" });
             navigate('/', { replace: true });
           }
@@ -119,7 +126,9 @@ const MemberAreaLogin = () => {
     setLoading(true);
     const { error } = await signIn(email, password);
     if (!error) {
-      // On successful login, the useEffect above will handle redirection
+      // On successful login, explicitly redirect to the member area dashboard
+      // The useEffect above will handle the actual access check and final navigation
+      navigate(`/membros/${memberAreaId}`, { replace: true });
     }
     setLoading(false);
   };
