@@ -211,11 +211,11 @@ const MemberAreaDashboard = () => {
             <img 
               src={currentSettings.logo_url} 
               alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-8 w-8 object-contain" 
+              className="h-10 w-10 object-contain" 
             />
           ) : (
-            <Avatar className="h-8 w-8 border border-gray-200">
-              <AvatarFallback className="bg-white text-memberArea-text-dark text-sm font-semibold">
+            <Avatar className="h-10 w-10 border border-gray-200">
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
                 {memberAreaNameInitials}
               </AvatarFallback>
             </Avatar>
