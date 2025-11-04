@@ -128,12 +128,16 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
 
         if (edgeFunctionError) {
           console.error('Error invoking create-member-user Edge Function:', edgeFunctionError);
-          throw new Error(edgeFunctionError.message || 'Erro ao invocar função de criação de membro.');
+          toast({ title: "Erro", description: edgeFunctionError.message || 'Erro ao invocar função de criação de membro.', variant: "destructive" });
+          setLoading(false);
+          return;
         }
 
         if (!data?.success) {
           console.error('Edge Function returned error:', data?.error);
-          throw new Error(data?.error || 'Falha na Edge Function ao criar membro.');
+          toast({ title: "Erro", description: data?.error || 'Falha na Edge Function ao criar membro.', variant: "destructive" });
+          setLoading(false);
+          return;
         }
 
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
@@ -347,7 +351,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
               <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">Nenhum membro cadastrado</h3>
               <p className="text-muted-foreground">
-                Adicione seu primeiro membro para começar
+                Adicione o primeiro membro para começar
               </p>
             </div>
           ) : (
