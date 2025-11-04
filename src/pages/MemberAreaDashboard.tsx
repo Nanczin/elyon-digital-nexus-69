@@ -66,7 +66,7 @@ const MemberAreaDashboard = () => {
         .maybeSingle();
 
       if (areaError || !areaData) {
-        console.error('Error fetching member area:', areaError);
+        console.error('MEMBER_AREA_DEBUG: Error fetching member area:', areaError);
         toast({ title: "Erro", description: "Área de membros não encontrada.", variant: "destructive" });
         setHasAccess(false);
         setLoading(false);
@@ -82,29 +82,46 @@ const MemberAreaDashboard = () => {
         .maybeSingle();
 
       if (settingsError && settingsError.code !== 'PGRST116') {
-        console.error('Error fetching platform settings:', settingsError);
+        console.error('MEMBER_AREA_DEBUG: Error fetching platform settings:', settingsError);
       } else if (settingsData) {
         setSettings(deepMerge(getDefaultSettings(memberAreaId), settingsData as Partial<PlatformSettings>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
 
-      // 3. Check if user has access to this specific member area
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('member_area_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // --- START MODIFIED ACCESS CHECK ---
+      let userHasAccess = false;
 
-      if (profileError || profileData?.member_area_id !== memberAreaId) {
+      // Option A: Admin owns this member area
+      if (isAdmin && user.id === areaData.user_id) {
+        userHasAccess = true;
+        console.log('MEMBER_AREA_DEBUG: Admin user owns this member area, granting access.');
+      } else {
+        // Option B: Regular member with profile linked to this member area
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('member_area_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('MEMBER_AREA_DEBUG: Error checking user profile for member area access:', profileError);
+        } else if (profileData?.member_area_id === memberAreaId) {
+          userHasAccess = true;
+          console.log('MEMBER_AREA_DEBUG: User profile linked to this member area, granting access.');
+        }
+      }
+
+      if (!userHasAccess) {
         setHasAccess(false);
         toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros.", variant: "destructive" });
         setLoading(false);
         return;
       }
       setHasAccess(true);
+      // --- END MODIFIED ACCESS CHECK ---
 
-      // 4. Fetch modules the user has access to
+      // 4. Fetch modules the user has access to (this part relies on RLS, which was fixed)
       const { data: modulesData, error: modulesError } = await supabase
         .from('modules')
         .select(`
@@ -118,20 +135,20 @@ const MemberAreaDashboard = () => {
         .order('order_index', { ascending: true });
 
       if (modulesError) {
-        console.error('Error fetching user modules:', modulesError);
+        console.error('MEMBER_AREA_DEBUG: Error fetching user modules:', modulesError);
         toast({ title: "Erro", description: "Falha ao carregar seus módulos.", variant: "destructive" });
       } else {
         setModules(modulesData || []);
       }
 
     } catch (error: any) {
-      console.error('Error in MemberAreaDashboard:', error);
+      console.error('MEMBER_AREA_DEBUG: Error in MemberAreaDashboard:', error);
       toast({ title: "Erro", description: error.message || "Ocorreu um erro ao carregar a área de membros.", variant: "destructive" });
       setHasAccess(false);
     } finally {
       setLoading(false);
     }
-  }, [memberAreaId, user?.id, toast]);
+  }, [memberAreaId, user?.id, isAdmin, toast]); // Added isAdmin to dependencies
 
   useEffect(() => {
     if (!authLoading) {
