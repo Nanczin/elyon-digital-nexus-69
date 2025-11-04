@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon } from 'lucide-react'; // Adicionado ImageIcon
+import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react'; // Adicionado ChevronDown, ChevronUp
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Importar Collapsible
 
 
 type MemberArea = Tables<'member_areas'>;
@@ -216,7 +217,7 @@ const LessonFormDialog = ({
   const [contentType, setContentType] = useState(editingLesson?.content_type || 'video_link');
   const [contentUrl, setContentUrl] = useState(editingLesson?.content_url || '');
   const [textContent, setTextContent] = useState(editingLesson?.text_content || '');
-  const [status, setStatus] = useState(editingLesson?.status === 'published'); // <-- Adicionado o estado 'status'
+  const [status, setStatus] = useState(editingLesson?.status === 'published');
   const [videoFile, setVideoFile] = useState<File | null>(null); // Novo estado para upload de vídeo
   const [pdfFile, setPdfFile] = useState<File | null>(null);     // Novo estado para upload de PDF
   const [imageFile, setImageFile] = useState<File | null>(null); // Novo estado para upload de imagem
@@ -529,6 +530,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const [openLessons, setOpenLessons] = useState<Set<string>>(new Set()); // Estado para controlar aulas abertas/fechadas
 
   const fetchLessons = useCallback(async (id: string) => {
     if (!user?.id || !id) {
@@ -572,6 +574,18 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
       toast({ title: "Erro", description: error.message || "Falha ao excluir aula.", variant: "destructive" });
       console.error(error);
     }
+  };
+
+  const toggleLesson = (lessonId: string) => {
+    setOpenLessons(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(lessonId)) {
+        newSet.delete(lessonId);
+      } else {
+        newSet.add(lessonId);
+      }
+      return newSet;
+    });
   };
 
   const renderLessonContent = (lesson: Lesson) => {
@@ -652,55 +666,67 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
 
   return (
     <div className="space-y-4">
-      {lessons.map(lesson => (
-        <Card key={lesson.id}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="font-semibold">{lesson.title}</h3>
-                <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100)}...</p>
-                <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
-                  {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4" />
+      {lessons.map(lesson => {
+        const isOpen = openLessons.has(lesson.id);
+        return (
+          <Card key={lesson.id}>
+            <CardContent className="p-4">
+              <Collapsible open={isOpen} onOpenChange={() => toggleLesson(lesson.id)}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold">{lesson.title}</h3>
+                    <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100)}...</p>
+                    <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
+                      {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>
+                      <Edit className="h-4 w-4" />
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)}>Excluir</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-            {lesson.content_url && (
-              <div className="mt-4 border rounded-lg overflow-hidden">
-                {renderLessonContent(lesson)}
-              </div>
-            )}
-            {lesson.text_content && lesson.content_type === 'text_content' && (
-              <div className="mt-4 border rounded-lg p-4">
-                {renderLessonContent(lesson)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                </div>
+                <CollapsibleContent className="space-y-4 mt-4">
+                  {lesson.content_url && (
+                    <div className="border rounded-lg overflow-hidden">
+                      {renderLessonContent(lesson)}
+                    </div>
+                  )}
+                  {lesson.text_content && lesson.content_type === 'text_content' && (
+                    <div className="border rounded-lg p-4">
+                      {renderLessonContent(lesson)}
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };
