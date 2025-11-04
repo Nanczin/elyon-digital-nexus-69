@@ -581,7 +581,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
         .eq('id', lessonId);
       
       if (error) throw error;
-      toast({ title: "Sucesso", description: `Aula "${lessonTitle}" excluída.` });
+      toast({ title: "Sucesso", description: `Aula "${lessonTitle}" excluído.` });
       onLessonDeleted(); // Notify parent to refresh
     } catch (error: any) {
       toast({ title: "Erro", description: error.message || "Falha ao excluir aula.", variant: "destructive" });
