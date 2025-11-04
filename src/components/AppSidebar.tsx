@@ -123,6 +123,7 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
+        {/* Grupo do Menu Principal */}
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}>
             Menu Principal
@@ -155,53 +156,53 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-
-              {/* Novo Grupo para Área de Membros */}
-              {isAdmin && (
-                <SidebarGroup collapsible>
-                  <SidebarGroupLabel 
-                    className={`flex items-center rounded-md py-2 cursor-pointer ${
-                      isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
-                    } hover:bg-accent`}
-                    title={isCollapsed ? "Área de Membros" : undefined}
-                  >
-                    <MonitorDot className="h-4 w-4 flex-shrink-0" />
-                    {!isCollapsed && (
-                      <span className="truncate text-base">Área de Membros</span>
-                    )}
-                  </SidebarGroupLabel>
-                  <SidebarGroupContent className="pl-4"> {/* Indentação para sub-itens */}
-                    <SidebarMenu className="space-y-1">
-                      {memberAreaNavItems.map((item) => {
-                        const IconComponent = item.icon;
-                        return (
-                          <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton asChild className="w-full">
-                              <NavLink 
-                                to={item.href} 
-                                className={({ isActive }) => 
-                                  `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
-                                    isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
-                                  }`
-                                }
-                                title={isCollapsed ? item.label : undefined}
-                              >
-                                <IconComponent className="h-4 w-4 flex-shrink-0" />
-                                {!isCollapsed && (
-                                  <span className="truncate text-base">{item.label}</span>
-                                )}
-                              </NavLink>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Novo Grupo para Área de Membros - agora no mesmo nível do Menu Principal */}
+        {isAdmin && (
+          <SidebarGroup collapsible>
+            <SidebarGroupLabel 
+              className={`flex items-center rounded-md py-2 cursor-pointer ${
+                isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
+              } hover:bg-accent`}
+              title={isCollapsed ? "Área de Membros" : undefined}
+            >
+              <MonitorDot className="h-4 w-4 flex-shrink-0" />
+              {!isCollapsed && (
+                <span className="truncate text-base">Área de Membros</span>
+              )}
+            </SidebarGroupLabel>
+            <SidebarGroupContent className="pl-4"> {/* Indentação para sub-itens */}
+              <SidebarMenu className="space-y-1">
+                {memberAreaNavItems.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild className="w-full">
+                        <NavLink 
+                          to={item.href} 
+                          className={({ isActive }) => 
+                            `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
+                              isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
+                            }`
+                          }
+                          title={isCollapsed ? item.label : undefined}
+                        >
+                          <IconComponent className="h-4 w-4 flex-shrink-0" />
+                          {!isCollapsed && (
+                            <span className="truncate text-base">{item.label}</span>
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );
