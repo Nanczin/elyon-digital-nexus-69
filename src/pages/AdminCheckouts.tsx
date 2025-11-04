@@ -18,13 +18,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig, FormFields e os novos tipos
+import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables } from '@/integrations/supabase/types'; // Importar Tables
 import { Alert, AlertDescription } from '@/components/ui/alert'; // Importação adicionada
 import { setNestedValue, deepMerge } from '@/lib/utils'; // Importar setNestedValue e deepMerge
+
+type MemberArea = Tables<'member_areas'>;
 
 const AdminCheckouts = () => {
   const {
@@ -46,6 +48,7 @@ const AdminCheckouts = () => {
   const [editingCheckout, setEditingCheckout] = useState<any>(null);
   const [checkouts, setCheckouts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]); // Novo estado para áreas de membros
   const [currentTab, setCurrentTab] = useState('basic');
   const [selectedDeliverableFile, setSelectedDeliverableFile] = useState<File | null>(null); // Novo estado para o arquivo
   
@@ -126,7 +129,8 @@ const AdminCheckouts = () => {
         duration: 15,
         color: '#dc2626',
         text: 'Oferta por tempo limitado'
-      }
+      },
+      member_area_id: '' as string | null, // Novo campo para member_area_id
     };
     // Deep clone the initial object to ensure a fresh start every time
     return JSON.parse(JSON.stringify(initial));
@@ -226,6 +230,7 @@ const AdminCheckouts = () => {
         headlineText: checkout.styles?.headlineText || checkout.products?.name || initial.styles.headlineText, // Prioritize checkout headline, then product name, then default
       },
       timer: checkout.timer || initial.timer,
+      member_area_id: checkout.member_area_id || null, // Carregar member_area_id
     });
   }, [getInitialFormData, products]); // Adicionado products como dependência
 
@@ -294,6 +299,7 @@ const AdminCheckouts = () => {
     if (user && isAdmin) {
       fetchCheckouts();
       fetchProducts();
+      fetchMemberAreas(); // Buscar áreas de membros
     }
   }, [user, isAdmin]);
 
@@ -304,7 +310,8 @@ const AdminCheckouts = () => {
         error
       } = await supabase.from('checkouts').select(`
           *,
-          products (id, name)
+          products (id, name),
+          member_areas (name, slug)
         `).order('created_at', {
         ascending: false
       });
@@ -331,6 +338,25 @@ const AdminCheckouts = () => {
       setProducts(data || []);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
+    }
+  };
+
+  const fetchMemberAreas = async () => {
+    if (!user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('member_areas')
+        .select('id, name, slug')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      setMemberAreas(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar áreas de membros:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as áreas de membros",
+        variant: "destructive"
+      });
     }
   };
 
@@ -579,6 +605,7 @@ const AdminCheckouts = () => {
 
       const checkoutPayload = {
         user_id: user?.id, // Adicionar user_id
+        member_area_id: checkoutData.member_area_id || null, // Adicionar member_area_id
         name: checkoutData.name, // Salvar o novo campo 'name'
         product_id: checkoutData.selectedProduct,
         price: Math.round(checkoutData.form_fields.packages[0]?.price * 100) || 0, // Aplicar Math.round
@@ -759,6 +786,31 @@ const AdminCheckouts = () => {
 
                 <TabsContent value="basic" className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="memberArea">Área de Membros (Opcional)</Label>
+                      <Select 
+                        value={checkoutData.member_area_id || ''} 
+                        onValueChange={value => handleInputChange('member_area_id', value === '' ? null : value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Associar a uma área de membros" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Nenhuma</SelectItem>
+                          {memberAreas.map(area => (
+                            <SelectItem key={area.id} value={area.id}>
+                              <div className="flex items-center gap-2">
+                                <MonitorDot className="h-4 w-4" />
+                                {area.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Associe este checkout a uma área de membros específica.
+                      </p>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="selectedProduct">Produto Base</Label>
                       <Select value={checkoutData.selectedProduct} onValueChange={value => handleInputChange('selectedProduct', value)}>
@@ -1685,6 +1737,11 @@ const AdminCheckouts = () => {
                           <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
                             Email Ativo
                           </Badge>
+                        )}
+                        {checkout.member_area_id && checkout.member_areas?.name && (
+                           <Badge variant="secondary" className="text-xs bg-indigo-100 text-indigo-800">
+                             Área: {checkout.member_areas.name}
+                           </Badge>                         
                         )}
                       </div>
                     </div>

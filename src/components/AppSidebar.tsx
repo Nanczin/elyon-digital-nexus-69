@@ -76,7 +76,9 @@ const adminNavItems = [
 ];
 
 // Novos itens de navegação para a Área de Membros
-const memberAreaNavItems = [
+// Estes itens serão acessados a partir de uma área de membros específica,
+// então o link direto na sidebar será para a gestão das áreas.
+const memberAreaSubNavItems = [
   {
     href: '/admin/content',
     label: 'Conteúdo',
@@ -119,14 +121,16 @@ export function AppSidebar() {
   }
 
   const isCollapsed = state === 'collapsed';
-  const [isMemberAreaOpen, setIsMemberAreaOpen] = useState(false); // Estado para controlar o colapso da Área de Membros
+  // O estado isMemberAreaOpen não é mais necessário para um grupo recolhível aqui,
+  // pois a gestão de áreas de membros será uma página separada.
+  // const [isMemberAreaOpen, setIsMemberAreaOpen] = useState(false); 
 
   return (
     <Sidebar
       className={isCollapsed ? "w-20" : "w-64"}
       collapsible="icon"
     >
-      <SidebarContent className="overflow-hidden space-y-1"> {/* Adicionado space-y-1 aqui */}
+      <SidebarContent className="overflow-hidden space-y-1">
         {/* Grupo do Menu Principal */}
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}>
@@ -164,53 +168,35 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Novo Grupo para Área de Membros */}
+        {/* Novo item de menu principal para "Minhas Áreas de Membros" */}
         {isAdmin && (
-          <Collapsible open={isMemberAreaOpen} onOpenChange={setIsMemberAreaOpen} className="w-full">
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel // Usar SidebarGroupLabel como o trigger
-                className={`flex items-center rounded-md py-2 cursor-pointer ${
-                  isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
-                } hover:bg-accent`}
-                title={isCollapsed ? "Área de Membros" : undefined}
-              >
-                <MonitorDot className="h-4 w-4 flex-shrink-0" />
-                {!isCollapsed && (
-                  <>
-                    <span className="truncate text-base">Área de Membros</span>
-                    <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${isMemberAreaOpen ? 'rotate-180' : ''}`} />
-                  </>
-                )}
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-4"> {/* Conteúdo dentro de CollapsibleContent */}
+          <SidebarGroup>
+            <SidebarGroupLabel className={isCollapsed ? "sr-only" : "text-sm px-4 py-2"}>
+              Áreas de Membros
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
-                {memberAreaNavItems.map((item) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild className="w-full">
-                        <NavLink 
-                          to={item.href} 
-                          className={({ isActive }) => 
-                            `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
-                              isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
-                            }`
-                          }
-                          title={isCollapsed ? item.label : undefined}
-                        >
-                          <IconComponent className="h-4 w-4 flex-shrink-0" />
-                          {!isCollapsed && (
-                            <span className="truncate text-base">{item.label}</span>
-                          )}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="w-full">
+                    <NavLink 
+                      to="/admin/member-areas" 
+                      className={({ isActive }) => 
+                        `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
+                          isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
+                        }`
+                      }
+                      title={isCollapsed ? "Minhas Áreas de Membros" : undefined}
+                    >
+                      <MonitorDot className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && (
+                        <span className="truncate text-base">Minhas Áreas de Membros</span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
-            </CollapsibleContent>
-          </Collapsible>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
       </SidebarContent>
     </Sidebar>

@@ -134,6 +134,7 @@ export type Database = {
           timer: Json | null
           updated_at: string
           user_id: string | null
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Insert: {
           created_at?: string
@@ -152,6 +153,7 @@ export type Database = {
           timer?: Json | null
           updated_at?: string
           user_id?: string | null
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Update: {
           created_at?: string
@@ -170,6 +172,7 @@ export type Database = {
           timer?: Json | null
           updated_at?: string
           user_id?: string | null
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Relationships: [
           {
@@ -177,6 +180,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkouts_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
             referencedColumns: ["id"]
           },
         ]
@@ -219,6 +229,7 @@ export type Database = {
           mercadopago_order_id?: string | null
           mercadopago_payment_id: string
           metodo_pagamento?: string | null
+          moeda?: string | null
           password?: string | null
           produto_id?: string | null
           status_pagamento?: string
@@ -460,6 +471,7 @@ export type Database = {
           price: number
           price_original: number | null
           updated_at: string
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Insert: {
           access_url?: string | null
@@ -476,6 +488,7 @@ export type Database = {
           price: number
           price_original?: number | null
           updated_at?: string
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Update: {
           access_url?: string | null
@@ -492,6 +505,7 @@ export type Database = {
           price?: number
           price_original?: number | null
           updated_at?: string
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         }
         Relationships: [
           {
@@ -499,6 +513,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
             referencedColumns: ["id"]
           },
         ]
@@ -830,6 +851,50 @@ export type Database = {
       }
       
       -- Novas tabelas da área de membros
+      member_areas: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          logo_url: string | null;
+          primary_color: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          logo_url?: string | null;
+          primary_color?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          logo_url?: string | null;
+          primary_color?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_areas_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       modules: {
         Row: {
           id: string;
@@ -841,6 +906,7 @@ export type Database = {
           status: string;
           created_at: string;
           updated_at: string;
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Insert: {
           id?: string;
@@ -852,6 +918,7 @@ export type Database = {
           status?: string;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Update: {
           id?: string;
@@ -863,6 +930,7 @@ export type Database = {
           status?: string;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Relationships: [
           {
@@ -871,6 +939,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "modules_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
           },
         ];
       };
@@ -936,6 +1011,7 @@ export type Database = {
           is_active: boolean;
           created_at: string;
           updated_at: string;
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Insert: {
           id?: string;
@@ -945,6 +1021,7 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Update: {
           id?: string;
@@ -954,6 +1031,7 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Relationships: [
           {
@@ -970,6 +1048,13 @@ export type Database = {
             referencedRelation: "modules";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "member_access_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
         ];
       };
       platform_settings: {
@@ -983,6 +1068,7 @@ export type Database = {
           colors: Json | null;
           created_at: string;
           updated_at: string;
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Insert: {
           id?: string;
@@ -994,6 +1080,7 @@ export type Database = {
           colors?: Json | null;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Update: {
           id?: string;
@@ -1005,6 +1092,7 @@ export type Database = {
           colors?: Json | null;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Relationships: [
           {
@@ -1013,6 +1101,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "platform_settings_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
           },
         ];
       };
@@ -1027,6 +1122,7 @@ export type Database = {
           is_automatic: boolean;
           created_at: string;
           updated_at: string;
+          member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Insert: {
           id?: string;
@@ -1038,6 +1134,7 @@ export type Database = {
           is_automatic?: boolean;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Update: {
           id?: string;
@@ -1049,6 +1146,7 @@ export type Database = {
           is_automatic?: boolean;
           created_at?: string;
           updated_at?: string;
+          member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
         };
         Relationships: [
           {
@@ -1071,6 +1169,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "lessons";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "community_posts_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
           },
         ];
       };

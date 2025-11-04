@@ -90,3 +90,18 @@ export const toCents = (value: number): number => {
 export const fromCents = (value: number): number => {
   return value / 100;
 };
+
+/**
+ * Gera um slug amigável para URL a partir de uma string.
+ */
+export const generateSlug = (text: string): string => {
+  return text
+    .toString()
+    .normalize('NFD') // Normaliza caracteres Unicode (ex: 'á' -> 'a')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacríticos
+    .toLowerCase() // Converte para minúsculas
+    .trim() // Remove espaços em branco do início e fim
+    .replace(/\s+/g, '-') // Substitui espaços por hífens
+    .replace(/[^\w-]+/g, '') // Remove todos os caracteres não-palavra (exceto hífens)
+    .replace(/--+/g, '-'); // Substitui múltiplos hífens por um único
+};
