@@ -92,10 +92,14 @@ const MemberAreaDashboard = () => {
       // --- START MODIFIED ACCESS CHECK ---
       let userHasAccess = false;
 
-      // Option A: Admin owns this member area
-      if (isAdmin && user.id === areaData.user_id) {
+      // Option A: Check if user is an admin of THIS specific member area
+      const { data: isAdminOfArea, error: adminCheckError } = await supabase.rpc('is_admin_of_member_area', { p_member_area_id: memberAreaId });
+
+      if (adminCheckError) {
+        console.error('MEMBER_AREA_DEBUG: Error checking admin status for member area:', adminCheckError);
+      } else if (isAdminOfArea) {
         userHasAccess = true;
-        console.log('MEMBER_AREA_DEBUG: Admin user owns this member area, granting access.');
+        console.log('MEMBER_AREA_DEBUG: User is admin of this member area, granting access.');
       } else {
         // Option B: Regular member with profile linked to this member area
         const { data: profileData, error: profileError } = await supabase
