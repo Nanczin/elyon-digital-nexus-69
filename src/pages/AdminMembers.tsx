@@ -25,7 +25,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
   const [selectedModules, setSelectedModules] = useState<string[]>(member?.access_modules?.map((ma: any) => ma.module_id) || []);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { user: adminUser } = useAuth();
+  const { user: adminUser, refreshUserSession } = useAuth(); // Obter refreshUserSession
 
   useEffect(() => {
     if (member) {
@@ -72,6 +72,22 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
           .update({ name, status: isActive ? 'active' : 'inactive' })
           .eq('user_id', member.user_id);
         if (profileError) throw profileError;
+
+        // Update auth.users.user_metadata
+        const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+          member.user_id,
+          {
+            user_metadata: { 
+              name, 
+              first_name: name.split(' ')[0], 
+              last_name: name.split(' ').slice(1).join(' ') || '',
+              member_area_id: memberAreaId, // Garantir que member_area_id esteja no metadata
+              status: isActive ? 'active' : 'inactive'
+            }
+          }
+        );
+        if (authUpdateError) console.error('Error updating auth.users user_metadata:', authUpdateError);
+
 
         // Update member_access
         // First, delete all existing access for this user in this member area
@@ -142,6 +158,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
 
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
       }
+      
+      await refreshUserSession(); // Chamar refreshUserSession após salvar
       onSave();
       onClose();
     } catch (error: any) {
