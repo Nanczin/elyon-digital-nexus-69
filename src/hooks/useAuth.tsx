@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-// import { useNavigate } from 'react-router-dom'; // REMOVIDO: useNavigate não deve ser usado aqui
 
 interface AuthContextType {
   user: User | null;
@@ -12,7 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
-  refreshUserSession: () => Promise<void>; // Adicionado
+  refreshUserSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,26 +21,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  // const navigate = useNavigate(); // REMOVIDO: useNavigate não deve ser usado aqui
 
   useEffect(() => {
-    // Set up auth state listener
+    const checkAdminStatus = async (userId: string) => {
+      try {
+        const { data } = await supabase.rpc('is_admin', { user_id: userId });
+        setIsAdmin(data || false);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Check if user is admin when session changes
         if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data } = await supabase.rpc('is_admin');
-              setIsAdmin(data || false);
-            } catch (error) {
-              console.error('Error checking admin status:', error);
-              setIsAdmin(false);
-            }
-          }, 0);
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
         }
@@ -50,10 +48,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        await checkAdminStatus(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -119,10 +119,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
-    // navigate('/'); // REMOVIDO: A navegação será feita no componente Layout
   };
 
-  // Nova função para atualizar a sessão do usuário
   const refreshUserSession = async () => {
     const { data, error } = await supabase.auth.refreshSession();
     if (error) {
@@ -130,6 +128,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else if (data.session) {
       setSession(data.session);
       setUser(data.session.user);
+      if (data.session.user) {
+        await checkAdminStatus(data.session.user.id);
+      }
       console.log('Sessão do usuário atualizada com sucesso.');
     }
   };
@@ -142,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     isAdmin,
-    refreshUserSession, // Expondo a nova função
+    refreshUserSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -151,7 +152,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // Adicionado um console.error mais detalhado para ajudar a depurar
     console.error('useAuth: O hook useAuth deve ser usado dentro de um AuthProvider. Verifique a árvore de componentes.');
     throw new Error('useAuth must be used within an AuthProvider');
   }
