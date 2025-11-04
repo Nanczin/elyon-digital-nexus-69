@@ -37,8 +37,6 @@ serve(async (req) => {
     }
 
     // 1. Criar usuário no Supabase Auth
-    // O trigger 'handle_new_user' será acionado e criará o perfil em 'public.profiles'
-    // usando os dados de 'user_metadata'.
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -54,9 +52,21 @@ serve(async (req) => {
 
     if (authError) {
       console.error('EDGE_FUNCTION_DEBUG: Erro ao criar usuário auth.admin.createUser:', authError);
+      let statusCode = 500;
+      let errorMessage = authError.message || 'Falha ao criar usuário.';
+
+      // Tratamento de erro específico para e-mail duplicado
+      if (authError.message.includes('duplicate key value violates unique constraint "users_email_key"')) {
+        statusCode = 409; // Conflict
+        errorMessage = 'Este e-mail já está cadastrado.';
+      } else if (authError.message.includes('Password should be at least 6 characters')) {
+        statusCode = 400; // Bad Request
+        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+      }
+      
       return new Response(
-        JSON.stringify({ success: false, error: authError.message || 'Falha ao criar usuário.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ success: false, error: errorMessage }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: statusCode }
       );
     }
 
@@ -84,9 +94,6 @@ serve(async (req) => {
 
       if (insertAccessError) {
         console.error('EDGE_FUNCTION_DEBUG: Erro ao inserir acessos aos módulos:', insertAccessError);
-        // Se a inserção de acesso falhar, o usuário e o perfil já foram criados.
-        // Podemos optar por não reverter o usuário, mas logar o erro.
-        // Ou, se for crítico, deletar o usuário aqui também. Por enquanto, apenas logar.
         return new Response(
           JSON.stringify({ success: false, error: insertAccessError.message || 'Falha ao conceder acesso aos módulos.' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
