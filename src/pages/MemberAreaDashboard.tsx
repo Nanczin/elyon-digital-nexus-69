@@ -189,7 +189,7 @@ const MemberAreaDashboard = () => {
 
   return (
     <div 
-      className="w-full min-h-screen flex flex-col" 
+      className="w-full min-h-screen flex flex-col p-8" 
       style={{ 
         backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: fontFamily 
@@ -197,9 +197,10 @@ const MemberAreaDashboard = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4"
+        className="flex items-center justify-between p-4 mb-12 rounded-lg shadow-sm"
         style={{ 
           backgroundColor: currentSettings.colors?.header_background || 'hsl(var(--member-area-header-background))',
+          borderBottom: `1px solid ${currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))'}`,
           color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
@@ -211,11 +212,11 @@ const MemberAreaDashboard = () => {
               className="h-8 w-8 object-contain" 
             />
           )}
-          <span className="text-lg font-semibold" style={{ color: textColor }}>Área de Membros RE-MÃE</span>
+          <span className="text-lg font-semibold">Área de Membros RE-MÃE</span>
         </div>
         <Button onClick={signOut} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
-          <Avatar className="h-9 w-9 border border-gray-200">
-            <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-memberArea-primary text-white text-sm font-semibold">
               {userInitial}
             </AvatarFallback>
           </Avatar>
@@ -223,7 +224,7 @@ const MemberAreaDashboard = () => {
       </header>
 
       {/* SEÇÃO DE BOAS-VINDAS */}
-      <div className="flex-1 px-8 py-16 text-center space-y-6">
+      <div className="flex-1 px-4 space-y-6 mb-16">
         <h1 className="text-5xl font-semibold leading-tight" style={{ color: textColor }}>
           Olá, {userName}!
         </h1>
@@ -232,7 +233,7 @@ const MemberAreaDashboard = () => {
         </p>
 
         {/* CARDS DE MÓDULOS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
           {modules.length === 0 ? (
             <p className="text-memberArea-text-muted">Nenhum módulo disponível para você ainda.</p>
           ) : (
@@ -268,7 +269,7 @@ const MemberAreaDashboard = () => {
                     {module.description}
                   </p>
                   <Button 
-                    className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
+                    className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold" 
                     style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                     asChild
                   >
