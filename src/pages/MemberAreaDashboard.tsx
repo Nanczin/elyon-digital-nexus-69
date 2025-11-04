@@ -41,7 +41,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaDashboard = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { user, loading: authLoading, signOut, refreshUserSession } = useMemberAreaAuth(); // Usar useMemberAreaAuth e refreshUserSession
+  const { user, loading: authLoading, signOut } = useMemberAreaAuth(); // Removido refreshUserSession
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -143,10 +143,10 @@ const MemberAreaDashboard = () => {
         return; // Prevent further execution until redirected
       }
       // Refresh user session to get latest metadata (e.g., updated name)
-      refreshUserSession(); // <--- Chamada adicionada aqui
+      // refreshUserSession(); // <--- REMOVIDO: A chamada refreshUserSession() foi removida daqui
       fetchMemberAreaAndContent();
     }
-  }, [user, authLoading, fetchMemberAreaAndContent, refreshUserSession, toast]); // Adicionado refreshUserSession às dependências
+  }, [user, authLoading, fetchMemberAreaAndContent, toast]); // Removido refreshUserSession das dependências
 
   if (authLoading || loading) {
     return (
