@@ -187,7 +187,11 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
   };
 
   if (authLoading || loading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Carregando...
+      </div>
+    );
   }
 
   if (!user || !isAdmin) {
@@ -283,7 +287,10 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
             {/* Simulação da página de login com as cores e textos */}
             <div 
               className="w-full h-full flex items-center justify-center p-4" 
-              style={{ backgroundColor: settings.colors?.background_login || currentDefaultSettings.colors?.background_login }}
+              style={{ 
+                backgroundColor: settings.colors?.background_login || currentDefaultSettings.colors?.background_login,
+                fontFamily: settings.global_font_family || currentDefaultSettings.global_font_family // Aplicar a fonte aqui
+              }}
             >
               <div 
                 className="w-full max-w-sm p-6 rounded-lg shadow-lg text-center space-y-4"
