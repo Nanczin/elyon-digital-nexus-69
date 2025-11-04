@@ -688,8 +688,8 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex-1 flex flex-col"> {/* Adicionado flex-1 flex-col */}
                     <h3 className="font-semibold">{lesson.title}</h3>
-                    <p className="text-sm text-muted-foreground min-h-[1.25rem]"> {/* Adicionado min-h */}
-                      {lesson.description?.trim() ? `${lesson.description.trim().substring(0, 100)}${lesson.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
+                    <p className="text-sm text-muted-foreground"> {/* Removido min-h */}
+                      {lesson.description?.trim()}
                     </p>
                     {lesson.duration_minutes && lesson.duration_minutes > 0 && (
                       <div className="flex items-center text-xs text-muted-foreground mt-1">
@@ -712,7 +712,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                          <AlertDialogTitle>Confirmar Exclusção</AlertDialogTitle>
                           <AlertDialogDescription>
                             Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
                           </AlertDialogDescription>
