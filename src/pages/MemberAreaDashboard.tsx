@@ -142,8 +142,6 @@ const MemberAreaDashboard = () => {
         toast({ title: "Não autenticado", description: "Faça login para acessar a área de membros.", variant: "destructive" });
         return; // Prevent further execution until redirected
       }
-      // Refresh user session to get latest metadata (e.g., updated name)
-      // refreshUserSession(); // <--- REMOVIDO: A chamada refreshUserSession() foi removida daqui
       fetchMemberAreaAndContent();
     }
   }, [user, authLoading, fetchMemberAreaAndContent, toast]); // Removido refreshUserSession das dependências
@@ -226,10 +224,10 @@ const MemberAreaDashboard = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 p-4 space-y-6">
         <h1 className="text-3xl font-bold" style={{ color: textColor }}>
-          Olá, {userName}!
+          Bem-vindo(a), {userName}!
         </h1>
         <p className="text-lg" style={{ color: secondaryTextColor }}>
-          Bem-vindo à sua área de membros. Escolha um módulo para começar.
+          Sua jornada de aprendizado começa agora. Escolha um módulo para explorar.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
