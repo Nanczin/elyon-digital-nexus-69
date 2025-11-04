@@ -570,6 +570,8 @@ export type Database = {
           role: string
           updated_at: string
           user_id: string
+          status: string; /* Adicionada nova coluna 'status' */
+          login_url: string | null; /* Adicionada nova coluna 'login_url' */
         }
         Insert: {
           avatar_url?: string | null
@@ -580,6 +582,8 @@ export type Database = {
           role?: string
           updated_at?: string
           user_id: string
+          status?: string; /* Adicionada nova coluna 'status' */
+          login_url?: string | null; /* Adicionada nova coluna 'login_url' */
         }
         Update: {
           avatar_url?: string | null
@@ -590,6 +594,8 @@ export type Database = {
           role?: string
           updated_at?: string
           user_id?: string
+          status?: string; /* Adicionada nova coluna 'status' */
+          login_url?: string | null; /* Adicionada nova coluna 'login_url' */
         }
         Relationships: []
       }
@@ -822,6 +828,336 @@ export type Database = {
           },
         ]
       }
+      
+      -- Novas tabelas da área de membros
+      modules: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          banner_url: string | null;
+          order_index: number;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          banner_url?: string | null;
+          order_index?: number;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          banner_url?: string | null;
+          order_index?: number;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "modules_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lessons: {
+        Row: {
+          id: string;
+          module_id: string;
+          title: string;
+          description: string | null;
+          duration_minutes: number | null;
+          content_type: string;
+          content_url: string | null;
+          text_content: string | null;
+          order_index: number;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          module_id: string;
+          title: string;
+          description?: string | null;
+          duration_minutes?: number | null;
+          content_type: string;
+          content_url?: string | null;
+          text_content?: string | null;
+          order_index?: number;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          module_id?: string;
+          title?: string;
+          description?: string | null;
+          duration_minutes?: number | null;
+          content_type?: string;
+          content_url?: string | null;
+          text_content?: string | null;
+          order_index?: number;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lessons_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      member_access: {
+        Row: {
+          id: string;
+          user_id: string;
+          module_id: string;
+          access_granted_at: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          module_id: string;
+          access_granted_at?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          module_id?: string;
+          access_granted_at?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_access_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "member_access_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      platform_settings: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          logo_url: string | null;
+          login_title: string | null;
+          login_subtitle: string | null;
+          global_font_family: string | null;
+          colors: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          logo_url?: string | null;
+          login_title?: string | null;
+          login_subtitle?: string | null;
+          global_font_family?: string | null;
+          colors?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          logo_url?: string | null;
+          login_title?: string | null;
+          login_subtitle?: string | null;
+          global_font_family?: string | null;
+          colors?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      community_posts: {
+        Row: {
+          id: string;
+          user_id: string;
+          module_id: string | null;
+          lesson_id: string | null;
+          title: string;
+          content: string;
+          is_automatic: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          module_id?: string | null;
+          lesson_id?: string | null;
+          title: string;
+          content: string;
+          is_automatic?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          module_id?: string | null;
+          lesson_id?: string | null;
+          title?: string;
+          content?: string;
+          is_automatic?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "community_posts_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "community_posts_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      community_comments: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          user_id: string;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          user_id?: string;
+          content?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "community_posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "community_comments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lesson_completions: {
+        Row: {
+          id: string;
+          user_id: string;
+          lesson_id: string;
+          completed_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lesson_id: string;
+          completed_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          lesson_id?: string;
+          completed_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_completions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_completions_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     }
     Views: {
       [_ in never]: never

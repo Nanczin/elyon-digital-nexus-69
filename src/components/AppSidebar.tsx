@@ -20,7 +20,12 @@ import {
   ShoppingCart, 
   Users, 
   Receipt,
-  FileText
+  FileText,
+  BookOpen, // Novo ícone para Conteúdo
+  UserSquare, // Novo ícone para Membros
+  Palette, // Novo ícone para Design
+  BarChart2, // Novo ícone para Analytics
+  MessageSquare // Novo ícone para Comunidade
 } from 'lucide-react';
 
 const adminNavItems = [
@@ -40,9 +45,29 @@ const adminNavItems = [
     icon: CreditCard
   },
   {
-    href: '/admin/integrations',
-    label: 'Integrações',
-    icon: Settings
+    href: '/admin/content', // Nova rota para Conteúdo
+    label: 'Conteúdo',
+    icon: BookOpen
+  },
+  {
+    href: '/admin/members', // Nova rota para Membros
+    label: 'Membros',
+    icon: UserSquare
+  },
+  {
+    href: '/admin/design', // Nova rota para Design
+    label: 'Design',
+    icon: Palette
+  },
+  {
+    href: '/admin/analytics', // Nova rota para Analytics
+    label: 'Analytics',
+    icon: BarChart2
+  },
+  {
+    href: '/admin/community', // Nova rota para Comunidade
+    label: 'Comunidade',
+    icon: MessageSquare
   },
   {
     href: '/sales',
@@ -63,6 +88,11 @@ const adminNavItems = [
     href: '/payments',
     label: 'Pagamentos',
     icon: Receipt
+  },
+  {
+    href: '/admin/integrations',
+    label: 'Integrações',
+    icon: Settings
   }
 ];
 

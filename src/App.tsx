@@ -23,6 +23,14 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
+// Novas páginas da área de membros
+import AdminContent from "./pages/AdminContent";
+import AdminMembers from "./pages/AdminMembers";
+import AdminDesign from "./pages/AdminDesign";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminCommunity from "./pages/AdminCommunity";
+
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -42,6 +50,14 @@ const App = () => (
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/checkouts" element={<AdminCheckouts />} />
               <Route path="/admin/integrations" element={<AdminIntegrations />} />
+              
+              {/* Novas Rotas da Área de Membros */}
+              <Route path="/admin/content" element={<AdminContent />} />
+              <Route path="/admin/members" element={<AdminMembers />} />
+              <Route path="/admin/design" element={<AdminDesign />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/admin/community" element={<AdminCommunity />} />
+
               <Route path="/sales" element={<Sales />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/customers" element={<Customers />} />
