@@ -24,8 +24,8 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
   colors: {
     background_login: 'hsl(var(--member-area-background))',
     card_login: 'hsl(var(--member-area-card-background))',
-    header_background: 'hsl(var(--member-area-header-background))',
-    header_border: 'hsl(var(--member-area-header-border))',
+    header_background: 'hsl(var(--member-area-background))', // Changed to match page background
+    header_border: 'transparent', // Changed to transparent
     button_background: 'hsl(var(--member-area-primary))',
     text_primary: 'hsl(var(--member-area-text-dark))',
     text_header: 'hsl(var(--member-area-text-dark))',
