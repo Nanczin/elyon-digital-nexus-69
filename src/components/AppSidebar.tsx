@@ -20,8 +20,7 @@ import {
   ShoppingCart, 
   Users, 
   Receipt,
-  FileText,
-  MessageCircle // Importado o ícone MessageCircle
+  FileText
 } from 'lucide-react';
 
 const adminNavItems = [
@@ -64,11 +63,6 @@ const adminNavItems = [
     href: '/payments',
     label: 'Pagamentos',
     icon: Receipt
-  },
-  { // Nova entrada para Suporte
-    href: '/suporte',
-    label: 'Suporte',
-    icon: MessageCircle
   }
 ];
 
