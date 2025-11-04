@@ -60,7 +60,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
 
   return (
     <div 
-      className="w-full h-full flex flex-col overflow-auto p-4" 
+      className="w-full h-full flex flex-col overflow-auto" 
       style={{ 
         backgroundColor: settings.colors?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: fontFamily 
@@ -68,10 +68,9 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
     >
       {/* Header da Área de Membros */}
       <header 
-        className="flex items-center justify-between p-4 mb-6 rounded-lg shadow-sm"
+        className="flex items-center justify-between h-[72px] px-8 py-4"
         style={{ 
           backgroundColor: settings.colors?.header_background || 'hsl(var(--member-area-header-background))',
-          borderBottom: `1px solid ${settings.colors?.header_border || 'hsl(var(--member-area-header-border))'}`,
           color: settings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
@@ -83,11 +82,11 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
               className="h-8 w-8 object-contain" 
             />
           )}
-          <span className="text-lg font-semibold">Área de Membros RE-MÃE</span>
+          <span className="text-lg font-semibold" style={{ color: textColor }}>Área de Membros RE-MÃE</span>
         </div>
         <Button onClick={onLogout} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-memberArea-primary text-white text-sm font-semibold">
+          <Avatar className="h-9 w-9 border border-gray-200">
+            <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
               {userInitial}
             </AvatarFallback>
           </Avatar>
@@ -95,7 +94,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 p-4 space-y-6">
+      <div className="flex-1 px-8 py-16 text-center space-y-6">
         <h1 className="text-3xl font-bold" style={{ color: textColor }}>
           Olá, {userName}!
         </h1>
@@ -103,11 +102,11 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
           Bem-vinda à sua área de membros. Escolha um módulo para começar.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-6xl mx-auto">
           {modulesToDisplay.map((module) => (
             <Card 
               key={module.id} 
-              className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl"
+              className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
               style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
             >
               <div className="relative aspect-video w-full bg-gray-200 h-48">
@@ -135,7 +134,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                   {module.description}
                 </p>
                 <Button 
-                  className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold" 
+                  className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
                   style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                 >
                   Acessar Módulo <ArrowRight className="h-4 w-4" />

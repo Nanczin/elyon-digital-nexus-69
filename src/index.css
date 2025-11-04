@@ -69,6 +69,7 @@ All colors MUST be HSL.
     --member-area-header-border: 210 10% 90%; /* #E5E7EB */
     --member-area-card-background: 0 0% 100%; /* #FFFFFF */
     --member-area-primary: 4 50% 78%; /* #EBA9A4 */
+    --member-area-primary-hover: 8 40% 70%; /* #d9928b */
     --member-area-text-dark: 0 0% 16%; /* #2A2A2A */
     --member-area-text-muted: 0 0% 40%; /* #676767 */
     --member-area-checkmark-background: 142 50% 89%; /* #D1FAE5 */
@@ -125,6 +126,7 @@ All colors MUST be HSL.
     --member-area-header-border: 215 25% 20%;
     --member-area-card-background: 215 25% 15%;
     --member-area-primary: 4 50% 78%; /* Keep pink */
+    --member-area-primary-hover: 8 40% 70%; /* Darker pink for hover */
     --member-area-text-dark: 0 0% 90%; /* Lighter text */
     --member-area-text-muted: 0 0% 60%;
     --member-area-checkmark-background: 142 50% 30%;

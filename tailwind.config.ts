@@ -76,6 +76,7 @@ export default {
 					'header-border': 'hsl(var(--member-area-header-border))',
 					card: 'hsl(var(--member-area-card-background))',
 					primary: 'hsl(var(--member-area-primary))',
+					'primary-hover': 'hsl(var(--member-area-primary-hover))',
 					'text-dark': 'hsl(var(--member-area-text-dark))',
 					'text-muted': 'hsl(var(--member-area-text-muted))',
 					'checkmark-bg': 'hsl(var(--member-area-checkmark-background))',
