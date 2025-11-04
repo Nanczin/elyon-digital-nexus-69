@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
+import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Importar Avatar e AvatarFallback
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface MemberAreaPreviewContentProps {
   settings: any; // Usar o tipo PlatformSettings de AdminDesign.tsx
@@ -104,28 +104,31 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-6xl mx-auto">
-          {modulesToDisplay.map((module) => (
-            <Card 
-              key={module.id} 
-              className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
-              style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
-            >
-              <div className="relative aspect-video w-full bg-gray-200 h-48">
-                {module.banner_url && (
-                  <img 
-                    src={module.banner_url} 
-                    alt={module.title} 
-                    className="w-full h-full object-cover" 
-                  />
-                )}
-                {module.isCompleted && (
-                  <div 
-                    className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: checkmarkBgColor }}
-                  >
-                    <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
-                  </div>
-                )}
+          {modulesToDisplay.length === 0 ? (
+            <p className="text-memberArea-text-muted">Nenhum módulo disponível para você ainda.</p>
+          ) : (
+            modulesToDisplay.map((module) => (
+              <Card 
+                key={module.id} 
+                className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
+                style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
+              >
+                <div className="relative aspect-video w-full bg-gray-200 h-48">
+                  {module.banner_url && (
+                    <img 
+                      src={module.banner_url} 
+                      alt={module.title} 
+                      className="w-full h-full object-cover" 
+                    />
+                  )}
+                  {module.isCompleted && (
+                    <div 
+                      className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: checkmarkBgColor }}
+                    >
+                      <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
+                    </div>
+                  )}
                 </div>
                 <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
                   <h3 className="text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}>
