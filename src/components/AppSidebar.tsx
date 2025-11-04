@@ -21,11 +21,12 @@ import {
   Users, 
   Receipt,
   FileText,
-  BookOpen, // Novo ícone para Conteúdo
-  UserSquare, // Novo ícone para Membros
-  Palette, // Novo ícone para Design
-  BarChart2, // Novo ícone para Analytics
-  MessageSquare // Novo ícone para Comunidade
+  BookOpen, // Ícone para Conteúdo
+  UserSquare, // Ícone para Membros
+  Palette, // Ícone para Design
+  BarChart2, // Ícone para Analytics
+  MessageSquare, // Ícone para Comunidade
+  MonitorDot // Novo ícone para Área de Membros
 } from 'lucide-react';
 
 const adminNavItems = [
@@ -43,31 +44,6 @@ const adminNavItems = [
     href: '/admin/checkouts',
     label: 'Checkouts',
     icon: CreditCard
-  },
-  {
-    href: '/admin/content', // Nova rota para Conteúdo
-    label: 'Conteúdo',
-    icon: BookOpen
-  },
-  {
-    href: '/admin/members', // Nova rota para Membros
-    label: 'Membros',
-    icon: UserSquare
-  },
-  {
-    href: '/admin/design', // Nova rota para Design
-    label: 'Design',
-    icon: Palette
-  },
-  {
-    href: '/admin/analytics', // Nova rota para Analytics
-    label: 'Analytics',
-    icon: BarChart2
-  },
-  {
-    href: '/admin/community', // Nova rota para Comunidade
-    label: 'Comunidade',
-    icon: MessageSquare
   },
   {
     href: '/sales',
@@ -96,6 +72,35 @@ const adminNavItems = [
   }
 ];
 
+// Novos itens de navegação para a Área de Membros
+const memberAreaNavItems = [
+  {
+    href: '/admin/content',
+    label: 'Conteúdo',
+    icon: BookOpen
+  },
+  {
+    href: '/admin/members',
+    label: 'Membros',
+    icon: UserSquare
+  },
+  {
+    href: '/admin/design',
+    label: 'Design',
+    icon: Palette
+  },
+  {
+    href: '/admin/analytics',
+    label: 'Analytics',
+    icon: BarChart2
+  },
+  {
+    href: '/admin/community',
+    label: 'Comunidade',
+    icon: MessageSquare
+  }
+];
+
 export function AppSidebar() {
   const { user, isAdmin } = useAuth();
   const { state } = useSidebar();
@@ -114,7 +119,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-20" : "w-64"} // Largura ajustada para os estados recolhido e expandido
+      className={isCollapsed ? "w-20" : "w-64"}
       collapsible="icon"
     >
       <SidebarContent className="overflow-hidden">
@@ -125,11 +130,9 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {adminNavItems.map((item) => {
-                // Show all items to admin, only payments to regular users
                 if (!isAdmin && item.href !== '/payments') {
                   return null;
                 }
-
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -143,7 +146,6 @@ export function AppSidebar() {
                         }
                         title={isCollapsed ? item.label : undefined}
                       >
-                        {/* Removido o <span> extra que envolvia os filhos do NavLink */}
                         <IconComponent className="h-4 w-4 flex-shrink-0" />
                         {!isCollapsed && (
                           <span className="truncate text-base">{item.label}</span>
@@ -153,6 +155,50 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+
+              {/* Novo Grupo para Área de Membros */}
+              {isAdmin && (
+                <SidebarGroup collapsible>
+                  <SidebarGroupLabel 
+                    className={`flex items-center rounded-md py-2 cursor-pointer ${
+                      isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
+                    } hover:bg-accent`}
+                    title={isCollapsed ? "Área de Membros" : undefined}
+                  >
+                    <MonitorDot className="h-4 w-4 flex-shrink-0" />
+                    {!isCollapsed && (
+                      <span className="truncate text-base">Área de Membros</span>
+                    )}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent className="pl-4"> {/* Indentação para sub-itens */}
+                    <SidebarMenu className="space-y-1">
+                      {memberAreaNavItems.map((item) => {
+                        const IconComponent = item.icon;
+                        return (
+                          <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton asChild className="w-full">
+                              <NavLink 
+                                to={item.href} 
+                                className={({ isActive }) => 
+                                  `${getNavCls({ isActive })} flex items-center rounded-md py-2 ${
+                                    isCollapsed ? 'justify-center px-0' : 'gap-3 pl-4 pr-3'
+                                  }`
+                                }
+                                title={isCollapsed ? item.label : undefined}
+                              >
+                                <IconComponent className="h-4 w-4 flex-shrink-0" />
+                                {!isCollapsed && (
+                                  <span className="truncate text-base">{item.label}</span>
+                                )}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
