@@ -64,17 +64,6 @@ export type FormFields = {
   transactionalEmailBody?: string; // Novo campo para o corpo do e-mail
 };
 
-// Novo tipo para project_members
-export type ProjectMember = {
-  id: string;
-  project_id: string;
-  user_id: string;
-  role: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-};
-
 export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -349,59 +338,6 @@ export type Database = {
         }
         Relationships: []
       }
-      lessons: {
-        Row: {
-          content_type: string
-          content_url: string | null
-          created_at: string
-          description: string | null
-          duration_minutes: number | null
-          id: string
-          module_id: string
-          order_index: number | null
-          status: string | null
-          text_content: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          content_type: string
-          content_url?: string | null
-          created_at?: string
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          module_id: string
-          order_index?: number | null
-          status?: string | null
-          text_content?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          content_type?: string
-          content_url?: string | null
-          created_at?: string
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          module_id?: string
-          order_index?: number | null
-          status?: string | null
-          text_content?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lessons_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       logs_entrega: {
         Row: {
           assunto: string | null
@@ -442,50 +378,6 @@ export type Database = {
             columns: ["compra_id"]
             isOneToOne: false
             referencedRelation: "compras"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      modules: {
-        Row: {
-          banner_url: string | null
-          created_at: string
-          description: string | null
-          id: string
-          order_index: number | null
-          project_id: string
-          status: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          order_index?: number | null
-          project_id: string
-          status?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          order_index?: number | null
-          project_id?: string
-          status?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "modules_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -567,7 +459,6 @@ export type Database = {
           name: string
           price: number
           price_original: number | null
-          project_id: string | null // Adicionada nova coluna project_id
           updated_at: string
         }
         Insert: {
@@ -584,7 +475,6 @@ export type Database = {
           name: string
           price: number
           price_original?: number | null
-          project_id?: string | null // Adicionada nova coluna project_id
           updated_at?: string
         }
         Update: {
@@ -601,15 +491,14 @@ export type Database = {
           name?: string
           price?: number
           price_original?: number | null
-          project_id?: string | null // Adicionada nova coluna project_id
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "products_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "products_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -847,101 +736,6 @@ export type Database = {
           },
           {
             foreignKeyName: "product_purchases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      projects: {
-        Row: {
-          access_url: string
-          created_at: string | null
-          description: string | null
-          id: string
-          logo_url: string | null
-          name: string
-          primary_color: string | null
-          secondary_color: string | null
-          status: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          access_url: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          logo_url?: string | null
-          name: string
-          primary_color?: string | null
-          secondary_color?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          access_url?: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          logo_url?: string | null
-          name?: string
-          primary_color?: string | null
-          secondary_color?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "projects_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_members: {
-        Row: {
-          created_at: string
-          id: string
-          project_id: string
-          role: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          project_id: string
-          role?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          project_id?: string
-          role?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"

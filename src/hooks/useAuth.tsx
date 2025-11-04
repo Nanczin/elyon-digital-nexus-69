@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+// import { useNavigate } from 'react-router-dom'; // REMOVIDO: useNavigate não deve ser usado aqui
 
 interface AuthContextType {
   user: User | null;
@@ -20,48 +21,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  // const navigate = useNavigate(); // REMOVIDO: useNavigate não deve ser usado aqui
 
   useEffect(() => {
-    const handleAuthStateChange = async (event: string, currentSession: Session | null) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (currentSession?.user) {
-        try {
-          const { data, error } = await supabase.rpc('is_admin');
-          if (error) {
-            console.error('Error checking admin status:', error);
-            setIsAdmin(false);
-          } else {
-            // A função RPC 'is_admin' retorna um booleano diretamente.
-            // No entanto, defensivamente, verificamos se o resultado pode vir
-            // encapsulado em um array de objetos, como [{ is_admin: true }].
-            if (typeof data === 'boolean') {
-              setIsAdmin(data);
-            } else if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'is_admin' in data[0]) {
-              // Se for um array como [{ is_admin: true }]
-              setIsAdmin(data[0].is_admin);
-            } else {
-              console.warn('RPC is_admin returned unexpected data format:', data);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Check if user is admin when session changes
+        if (session?.user) {
+          setTimeout(async () => {
+            try {
+              const { data } = await supabase.rpc('is_admin');
+              setIsAdmin(data || false);
+            } catch (error) {
+              console.error('Error checking admin status:', error);
               setIsAdmin(false);
             }
-          }
-        } catch (error) {
-          console.error('Error checking admin status (catch block):', error);
+          }, 0);
+        } else {
           setIsAdmin(false);
         }
-      } else {
-        setIsAdmin(false);
+        
+        setLoading(false);
       }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Also check for existing session on mount
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
-      await handleAuthStateChange('INITIAL_SESSION', initialSession);
     });
 
     return () => subscription.unsubscribe();
@@ -126,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
+    // navigate('/'); // REMOVIDO: A navegação será feita no componente Layout
   };
 
   const value = {

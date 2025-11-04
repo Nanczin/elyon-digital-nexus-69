@@ -20,8 +20,7 @@ import {
   ShoppingCart, 
   Users, 
   Receipt,
-  FileText,
-  Blocks // Importando o ícone Blocks para o Elyon Builder
+  FileText
 } from 'lucide-react';
 
 const adminNavItems = [
@@ -44,11 +43,6 @@ const adminNavItems = [
     href: '/admin/integrations',
     label: 'Integrações',
     icon: Settings
-  },
-  {
-    href: '/admin/elyon-builder', // Novo item para Elyon Builder
-    label: 'Elyon Builder',
-    icon: Blocks // Ícone Blocks
   },
   {
     href: '/sales',
