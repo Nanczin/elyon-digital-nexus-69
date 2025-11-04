@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Importar useState
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
@@ -30,7 +30,7 @@ import {
   MonitorDot, // Novo ícone para Área de Membros
   ChevronDown // Importar ChevronDown
 } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Importar Collapsible
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const adminNavItems = [
   {
@@ -75,37 +75,6 @@ const adminNavItems = [
   }
 ];
 
-// Novos itens de navegação para a Área de Membros
-// Estes itens serão acessados a partir de uma área de membros específica,
-// então o link direto na sidebar será para a gestão das áreas.
-const memberAreaSubNavItems = [
-  {
-    href: '/admin/content',
-    label: 'Conteúdo',
-    icon: BookOpen
-  },
-  {
-    href: '/admin/members',
-    label: 'Membros',
-    icon: UserSquare
-  },
-  {
-    href: '/admin/design',
-    label: 'Design',
-    icon: Palette
-  },
-  {
-    href: '/admin/analytics',
-    label: 'Analytics',
-    icon: BarChart2
-  },
-  {
-    href: '/admin/community',
-    label: 'Comunidade',
-    icon: MessageSquare
-  }
-];
-
 export function AppSidebar() {
   const { user, isAdmin } = useAuth();
   const { state } = useSidebar();
@@ -121,9 +90,6 @@ export function AppSidebar() {
   }
 
   const isCollapsed = state === 'collapsed';
-  // O estado isMemberAreaOpen não é mais necessário para um grupo recolhível aqui,
-  // pois a gestão de áreas de membros será uma página separada.
-  // const [isMemberAreaOpen, setIsMemberAreaOpen] = useState(false); 
 
   return (
     <Sidebar

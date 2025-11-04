@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 // Componente para adicionar/editar membro
-const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: () => void, modules: any[] }) => {
+const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { member?: any, onSave: () => void, modules: any[], memberAreaId: string, onClose: () => void }) => {
   const [name, setName] = useState(member?.name || '');
   const [email, setEmail] = useState(member?.email || '');
   const [password, setPassword] = useState('');
@@ -37,7 +37,8 @@ const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: (
         const { data, error } = await supabase
           .from('member_access')
           .select('module_id')
-          .eq('user_id', member.user_id);
+          .eq('user_id', member.user_id)
+          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
         if (error) {
           console.error('Error fetching member access:', error);
         } else {
@@ -53,7 +54,7 @@ const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: (
       setIsActive(true);
       setSelectedModules([]);
     }
-  }, [member]);
+  }, [member, memberAreaId]);
 
   const handleGeneratePassword = () => {
     const newPassword = Math.random().toString(36).slice(-8); // Simple random password
@@ -73,18 +74,20 @@ const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: (
         if (profileError) throw profileError;
 
         // Update member_access
-        // First, delete all existing access for this user
+        // First, delete all existing access for this user in this member area
         const { error: deleteAccessError } = await supabase
           .from('member_access')
           .delete()
-          .eq('user_id', member.user_id);
+          .eq('user_id', member.user_id)
+          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
         if (deleteAccessError) throw deleteAccessError;
 
-        // Then, insert new access records
+        // Then, insert new access records for this member area
         const accessInserts = selectedModules.map(moduleId => ({
           user_id: member.user_id,
           module_id: moduleId,
           is_active: true,
+          member_area_id: memberAreaId, // Ensure member_area_id is set
         }));
         if (accessInserts.length > 0) {
           const { error: insertAccessError } = await supabase
@@ -127,17 +130,19 @@ const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: (
           .eq('user_id', newUserId);
         if (profileError) console.error('Error updating profile status:', profileError);
 
-        // Grant access to all published modules by default for new members
+        // Grant access to all published modules by default for new members in this member area
         const { data: publishedModules, error: modulesError } = await supabase
           .from('modules')
           .select('id')
-          .eq('status', 'published');
+          .eq('status', 'published')
+          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
         if (modulesError) throw modulesError;
 
         const defaultAccessInserts = publishedModules?.map(module => ({
           user_id: newUserId,
           module_id: module.id,
           is_active: true,
+          member_area_id: memberAreaId, // Ensure member_area_id is set
         })) || [];
 
         if (defaultAccessInserts.length > 0) {
@@ -150,6 +155,7 @@ const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: (
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
       }
       onSave();
+      onClose();
     } catch (error: any) {
       toast({ title: "Erro", description: error.message || "Falha ao salvar membro.", variant: "destructive" });
       console.error(error);
@@ -220,8 +226,11 @@ const MemberFormDialog = ({ member, onSave, modules }: { member?: any, onSave: (
   );
 };
 
-const AdminMembers = () => {
+const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string }) => {
   const { user, isAdmin, loading: authLoading } = useAuth();
+  const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
+  const currentMemberAreaId = propMemberAreaId || urlMemberAreaId;
+
   const [members, setMembers] = useState<any[]>([]);
   const [modules, setModules] = useState<any[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
@@ -230,11 +239,11 @@ const AdminMembers = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && currentMemberAreaId) {
       fetchMembers();
       fetchModules();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, currentMemberAreaId]);
 
   const fetchMembers = async () => {
     setLoadingMembers(true);
@@ -244,6 +253,7 @@ const AdminMembers = () => {
         *,
         member_access(module_id)
       `)
+      .eq('member_area_id', currentMemberAreaId) // Filter by memberAreaId
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -259,7 +269,8 @@ const AdminMembers = () => {
     const { data, error } = await supabase
       .from('modules')
       .select('id, title')
-      .eq('status', 'published'); // Only published modules for access management
+      .eq('status', 'published') // Only published modules for access management
+      .eq('member_area_id', currentMemberAreaId); // Filter by memberAreaId
     
     if (error) {
       toast({ title: "Erro", description: "Falha ao carregar módulos para permissões.", variant: "destructive" });
@@ -311,17 +322,14 @@ const AdminMembers = () => {
     return <Navigate to="/" replace />;
   }
 
-  const platformLoginUrl = `${window.location.origin}/auth/login`; // Default login URL
+  if (!currentMemberAreaId) {
+    return <p>Nenhuma área de membros selecionada.</p>;
+  }
+
+  const platformLoginUrl = `${window.location.origin}/membros/${currentMemberAreaId}/login`; // Dynamic login URL
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Gestão de Membros</h1>
-        <p className="text-muted-foreground mt-2">
-          Adicione, gerencie e defina permissões para os membros da sua área
-        </p>
-      </div>
-
+    <div className="p-6">
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>URL de Acesso à Área de Membros</CardTitle>
@@ -346,7 +354,7 @@ const AdminMembers = () => {
                 <UserPlus className="mr-2 h-4 w-4" /> Novo Membro
               </Button>
             </DialogTrigger>
-            <MemberFormDialog member={editingMember} onSave={handleFormDialogClose} modules={modules} />
+            <MemberFormDialog member={editingMember} onSave={handleFormDialogClose} modules={modules} memberAreaId={currentMemberAreaId} onClose={() => setIsFormDialogOpen(false)} />
           </Dialog>
         </CardHeader>
         <CardContent>

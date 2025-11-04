@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -10,9 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 // Componente para exibir detalhes do post e comentários
-const PostDetailsDialog = ({ post, onClose }: { post: any, onClose: () => void }) => {
+const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose: () => void, memberAreaId: string }) => {
   const [comments, setComments] = useState<any[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
   const { toast } = useToast();
@@ -129,8 +131,11 @@ const PostDetailsDialog = ({ post, onClose }: { post: any, onClose: () => void }
   );
 };
 
-const AdminCommunity = () => {
+const AdminCommunity = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string }) => {
   const { user, isAdmin, loading: authLoading } = useAuth();
+  const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
+  const currentMemberAreaId = propMemberAreaId || urlMemberAreaId;
+
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -138,10 +143,10 @@ const AdminCommunity = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && currentMemberAreaId) {
       fetchPosts();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, currentMemberAreaId]);
 
   const fetchPosts = async () => {
     setLoadingPosts(true);
@@ -152,6 +157,7 @@ const AdminCommunity = () => {
         profiles(name, avatar_url),
         modules(title)
       `)
+      .eq('member_area_id', currentMemberAreaId) // Filter by memberAreaId
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -198,15 +204,12 @@ const AdminCommunity = () => {
     return <Navigate to="/" replace />;
   }
 
-  return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Comunidade</h1>
-        <p className="text-muted-foreground mt-2">
-          Gerencie posts e comentários da sua comunidade
-        </p>
-      </div>
+  if (!currentMemberAreaId) {
+    return <p>Nenhuma área de membros selecionada.</p>;
+  }
 
+  return (
+    <div className="p-6">
       <Card>
         <CardHeader>
           <CardTitle>Posts da Comunidade ({posts.length})</CardTitle>
@@ -280,7 +283,7 @@ const AdminCommunity = () => {
 
       {selectedPost && (
         <Dialog open={isPostDetailsDialogOpen} onOpenChange={setIsPostDetailsDialogOpen}>
-          <PostDetailsDialog post={selectedPost} onClose={handlePostDetailsDialogClose} />
+          <PostDetailsDialog post={selectedPost} onClose={handlePostDetailsDialogClose} memberAreaId={currentMemberAreaId} />
         </Dialog>
       )}
     </div>

@@ -29,7 +29,8 @@ import AdminMembers from "./pages/AdminMembers";
 import AdminDesign from "./pages/AdminDesign";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCommunity from "./pages/AdminCommunity";
-import AdminMemberAreas from "./pages/AdminMemberAreas"; // Importar a nova página
+import AdminMemberAreas from "./pages/AdminMemberAreas";
+import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails"; // Importar a nova página de detalhes
 
 
 const queryClient = new QueryClient();
@@ -52,13 +53,15 @@ const App = () => (
               <Route path="/admin/checkouts" element={<AdminCheckouts />} />
               <Route path="/admin/integrations" element={<AdminIntegrations />} />
               
-              {/* Rotas da Área de Membros (agora gerenciadas via AdminMemberAreas) */}
-              <Route path="/admin/member-areas" element={<AdminMemberAreas />} /> {/* Nova rota */}
-              <Route path="/admin/content" element={<AdminContent />} />
-              <Route path="/admin/members" element={<AdminMembers />} />
-              <Route path="/admin/design" element={<AdminDesign />} />
-              <Route path="/admin/analytics" element={<AdminAnalytics />} />
-              <Route path="/admin/community" element={<AdminCommunity />} />
+              {/* Rotas da Área de Membros */}
+              <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
+              <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
+                <Route path="content" element={<AdminContent />} />
+                <Route path="members" element={<AdminMembers />} />
+                <Route path="design" element={<AdminDesign />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="community" element={<AdminCommunity />} />
+              </Route>
 
               <Route path="/sales" element={<Sales />} />
               <Route path="/reports" element={<Reports />} />

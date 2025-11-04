@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, Video, TrendingUp, MessageCircle, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 interface AnalyticsStats {
   totalMembers: number;
@@ -15,16 +16,20 @@ interface AnalyticsStats {
   totalCommunityComments: number;
 }
 
-const AdminAnalytics = () => {
+const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string }) => {
   const { user, isAdmin, loading: authLoading } = useAuth();
+  const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
+  const currentMemberAreaId = propMemberAreaId || urlMemberAreaId;
+
   const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast(); // Initialize useToast
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && currentMemberAreaId) {
       fetchAnalytics();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, currentMemberAreaId]);
 
   const fetchAnalytics = async () => {
     setLoading(true);
@@ -32,42 +37,47 @@ const AdminAnalytics = () => {
       // Total de Membros
       const { count: totalMembers } = await supabase
         .from('profiles')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .eq('member_area_id', currentMemberAreaId); // Filter by memberAreaId
 
       // Membros Ativos
       const { count: activeMembers } = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .eq('member_area_id', currentMemberAreaId); // Filter by memberAreaId
 
       // Total de Módulos
       const { count: totalModules } = await supabase
         .from('modules')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .eq('member_area_id', currentMemberAreaId); // Filter by memberAreaId
 
       // Total de Aulas
       const { count: totalLessons } = await supabase
         .from('lessons')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId)); // Filter by modules in this member area
 
       // Total de Posts da Comunidade
       const { count: totalCommunityPosts } = await supabase
         .from('community_posts')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .eq('member_area_id', currentMemberAreaId); // Filter by memberAreaId
 
-      // Total de Comentários
+      // Total de Comentários (assuming comments are linked to posts, which are linked to member_area_id)
       const { count: totalCommunityComments } = await supabase
         .from('community_comments')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .in('post_id', supabase.from('community_posts').select('id').eq('member_area_id', currentMemberAreaId)); // Filter by posts in this member area
 
       // Taxa Média de Conclusão de Aulas (simplificado para esta versão inicial)
-      // Para uma taxa real, precisaríamos de mais dados de engajamento por aula/membro.
-      // Por enquanto, um placeholder ou cálculo básico.
-      const { data: completionsData, count: totalCompletions } = await supabase
+      const { count: totalCompletions } = await supabase
         .from('lesson_completions')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .in('lesson_id', supabase.from('lessons').select('id').in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId))); // Filter by lessons in this member area
       
-      const avgLessonCompletionRate = totalLessons && totalCompletions ? (totalCompletions / (totalLessons * (totalMembers || 1))) * 100 : 0;
+      const avgLessonCompletionRate = (totalLessons && totalCompletions) ? (totalCompletions / (totalLessons * (totalMembers || 1))) * 100 : 0;
 
 
       setStats({
@@ -96,17 +106,14 @@ const AdminAnalytics = () => {
     return <Navigate to="/" replace />;
   }
 
+  if (!currentMemberAreaId) {
+    return <p>Nenhuma área de membros selecionada.</p>;
+  }
+
   if (!stats) return <p>Nenhum dado de analytics disponível.</p>;
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Analytics da Área de Membros</h1>
-        <p className="text-muted-foreground mt-2">
-          Acompanhe o engajamento e o crescimento da sua plataforma
-        </p>
-      </div>
-
+    <div className="p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

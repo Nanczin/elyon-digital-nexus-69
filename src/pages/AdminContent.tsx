@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2 } from 'lucide-react';
@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+
 
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
@@ -550,13 +553,15 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
   );
 };
 
-const AdminContent = () => {
+const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string }) => {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
+  const currentMemberAreaId = propMemberAreaId || urlMemberAreaId;
+
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
-  const [selectedMemberAreaId, setSelectedMemberAreaId] = useState<string | null>(null);
-  const [modules, setModules] = useState<Module[]>([]); // Para o seletor de módulos de aulas
-  const [currentModuleId, setCurrentModuleId] = useState<string | null>(null); // Para o seletor de aulas
+  const [modules, setModules] = useState<Module[]>([]); // For the lesson module selector
+  const [currentModuleId, setCurrentModuleId] = useState<string | null>(null); // For the lesson list filter
   
   const [isModuleFormOpen, setIsModuleFormOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | undefined>(undefined);
@@ -565,10 +570,10 @@ const AdminContent = () => {
   const [editingLesson, setEditingLesson] = useState<Lesson | undefined>(undefined);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && currentMemberAreaId) {
       fetchMemberAreas();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, currentMemberAreaId]);
 
   const fetchMemberAreas = async () => {
     if (!user?.id) return;
@@ -583,14 +588,11 @@ const AdminContent = () => {
       console.error(error);
     } else {
       setMemberAreas(data || []);
-      if (data && data.length > 0 && !selectedMemberAreaId) {
-        setSelectedMemberAreaId(data[0].id); // Seleciona a primeira área por padrão
-      }
     }
   };
 
   const fetchModulesForSelector = useCallback(async () => {
-    if (!user?.id || !selectedMemberAreaId) {
+    if (!user?.id || !currentMemberAreaId) {
       setModules([]);
       setCurrentModuleId(null);
       return;
@@ -599,7 +601,7 @@ const AdminContent = () => {
       .from('modules')
       .select('id, title')
       .eq('user_id', user.id)
-      .eq('member_area_id', selectedMemberAreaId)
+      .eq('member_area_id', currentMemberAreaId)
       .order('title', { ascending: true });
     
     if (error) {
@@ -608,7 +610,7 @@ const AdminContent = () => {
     } else {
       setModules(data || []);
       if (data && data.length > 0 && !currentModuleId) {
-        setCurrentModuleId(data[0].id); // Seleciona o primeiro módulo por padrão
+        setCurrentModuleId(data[0].id); // Select the first module by default
       } else if (data && data.length > 0 && currentModuleId && !data.some(m => m.id === currentModuleId)) {
         // If previously selected module is no longer in the list (e.g., deleted or moved)
         setCurrentModuleId(data[0].id);
@@ -616,7 +618,7 @@ const AdminContent = () => {
         setCurrentModuleId(null);
       }
     }
-  }, [user?.id, selectedMemberAreaId, currentModuleId, toast]);
+  }, [user?.id, currentMemberAreaId, currentModuleId, toast]);
 
   useEffect(() => {
     fetchModulesForSelector();
@@ -651,148 +653,102 @@ const AdminContent = () => {
     return <Navigate to="/" replace />;
   }
 
+  if (!currentMemberAreaId) {
+    return <p>Nenhuma área de membros selecionada.</p>;
+  }
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Gestão de Conteúdo</h1>
-        <p className="text-muted-foreground mt-2">
-          Crie e organize seus módulos e aulas
-        </p>
-      </div>
+    <div className="p-6">
+      <Tabs defaultValue="modules">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="modules">
+            <BookOpen className="mr-2 h-4 w-4" /> Módulos
+          </TabsTrigger>
+          <TabsTrigger value="lessons">
+            <Video className="mr-2 h-4 w-4" /> Aulas
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="mb-6">
-        <Label htmlFor="memberAreaSelector">Selecione a Área de Membros</Label>
-        <Select 
-          value={selectedMemberAreaId || ''} 
-          onValueChange={(value) => {
-            setSelectedMemberAreaId(value);
-            setCurrentModuleId(null); // Reset module selection when member area changes
-          }}
-        >
-          <SelectTrigger id="memberAreaSelector">
-            <SelectValue placeholder="Selecione uma área de membros" />
-          </SelectTrigger>
-          <SelectContent>
-            {memberAreas.length === 0 ? (
-              <SelectItem value="" disabled>Nenhuma área de membros criada</SelectItem>
-            ) : (
-              memberAreas.map(area => (
-                <SelectItem key={area.id} value={area.id}>
-                  <div className="flex items-center gap-2">
-                    <MonitorDot className="h-4 w-4" />
-                    {area.name}
-                  </div>
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        {memberAreas.length === 0 && (
-          <p className="text-sm text-red-500 mt-2">
-            Crie uma área de membros primeiro na seção "Minhas Áreas de Membros".
-          </p>
-        )}
-      </div>
+        <TabsContent value="modules" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Módulos</CardTitle>
+              <Dialog open={isModuleFormOpen} onOpenChange={setIsModuleFormOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" onClick={() => setEditingModule(undefined)}>
+                    <Plus className="mr-2 h-4 w-4" /> Novo Módulo
+                  </Button>
+                </DialogTrigger>
+                <ModuleFormDialog 
+                  module={editingModule} 
+                  onSave={handleModuleSaved} 
+                  memberAreas={memberAreas} 
+                  selectedMemberAreaId={currentMemberAreaId}
+                  onClose={() => setIsModuleFormOpen(false)}
+                />
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <ModulesList 
+                memberAreaId={currentMemberAreaId} 
+                onEditModule={handleEditModule} 
+                onModuleDeleted={handleModuleSaved} 
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {selectedMemberAreaId ? (
-        <Tabs defaultValue="modules">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="modules">
-              <BookOpen className="mr-2 h-4 w-4" /> Módulos
-            </TabsTrigger>
-            <TabsTrigger value="lessons">
-              <Video className="mr-2 h-4 w-4" /> Aulas
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="modules" className="mt-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Módulos</CardTitle>
-                <Dialog open={isModuleFormOpen} onOpenChange={setIsModuleFormOpen}>
+        <TabsContent value="lessons" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Aulas</CardTitle>
+              <div className="flex items-center gap-2">
+                <Select value={currentModuleId || ''} onValueChange={setCurrentModuleId}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Selecionar Módulo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modules.length === 0 ? (
+                      <SelectItem value="" disabled>Nenhum módulo disponível</SelectItem>
+                    ) : (
+                      modules.map(module => (
+                        <SelectItem key={module.id} value={module.id}>
+                          {module.title}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <Dialog open={isLessonFormOpen} onOpenChange={setIsLessonFormOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" onClick={() => setEditingModule(undefined)}>
-                      <Plus className="mr-2 h-4 w-4" /> Novo Módulo
+                    <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)}>
+                      <Plus className="mr-2 h-4 w-4" /> Nova Aula
                     </Button>
                   </DialogTrigger>
-                  <ModuleFormDialog 
-                    module={editingModule} 
-                    onSave={handleModuleSaved} 
-                    memberAreas={memberAreas} 
-                    selectedMemberAreaId={selectedMemberAreaId}
-                    onClose={() => setIsModuleFormOpen(false)}
+                  <LessonFormDialog 
+                    lesson={editingLesson}
+                    onSave={handleLessonSaved} 
+                    modules={modules} 
+                    selectedModuleId={currentModuleId}
+                    onClose={() => setIsLessonFormOpen(false)}
                   />
                 </Dialog>
-              </CardHeader>
-              <CardContent>
-                <ModulesList 
-                  memberAreaId={selectedMemberAreaId} 
-                  onEditModule={handleEditModule} 
-                  onModuleDeleted={handleModuleSaved} 
+              </div>
+            </CardHeader>
+            <CardContent>
+              {currentModuleId ? (
+                <LessonsList 
+                  moduleId={currentModuleId} 
+                  onEditLesson={handleEditLesson} 
+                  onLessonDeleted={handleLessonSaved} 
                 />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="lessons" className="mt-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Aulas</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Select value={currentModuleId || ''} onValueChange={setCurrentModuleId}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Selecionar Módulo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {modules.length === 0 ? (
-                        <SelectItem value="" disabled>Nenhum módulo disponível</SelectItem>
-                      ) : (
-                        modules.map(module => (
-                          <SelectItem key={module.id} value={module.id}>
-                            {module.title}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <Dialog open={isLessonFormOpen} onOpenChange={setIsLessonFormOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)}>
-                        <Plus className="mr-2 h-4 w-4" /> Nova Aula
-                      </Button>
-                    </DialogTrigger>
-                    <LessonFormDialog 
-                      lesson={editingLesson}
-                      onSave={handleLessonSaved} 
-                      modules={modules} 
-                      selectedModuleId={currentModuleId}
-                      onClose={() => setIsLessonFormOpen(false)}
-                    />
-                  </Dialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {currentModuleId ? (
-                  <LessonsList 
-                    moduleId={currentModuleId} 
-                    onEditLesson={handleEditLesson} 
-                    onLessonDeleted={handleLessonSaved} 
-                  />
-                ) : (
-                  <p className="text-muted-foreground">Selecione um módulo para ver as aulas.</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <Card className="mt-6">
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <MonitorDot className="mx-auto h-12 w-12 mb-4" />
-            <p>Selecione uma área de membros acima para gerenciar seu conteúdo.</p>
-          </CardContent>
-        </Card>
-      )}
+              ) : (
+                <p className="text-muted-foreground">Selecione um módulo para ver as aulas.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

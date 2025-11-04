@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,11 +8,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, MonitorDot, Trash2, Edit, Link, Image, Palette } from 'lucide-react';
+import { Plus, MonitorDot, Trash2, Edit, Link as LinkIcon, Image, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-import { generateSlug } from '@/utils/textFormatting'; // Assuming this utility exists or will be created
+import { generateSlug } from '@/utils/textFormatting';
 
 type MemberArea = Tables<'member_areas'>;
 
@@ -140,19 +140,6 @@ const AdminMemberAreas = () => {
     }
   };
 
-  const handleEdit = (area: MemberArea) => {
-    setEditingArea(area);
-    setFormData({
-      name: area.name,
-      slug: area.slug,
-      description: area.description || '',
-      logo_url: area.logo_url || '',
-      primary_color: area.primary_color || '#3b82f6',
-      logoFile: null,
-    });
-    setIsDialogOpen(true);
-  };
-
   const handleDelete = async (areaId: string, areaName: string) => {
     setIsSaving(true);
     try {
@@ -241,7 +228,7 @@ const AdminMemberAreas = () => {
                 {formData.logoFile && <p className="text-sm text-muted-foreground">Arquivo selecionado: {formData.logoFile.name}</p>}
                 {formData.logo_url && !formData.logoFile && (
                   <div className="mt-2 flex items-center gap-2">
-                    <img src={formData.logo_url} alt="Logo atual" className="h-10 w-auto object-contain" />
+                    <img src={formData.logo_url} alt="Logo atual" className="h-10 w-10 object-contain" />
                     <Button variant="ghost" size="sm" onClick={() => handleInputChange('logo_url', '')} className="text-destructive">Remover Logo</Button>
                   </div>
                 )}
@@ -301,14 +288,10 @@ const AdminMemberAreas = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/membros/${area.slug}/login`);
-                      toast({ title: "Copiado!", description: "URL de login copiada para a área de transferência." });
-                    }}>
-                      <Link className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(area)}>
-                      <Edit className="h-4 w-4" />
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/admin/member-areas/${area.id}/content`}> {/* Navigate to details page */}
+                        <Edit className="h-4 w-4" />
+                      </Link>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
