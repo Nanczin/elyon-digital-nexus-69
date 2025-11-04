@@ -227,10 +227,10 @@ const MemberAreaModuleDetails = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4"
+        className="flex items-center justify-between h-[72px] px-8 py-4 border-b" // Adicionado border-b aqui
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
-          borderBottom: `1px solid transparent`,
+          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))', // Usar cor da borda
           color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >

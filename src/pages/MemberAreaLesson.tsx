@@ -31,7 +31,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
     button_background: 'hsl(var(--member-area-primary))',
     text_primary: 'hsl(var(--member-area-text-dark))',
     text_header: 'hsl(var(--member-area-text-dark))',
-    text_cards: 'hsl(var(--member-area-text-dark))',
+    text_cards: 'hsl(var(--member-area-card-background))',
     text_secondary: 'hsl(var(--member-area-text-muted))',
     checkmark_background: 'hsl(var(--member-area-checkmark-background))',
     checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
@@ -300,10 +300,10 @@ const MemberAreaLesson = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4"
+        className="flex items-center justify-between h-[72px] px-8 py-4 border-b" // Adicionado border-b aqui
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
-          borderBottom: `1px solid transparent`,
+          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))', // Usar cor da borda
           color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
