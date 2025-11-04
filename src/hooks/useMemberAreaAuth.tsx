@@ -9,6 +9,7 @@ interface MemberAreaAuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshUserSession: () => Promise<void>; // Adicionada a função de refresh
   // Não há 'isAdmin' para usuários da área de membros
 }
 
@@ -67,12 +68,30 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
     });
   };
 
+  const refreshUserSession = async () => {
+    setLoading(true);
+    const { data: { session: newSession }, error } = await memberAreaSupabase.auth.refreshSession();
+    if (error) {
+      console.error("Erro ao atualizar sessão do usuário da área de membros:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar os dados do usuário.",
+        variant: "destructive",
+      });
+    } else {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+    }
+    setLoading(false);
+  };
+
   const value = {
     user,
     session,
     loading,
     signIn,
     signOut,
+    refreshUserSession,
   };
 
   return <MemberAreaAuthContext.Provider value={value}>{children}</MemberAreaAuthContext.Provider>;

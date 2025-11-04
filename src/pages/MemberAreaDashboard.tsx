@@ -41,7 +41,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaDashboard = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { user, loading: authLoading, signOut } = useMemberAreaAuth(); // Usar useMemberAreaAuth
+  const { user, loading: authLoading, signOut, refreshUserSession } = useMemberAreaAuth(); // Usar useMemberAreaAuth e refreshUserSession
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -142,9 +142,11 @@ const MemberAreaDashboard = () => {
         toast({ title: "Não autenticado", description: "Faça login para acessar a área de membros.", variant: "destructive" });
         return; // Prevent further execution until redirected
       }
+      // Refresh user session to get latest metadata (e.g., updated name)
+      refreshUserSession(); // <--- Chamada adicionada aqui
       fetchMemberAreaAndContent();
     }
-  }, [user, authLoading, fetchMemberAreaAndContent, toast]);
+  }, [user, authLoading, fetchMemberAreaAndContent, refreshUserSession, toast]); // Adicionado refreshUserSession às dependências
 
   if (authLoading || loading) {
     return (
