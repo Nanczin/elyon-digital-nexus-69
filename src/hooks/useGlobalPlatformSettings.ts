@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-import { useAuth } from './useAuth';
+// import { useAuth } from './useAuth'; // Removido: useAuth não é necessário aqui
 import { useLocation, useParams } from 'react-router-dom';
 
 type PlatformSettings = Tables<'platform_settings'>;
@@ -9,7 +9,7 @@ type PlatformSettings = Tables<'platform_settings'>;
 const DEFAULT_FONT_FAMILY = 'Inter, sans-serif';
 
 export const useGlobalPlatformSettings = () => {
-  const { user, isAdmin } = useAuth();
+  // const { user, isAdmin } = useAuth(); // Removido: useAuth não é necessário aqui
   const location = useLocation();
   const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
 
