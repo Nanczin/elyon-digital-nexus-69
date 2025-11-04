@@ -59,11 +59,13 @@ const App = () => {
             <BrowserRouter>
             
               <Routes>
+                {/* Rotas de autenticação que NÃO usam o Layout principal */}
+                <Route path="/auth/login" element={<AuthLogin />} />
+                <Route path="/auth/register" element={<AuthRegister />} />
+
                 {/* Rotas que usam o Layout principal da Elyon */}
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
-                  <Route path="/auth/login" element={<AuthLogin />} />
-                  <Route path="/auth/register" element={<AuthRegister />} />
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/products" element={<AdminProducts />} />
                   <Route path="/admin/checkouts" element={<AdminCheckouts />} />
