@@ -347,7 +347,7 @@ const MemberAreaLesson = () => {
             </CardTitle>
             {lesson.description && (
               <p className="text-lg sm:text-xl mt-2" style={{ color: secondaryTextColor }}>
-                {lesson.description}
+                {lesson.description.trim()}
               </p>
             )}
             {lesson.duration_minutes && (

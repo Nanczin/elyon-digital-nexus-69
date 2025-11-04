@@ -274,7 +274,7 @@ const MemberAreaModuleDetails = () => {
             </CardTitle>
             {module.description && (
               <p className="text-lg sm:text-xl mt-2" style={{ color: secondaryTextColor }}>
-                {module.description}
+                {module.description.trim()}
               </p>
             )}
           </CardHeader>
@@ -292,7 +292,7 @@ const MemberAreaModuleDetails = () => {
                         <div>
                           <h4 className="font-semibold text-lg" style={{ color: textColor }}>{lesson.title}</h4>
                           <p className="text-sm" style={{ color: secondaryTextColor }}>
-                            {lesson.description?.substring(0, 80)}...
+                            {lesson.description?.substring(0, 80).trim()}...
                           </p>
                           {lesson.duration_minutes && (
                             <div className="flex items-center text-xs mt-1" style={{ color: secondaryTextColor }}>

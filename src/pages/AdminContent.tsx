@@ -294,7 +294,7 @@ const LessonFormDialog = ({
       const payload = {
         module_id: moduleId,
         title,
-        description,
+        description: description.trim(), // Apply trim here
         duration_minutes: durationMinutes,
         content_type: contentType,
         content_url: finalContentUrl,
@@ -686,7 +686,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-semibold">{lesson.title}</h3>
-                    <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100)}...</p>
+                    <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100).trim()}...</p>
                     <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
                       {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
                     </Badge>
