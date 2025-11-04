@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Video } from 'lucide-react';
+import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,22 +13,369 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 
-// Componente para listar Módulos
-const ModulesList = () => {
-  const [modules, setModules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+type MemberArea = Tables<'member_areas'>;
+type Module = Tables<'modules'>;
+type Lesson = Tables<'lessons'>;
+
+// Componente para o formulário de Módulo
+const ModuleFormDialog = ({ 
+  module: editingModule, 
+  onSave, 
+  memberAreas, 
+  selectedMemberAreaId,
+  onClose 
+}: { 
+  module?: Module, 
+  onSave: () => void, 
+  memberAreas: MemberArea[], 
+  selectedMemberAreaId: string | null,
+  onClose: () => void
+}) => {
+  const [title, setTitle] = useState(editingModule?.title || '');
+  const [description, setDescription] = useState(editingModule?.description || '');
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerUrl, setBannerUrl] = useState(editingModule?.banner_url || '');
+  const [status, setStatus] = useState(editingModule?.status === 'published');
+  const [currentMemberAreaId, setCurrentMemberAreaId] = useState(editingModule?.member_area_id || selectedMemberAreaId || '');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchModules();
-  }, []);
+    if (editingModule) {
+      setTitle(editingModule.title);
+      setDescription(editingModule.description || '');
+      setBannerUrl(editingModule.banner_url || '');
+      setStatus(editingModule.status === 'published');
+      setCurrentMemberAreaId(editingModule.member_area_id || '');
+    } else {
+      setTitle('');
+      setDescription('');
+      setBannerFile(null);
+      setBannerUrl('');
+      setStatus(false);
+      setCurrentMemberAreaId(selectedMemberAreaId || '');
+    }
+  }, [editingModule, selectedMemberAreaId]);
 
-  const fetchModules = async () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setBannerFile(e.target.files[0]);
+    }
+  };
+
+  const uploadFile = async (file: File, folder: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${folder}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('member-area-content')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('member-area-content')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  const handleSave = async () => {
+    if (!user?.id || !currentMemberAreaId) {
+      toast({ title: "Erro", description: "Selecione uma área de membros e faça login.", variant: "destructive" });
+      return;
+    }
+    if (!title) {
+      toast({ title: "Erro", description: "O título do módulo é obrigatório.", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let finalBannerUrl = bannerUrl;
+      if (bannerFile) {
+        finalBannerUrl = await uploadFile(bannerFile, 'module-banners');
+      }
+
+      const payload = {
+        user_id: user.id,
+        member_area_id: currentMemberAreaId,
+        title,
+        description,
+        banner_url: finalBannerUrl,
+        status: status ? 'published' : 'draft',
+        order_index: editingModule?.order_index || 0, // Preserve order or set default
+      };
+
+      if (editingModule) {
+        const { error } = await supabase
+          .from('modules')
+          .update(payload)
+          .eq('id', editingModule.id);
+        if (error) throw error;
+        toast({ title: "Sucesso", description: "Módulo atualizado!" });
+      } else {
+        const { error } = await supabase
+          .from('modules')
+          .insert(payload);
+        if (error) throw error;
+        toast({ title: "Sucesso", description: "Módulo criado!" });
+      }
+      onSave();
+      onClose();
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message || "Falha ao salvar módulo.", variant: "destructive" });
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>{editingModule ? 'Editar Módulo' : 'Criar Novo Módulo'}</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="moduleMemberArea">Área de Membros</Label>
+          <Select 
+            value={currentMemberAreaId} 
+            onValueChange={setCurrentMemberAreaId}
+            disabled={!!editingModule} // Cannot change member area for existing modules
+          >
+            <SelectTrigger id="moduleMemberArea">
+              <SelectValue placeholder="Selecione uma área de membros" />
+            </SelectTrigger>
+            <SelectContent>
+              {memberAreas.map(area => (
+                <SelectItem key={area.id} value={area.id}>
+                  {area.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="moduleTitle">Título *</Label>
+          <Input id="moduleTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título do Módulo" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="moduleDescription">Descrição</Label>
+          <Textarea id="moduleDescription" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descrição do Módulo" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="moduleBanner">Banner</Label>
+          <Input id="moduleBanner" type="file" accept="image/*" onChange={handleFileChange} />
+          {bannerFile && <p className="text-sm text-muted-foreground">Arquivo selecionado: {bannerFile.name}</p>}
+          {bannerUrl && !bannerFile && (
+            <div className="mt-2">
+              <img src={bannerUrl} alt="Banner atual" className="h-16 w-auto object-contain" />
+              <Button variant="ghost" size="sm" onClick={() => setBannerUrl('')} className="text-destructive">Remover Banner</Button>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="moduleStatus">Publicado</Label>
+          <Switch id="moduleStatus" checked={status} onCheckedChange={setStatus} />
+        </div>
+        <Button className="w-full" onClick={handleSave} disabled={loading}>
+          {loading ? 'Salvando...' : 'Salvar Módulo'}
+        </Button>
+      </div>
+    </DialogContent>
+  );
+};
+
+// Componente para o formulário de Aula
+const LessonFormDialog = ({ 
+  lesson: editingLesson, 
+  onSave, 
+  modules, 
+  selectedModuleId,
+  onClose
+}: { 
+  lesson?: Lesson, 
+  onSave: () => void, 
+  modules: Module[], 
+  selectedModuleId: string | null,
+  onClose: () => void
+}) => {
+  const [moduleId, setModuleId] = useState(editingLesson?.module_id || selectedModuleId || '');
+  const [title, setTitle] = useState(editingLesson?.title || '');
+  const [description, setDescription] = useState(editingLesson?.description || '');
+  const [durationMinutes, setDurationMinutes] = useState(editingLesson?.duration_minutes || 0);
+  const [contentType, setContentType] = useState(editingLesson?.content_type || 'video_link');
+  const [contentUrl, setContentUrl] = useState(editingLesson?.content_url || '');
+  const [textContent, setTextContent] = useState(editingLesson?.text_content || '');
+  const [status, setStatus] = useState(editingLesson?.status === 'published');
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (editingLesson) {
+      setModuleId(editingLesson.module_id);
+      setTitle(editingLesson.title);
+      setDescription(editingLesson.description || '');
+      setDurationMinutes(editingLesson.duration_minutes || 0);
+      setContentType(editingLesson.content_type);
+      setContentUrl(editingLesson.content_url || '');
+      setTextContent(editingLesson.text_content || '');
+      setStatus(editingLesson.status === 'published');
+    } else {
+      setModuleId(selectedModuleId || '');
+      setTitle('');
+      setDescription('');
+      setDurationMinutes(0);
+      setContentType('video_link');
+      setContentUrl('');
+      setTextContent('');
+      setStatus(false);
+    }
+  }, [editingLesson, selectedModuleId]);
+
+  const handleSave = async () => {
+    if (!user?.id || !moduleId || !title || !contentType) {
+      toast({ title: "Erro", description: "Preencha todos os campos obrigatórios.", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        module_id: moduleId,
+        title,
+        description,
+        duration_minutes: durationMinutes,
+        content_type: contentType,
+        content_url: contentUrl,
+        text_content: textContent,
+        status: status ? 'published' : 'draft',
+        order_index: editingLesson?.order_index || 0, // Preserve order or set default
+      };
+
+      if (editingLesson) {
+        const { error } = await supabase
+          .from('lessons')
+          .update(payload)
+          .eq('id', editingLesson.id);
+        if (error) throw error;
+        toast({ title: "Sucesso", description: "Aula atualizada!" });
+      } else {
+        const { error } = await supabase
+          .from('lessons')
+          .insert(payload);
+        if (error) throw error;
+        toast({ title: "Sucesso", description: "Aula criada!" });
+      }
+      onSave();
+      onClose();
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message || "Falha ao salvar aula.", variant: "destructive" });
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>{editingLesson ? 'Editar Aula' : 'Criar Nova Aula'}</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="lessonModule">Módulo *</Label>
+          <Select 
+            value={moduleId} 
+            onValueChange={setModuleId}
+            disabled={!!editingLesson} // Cannot change module for existing lessons
+          >
+            <SelectTrigger id="lessonModule">
+              <SelectValue placeholder="Selecione o módulo" />
+            </SelectTrigger>
+            <SelectContent>
+              {modules.map(mod => (
+                <SelectItem key={mod.id} value={mod.id}>
+                  {mod.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lessonTitle">Título *</Label>
+          <Input id="lessonTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título da Aula" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lessonDescription">Descrição</Label>
+          <Textarea id="lessonDescription" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descrição da Aula" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lessonDuration">Duração (minutos)</Label>
+          <Input id="lessonDuration" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} placeholder="Ex: 15" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="contentType">Tipo de Conteúdo *</Label>
+          <Select value={contentType} onValueChange={setContentType}>
+            <SelectTrigger id="contentType">
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="video_link">Vídeo (Link)</SelectItem>
+              <SelectItem value="text_content">Texto HTML</SelectItem>
+              {/* Adicione outros tipos conforme necessário */}
+            </SelectContent>
+          </Select>
+        </div>
+        {contentType === 'video_link' && (
+          <div className="space-y-2">
+            <Label htmlFor="contentUrl">URL do Vídeo *</Label>
+            <Input id="contentUrl" type="url" value={contentUrl} onChange={(e) => setContentUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." required />
+          </div>
+        )}
+        {contentType === 'text_content' && (
+          <div className="space-y-2">
+            <Label htmlFor="textContent">Conteúdo em Texto (HTML)</Label>
+            <Textarea id="textContent" value={textContent} onChange={(e) => setTextContent(e.target.value)} placeholder="<p>Seu conteúdo aqui...</p>" rows={5} />
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <Label htmlFor="lessonStatus">Publicado</Label>
+          <Switch id="lessonStatus" checked={status} onCheckedChange={setStatus} />
+        </div>
+        <Button className="w-full" onClick={handleSave} disabled={loading}>
+          {loading ? 'Salvando...' : 'Salvar Aula'}
+        </Button>
+      </div>
+    </DialogContent>
+  );
+};
+
+// Componente para listar Módulos
+const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted }: { memberAreaId: string | null, onEditModule: (module: Module) => void, onModuleDeleted: () => void }) => {
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const fetchModules = useCallback(async () => {
+    if (!user?.id || !memberAreaId) {
+      setModules([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const { data, error } = await supabase
       .from('modules')
       .select('*')
+      .eq('user_id', user.id)
+      .eq('member_area_id', memberAreaId)
       .order('order_index', { ascending: true });
     
     if (error) {
@@ -38,10 +385,30 @@ const ModulesList = () => {
       setModules(data || []);
     }
     setLoading(false);
+  }, [user?.id, memberAreaId, toast]);
+
+  useEffect(() => {
+    fetchModules();
+  }, [fetchModules]);
+
+  const handleDeleteModule = async (moduleId: string, moduleTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .delete()
+        .eq('id', moduleId);
+      
+      if (error) throw error;
+      toast({ title: "Sucesso", description: `Módulo "${moduleTitle}" excluído.` });
+      onModuleDeleted(); // Notify parent to refresh
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message || "Falha ao excluir módulo.", variant: "destructive" });
+      console.error(error);
+    }
   };
 
   if (loading) return <p>Carregando módulos...</p>;
-  if (modules.length === 0) return <p>Nenhum módulo criado ainda.</p>;
+  if (modules.length === 0) return <p className="text-muted-foreground">Nenhum módulo criado ainda para esta área de membros.</p>;
 
   return (
     <div className="space-y-4">
@@ -51,10 +418,33 @@ const ModulesList = () => {
             <div>
               <h3 className="font-semibold">{module.title}</h3>
               <p className="text-sm text-muted-foreground">{module.description?.substring(0, 100)}...</p>
+              <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">
+                {module.status === 'published' ? 'Publicado' : 'Rascunho'}
+              </Badge>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">Editar</Button>
-              <Button variant="destructive" size="sm">Excluir</Button>
+              <Button variant="outline" size="sm" onClick={() => onEditModule(module)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir o módulo <strong>"{module.title}"</strong>? Todas as aulas e acessos associados também serão excluídos. Esta ação é irreversível.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)}>Excluir</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -64,18 +454,18 @@ const ModulesList = () => {
 };
 
 // Componente para listar Aulas
-const LessonsList = ({ moduleId }: { moduleId: string }) => {
-  const [lessons, setLessons] = useState<any[]>([]);
+const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: string | null, onEditLesson: (lesson: Lesson) => void, onLessonDeleted: () => void }) => {
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (moduleId) {
-      fetchLessons(moduleId);
+  const fetchLessons = useCallback(async (id: string) => {
+    if (!user?.id || !id) {
+      setLessons([]);
+      setLoading(false);
+      return;
     }
-  }, [moduleId]);
-
-  const fetchLessons = async (id: string) => {
     setLoading(true);
     const { data, error } = await supabase
       .from('lessons')
@@ -90,10 +480,32 @@ const LessonsList = ({ moduleId }: { moduleId: string }) => {
       setLessons(data || []);
     }
     setLoading(false);
+  }, [user?.id, toast]);
+
+  useEffect(() => {
+    if (moduleId) {
+      fetchLessons(moduleId);
+    }
+  }, [moduleId, fetchLessons]);
+
+  const handleDeleteLesson = async (lessonId: string, lessonTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('id', lessonId);
+      
+      if (error) throw error;
+      toast({ title: "Sucesso", description: `Aula "${lessonTitle}" excluída.` });
+      onLessonDeleted(); // Notify parent to refresh
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message || "Falha ao excluir aula.", variant: "destructive" });
+      console.error(error);
+    }
   };
 
   if (loading) return <p>Carregando aulas...</p>;
-  if (lessons.length === 0) return <p>Nenhuma aula criada para este módulo.</p>;
+  if (lessons.length === 0) return <p className="text-muted-foreground">Nenhuma aula criada para este módulo.</p>;
 
   return (
     <div className="space-y-4">
@@ -103,10 +515,33 @@ const LessonsList = ({ moduleId }: { moduleId: string }) => {
             <div>
               <h3 className="font-semibold">{lesson.title}</h3>
               <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100)}...</p>
+              <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
+                {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
+              </Badge>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">Editar</Button>
-              <Button variant="destructive" size="sm">Excluir</Button>
+              <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)}>Excluir</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -118,19 +553,53 @@ const LessonsList = ({ moduleId }: { moduleId: string }) => {
 const AdminContent = () => {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [currentModuleId, setCurrentModuleId] = useState<string | null>(null);
-  const [modules, setModules] = useState<any[]>([]); // Para o seletor de módulos
+  const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
+  const [selectedMemberAreaId, setSelectedMemberAreaId] = useState<string | null>(null);
+  const [modules, setModules] = useState<Module[]>([]); // Para o seletor de módulos de aulas
+  const [currentModuleId, setCurrentModuleId] = useState<string | null>(null); // Para o seletor de aulas
+  
+  const [isModuleFormOpen, setIsModuleFormOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState<Module | undefined>(undefined);
+
+  const [isLessonFormOpen, setIsLessonFormOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | undefined>(undefined);
 
   useEffect(() => {
     if (user && isAdmin) {
-      fetchModulesForSelector();
+      fetchMemberAreas();
     }
   }, [user, isAdmin]);
 
-  const fetchModulesForSelector = async () => {
+  const fetchMemberAreas = async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from('member_areas')
+      .select('id, name, slug')
+      .eq('user_id', user.id)
+      .order('name', { ascending: true });
+    
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao carregar áreas de membros.", variant: "destructive" });
+      console.error(error);
+    } else {
+      setMemberAreas(data || []);
+      if (data && data.length > 0 && !selectedMemberAreaId) {
+        setSelectedMemberAreaId(data[0].id); // Seleciona a primeira área por padrão
+      }
+    }
+  };
+
+  const fetchModulesForSelector = useCallback(async () => {
+    if (!user?.id || !selectedMemberAreaId) {
+      setModules([]);
+      setCurrentModuleId(null);
+      return;
+    }
     const { data, error } = await supabase
       .from('modules')
       .select('id, title')
+      .eq('user_id', user.id)
+      .eq('member_area_id', selectedMemberAreaId)
       .order('title', { ascending: true });
     
     if (error) {
@@ -138,10 +607,40 @@ const AdminContent = () => {
       console.error(error);
     } else {
       setModules(data || []);
-      if (data && data.length > 0) {
+      if (data && data.length > 0 && !currentModuleId) {
         setCurrentModuleId(data[0].id); // Seleciona o primeiro módulo por padrão
+      } else if (data && data.length > 0 && currentModuleId && !data.some(m => m.id === currentModuleId)) {
+        // If previously selected module is no longer in the list (e.g., deleted or moved)
+        setCurrentModuleId(data[0].id);
+      } else if (data && data.length === 0) {
+        setCurrentModuleId(null);
       }
     }
+  }, [user?.id, selectedMemberAreaId, currentModuleId, toast]);
+
+  useEffect(() => {
+    fetchModulesForSelector();
+  }, [fetchModulesForSelector]);
+
+  const handleModuleSaved = () => {
+    fetchModulesForSelector(); // Refresh modules list for selector
+  };
+
+  const handleLessonSaved = () => {
+    if (currentModuleId) {
+      // Re-fetch lessons for the current module
+      // This is handled by the LessonsList component's useEffect
+    }
+  };
+
+  const handleEditModule = (module: Module) => {
+    setEditingModule(module);
+    setIsModuleFormOpen(true);
+  };
+
+  const handleEditLesson = (lesson: Lesson) => {
+    setEditingLesson(lesson);
+    setIsLessonFormOpen(true);
   };
 
   if (authLoading) {
@@ -161,126 +660,139 @@ const AdminContent = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="modules">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="modules">
-            <BookOpen className="mr-2 h-4 w-4" /> Módulos
-          </TabsTrigger>
-          <TabsTrigger value="lessons">
-            <Video className="mr-2 h-4 w-4" /> Aulas
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="modules" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Módulos</CardTitle>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" /> Novo Módulo
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Criar Novo Módulo</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="moduleTitle">Título</Label>
-                      <Input id="moduleTitle" placeholder="Título do Módulo" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="moduleDescription">Descrição</Label>
-                      <Textarea id="moduleDescription" placeholder="Descrição do Módulo" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="moduleBanner">Banner</Label>
-                      <Input id="moduleBanner" type="file" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="moduleStatus">Publicado</Label>
-                      <Switch id="moduleStatus" />
-                    </div>
-                    <Button className="w-full">Salvar Módulo</Button>
+      <div className="mb-6">
+        <Label htmlFor="memberAreaSelector">Selecione a Área de Membros</Label>
+        <Select 
+          value={selectedMemberAreaId || ''} 
+          onValueChange={(value) => {
+            setSelectedMemberAreaId(value);
+            setCurrentModuleId(null); // Reset module selection when member area changes
+          }}
+        >
+          <SelectTrigger id="memberAreaSelector">
+            <SelectValue placeholder="Selecione uma área de membros" />
+          </SelectTrigger>
+          <SelectContent>
+            {memberAreas.length === 0 ? (
+              <SelectItem value="" disabled>Nenhuma área de membros criada</SelectItem>
+            ) : (
+              memberAreas.map(area => (
+                <SelectItem key={area.id} value={area.id}>
+                  <div className="flex items-center gap-2">
+                    <MonitorDot className="h-4 w-4" />
+                    {area.name}
                   </div>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              <ModulesList />
-            </CardContent>
-          </Card>
-        </TabsContent>
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        {memberAreas.length === 0 && (
+          <p className="text-sm text-red-500 mt-2">
+            Crie uma área de membros primeiro na seção "Minhas Áreas de Membros".
+          </p>
+        )}
+      </div>
 
-        <TabsContent value="lessons" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Aulas</CardTitle>
-              <div className="flex items-center gap-2">
-                <Select value={currentModuleId || ''} onValueChange={setCurrentModuleId}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Selecionar Módulo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modules.map(module => (
-                      <SelectItem key={module.id} value={module.id}>
-                        {module.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Dialog>
+      {selectedMemberAreaId ? (
+        <Tabs defaultValue="modules">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="modules">
+              <BookOpen className="mr-2 h-4 w-4" /> Módulos
+            </TabsTrigger>
+            <TabsTrigger value="lessons">
+              <Video className="mr-2 h-4 w-4" /> Aulas
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="modules" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Módulos</CardTitle>
+                <Dialog open={isModuleFormOpen} onOpenChange={setIsModuleFormOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" disabled={!currentModuleId}>
-                      <Plus className="mr-2 h-4 w-4" /> Nova Aula
+                    <Button size="sm" onClick={() => setEditingModule(undefined)}>
+                      <Plus className="mr-2 h-4 w-4" /> Novo Módulo
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Criar Nova Aula</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="lessonTitle">Título</Label>
-                        <Input id="lessonTitle" placeholder="Título da Aula" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lessonDescription">Descrição</Label>
-                        <Textarea id="lessonDescription" placeholder="Descrição da Aula" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lessonDuration">Duração (minutos)</Label>
-                        <Input id="lessonDuration" type="number" placeholder="Ex: 15" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="contentType">Tipo de Conteúdo</Label>
-                        <Select>
-                          <SelectTrigger id="contentType">
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="video_upload">Vídeo (Upload)</SelectItem>
-                            <SelectItem value="video_link">Vídeo (Link)</SelectItem>
-                            <SelectItem value="pdf_upload">PDF</SelectItem>
-                            <SelectItem value="image_upload">Imagem</SelectItem>
-                            <SelectItem value="html_text">Texto HTML</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* Campos condicionais para conteúdo */}
-                      <Button className="w-full">Salvar Aula</Button>
-                    </div>
-                  </DialogContent>
+                  <ModuleFormDialog 
+                    module={editingModule} 
+                    onSave={handleModuleSaved} 
+                    memberAreas={memberAreas} 
+                    selectedMemberAreaId={selectedMemberAreaId}
+                    onClose={() => setIsModuleFormOpen(false)}
+                  />
                 </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {currentModuleId ? <LessonsList moduleId={currentModuleId} /> : <p>Selecione um módulo para ver as aulas.</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardHeader>
+              <CardContent>
+                <ModulesList 
+                  memberAreaId={selectedMemberAreaId} 
+                  onEditModule={handleEditModule} 
+                  onModuleDeleted={handleModuleSaved} 
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="lessons" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Aulas</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Select value={currentModuleId || ''} onValueChange={setCurrentModuleId}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Selecionar Módulo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modules.length === 0 ? (
+                        <SelectItem value="" disabled>Nenhum módulo disponível</SelectItem>
+                      ) : (
+                        modules.map(module => (
+                          <SelectItem key={module.id} value={module.id}>
+                            {module.title}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Dialog open={isLessonFormOpen} onOpenChange={setIsLessonFormOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)}>
+                        <Plus className="mr-2 h-4 w-4" /> Nova Aula
+                      </Button>
+                    </DialogTrigger>
+                    <LessonFormDialog 
+                      lesson={editingLesson}
+                      onSave={handleLessonSaved} 
+                      modules={modules} 
+                      selectedModuleId={currentModuleId}
+                      onClose={() => setIsLessonFormOpen(false)}
+                    />
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {currentModuleId ? (
+                  <LessonsList 
+                    moduleId={currentModuleId} 
+                    onEditLesson={handleEditLesson} 
+                    onLessonDeleted={handleLessonSaved} 
+                  />
+                ) : (
+                  <p className="text-muted-foreground">Selecione um módulo para ver as aulas.</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <Card className="mt-6">
+          <CardContent className="py-8 text-center text-muted-foreground">
+            <MonitorDot className="mx-auto h-12 w-12 mb-4" />
+            <p>Selecione uma área de membros acima para gerenciar seu conteúdo.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
