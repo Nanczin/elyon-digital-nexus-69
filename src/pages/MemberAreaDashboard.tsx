@@ -6,7 +6,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, BookOpen, User, MessageSquare, ArrowRight } from 'lucide-react';
+import { Check, BookOpen, User, MessageSquare, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
 import { deepMerge } from '@/lib/utils';
 
 type PlatformSettings = Tables<'platform_settings'>;
@@ -89,16 +89,20 @@ const MemberAreaDashboard = () => {
         setSettings(getDefaultSettings(memberAreaId));
       }
 
-      // 3. Check if user has access to this specific member area using user_metadata
-      const userMemberAreaId = user?.user_metadata?.member_area_id;
-      if (userMemberAreaId === memberAreaId) {
-        setHasAccess(true);
-      } else {
+      // 3. Check if user has access to this specific member area
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('member_area_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileError || profileData?.member_area_id !== memberAreaId) {
         setHasAccess(false);
         toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros.", variant: "destructive" });
         setLoading(false);
         return;
       }
+      setHasAccess(true);
 
       // 4. Fetch modules the user has access to
       const { data: modulesData, error: modulesError } = await supabase
@@ -127,13 +131,16 @@ const MemberAreaDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [memberAreaId, user?.id, user?.user_metadata?.member_area_id, toast]);
+  }, [memberAreaId, user?.id, toast]);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading) {
+      if (!user) {
+        // If not authenticated, redirect to login
+        toast({ title: "Não autenticado", description: "Faça login para acessar a área de membros.", variant: "destructive" });
+        return; // Prevent further execution until redirected
+      }
       fetchMemberAreaAndContent();
-    } else if (!authLoading && !user) {
-      toast({ title: "Não autenticado", description: "Faça login para acessar a área de membros.", variant: "destructive" });
     }
   }, [user, authLoading, fetchMemberAreaAndContent, toast]);
 
@@ -150,6 +157,7 @@ const MemberAreaDashboard = () => {
   }
 
   if (!hasAccess) {
+    // If user is logged in but doesn't have access to this specific member area
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md text-center">
@@ -257,7 +265,7 @@ const MemberAreaDashboard = () => {
                   </p>
                   <Button 
                     className="w-full flex items-center justify-center gap-2" 
-                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} // Botão com texto branco
                     asChild
                   >
                     <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
