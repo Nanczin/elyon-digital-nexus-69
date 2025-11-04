@@ -498,7 +498,9 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted }: { memberAr
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold">{module.title}</h3>
-                <p className="text-sm text-muted-foreground">{module.description?.substring(0, 100)}...</p>
+                <p className="text-sm text-muted-foreground">
+                  {module.description?.trim() ? `${module.description.trim().substring(0, 100)}${module.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
+                </p>
                 <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">
                   {module.status === 'published' ? 'Publicado' : 'Rascunho'}
                 </Badge>
@@ -686,7 +688,9 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-semibold">{lesson.title}</h3>
-                    <p className="text-sm text-muted-foreground">{lesson.description?.substring(0, 100).trim()}...</p>
+                    <p className="text-sm text-muted-foreground">
+                      {lesson.description?.trim() ? `${lesson.description.trim().substring(0, 100)}${lesson.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
+                    </p>
                     <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="mt-1">
                       {lesson.status === 'published' ? 'Publicado' : 'Rascunho'}
                     </Badge>

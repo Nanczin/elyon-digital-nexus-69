@@ -292,7 +292,7 @@ const MemberAreaModuleDetails = () => {
                         <div>
                           <h4 className="font-semibold text-lg" style={{ color: textColor }}>{lesson.title}</h4>
                           <p className="text-sm" style={{ color: secondaryTextColor }}>
-                            {lesson.description?.substring(0, 80).trim()}...
+                            {lesson.description?.trim() ? `${lesson.description.trim().substring(0, 80)}${lesson.description.trim().length > 80 ? '...' : ''}` : 'Nenhuma descrição'}
                           </p>
                           {lesson.duration_minutes && (
                             <div className="flex items-center text-xs mt-1" style={{ color: secondaryTextColor }}>
