@@ -186,6 +186,8 @@ const MemberAreaDashboard = () => {
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
   const userInitial = userName.charAt(0).toUpperCase();
+  const memberAreaNameInitials = memberArea?.name ? memberArea.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'MA';
+
 
   return (
     <div 
@@ -205,12 +207,18 @@ const MemberAreaDashboard = () => {
         }}
       >
         <div className="flex items-center space-x-3">
-          {memberArea?.logo_url && (
+          {memberArea?.logo_url ? (
             <img 
               src={memberArea.logo_url} 
-              alt={memberArea.name || "Logo"} 
+              alt={memberArea.name || "Logo da Área de Membros"} 
               className="h-8 w-8 object-contain" 
             />
+          ) : (
+            <Avatar className="h-8 w-8 border border-gray-200">
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-sm font-semibold">
+                {memberAreaNameInitials}
+              </AvatarFallback>
+            </Avatar>
           )}
           <span className="text-lg font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
         </div>
