@@ -31,55 +31,68 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCommunity from "./pages/AdminCommunity";
 import AdminMemberAreas from "./pages/AdminMemberAreas";
 import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails"; // Importar a nova página de detalhes
+import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
+import { useEffect } from "react";
 
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth/login" element={<AuthLogin />} />
-              <Route path="/auth/register" element={<AuthRegister />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/products" element={<AdminProducts />} />
-              <Route path="/admin/checkouts" element={<AdminCheckouts />} />
-              <Route path="/admin/integrations" element={<AdminIntegrations />} />
-              
-              {/* Rotas da Área de Membros */}
-              <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
-              <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
-                <Route path="content" element={<AdminContent />} />
-                <Route path="members" element={<AdminMembers />} />
-                <Route path="design" element={<AdminDesign />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="community" element={<AdminCommunity />} />
-              </Route>
+const App = () => {
+  const { globalFontFamily } = useGlobalPlatformSettings();
 
-              <Route path="/sales" element={<Sales />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/payments" element={<Payments />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/checkout/:checkoutId" element={<Checkout />} />
-              
-              <Route path="/payment-success" element={<PaymentSuccess />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+  useEffect(() => {
+    if (globalFontFamily) {
+      // Aplica a fonte ao elemento raiz (<html>) para que afete todo o documento
+      document.documentElement.style.setProperty('--global-font-family', globalFontFamily);
+    }
+  }, [globalFontFamily]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth/login" element={<AuthLogin />} />
+                <Route path="/auth/register" element={<AuthRegister />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/checkouts" element={<AdminCheckouts />} />
+                <Route path="/admin/integrations" element={<AdminIntegrations />} />
+                
+                {/* Rotas da Área de Membros */}
+                <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
+                <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
+                  <Route path="content" element={<AdminContent />} />
+                  <Route path="members" element={<AdminMembers />} />
+                  <Route path="design" element={<AdminDesign />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="community" element={<AdminCommunity />} />
+                </Route>
+
+                <Route path="/sales" element={<Sales />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/payments" element={<Payments />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/checkout/:checkoutId" element={<Checkout />} />
+                
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
