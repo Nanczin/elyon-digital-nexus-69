@@ -207,10 +207,10 @@ const MemberAreaDashboard = () => {
         }}
       >
         <div className="flex items-center space-x-3">
-          {memberArea?.logo_url ? (
+          {currentSettings.logo_url ? (
             <img 
-              src={memberArea.logo_url} 
-              alt={memberArea.name || "Logo da Área de Membros"} 
+              src={currentSettings.logo_url} 
+              alt={memberArea?.name || "Logo da Plataforma"} 
               className="h-8 w-8 object-contain" 
             />
           ) : (
