@@ -31,13 +31,22 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCommunity from "./pages/AdminCommunity";
 import AdminMemberAreas from "./pages/AdminMemberAreas";
 import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails"; // Importar a nova página de detalhes
-import MemberAreaLogin from "./pages/MemberAreaLogin"; // Importar a nova página de login da área de membros
-import MemberAreaDashboard from "./pages/MemberAreaDashboard"; // Importar a nova página de dashboard da área de membros
+// import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
+// import { useEffect } from "react";
 
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  // const { globalFontFamily } = useGlobalPlatformSettings(); // Removido daqui
+
+  // useEffect(() => {
+  //   if (globalFontFamily) {
+  //     // Aplica a fonte ao elemento raiz (<html>) para que afete todo o documento
+  //     document.documentElement.style.setProperty('--global-font-family', globalFontFamily);
+  //   }
+  // }, [globalFontFamily]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
@@ -65,10 +74,6 @@ const App = () => {
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="community" element={<AdminCommunity />} />
                 </Route>
-
-                {/* Rotas públicas da Área de Membros */}
-                <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
-                <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
 
                 <Route path="/sales" element={<Sales />} />
                 <Route path="/reports" element={<Reports />} />

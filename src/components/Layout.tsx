@@ -25,7 +25,6 @@ const Layout: React.FC<LayoutProps> = ({
   const navigate = useNavigate(); // Inicializar useNavigate aqui
   const isAuthPage = location.pathname.startsWith('/auth');
   const isCheckoutPage = location.pathname.startsWith('/checkout') || location.pathname === '/payment-success';
-  const isMemberAreaPage = location.pathname.startsWith('/membros/'); // Nova verificação para páginas de membros
   
   // Chamar o hook useGlobalPlatformSettings dentro do Layout
   const { globalFontFamily } = useGlobalPlatformSettings();
@@ -37,7 +36,7 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [globalFontFamily]);
 
-  if (isAuthPage || isCheckoutPage || isMemberAreaPage) { // Incluir isMemberAreaPage aqui
+  if (isAuthPage || isCheckoutPage) {
     return <>{children}</>;
   }
 

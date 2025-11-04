@@ -24,33 +24,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // const navigate = useNavigate(); // REMOVIDO: useNavigate não deve ser usado aqui
 
   useEffect(() => {
-    const handleAuthStateChange = async (event: string, session: Session | null) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        try {
-          // Await the RPC call to ensure isAdmin is set before loading is false
-          const { data } = await supabase.rpc('is_admin');
-          setIsAdmin(data || false);
-        } catch (error) {
-          console.error('Error checking admin status:', error);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Check if user is admin when session changes
+        if (session?.user) {
+          setTimeout(async () => {
+            try {
+              const { data } = await supabase.rpc('is_admin');
+              setIsAdmin(data || false);
+            } catch (error) {
+              console.error('Error checking admin status:', error);
+              setIsAdmin(false);
+            }
+          }, 0);
+        } else {
           setIsAdmin(false);
         }
-      } else {
-        setIsAdmin(false);
+        
+        setLoading(false);
       }
-      
-      setLoading(false); // Set loading to false only after all checks are done
-    };
+    );
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Also check for existing session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      // Call the same handler to process the initial session
-      await handleAuthStateChange('INITIAL_SESSION', session);
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
