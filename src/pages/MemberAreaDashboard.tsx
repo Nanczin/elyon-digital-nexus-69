@@ -6,7 +6,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, BookOpen, User, MessageSquare } from 'lucide-react';
+import { Check, BookOpen, User, MessageSquare, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
 import { deepMerge } from '@/lib/utils';
 
 type PlatformSettings = Tables<'platform_settings'>;
@@ -23,15 +23,17 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
   login_subtitle: 'Acesse seu conteúdo exclusivo',
   global_font_family: 'Inter', // Default font
   colors: {
-    background_login: '#F0F2F5',
-    card_login: '#FFFFFF',
-    header_background: '#FFFFFF',
-    header_border: '#E5E7EB',
-    button_background: '#3b82f6',
-    text_primary: '#1F2937',
-    text_header: '#1F2937',
-    text_cards: '#1F2937',
-    text_secondary: '#6B7280',
+    background_login: '#F0F2F5', // Light beige/off-white
+    card_login: '#FFFFFF',      // White
+    header_background: '#FFFFFF', // White
+    header_border: '#E5E7EB',   // Light gray
+    button_background: '#E98B8B', // Pinkish-red from image
+    text_primary: '#1F2937',    // Dark gray
+    text_header: '#1F2937',     // Dark gray
+    text_cards: '#1F2937',      // Dark gray
+    text_secondary: '#6B7280',  // Medium gray
+    checkmark_background: '#D1FAE5', // Light green for badge background
+    checkmark_icon: '#059669',     // Darker green for checkmark icon
   },
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -175,17 +177,19 @@ const MemberAreaDashboard = () => {
   }
 
   const currentSettings = settings || getDefaultSettings(memberAreaId || '');
-  const primaryColor = currentSettings.colors?.button_background || '#3b82f6';
+  const primaryColor = currentSettings.colors?.button_background || '#E98B8B';
   const textColor = currentSettings.colors?.text_primary || '#1F2937';
   const secondaryTextColor = currentSettings.colors?.text_secondary || '#6B7280';
   const cardBackground = currentSettings.colors?.card_login || '#FFFFFF';
   const fontFamily = currentSettings.global_font_family || 'Inter';
+  const checkmarkBgColor = currentSettings.colors?.checkmark_background || '#D1FAE5';
+  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || '#059669';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
 
   return (
     <div 
-      className="w-full h-full flex flex-col overflow-auto p-4 min-h-screen" // Adicionado min-h-screen
+      className="w-full h-full flex flex-col overflow-auto p-4 min-h-screen" 
       style={{ 
         backgroundColor: currentSettings.colors?.background_login || '#F0F2F5',
         fontFamily: fontFamily 
@@ -208,10 +212,10 @@ const MemberAreaDashboard = () => {
               className="h-8 w-8 object-contain" 
             />
           )}
-          <span className="text-lg font-semibold">{memberArea?.name || "Área de Membros"}</span>
+          <span className="text-lg font-semibold">{memberArea?.name || "Área de Membros RE-MÃE"}</span>
         </div>
-        <Button onClick={signOut} variant="outline" size="sm" style={{ borderColor: primaryColor, color: primaryColor }}>
-          Sair
+        <Button onClick={signOut} variant="ghost" size="sm" style={{ color: secondaryTextColor }}>
+          {user?.email?.charAt(0).toUpperCase() || 'E'}
         </Button>
       </header>
 
@@ -242,7 +246,15 @@ const MemberAreaDashboard = () => {
                       className="w-full h-full object-cover" 
                     />
                   )}
-                  {/* No preview, não temos status de conclusão real, então não exibimos o check */}
+                  {/* Placeholder para o badge de concluído - ajustar a lógica real depois */}
+                  {module.title.includes('Boas-vindas') || module.title.includes('30 Dias') || module.title.includes('Exercícios') ? ( // Exemplo de condição
+                    <div 
+                      className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: checkmarkBgColor }}
+                    >
+                      <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
+                    </div>
+                  ) : null}
                 </div>
                 <CardContent className="p-6 space-y-4">
                   <h3 className="text-xl font-bold" style={{ color: currentSettings.colors?.text_cards || textColor }}>
@@ -252,11 +264,13 @@ const MemberAreaDashboard = () => {
                     {module.description}
                   </p>
                   <Button 
-                    className="w-full" 
-                    style={{ backgroundColor: primaryColor, color: currentSettings.colors?.text_primary }}
+                    className="w-full flex items-center justify-center gap-2" 
+                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} // Botão com texto branco
                     asChild
                   >
-                    <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>Acessar Módulo</Link>
+                    <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
+                      Acessar Módulo <ArrowRight className="h-4 w-4" />
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>

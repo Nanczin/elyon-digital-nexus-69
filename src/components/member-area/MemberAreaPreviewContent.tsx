@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, User, MessageSquare, Check } from 'lucide-react';
+import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react'; // Adicionado ArrowRight
 import { Tables } from '@/integrations/supabase/types';
 
 interface MemberAreaPreviewContentProps {
@@ -12,11 +12,13 @@ interface MemberAreaPreviewContentProps {
 }
 
 const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ settings, onLogout, memberArea, modules }) => {
-  const primaryColor = settings.colors?.button_background || '#3b82f6';
+  const primaryColor = settings.colors?.button_background || '#E98B8B'; // Usar a nova cor padrão
   const textColor = settings.colors?.text_primary || '#1F2937';
   const secondaryTextColor = settings.colors?.text_secondary || '#6B7280';
   const cardBackground = settings.colors?.card_login || '#FFFFFF';
   const fontFamily = settings.global_font_family || 'Inter';
+  const checkmarkBgColor = settings.colors?.checkmark_background || '#D1FAE5';
+  const checkmarkIconColor = settings.colors?.checkmark_icon || '#059669';
 
   // Placeholder para o nome do usuário logado
   const userName = "Estevão Venancio Garcia"; 
@@ -27,7 +29,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       id: 'welcome',
       title: 'Boas-vindas e orientações iniciais',
       description: 'Comece sua jornada aqui! Orientações essenciais para aproveitar ao máximo o Método Remãe.',
-      banner_url: '/lovable-uploads/60aef8b0-cab0-4a0b-817b-81cb3e2b0760.png', // Exemplo de imagem
+      banner_url: '/lovable-uploads/60aef8b0-cab0-4f83-87eb-eced18d89bff.png', // Exemplo de imagem
       isCompleted: true,
     },
     {
@@ -35,14 +37,14 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       title: 'Recuperação Pós-Parto: 30 Dias',
       description: 'Um plano de 30 dias para reconquistar seu corpo de forma saudável e segura.',
       banner_url: '/lovable-uploads/357f51bf-cb26-4978-b65c-17227703a149.png', // Exemplo de imagem
-      isCompleted: false,
+      isCompleted: true, // Marcar como completo para o preview
     },
     {
       id: 'exercises',
       title: 'Guia de Exercícios Seguros',
       description: 'Aprenda os melhores e mais seguros exercícios para fazer no pós-parto.',
       banner_url: '/lovable-uploads/a76239a2-eeaf-4efa-9312-9084cbcd1865.png', // Exemplo de imagem
-      isCompleted: false,
+      isCompleted: true, // Marcar como completo para o preview
     },
   ];
 
@@ -51,7 +53,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
     title: mod.title,
     description: mod.description || '',
     banner_url: mod.banner_url || '/placeholder.svg', // Usar placeholder se não houver banner
-    isCompleted: false, // Para o preview, assumir não completo
+    isCompleted: true, // Para o preview, assumir completo para mostrar o checkmark
   })) : defaultModules;
 
   return (
@@ -79,10 +81,10 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
               className="h-8 w-8 object-contain" 
             />
           )}
-          <span className="text-lg font-semibold">{memberArea?.name || "Área de Membros"}</span>
+          <span className="text-lg font-semibold">{memberArea?.name || "Área de Membros RE-MÃE"}</span>
         </div>
-        <Button onClick={onLogout} variant="outline" size="sm" style={{ borderColor: primaryColor, color: primaryColor }}>
-          Sair
+        <Button onClick={onLogout} variant="ghost" size="sm" style={{ color: secondaryTextColor }}>
+          {userName.charAt(0).toUpperCase()}
         </Button>
       </header>
 
@@ -113,9 +115,9 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 {module.isCompleted && (
                   <div 
                     className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: checkmarkBgColor }}
                   >
-                    <Check className="h-5 w-5 text-white" />
+                    <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
                   </div>
                 )}
               </div>
@@ -127,10 +129,10 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                   {module.description}
                 </p>
                 <Button 
-                  className="w-full" 
-                  style={{ backgroundColor: primaryColor, color: settings.colors?.text_primary }}
+                  className="w-full flex items-center justify-center gap-2" 
+                  style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                 >
-                  Acessar Módulo
+                  Acessar Módulo <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>

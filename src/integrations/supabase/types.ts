@@ -604,7 +604,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           status?: string; /* Adicionada nova coluna 'status' */
-          login_url?: string | null; /* Adicionada nova coluna 'login_url' */
+          login_url?: string | null; /* Adicionada nova coluna 'login' */
         }
         Update: {
           avatar_url?: string | null
@@ -1065,7 +1065,19 @@ export type Database = {
           login_title: string | null;
           login_subtitle: string | null;
           global_font_family: string | null;
-          colors: Json | null;
+          colors: {
+            background_login?: string;
+            card_login?: string;
+            header_background?: string;
+            header_border?: string;
+            button_background?: string;
+            text_primary?: string;
+            text_header?: string;
+            text_cards?: string;
+            text_secondary?: string;
+            checkmark_background?: string; /* Adicionado */
+            checkmark_icon?: string; /* Adicionado */
+          } | null;
           created_at: string;
           updated_at: string;
           member_area_id: string | null; /* Adicionada nova coluna 'member_area_id' */
@@ -1077,7 +1089,19 @@ export type Database = {
           login_title?: string | null;
           login_subtitle?: string | null;
           global_font_family?: string | null;
-          colors?: Json | null;
+          colors?: {
+            background_login?: string;
+            card_login?: string;
+            header_background?: string;
+            header_border?: string;
+            button_background?: string;
+            text_primary?: string;
+            text_header?: string;
+            text_cards?: string;
+            text_secondary?: string;
+            checkmark_background?: string; /* Adicionado */
+            checkmark_icon?: string; /* Adicionado */
+          } | null;
           created_at?: string;
           updated_at?: string;
           member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */
@@ -1089,7 +1113,19 @@ export type Database = {
           login_title?: string | null;
           login_subtitle?: string | null;
           global_font_family?: string | null;
-          colors?: Json | null;
+          colors?: {
+            background_login?: string;
+            card_login?: string;
+            header_background?: string;
+            header_border?: string;
+            button_background?: string;
+            text_primary?: string;
+            text_header?: string;
+            text_cards?: string;
+            text_secondary?: string;
+            checkmark_background?: string; /* Adicionado */
+            checkmark_icon?: string; /* Adicionado */
+          } | null;
           created_at?: string;
           updated_at?: string;
           member_area_id?: string | null; /* Adicionada nova coluna 'member_area_id' */

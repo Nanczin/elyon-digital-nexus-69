@@ -22,15 +22,17 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
   login_subtitle: 'Acesse seu conteúdo exclusivo',
   global_font_family: 'Inter', // Default font
   colors: {
-    background_login: '#F0F2F5',
-    card_login: '#FFFFFF',
-    header_background: '#FFFFFF',
-    header_border: '#E5E7EB',
-    button_background: '#3b82f6',
-    text_primary: '#1F2937',
-    text_header: '#1F2937',
-    text_cards: '#1F2937',
-    text_secondary: '#6B7280',
+    background_login: '#F0F2F5', // Light beige/off-white
+    card_login: '#FFFFFF',      // White
+    header_background: '#FFFFFF', // White
+    header_border: '#E5E7EB',   // Light gray
+    button_background: '#E98B8B', // Pinkish-red from image
+    text_primary: '#1F2937',    // Dark gray
+    text_header: '#1F2937',     // Dark gray
+    text_cards: '#1F2937',      // Dark gray
+    text_secondary: '#6B7280',  // Medium gray
+    checkmark_background: '#D1FAE5', // Light green for badge background
+    checkmark_icon: '#059669',     // Darker green for checkmark icon
   },
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -188,7 +190,7 @@ const MemberAreaLogin = () => {
               type="submit" 
               className="w-full" 
               disabled={loading}
-              style={{ backgroundColor: currentSettings.colors?.button_background || '#3b82f6', color: currentSettings.colors?.text_primary || '#1F2937' }}
+              style={{ backgroundColor: currentSettings.colors?.button_background || '#E98B8B', color: '#FFFFFF' }} // Botão com texto branco
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
@@ -197,7 +199,7 @@ const MemberAreaLogin = () => {
           <div className="mt-6 text-center">
             <p className="text-sm" style={{ color: currentSettings.colors?.text_secondary || '#6B7280' }}>
               Esqueceu sua senha?{' '}
-              <Link to={`/auth/forgot-password?memberAreaId=${memberAreaId}`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || '#3b82f6' }}>
+              <Link to={`/auth/forgot-password?memberAreaId=${memberAreaId}`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || '#E98B8B' }}>
                 Recuperar senha
               </Link>
             </p>
