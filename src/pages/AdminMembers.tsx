@@ -285,11 +285,24 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
   const handleDeleteMember = async (memberId: string, memberName: string) => {
     try {
-      // Delete from auth.users, which will cascade delete from profiles
-      const { error } = await supabase.auth.admin.deleteUser(memberId);
-      if (error) throw error;
+      // Chamar a Edge Function para excluir o usuário
+      const { data, error: edgeFunctionError } = await supabase.functions.invoke('delete-member', {
+        body: { userId: memberId },
+        method: 'DELETE',
+      });
+
+      if (edgeFunctionError) {
+        console.error('Error invoking delete-member Edge Function:', edgeFunctionError);
+        throw new Error(edgeFunctionError.message || 'Erro ao invocar função de exclusão de membro.');
+      }
+
+      if (!data?.success) {
+        console.error('Edge Function returned error:', data?.error);
+        throw new Error(data?.error || 'Falha na Edge Function ao excluir membro.');
+      }
+
       toast({ title: "Sucesso", description: `Membro ${memberName} excluído.` });
-      fetchMembers();
+      fetchMembers(); // Recarregar a lista de membros
     } catch (error: any) {
       toast({ title: "Erro", description: error.message || "Falha ao excluir membro.", variant: "destructive" });
       console.error(error);
@@ -408,7 +421,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteMember(member.id, member.name)}>Excluir</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handleDeleteMember(member.user_id, member.name)}>Excluir</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
