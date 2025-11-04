@@ -703,13 +703,13 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Aulas</CardTitle>
               <div className="flex items-center gap-2">
-                <Select value={currentModuleId || ''} onValueChange={setCurrentModuleId}>
+                <Select value={currentModuleId || "none"} onValueChange={value => setCurrentModuleId(value === "none" ? null : value)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Selecionar Módulo" />
                   </SelectTrigger>
                   <SelectContent>
                     {modules.length === 0 ? (
-                      <SelectItem value="" disabled>Nenhum módulo disponível</SelectItem>
+                      <SelectItem value="none" disabled>Nenhum módulo disponível</SelectItem>
                     ) : (
                       modules.map(module => (
                         <SelectItem key={module.id} value={module.id}>

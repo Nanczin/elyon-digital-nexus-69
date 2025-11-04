@@ -563,14 +563,14 @@ const AdminProducts = () => {
                     <div className="space-y-2">
                       <Label htmlFor="memberArea">Área de Membros (Opcional)</Label>
                       <Select 
-                        value={formData.member_area_id || ''} 
-                        onValueChange={value => handleInputChange('member_area_id', value === '' ? null : value)}
+                        value={formData.member_area_id || "none"} 
+                        onValueChange={value => handleInputChange('member_area_id', value === "none" ? null : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Associar a uma área de membros" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhuma</SelectItem>
+                          <SelectItem value="none">Nenhuma</SelectItem>
                           {memberAreas.map(area => (
                             <SelectItem key={area.id} value={area.id}>
                               <div className="flex items-center gap-2">
