@@ -66,14 +66,10 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
     setLoading(true);
     try {
       if (member) {
-        // Update existing member's profile
+        // Update existing member
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ 
-            name, 
-            status: isActive ? 'active' : 'inactive',
-            member_area_id: memberAreaId // <--- ADDED THIS LINE
-          })
+          .update({ name, status: isActive ? 'active' : 'inactive' })
           .eq('user_id', member.user_id);
         if (profileError) throw profileError;
 

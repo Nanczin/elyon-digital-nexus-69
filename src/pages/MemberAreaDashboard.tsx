@@ -41,7 +41,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 
 const MemberAreaDashboard = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
-  const { user, loading: authLoading, signOut, isAdmin } = useAuth(); // Adicionado isAdmin
+  const { user, loading: authLoading, signOut } = useAuth();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,7 @@ const MemberAreaDashboard = () => {
         .maybeSingle();
 
       if (areaError || !areaData) {
-        console.error('MEMBER_AREA_DEBUG: Error fetching member area:', areaError);
+        console.error('Error fetching member area:', areaError);
         toast({ title: "Erro", description: "Área de membros não encontrada.", variant: "destructive" });
         setHasAccess(false);
         setLoading(false);
@@ -82,50 +82,29 @@ const MemberAreaDashboard = () => {
         .maybeSingle();
 
       if (settingsError && settingsError.code !== 'PGRST116') {
-        console.error('MEMBER_AREA_DEBUG: Error fetching platform settings:', settingsError);
+        console.error('Error fetching platform settings:', settingsError);
       } else if (settingsData) {
         setSettings(deepMerge(getDefaultSettings(memberAreaId), settingsData as Partial<PlatformSettings>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
 
-      // --- START MODIFIED ACCESS CHECK ---
-      let userHasAccess = false;
+      // 3. Check if user has access to this specific member area
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('member_area_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      // Option A: Check if user is an admin of THIS specific member area
-      const { data: isAdminOfArea, error: adminCheckError } = await supabase.rpc('is_admin_of_member_area', { p_member_area_id: memberAreaId });
-
-      if (adminCheckError) {
-        console.error('MEMBER_AREA_DEBUG: Error checking admin status for member area:', adminCheckError);
-      } else if (isAdminOfArea) {
-        userHasAccess = true;
-        console.log('MEMBER_AREA_DEBUG: User is admin of this member area, granting access.');
-      } else {
-        // Option B: Regular member with profile linked to this member area
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('member_area_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('MEMBER_AREA_DEBUG: Error checking user profile for member area access:', profileError);
-        } else if (profileData?.member_area_id === memberAreaId) {
-          userHasAccess = true;
-          console.log('MEMBER_AREA_DEBUG: User profile linked to this member area, granting access.');
-        }
-      }
-
-      if (!userHasAccess) {
+      if (profileError || profileData?.member_area_id !== memberAreaId) {
         setHasAccess(false);
         toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros.", variant: "destructive" });
         setLoading(false);
         return;
       }
       setHasAccess(true);
-      // --- END MODIFIED ACCESS CHECK ---
 
-      // 4. Fetch modules the user has access to (this part relies on RLS, which was fixed)
+      // 4. Fetch modules the user has access to
       const { data: modulesData, error: modulesError } = await supabase
         .from('modules')
         .select(`
@@ -139,20 +118,20 @@ const MemberAreaDashboard = () => {
         .order('order_index', { ascending: true });
 
       if (modulesError) {
-        console.error('MEMBER_AREA_DEBUG: Error fetching user modules:', modulesError);
+        console.error('Error fetching user modules:', modulesError);
         toast({ title: "Erro", description: "Falha ao carregar seus módulos.", variant: "destructive" });
       } else {
         setModules(modulesData || []);
       }
 
     } catch (error: any) {
-      console.error('MEMBER_AREA_DEBUG: Error in MemberAreaDashboard:', error);
+      console.error('Error in MemberAreaDashboard:', error);
       toast({ title: "Erro", description: error.message || "Ocorreu um erro ao carregar a área de membros.", variant: "destructive" });
       setHasAccess(false);
     } finally {
       setLoading(false);
     }
-  }, [memberAreaId, user?.id, isAdmin, toast]); // Added isAdmin to dependencies
+  }, [memberAreaId, user?.id, toast]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -178,30 +157,23 @@ const MemberAreaDashboard = () => {
   }
 
   if (!hasAccess) {
-    // Se o usuário está logado mas não tem acesso a esta área de membros específica
-    // Se o usuário for um administrador, redirecioná-lo para a lista de áreas de membros do admin
-    if (isAdmin) {
-      toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar esta área de membros como membro. Redirecionando para o painel de áreas de membros.", variant: "destructive" });
-      return <Navigate to="/admin/member-areas" replace />;
-    } else {
-      // Para membros comuns sem acesso, exibir a tela atual de "Acesso Negado"
-      return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <Card className="w-full max-w-md text-center">
-            <CardHeader>
-              <CardTitle>Acesso Negado</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>Você não tem permissão para acessar esta área de membros.</p>
-              <Button onClick={() => signOut()}>Sair</Button>
-              <Button asChild variant="outline">
-                <Link to="/">Voltar para o Início</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
+    // If user is logged in but doesn't have access to this specific member area
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <CardTitle>Acesso Negado</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p>Você não tem permissão para acessar esta área de membros.</p>
+            <Button onClick={() => signOut()}>Sair</Button>
+            <Button asChild variant="outline">
+              <Link to="/">Voltar para o Início</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const currentSettings = settings || getDefaultSettings(memberAreaId || '');
