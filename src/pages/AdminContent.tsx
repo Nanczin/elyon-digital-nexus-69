@@ -216,6 +216,7 @@ const LessonFormDialog = ({
   const [contentType, setContentType] = useState(editingLesson?.content_type || 'video_link');
   const [contentUrl, setContentUrl] = useState(editingLesson?.content_url || '');
   const [textContent, setTextContent] = useState(editingLesson?.text_content || '');
+  const [status, setStatus] = useState(editingLesson?.status === 'published'); // <-- Adicionado o estado 'status'
   const [videoFile, setVideoFile] = useState<File | null>(null); // Novo estado para upload de vídeo
   const [pdfFile, setPdfFile] = useState<File | null>(null);     // Novo estado para upload de PDF
   const [imageFile, setImageFile] = useState<File | null>(null); // Novo estado para upload de imagem
