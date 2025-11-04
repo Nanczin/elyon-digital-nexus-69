@@ -225,7 +225,7 @@ const MemberAreaDashboard = () => {
           Olá, {userName}!
         </h1>
         <p className="text-lg" style={{ color: secondaryTextColor }}>
-          Bem-vinda à sua área de membros. Escolha um módulo para começar.
+          Bem-vindo à sua área de membros. Escolha um módulo para começar.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
