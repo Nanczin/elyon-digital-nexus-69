@@ -789,14 +789,14 @@ const AdminCheckouts = () => {
                     <div className="space-y-2">
                       <Label htmlFor="memberArea">Área de Membros (Opcional)</Label>
                       <Select 
-                        value={checkoutData.member_area_id || ''} 
-                        onValueChange={value => handleInputChange('member_area_id', value === '' ? null : value)}
+                        value={checkoutData.member_area_id || "none"} 
+                        onValueChange={value => handleInputChange('member_area_id', value === "none" ? null : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Associar a uma área de membros" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhuma</SelectItem>
+                          <SelectItem value="none">Nenhuma</SelectItem>
                           {memberAreas.map(area => (
                             <SelectItem key={area.id} value={area.id}>
                               <div className="flex items-center gap-2">
@@ -1273,9 +1273,9 @@ const AdminCheckouts = () => {
                       <div className="space-y-2">
                         <Label>Conta de Email Transacional</Label>
                         <Select 
-                          value={checkoutData.integrations?.selectedEmailAccount || ''} 
+                          value={checkoutData.integrations?.selectedEmailAccount || "none"} 
                           onValueChange={value => {
-                            if (value !== 'no-email-config') {
+                            if (value !== 'no-email-config' && value !== "none") {
                               handleInputChange('integrations.selectedEmailAccount', value);
                             } else {
                               handleInputChange('integrations.selectedEmailAccount', ''); // Desselecionar
@@ -1286,6 +1286,7 @@ const AdminCheckouts = () => {
                             <SelectValue placeholder="Selecione uma conta de email configurada" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="none">Nenhuma</SelectItem> {/* Alterado para "none" */}
                             {emailConfig ? (
                               <SelectItem key="default-email-config" value="default-email-config">
                                 {emailConfig.displayName || emailConfig.email}
