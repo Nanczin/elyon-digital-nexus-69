@@ -1,46 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom'; // Alterado para useParams
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient'; // Usar o cliente da área de membros
-import { supabase } from '@/integrations/supabase/client'; // Usar o cliente principal para buscar settings
+import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient';
+import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { deepMerge } from '@/lib/utils';
+import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
 
 type PlatformSettings = Tables<'platform_settings'>;
 
-// Function to generate default settings for a given memberAreaId
-const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
-  id: '',
-  user_id: null,
-  member_area_id: memberAreaId,
-  logo_url: null,
-  login_title: 'Bem-vindo à sua Área de Membros',
-  login_subtitle: 'Acesse seu conteúdo exclusivo',
-  global_font_family: 'Nunito',
-  colors: {
-    background_login: 'hsl(var(--member-area-background))',
-    card_login: 'hsl(var(--member-area-card-background))',
-    header_background: 'hsl(var(--member-area-background))',
-    header_border: 'transparent',
-    button_background: 'hsl(var(--member-area-primary))',
-    text_primary: 'hsl(var(--member-area-text-dark))',
-    text_header: 'hsl(var(--member-area-text-dark))',
-    text_cards: 'hsl(var(--member-area-text-dark))',
-    text_secondary: 'hsl(var(--member-area-text-muted))',
-    checkmark_background: 'hsl(var(--member-area-checkmark-background))',
-    checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
-  },
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-});
-
 const AuthForgotPassword = () => {
-  const { memberAreaId } = useParams<{ memberAreaId: string }>(); // Alterado para useParams
+  const { memberAreaId } = useParams<{ memberAreaId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -89,7 +64,6 @@ const AuthForgotPassword = () => {
     }
 
     try {
-      // A URL de redirecionamento deve apontar para a página de atualização de senha da área de membros
       const redirectTo = `${window.location.origin}/membros/${memberAreaId}/update-password`;
       
       const { error } = await memberAreaSupabase.auth.resetPasswordForEmail(email, {
@@ -125,7 +99,7 @@ const AuthForgotPassword = () => {
     );
   }
 
-  const currentSettings = settings || getDefaultSettings(memberAreaId || '');
+  const currentSettings = settings || getDefaultSettings(memberAreaId || null);
 
   return (
     <div 

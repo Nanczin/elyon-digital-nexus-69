@@ -11,37 +11,13 @@ import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
-import LessonComments from '@/components/member-area/LessonComments'; // Import the new component
+import LessonComments from '@/components/member-area/LessonComments';
+import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
 type Lesson = Tables<'lessons'>;
-
-const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
-  id: '',
-  user_id: null,
-  member_area_id: memberAreaId,
-  logo_url: null,
-  login_title: 'Bem-vindo à sua Área de Membros',
-  login_subtitle: 'Acesse seu conteúdo exclusivo',
-  global_font_family: 'Nunito',
-  colors: {
-    background_login: 'hsl(var(--member-area-background))',
-    card_login: 'hsl(var(--member-area-card-background))',
-    header_background: 'hsl(var(--member-area-background))',
-    header_border: 'transparent',
-    button_background: 'hsl(var(--member-area-primary))',
-    text_primary: 'hsl(var(--member-area-text-dark))',
-    text_header: 'hsl(var(--member-area-text-dark))',
-    text_cards: 'hsl(var(--member-area-text-dark))',
-    text_secondary: 'hsl(var(--member-area-text-muted))',
-    checkmark_background: 'hsl(var(--member-area-checkmark-background))',
-    checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
-  },
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-});
 
 const MemberAreaLesson = () => {
   const { memberAreaId, moduleId, lessonId } = useParams<{ memberAreaId: string; moduleId: string; lessonId: string }>();
@@ -283,7 +259,7 @@ const MemberAreaLesson = () => {
     );
   }
 
-  const currentSettings = settings || getDefaultSettings(memberAreaId || '');
+  const currentSettings = settings || getDefaultSettings(memberAreaId || null);
   const textColor = currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))';
   const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
   const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';

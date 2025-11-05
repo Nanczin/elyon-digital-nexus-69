@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'; // Importar Outlet
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'; // Importar SidebarTrigger
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { User, Settings, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useGlobalPlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o hook aqui
+// import { useGlobalPlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // REMOVIDO: Não é necessário no layout principal
 
 interface LayoutProps {
   // children: React.ReactNode; // Removido, agora usa Outlet
@@ -17,19 +17,19 @@ const Layout: React.FC<LayoutProps> = () => {
   const {
     user,
     signOut,
-    loading: authLoading // Obter o estado de carregamento do useAuth
+    loading: authLoading
   } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate(); // Inicializar useNavigate aqui
+  const navigate = useNavigate();
   const isAuthPage = location.pathname.startsWith('/auth');
   const isCheckoutPage = location.pathname.startsWith('/checkout') || location.pathname === '/payment-success';
   
   // O Layout principal não aplicará mais estilos globais da área de membros.
   // As páginas da área de membros aplicarão seus próprios estilos.
-  const { loadingSettings } = useGlobalPlatformSettings(); // Ainda pode ser útil para outras lógicas globais
+  // const { loadingSettings } = useGlobalPlatformSettings(); // REMOVIDO: Não é necessário no layout principal
 
-  // Se ainda estiver carregando o estado de autenticação ou as configurações da plataforma, mostre um spinner
-  if (authLoading || loadingSettings) {
+  // Se ainda estiver carregando o estado de autenticação, mostre um spinner
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = () => {
   
   const handleSignOut = async () => {
     await signOut();
-    navigate('/'); // Redirecionar para a página inicial após o logout
+    navigate('/');
   };
 
   if (!user) {
@@ -97,12 +97,12 @@ const Layout: React.FC<LayoutProps> = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col"> {/* Nova div para envolver header e main */}
+        <div className="flex-1 flex flex-col">
           <header 
             className="h-12 sm:h-14 lg:h-16 border-b bg-card flex items-center px-2 sm:px-4 lg:px-6 shrink-0 gap-2 sm:gap-4"
           >
-            <div className="flex items-center gap-2"> {/* Novo wrapper para logo e trigger */}
-              <SidebarTrigger className="flex-shrink-0" /> {/* Botão de recolher/abrir */}
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="flex-shrink-0" />
               <Link to="/" className="flex items-center space-x-2">
                 <img 
                   src="/lovable-uploads/1eaaf35d-a413-41fd-9e08-b1335d8fe50f.png" 
@@ -127,7 +127,7 @@ const Layout: React.FC<LayoutProps> = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive"> {/* Chamar handleSignOut */}
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sair</span>
                   </DropdownMenuItem>
@@ -137,7 +137,7 @@ const Layout: React.FC<LayoutProps> = () => {
           </header>
           {/* Conditional padding for main based on path */}
           <main className={location.pathname === '/' ? "flex-1 overflow-auto p-0" : "flex-1 overflow-auto mobile-container py-4 sm:py-6 lg:py-8"}>
-            <Outlet /> {/* Renderiza o conteúdo da rota aninhada aqui */}
+            <Outlet />
           </main>
         </div>
       </div>

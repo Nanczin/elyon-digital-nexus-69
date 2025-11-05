@@ -10,37 +10,13 @@ import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog'; // Import the new dialog
+import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
+import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
 type Lesson = Tables<'lessons'>;
-
-const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
-  id: '',
-  user_id: null,
-  member_area_id: memberAreaId,
-  logo_url: null,
-  login_title: 'Bem-vindo à sua Área de Membros',
-  login_subtitle: 'Acesse seu conteúdo exclusivo',
-  global_font_family: 'Nunito',
-  colors: {
-    background_login: 'hsl(var(--member-area-background))',
-    card_login: 'hsl(var(--member-area-card-background))',
-    header_background: 'hsl(var(--member-area-background))',
-    header_border: 'transparent',
-    button_background: 'hsl(var(--member-area-primary))',
-    text_primary: 'hsl(var(--member-area-text-dark))',
-    text_header: 'hsl(var(--member-area-text-dark))',
-    text_cards: 'hsl(var(--member-area-text-dark))',
-    text_secondary: 'hsl(var(--member-area-text-muted))',
-    checkmark_background: 'hsl(var(--member-area-checkmark-background))',
-    checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
-  },
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-});
 
 const MemberAreaModuleDetails = () => {
   const { memberAreaId, moduleId } = useParams<{ memberAreaId: string; moduleId: string }>();
@@ -208,7 +184,7 @@ const MemberAreaModuleDetails = () => {
     );
   }
 
-  const currentSettings = settings || getDefaultSettings(memberAreaId || '');
+  const currentSettings = settings || getDefaultSettings(memberAreaId || null);
   const primaryColor = currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))';
   const textColor = currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))';
   const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
@@ -229,10 +205,10 @@ const MemberAreaModuleDetails = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4 border-b" // Adicionado border-b aqui
+        className="flex items-center justify-between h-[72px] px-8 py-4 border-b"
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
-          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))', // Usar cor da borda
+          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
           color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
