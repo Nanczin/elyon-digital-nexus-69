@@ -25,7 +25,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
   const [selectedModules, setSelectedModules] = useState<string[]>(member?.access_modules?.map((ma: any) => ma.module_id) || []);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { user: adminUser, refreshUserSession } = useAuth(); // Obter refreshUserSession
+  const { user: adminUser } = useAuth(); // Obter refreshUserSession
 
   useEffect(() => {
     if (member) {
@@ -159,7 +159,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
       }
       
-      await refreshUserSession(); // Chamar refreshUserSession após salvar
+      // await refreshUserSession(); // REMOVIDO: refreshUserSession não está disponível em useAuth
       onSave();
       onClose();
     } catch (error: any) {

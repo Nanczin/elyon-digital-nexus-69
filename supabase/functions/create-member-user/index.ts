@@ -18,6 +18,7 @@ function generateRandomString(length: number): string {
 }
 
 serve(async (req) => {
+  console.log('EDGE_FUNCTION_DEBUG: create-member-user function started.');
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 });
   }
@@ -28,15 +29,18 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { name, email, password, memberAreaId, selectedModules, isActive } = await req.json();
+    console.log('EDGE_FUNCTION_DEBUG: Received data:', { name, email, password: password ? '***' : 'N/A', memberAreaId, selectedModules, isActive });
 
     if (!name || !email || !password || !memberAreaId) {
+      console.error('EDGE_FUNCTION_DEBUG: Incomplete data received for member creation.');
       return new Response(
-        JSON.stringify({ success: false, error: 'Dados incompletos para criar o membro.' }),
+        JSON.stringify({ success: false, error: 'Dados incompletos para criar o membro (nome, email, senha, memberAreaId são obrigatórios).' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     // 1. Criar usuário no Supabase Auth
+    console.log('EDGE_FUNCTION_DEBUG: Attempting to create user in auth.admin.createUser.');
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -51,7 +55,7 @@ serve(async (req) => {
     });
 
     if (authError) {
-      console.error('EDGE_FUNCTION_DEBUG: Erro ao criar usuário auth.admin.createUser:', authError);
+      console.error('EDGE_FUNCTION_DEBUG: Error creating user with auth.admin.createUser:', authError);
       let statusCode = 500;
       let errorMessage = authError.message || 'Falha ao criar usuário.';
 
@@ -72,14 +76,16 @@ serve(async (req) => {
 
     const newUserId = authData.user?.id;
     if (!newUserId) {
+      console.error('EDGE_FUNCTION_DEBUG: New user ID not returned after auth.admin.createUser.');
       return new Response(
         JSON.stringify({ success: false, error: 'ID do novo usuário não retornado.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
-    console.log('EDGE_FUNCTION_DEBUG: Usuário auth.users criado com ID:', newUserId);
+    console.log('EDGE_FUNCTION_DEBUG: User auth.users created with ID:', newUserId);
 
     // 2. Conceder acesso aos módulos
+    console.log('EDGE_FUNCTION_DEBUG: Attempting to grant module access.');
     const accessInserts = selectedModules.map((moduleId: string) => ({
       user_id: newUserId,
       module_id: moduleId,
@@ -88,29 +94,31 @@ serve(async (req) => {
     }));
 
     if (accessInserts.length > 0) {
+      console.log('EDGE_FUNCTION_DEBUG: Inserting into member_access:', JSON.stringify(accessInserts, null, 2));
       const { error: insertAccessError } = await supabase
         .from('member_access')
         .insert(accessInserts);
 
       if (insertAccessError) {
-        console.error('EDGE_FUNCTION_DEBUG: Erro ao inserir acessos aos módulos:', insertAccessError);
+        console.error('EDGE_FUNCTION_DEBUG: Error inserting module access:', insertAccessError);
         return new Response(
           JSON.stringify({ success: false, error: insertAccessError.message || 'Falha ao conceder acesso aos módulos.' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         );
       }
-      console.log('EDGE_FUNCTION_DEBUG: Acessos aos módulos concedidos para user_id:', newUserId);
+      console.log('EDGE_FUNCTION_DEBUG: Module access granted for user_id:', newUserId);
     } else {
-      console.log('EDGE_FUNCTION_DEBUG: Nenhum módulo selecionado para conceder acesso.');
+      console.log('EDGE_FUNCTION_DEBUG: No modules selected to grant access.');
     }
 
+    console.log('EDGE_FUNCTION_DEBUG: Member creation process completed successfully.');
     return new Response(
       JSON.stringify({ success: true, userId: newUserId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error: any) {
-    console.error('EDGE_FUNCTION_DEBUG: Erro geral na função create-member-user:', error.message, 'Stack:', error.stack);
+    console.error('EDGE_FUNCTION_DEBUG: General error in create-member-user function:', error.message, 'Stack:', error.stack);
     return new Response(
       JSON.stringify({ success: false, error: error.message || 'Erro interno do servidor.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

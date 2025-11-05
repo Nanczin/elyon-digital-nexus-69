@@ -10,11 +10,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Lock, Camera, Eye, EyeOff, Save, UploadCloud, Loader2, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
-import { supabase } from '@/integrations/supabase/client'; // Use main supabase client for profile updates
+import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient'; // Usar o cliente da área de membros
 import { useGlobalPlatformSettings } from '@/hooks/useGlobalPlatformSettings';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface ProfileSettingsDialogProps {
@@ -101,7 +100,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
         // Store in a user-specific subfolder within 'avatars'
         const filePath = `avatars/${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await memberAreaSupabase.storage // Usar memberAreaSupabase
           .from('member-area-content')
           .upload(filePath, avatarFile, {
             cacheControl: '3600',
@@ -110,7 +109,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
 
         if (uploadError) throw uploadError;
         
-        const { data: publicUrlData } = supabase.storage
+        const { data: publicUrlData } = memberAreaSupabase.storage // Usar memberAreaSupabase
           .from('member-area-content')
           .getPublicUrl(filePath);
         
@@ -119,7 +118,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
         // User explicitly removed avatar, also delete from storage if it exists
         const oldAvatarPath = user.user_metadata.avatar_url.split('member-area-content/')[1];
         if (oldAvatarPath) {
-          const { error: deleteStorageError } = await supabase.storage
+          const { error: deleteStorageError } = await memberAreaSupabase.storage // Usar memberAreaSupabase
             .from('member-area-content')
             .remove([oldAvatarPath]);
           if (deleteStorageError) console.error('Error deleting old avatar from storage:', deleteStorageError);
@@ -134,7 +133,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
       });
 
       // Update auth.users metadata
-      const { data: authUpdateData, error: authUpdateError } = await supabase.auth.updateUser({
+      const { data: authUpdateData, error: authUpdateError } = await memberAreaSupabase.auth.updateUser({ // Usar memberAreaSupabase
         data: {
           name: values.name,
           avatar_url: newAvatarUrl,
@@ -144,7 +143,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
       if (authUpdateError) throw authUpdateError;
 
       // Update public.profiles table
-      const { error: profileUpdateError } = await supabase
+      const { error: profileUpdateError } = await memberAreaSupabase // Usar memberAreaSupabase
         .from('profiles')
         .update({
           name: values.name,
@@ -172,7 +171,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
     setIsSavingPassword(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await memberAreaSupabase.auth.updateUser({ // Usar memberAreaSupabase
         password: values.newPassword,
       });
 
