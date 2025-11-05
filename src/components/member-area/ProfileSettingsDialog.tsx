@@ -157,6 +157,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
       toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso!' });
       setAvatarPreview(newAvatarUrl); // Update local preview immediately
       await refreshUserSession(); // Refresh user data in context
+      console.log('PROFILE_SETTINGS_DEBUG: User after refreshUserSession:', user?.user_metadata?.avatar_url); // Log after refresh
       setIsOpen(false);
     } catch (error: any) {
       console.error('Error updating profile:', error);

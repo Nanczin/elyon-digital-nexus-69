@@ -190,6 +190,7 @@ const MemberAreaDashboard = () => {
   const userInitial = userName.charAt(0).toUpperCase();
   const memberAreaNameInitials = memberArea?.name ? memberArea.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'MA';
 
+  console.log('MEMBER_AREA_DASHBOARD_DEBUG: User avatar_url before AvatarImage:', user?.user_metadata?.avatar_url); // Log before AvatarImage
 
   return (
     <div 
