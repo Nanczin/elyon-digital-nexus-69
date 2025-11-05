@@ -36,6 +36,8 @@ import MemberAreaLogin from "./pages/MemberAreaLogin"; // Importar a nova págin
 import MemberAreaDashboard from "./pages/MemberAreaDashboard"; // Importar a nova página de dashboard da área de membros
 import MemberAreaModuleDetails from "./pages/MemberAreaModuleDetails"; // Importar a nova página de detalhes do módulo
 import MemberAreaLesson from "./pages/MemberAreaLesson"; // Importar a nova página de aula
+import AuthForgotPassword from "./pages/AuthForgotPassword"; // Importar a nova página de recuperação de senha
+import AuthUpdatePassword from "./pages/AuthUpdatePassword"; // Importar a nova página de atualização de senha
 // import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
 // import { useEffect } from "react";
 
@@ -101,6 +103,8 @@ const App = () => {
                   {/* Rotas públicas da Área de Membros (NÃO usam o Layout principal) */}
                   <Route element={<MemberAreaAuthProvider> <Outlet /> </MemberAreaAuthProvider>}> {/* Envolver com o novo provedor */}
                     <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
+                    <Route path="/membros/:memberAreaId/forgot-password" element={<AuthForgotPassword />} /> {/* Nova rota de recuperação de senha */}
+                    <Route path="/membros/:memberAreaId/update-password" element={<AuthUpdatePassword />} /> {/* Nova rota de atualização de senha */}
                     <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
                     <Route path="/membros/:memberAreaId/modules/:moduleId" element={<MemberAreaModuleDetails />} /> {/* Nova rota para detalhes do módulo */}
                     <Route path="/membros/:memberAreaId/modules/:moduleId/lessons/:lessonId" element={<MemberAreaLesson />} /> {/* Nova rota para a aula */}
