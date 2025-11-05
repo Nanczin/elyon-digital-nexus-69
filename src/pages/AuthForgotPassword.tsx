@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom'; // Alterado para useParams
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,8 +40,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
 });
 
 const AuthForgotPassword = () => {
-  const [searchParams] = useSearchParams();
-  const memberAreaId = searchParams.get('memberAreaId');
+  const { memberAreaId } = useParams<{ memberAreaId: string }>(); // Alterado para useParams
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
