@@ -201,7 +201,7 @@ const MemberAreaLogin = () => {
           <div className="mt-6 text-center">
             <p className="text-sm" style={{ color: currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))' }}>
               Esqueceu sua senha?{' '}
-              <Link to={`/auth/forgot-password?memberAreaId=${memberAreaId}`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))' }}>
+              <Link to={`/membros/${memberAreaId}/forgot-password`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))' }}>
                 Recuperar senha
               </Link>
             </p>
