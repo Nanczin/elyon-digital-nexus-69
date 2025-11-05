@@ -33,7 +33,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       id: 'welcome',
       title: 'Boas-vindas e orientações iniciais',
       description: 'Comece sua jornada aqui! Orientações essenciais para aproveitar ao máximo o Método Remãe.',
-      banner_url: '/lovable-uploads/60aef8b0-cab0-4f83-87eb-eced18d89bff.png', // Exemplo de imagem
+      banner_url: '/lovable-uploads/60aef8b0-cab0-41fd-9e08-b1335d8fe50f.png', // Exemplo de imagem
       isCompleted: true,
     },
     {
@@ -108,7 +108,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
           Olá, {userName}!
         </h1>
         <p className="text-lg" style={{ color: secondaryTextColor }}>
-          Bem-vinda à sua área de membros. Escolha um módulo para começar.
+          Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-6xl mx-auto">

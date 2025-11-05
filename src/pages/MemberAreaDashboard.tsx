@@ -262,7 +262,7 @@ const MemberAreaDashboard = () => {
           Olá, {userName}!
         </h1>
         <p className="text-xl font-normal leading-relaxed" style={{ color: secondaryTextColor }}>
-          Bem-vinda à sua área de membros. Escolha um módulo para começar.
+          Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
         </p>
 
         {/* CARDS DE MÓDULOS */}
