@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate, useParams } from 'react-router-dom'; // Import useParams
+import { Navigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { MessageCircle, Trash2, Eye, User, Calendar, BookOpen } from 'lucide-react';
+import { MessageCircle, Trash2, Eye, User, Calendar, BookOpen, MessageSquarePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,19 +15,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Componente para exibir detalhes do post e comentários
 const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose: () => void, memberAreaId: string }) => {
-  const [comments, setComments] = useState<any[]>([]);
-  const [loadingComments, setLoadingComments] = useState(true);
+  const [communityComments, setCommunityComments] = useState<any[]>([]);
+  const [lessonComments, setLessonComments] = useState<any[]>([]); // Novo estado para comentários da aula
+  const [loadingCommunityComments, setLoadingCommunityComments] = useState(true);
+  const [loadingLessonComments, setLoadingLessonComments] = useState(true); // Novo estado de loading
   const { toast } = useToast();
   const { user: adminUser } = useAuth();
 
   useEffect(() => {
     if (post?.id) {
-      fetchComments(post.id);
+      fetchCommunityComments(post.id);
     }
-  }, [post?.id]);
+    if (post?.lesson_id) { // Buscar comentários da aula se o post estiver vinculado a uma aula
+      fetchLessonComments(post.lesson_id);
+    }
+  }, [post?.id, post?.lesson_id]);
 
-  const fetchComments = async (postId: string) => {
-    setLoadingComments(true);
+  const fetchCommunityComments = async (postId: string) => {
+    setLoadingCommunityComments(true);
     const { data, error } = await supabase
       .from('community_comments')
       .select(`
@@ -38,15 +43,35 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
       .order('created_at', { ascending: true });
     
     if (error) {
-      toast({ title: "Erro", description: "Falha ao carregar comentários.", variant: "destructive" });
+      toast({ title: "Erro", description: "Falha ao carregar comentários da comunidade.", variant: "destructive" });
       console.error(error);
     } else {
-      setComments(data || []);
+      setCommunityComments(data || []);
     }
-    setLoadingComments(false);
+    setLoadingCommunityComments(false);
   };
 
-  const handleDeleteComment = async (commentId: string) => {
+  const fetchLessonComments = async (lessonId: string) => {
+    setLoadingLessonComments(true);
+    const { data, error } = await supabase
+      .from('lesson_comments')
+      .select(`
+        *,
+        profiles(name, avatar_url)
+      `)
+      .eq('lesson_id', lessonId)
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao carregar comentários da aula.", variant: "destructive" });
+      console.error(error);
+    } else {
+      setLessonComments(data || []);
+    }
+    setLoadingLessonComments(false);
+  };
+
+  const handleDeleteCommunityComment = async (commentId: string) => {
     try {
       const { error } = await supabase
         .from('community_comments')
@@ -54,10 +79,26 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
         .eq('id', commentId);
       
       if (error) throw error;
-      toast({ title: "Sucesso", description: "Comentário excluído." });
-      fetchComments(post.id); // Refresh comments
+      toast({ title: "Sucesso", description: "Comentário da comunidade excluído." });
+      fetchCommunityComments(post.id); // Refresh comments
     } catch (error: any) {
-      toast({ title: "Erro", description: error.message || "Falha ao excluir comentário.", variant: "destructive" });
+      toast({ title: "Erro", description: error.message || "Falha ao excluir comentário da comunidade.", variant: "destructive" });
+      console.error(error);
+    }
+  };
+
+  const handleDeleteLessonComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('lesson_comments')
+        .delete()
+        .eq('id', commentId);
+      
+      if (error) throw error;
+      toast({ title: "Sucesso", description: "Comentário da aula excluído." });
+      fetchLessonComments(post.lesson_id); // Refresh comments
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message || "Falha ao excluir comentário da aula.", variant: "destructive" });
       console.error(error);
     }
   };
@@ -80,14 +121,15 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
           </CardContent>
         </Card>
 
-        <h3 className="font-semibold text-lg">Comentários ({comments.length})</h3>
-        {loadingComments ? (
-          <p>Carregando comentários...</p>
-        ) : comments.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nenhum comentário ainda.</p>
+        {/* Seção de Comentários da Comunidade */}
+        <h3 className="font-semibold text-lg">Comentários da Comunidade ({communityComments.length})</h3>
+        {loadingCommunityComments ? (
+          <p>Carregando comentários da comunidade...</p>
+        ) : communityComments.length === 0 ? (
+          <p className="text-muted-foreground text-sm">Nenhum comentário da comunidade ainda.</p>
         ) : (
           <div className="space-y-3">
-            {comments.map(comment => (
+            {communityComments.map(comment => (
               <div key={comment.id} className="flex items-start gap-3 p-3 border rounded-lg">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={comment.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${comment.profiles?.name}`} />
@@ -111,12 +153,12 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
                       <AlertDialogHeader>
                         <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja excluir este comentário? Esta ação é irreversível.
+                          Tem certeza que deseja excluir este comentário da comunidade? Esta ação é irreversível.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteComment(comment.id)}>Excluir</AlertDialogAction>
+                        <AlertDialogAction onClick={() => handleDeleteCommunityComment(comment.id)}>Excluir</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -124,6 +166,59 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
               </div>
             ))}
           </div>
+        )}
+
+        {/* Nova Seção de Comentários da Aula */}
+        {post.lesson_id && (
+          <>
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <MessageSquarePlus className="h-5 w-5" /> Comentários da Aula ({lessonComments.length})
+            </h3>
+            {loadingLessonComments ? (
+              <p>Carregando comentários da aula...</p>
+            ) : lessonComments.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Nenhum comentário na aula ainda.</p>
+            ) : (
+              <div className="space-y-3">
+                {lessonComments.map(comment => (
+                  <div key={comment.id} className="flex items-start gap-3 p-3 border rounded-lg bg-blue-50/20"> {/* Estilo diferente para diferenciar */}
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={comment.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${comment.profiles?.name}`} />
+                      <AvatarFallback>{comment.profiles?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-sm">{comment.profiles?.name || 'Membro da Aula'}</p>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-1">{comment.content}</p>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive h-6 px-2 mt-2">
+                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir este comentário da aula? Esta ação é irreversível.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteLessonComment(comment.id)}>Excluir</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
       <Button onClick={onClose} className="w-full mt-4">Fechar</Button>
@@ -157,7 +252,7 @@ const AdminCommunity = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
         profiles(name, avatar_url),
         modules(title)
       `)
-      .eq('member_area_id', currentMemberAreaId) // Filter by memberAreaId
+      .eq('member_area_id', currentMemberAreaId)
       .order('created_at', { ascending: false });
     
     if (error) {
