@@ -370,11 +370,7 @@ const MemberAreaLesson = () => {
                 {lesson.description.trim()}
               </p>
             )}
-            {lesson.duration_minutes && (
-              <div className="flex items-center text-sm mt-4" style={{ color: secondaryTextColor }}>
-                <Clock className="h-4 w-4 mr-2" /> {lesson.duration_minutes} minutos de duração
-              </div>
-            )}
+            {/* Removido o bloco de exibição da duração da aula */}
           </CardHeader>
           <CardContent className="px-0">
             {renderLessonContent(lesson)}
