@@ -50,17 +50,17 @@ const getDefaultSettings = (memberAreaId: string, userId: string | null = null):
   login_subtitle: 'Acesse seu conteúdo exclusivo',
   global_font_family: 'Nunito', // Default font
   colors: {
-    background_login: 'hsl(var(--member-area-background))',
-    card_login: 'hsl(var(--member-area-card-background))',
-    header_background: 'hsl(var(--member-area-background))', // Changed to match page background
+    background_login: '#FAF6F3', // hsl(24 40% 97%)
+    card_login: '#FFFFFF',      // hsl(0 0% 100%)
+    header_background: '#FAF6F3', // Changed to match page background
     header_border: 'transparent', // Changed to transparent
-    button_background: 'hsl(var(--member-area-primary))',
-    text_primary: 'hsl(var(--member-area-text-dark))',
-    text_header: 'hsl(var(--member-area-text-dark))',
-    text_cards: 'hsl(var(--member-area-text-dark))',
-    text_secondary: 'hsl(var(--member-area-text-muted))',
-    checkmark_background: 'hsl(var(--member-area-checkmark-background))',
-    checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
+    button_background: '#EBA9A4', // hsl(4 50% 78%)
+    text_primary: '#2A2A2A',    // hsl(0 0% 16%)
+    text_header: '#2A2A2A',     // hsl(0 0% 16%)
+    text_cards: '#2A2A2A',      // hsl(0 0% 16%)
+    text_secondary: '#676767',  // hsl(0 0% 40%)
+    checkmark_background: '#D1FAE5', // hsl(142 50% 89%)
+    checkmark_icon: '#63C68B',     // hsl(142 80% 40%)
   },
 });
 

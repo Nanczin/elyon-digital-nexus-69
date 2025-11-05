@@ -16,19 +16,19 @@ const getDefaultSettings = (memberAreaId: string, userId: string | null = null):
   logo_url: null,
   login_title: 'Bem-vindo à sua Área de Membros',
   login_subtitle: 'Acesse seu conteúdo exclusivo',
-  global_font_family: 'Inter', // Default font
+  global_font_family: 'Nunito', // Default font
   colors: {
-    background_login: '#F0F2F5', // Light beige/off-white
-    card_login: '#FFFFFF',      // White
-    header_background: '#FFFFFF', // White
-    header_border: '#E5E7EB',   // Light gray
-    button_background: '#E98B8B', // Pinkish-red from image
-    text_primary: '#1F2937',    // Dark gray
-    text_header: '#1F2937',     // Dark gray
-    text_cards: '#1F2937',      // Dark gray
-    text_secondary: '#6B7280',  // Medium gray
-    checkmark_background: '#D1FAE5', // Light green for badge background
-    checkmark_icon: '#059669',     // Darker green for checkmark icon
+    background_login: '#FAF6F3', // hsl(24 40% 97%)
+    card_login: '#FFFFFF',      // hsl(0 0% 100%)
+    header_background: '#FAF6F3', // Changed to match page background
+    header_border: 'transparent', // Changed to transparent
+    button_background: '#EBA9A4', // hsl(4 50% 78%)
+    text_primary: '#2A2A2A',    // hsl(0 0% 16%)
+    text_header: '#2A2A2A',     // hsl(0 0% 16%)
+    text_cards: '#2A2A2A',      // hsl(0 0% 16%)
+    text_secondary: '#676767',  // hsl(0 0% 40%)
+    checkmark_background: '#D1FAE5', // hsl(142 50% 89%)
+    checkmark_icon: '#63C68B',     // hsl(142 80% 40%)
   },
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),

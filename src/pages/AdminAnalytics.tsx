@@ -79,6 +79,30 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
+      // Fetch all module IDs for the current member area
+      const { data: modulesData, error: modulesError } = await supabase
+        .from('modules')
+        .select('id')
+        .eq('member_area_id', currentMemberAreaId);
+      if (modulesError) throw modulesError;
+      const moduleIds = modulesData.map(m => m.id);
+
+      // Fetch all lesson IDs for these modules
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('id')
+        .in('module_id', moduleIds);
+      if (lessonsError) throw lessonsError;
+      const lessonIds = lessonsData.map(l => l.id);
+
+      // Fetch all community post IDs for the current member area
+      const { data: communityPostsData, error: communityPostsError } = await supabase
+        .from('community_posts')
+        .select('id')
+        .eq('member_area_id', currentMemberAreaId);
+      if (communityPostsError) throw communityPostsError;
+      const communityPostIds = communityPostsData.map(p => p.id);
+
       // Basic Stats
       // Total de Membros
       const { count: totalMembers } = await supabase
@@ -110,13 +134,13 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       const { count: totalLessons } = await supabase
         .from('lessons')
         .select('id', { count: 'exact', head: true })
-        .in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId));
+        .in('module_id', moduleIds); // Use the fetched moduleIds
 
       // Aulas Publicadas
       const { count: publishedLessons } = await supabase
         .from('lessons')
         .select('id', { count: 'exact', head: true })
-        .in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId))
+        .in('module_id', moduleIds) // Use the fetched moduleIds
         .eq('status', 'published');
 
       // Total de Posts da Comunidade
@@ -129,13 +153,13 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       const { count: totalCommunityComments } = await supabase
         .from('community_comments')
         .select('id', { count: 'exact', head: true })
-        .in('post_id', supabase.from('community_posts').select('id').eq('member_area_id', currentMemberAreaId));
+        .in('post_id', communityPostIds); // Use the fetched communityPostIds
 
       // Taxa Média de Conclusão de Aulas (simplificado)
       const { count: totalCompletions } = await supabase
         .from('lesson_completions')
         .select('id', { count: 'exact', head: true })
-        .in('lesson_id', supabase.from('lessons').select('id').in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId)));
+        .in('lesson_id', lessonIds); // Use the fetched lessonIds
       
       const avgLessonCompletionRate = (totalLessons && totalCompletions) ? (totalCompletions / (totalLessons * (totalMembers || 1))) * 100 : 0;
 
@@ -176,7 +200,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       const { data: lessonCompletionsRawData, error: lessonCompletionsError } = await supabase
         .from('lesson_completions')
         .select('created_at')
-        .in('lesson_id', supabase.from('lessons').select('id').in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId)))
+        .in('lesson_id', lessonIds) // Use the fetched lessonIds
         .gte('created_at', thirtyDaysAgo);
       if (lessonCompletionsError) console.error('Error fetching lesson completions data:', lessonCompletionsError);
       setLessonCompletionsTrend(generateDailyData(lessonCompletionsRawData || [], 30, 'lessonCompletions'));
