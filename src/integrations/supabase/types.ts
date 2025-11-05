@@ -1260,7 +1260,7 @@ export type Database = {
           },
         ];
       };
-      lesson_comments: { -- NEW TABLE
+      lesson_comments: { // NEW TABLE
         Row: {
           id: string;
           lesson_id: string;
@@ -1298,7 +1298,7 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            referencedColumns: ["user_id"]; // Alterado para referenciar profiles.user_id
           },
         ];
       };
