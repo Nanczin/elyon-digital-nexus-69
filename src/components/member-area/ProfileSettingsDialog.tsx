@@ -13,7 +13,8 @@ import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient'; // Usar o cliente da área de membros
 import { useGlobalPlatformSettings } from '@/hooks/useGlobalPlatformSettings';
 import { z } from 'zod';
-import { useForm } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form'; // CORRIGIDO: Importar useForm de react-hook-form
+import { zodResolver } from '@hookform/resolvers/zod'; // Manter zodResolver aqui
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface ProfileSettingsDialogProps {
