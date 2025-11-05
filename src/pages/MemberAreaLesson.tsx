@@ -10,7 +10,8 @@ import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog'; // Import the new dialog
+import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
+import LessonComments from '@/components/member-area/LessonComments'; // Import the new component
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -33,7 +34,7 @@ const getDefaultSettings = (memberAreaId: string): PlatformSettings => ({
     button_background: 'hsl(var(--member-area-primary))',
     text_primary: 'hsl(var(--member-area-text-dark))',
     text_header: 'hsl(var(--member-area-text-dark))',
-    text_cards: 'hsl(var(--member-area-card-background))',
+    text_cards: 'hsl(var(--member-area-text-dark))',
     text_secondary: 'hsl(var(--member-area-text-muted))',
     checkmark_background: 'hsl(var(--member-area-checkmark-background))',
     checkmark_icon: 'hsl(var(--member-area-checkmark-icon))',
@@ -302,10 +303,10 @@ const MemberAreaLesson = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4 border-b" // Adicionado border-b aqui
+        className="flex items-center justify-between h-[72px] px-8 py-4 border-b"
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
-          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))', // Usar cor da borda
+          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
           color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
@@ -370,12 +371,16 @@ const MemberAreaLesson = () => {
                 {lesson.description.trim()}
               </p>
             )}
-            {/* Removido o bloco de exibição da duração da aula */}
           </CardHeader>
           <CardContent className="px-0">
             {renderLessonContent(lesson)}
           </CardContent>
         </Card>
+
+        {/* Lesson Comments Section */}
+        <div className="mt-8">
+          <LessonComments lessonId={lessonId || ''} memberAreaId={memberAreaId || ''} />
+        </div>
       </div>
     </div>
   );
