@@ -228,7 +228,11 @@ const MemberAreaDashboard = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
               <Avatar className="h-9 w-9 border border-gray-200">
-                <AvatarImage src={user?.user_metadata?.avatar_url || undefined} alt={userName} />
+                <AvatarImage 
+                  key={user?.user_metadata?.avatar_url || 'default-avatar'} // Adicionado key para forçar re-render
+                  src={user?.user_metadata?.avatar_url || undefined} 
+                  alt={userName} 
+                />
                 <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
                   {userInitial}
                 </AvatarFallback>
