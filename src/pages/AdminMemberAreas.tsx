@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, MonitorDot, Trash2, Edit, Link as LinkIcon, Image, Palette } from 'lucide-react';
+import { Plus, MonitorDot, Trash2, Edit, Link as LinkIcon, Image, Palette, BookOpen } from 'lucide-react'; // Adicionado BookOpen
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -158,6 +158,19 @@ const AdminMemberAreas = () => {
     }
   };
 
+  const handleEdit = (area: MemberArea) => {
+    setEditingArea(area);
+    setFormData({
+      name: area.name,
+      slug: area.slug,
+      description: area.description || '',
+      logo_url: area.logo_url || '',
+      primary_color: area.primary_color || '#3b82f6',
+      logoFile: null, // Clear file input when editing
+    });
+    setIsDialogOpen(true);
+  };
+
   if (authLoading || loading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
@@ -175,7 +188,15 @@ const AdminMemberAreas = () => {
             Crie e gerencie suas áreas de membros personalizadas
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) { // When dialog is closed
+            setEditingArea(null); // Clear editing state
+            setFormData({ // Reset form data
+              name: '', slug: '', description: '', logo_url: '', primary_color: '#3b82f6', logoFile: null
+            });
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingArea(null);
@@ -288,9 +309,14 @@ const AdminMemberAreas = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* Botão para EDITAR DETALHES (Nome, Slug, etc.) */}
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(area)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    {/* Botão para GERENCIAR CONTEÚDO */}
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/admin/member-areas/${area.id}/content`}> {/* Navigate to details page */}
-                        <Edit className="h-4 w-4" />
+                      <Link to={`/admin/member-areas/${area.id}/content`}>
+                        <BookOpen className="h-4 w-4" />
                       </Link>
                     </Button>
                     <AlertDialog>
