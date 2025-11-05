@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Lock, Camera, Eye, EyeOff, Save, UploadCloud, Loader2 } from 'lucide-react';
+import { User, Lock, Camera, Eye, EyeOff, Save, UploadCloud, Loader2, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { supabase } from '@/integrations/supabase/client'; // Use main supabase client for profile updates
