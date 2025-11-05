@@ -98,8 +98,8 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
 
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        // Store in a user-specific subfolder within 'avatars'
+        const filePath = `avatars/${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('member-area-content')
@@ -116,9 +116,22 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
         
         newAvatarUrl = publicUrlData.publicUrl;
       } else if (avatarPreview === null && user.user_metadata?.avatar_url) {
-        // User explicitly removed avatar
+        // User explicitly removed avatar, also delete from storage if it exists
+        const oldAvatarPath = user.user_metadata.avatar_url.split('member-area-content/')[1];
+        if (oldAvatarPath) {
+          const { error: deleteStorageError } = await supabase.storage
+            .from('member-area-content')
+            .remove([oldAvatarPath]);
+          if (deleteStorageError) console.error('Error deleting old avatar from storage:', deleteStorageError);
+        }
         newAvatarUrl = null;
       }
+
+      console.log('PROFILE_SETTINGS_DEBUG: Attempting to update profile with:', {
+        name: values.name,
+        avatar_url: newAvatarUrl,
+        userId: user.id
+      });
 
       // Update auth.users metadata
       const { data: authUpdateData, error: authUpdateError } = await supabase.auth.updateUser({
