@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Video, TrendingUp, MessageCircle, BarChart3 } from 'lucide-react';
+import { Users, BookOpen, Video, TrendingUp, MessageCircle, BarChart3, CheckCircle2 } from 'lucide-react'; // Adicionado CheckCircle2
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast'; // Import useToast
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'; // Import recharts components
@@ -13,10 +13,14 @@ interface AnalyticsStats {
   totalMembers: number;
   activeMembers: number;
   totalModules: number;
+  publishedModules: number; // Nova métrica
   totalLessons: number;
+  publishedLessons: number; // Nova métrica
+  avgLessonsPerModule: number; // Nova métrica
   avgLessonCompletionRate: number;
   totalCommunityPosts: number;
   totalCommunityComments: number;
+  avgCommentsPerPost: number; // Nova métrica
 }
 
 interface DailyDataPoint {
@@ -89,17 +93,31 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
         .eq('status', 'active')
         .eq('member_area_id', currentMemberAreaId);
 
-      // Total de Módulos
+      // Total de Módulos (todos)
       const { count: totalModules } = await supabase
         .from('modules')
         .select('id', { count: 'exact', head: true })
         .eq('member_area_id', currentMemberAreaId);
 
-      // Total de Aulas
+      // Módulos Publicados
+      const { count: publishedModules } = await supabase
+        .from('modules')
+        .select('id', { count: 'exact', head: true })
+        .eq('member_area_id', currentMemberAreaId)
+        .eq('status', 'published');
+
+      // Total de Aulas (todas)
       const { count: totalLessons } = await supabase
         .from('lessons')
         .select('id', { count: 'exact', head: true })
         .in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId));
+
+      // Aulas Publicadas
+      const { count: publishedLessons } = await supabase
+        .from('lessons')
+        .select('id', { count: 'exact', head: true })
+        .in('module_id', supabase.from('modules').select('id').eq('member_area_id', currentMemberAreaId))
+        .eq('status', 'published');
 
       // Total de Posts da Comunidade
       const { count: totalCommunityPosts } = await supabase
@@ -121,14 +139,25 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       
       const avgLessonCompletionRate = (totalLessons && totalCompletions) ? (totalCompletions / (totalLessons * (totalMembers || 1))) * 100 : 0;
 
+      // Média de Aulas por Módulo
+      const avgLessonsPerModule = (totalModules && totalLessons) ? (totalLessons / totalModules) : 0;
+
+      // Média de Comentários por Post
+      const avgCommentsPerPost = (totalCommunityPosts && totalCommunityComments) ? (totalCommunityComments / totalCommunityPosts) : 0;
+
+
       setStats({
         totalMembers: totalMembers || 0,
         activeMembers: activeMembers || 0,
         totalModules: totalModules || 0,
+        publishedModules: publishedModules || 0,
         totalLessons: totalLessons || 0,
+        publishedLessons: publishedLessons || 0,
+        avgLessonsPerModule: parseFloat(avgLessonsPerModule.toFixed(2)),
         avgLessonCompletionRate: parseFloat(avgLessonCompletionRate.toFixed(2)),
         totalCommunityPosts: totalCommunityPosts || 0,
         totalCommunityComments: totalCommunityComments || 0,
+        avgCommentsPerPost: parseFloat(avgCommentsPerPost.toFixed(2)),
       });
 
       // Chart Data - Last 30 days
@@ -176,7 +205,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
 
   return (
     <div className="p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Membros</CardTitle>
@@ -192,13 +221,39 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Membros Ativos</CardTitle>
+            <Users className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeMembers}</div>
+            <p className="text-xs text-muted-foreground">
+              Membros com status 'ativo'
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Módulos</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalModules}</div>
             <p className="text-xs text-muted-foreground">
-              Conteúdo organizado
+              Módulos criados (rascunho + publicado)
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Módulos Publicados</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.publishedModules}</div>
+            <p className="text-xs text-muted-foreground">
+              Módulos visíveis para membros
             </p>
           </CardContent>
         </Card>
@@ -211,7 +266,33 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalLessons}</div>
             <p className="text-xs text-muted-foreground">
-              Aulas disponíveis
+              Aulas criadas (rascunho + publicado)
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Aulas Publicadas</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.publishedLessons}</div>
+            <p className="text-xs text-muted-foreground">
+              Aulas visíveis para membros
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Média de Aulas/Módulo</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.avgLessonsPerModule}</div>
+            <p className="text-xs text-muted-foreground">
+              Aulas por módulo em média
             </p>
           </CardContent>
         </Card>
@@ -251,6 +332,19 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <div className="text-2xl font-bold">{stats.totalCommunityComments}</div>
             <p className="text-xs text-muted-foreground">
               Total de interações
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Média de Comentários/Post</CardTitle>
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.avgCommentsPerPost}</div>
+            <p className="text-xs text-muted-foreground">
+              Comentários por post em média
             </p>
           </CardContent>
         </Card>
