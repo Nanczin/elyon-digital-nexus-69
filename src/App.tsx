@@ -66,6 +66,10 @@ const App = () => {
                   <Route path="/auth/login" element={<AuthLogin />} />
                   <Route path="/auth/register" element={<AuthRegister />} />
 
+                  {/* Rotas de Checkout e Sucesso de Pagamento que NÃO usam o Layout principal */}
+                  <Route path="/checkout/:checkoutId" element={<Checkout />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+
                   {/* Rotas que usam o Layout principal da Elyon */}
                   <Route element={<Layout />}>
                     <Route path="/" element={<Index />} />
@@ -89,9 +93,7 @@ const App = () => {
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/payments" element={<Payments />} />
                     <Route path="/settings" element={<Settings />} />
-                    <Route path="/checkout/:checkoutId" element={<Checkout />} />
                     
-                    <Route path="/payment-success" element={<PaymentSuccess />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Route>
