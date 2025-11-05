@@ -70,19 +70,33 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
 
   const refreshUserSession = async () => {
     setLoading(true);
-    const { data: { session: newSession }, error } = await memberAreaSupabase.auth.refreshSession();
-    if (error) {
+    try {
+      // Primeiro, tenta refrescar a sessão
+      const { data: { session: newSession }, error: refreshError } = await memberAreaSupabase.auth.refreshSession();
+      if (refreshError) {
+        throw refreshError;
+      }
+
+      // Em seguida, busca o usuário mais recente para garantir que o user_metadata esteja atualizado
+      const { data: { user: latestUser }, error: userError } = await memberAreaSupabase.auth.getUser();
+      if (userError) {
+        throw userError;
+      }
+      
+      setSession(newSession);
+      setUser(latestUser);
+      console.log('MEMBER_AREA_AUTH_DEBUG: User session refreshed. Latest user data:', latestUser);
+
+    } catch (error: any) {
       console.error("Erro ao atualizar sessão do usuário da área de membros:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar os dados do usuário.",
+        description: error.message || "Não foi possível atualizar os dados do usuário.",
         variant: "destructive",
       });
-    } else {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const value = {

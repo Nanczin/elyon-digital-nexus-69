@@ -155,6 +155,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
       if (profileUpdateError) throw profileUpdateError;
 
       toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso!' });
+      setAvatarPreview(newAvatarUrl); // Update local preview immediately
       await refreshUserSession(); // Refresh user data in context
       setIsOpen(false);
     } catch (error: any) {
@@ -362,10 +363,9 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   {isSavingPassword ? 'Salvando...' : 'Alterar Senha'}
                 </Button>
               </form>
-            </Form>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
     </Dialog>
   );
 };
