@@ -363,9 +363,10 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   {isSavingPassword ? 'Salvando...' : 'Alterar Senha'}
                 </Button>
               </form>
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
+            </Form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
     </Dialog>
   );
 };
