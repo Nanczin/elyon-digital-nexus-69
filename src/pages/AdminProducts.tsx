@@ -109,15 +109,17 @@ const AdminProducts = () => {
     const filePath = `${folder}/${fileName}`;
 
     try {
+      console.log(`ADMIN_PRODUCTS_DEBUG: Chamando supabase.storage.from('products').upload para ${filePath}`);
       const { error: uploadError } = await supabase.storage
         .from('products')
         .upload(filePath, file);
 
       if (uploadError) {
-        console.error(`ADMIN_PRODUCTS_DEBUG: Erro no upload do arquivo ${file.name}:`, uploadError);
+        console.error(`ADMIN_PRODUCTS_DEBUG: ERRO NO UPLOAD DO ARQUIVO ${file.name}:`, uploadError);
         throw uploadError;
       }
 
+      console(`ADMIN_PRODUCTS_DEBUG: Upload de ${file.name} concluído. Obtendo URL pública.`);
       const { data } = supabase.storage
         .from('products')
         .getPublicUrl(filePath);
@@ -125,7 +127,7 @@ const AdminProducts = () => {
       console.log(`ADMIN_PRODUCTS_DEBUG: Arquivo ${file.name} enviado com sucesso. URL: ${data.publicUrl}`);
       return data.publicUrl;
     } catch (error) {
-      console.error(`ADMIN_PRODUCTS_DEBUG: Exceção durante o upload do arquivo ${file.name}:`, error);
+      console.error(`ADMIN_PRODUCTS_DEBUG: EXCEÇÃO DURANTE O UPLOAD DO ARQUIVO ${file.name}:`, error);
       throw error; // Re-throw para ser capturado pelo handleSubmit/handleUpdate
     }
   };
@@ -222,6 +224,7 @@ const AdminProducts = () => {
     }
 
     setIsLoading(true);
+    console.log('ADMIN_PRODUCTS_DEBUG: Iniciando handleSubmit (criar produto).');
     try {
       let bannerUrl = null;
       let logoUrl = null;
@@ -229,20 +232,38 @@ const AdminProducts = () => {
 
       // Upload banner if exists
       if (formData.banner) {
+        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do banner.');
         bannerUrl = await uploadFile(formData.banner, 'banners');
       }
 
       // Upload logo if exists
       if (formData.logo) {
+        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do logo.');
         logoUrl = await uploadFile(formData.logo, 'logos');
       }
 
       // Upload deliverable if exists
       if (formData.deliverable) {
+        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do entregável.');
         fileUrl = await uploadFile(formData.deliverable, 'deliverables');
       } else if (formData.deliveryType === 'deliverableLink') {
+        console.log('ADMIN_PRODUCTS_DEBUG: Usando link direto para entregável.');
         fileUrl = formData.deliverableLink;
       }
+
+      console.log('ADMIN_PRODUCTS_DEBUG: Dados para inserção no DB:', {
+        user_id: user?.id,
+        member_area_id: formData.member_area_id,
+        name: formData.name,
+        description: formData.description,
+        price: parseInt(formData.price) * 100,
+        banner_url: bannerUrl,
+        logo_url: logoUrl,
+        file_url: fileUrl,
+        member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null,
+        access_url: formData.accessUrl,
+        email_template: formData.emailTemplate,
+      });
 
       // Create product in database
       const { error } = await supabase
@@ -261,7 +282,10 @@ const AdminProducts = () => {
           email_template: formData.emailTemplate, // Salvar email_template
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('ADMIN_PRODUCTS_DEBUG: ERRO AO INSERIR PRODUTO NO DB:', error);
+        throw error;
+      }
 
       toast({
         title: "Sucesso",
@@ -294,13 +318,14 @@ const AdminProducts = () => {
       // Refresh products list
       fetchProducts();
     } catch (error: any) {
-      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao criar produto:', error);
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao criar produto (catch block):', error);
       toast({
         title: "Erro",
         description: error.message || "Não foi possível criar o produto",
         variant: "destructive"
       });
     } finally {
+      console.log('ADMIN_PRODUCTS_DEBUG: Finalizando handleSubmit (criar produto).');
       setIsLoading(false);
     }
   };
@@ -400,6 +425,7 @@ const AdminProducts = () => {
     }
 
     setIsLoading(true);
+    console.log('ADMIN_PRODUCTS_DEBUG: Iniciando handleUpdate (atualizar produto).');
     try {
       let bannerUrl = editingProduct.banner_url;
       let logoUrl = editingProduct.logo_url;
@@ -408,27 +434,46 @@ const AdminProducts = () => {
 
       // Upload new files if provided
       if (formData.banner) {
+        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do novo banner.');
         bannerUrl = await uploadFile(formData.banner, 'banners');
       }
 
       if (formData.logo) {
+        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do novo logo.');
         logoUrl = await uploadFile(formData.logo, 'logos');
       }
 
       if (formData.deliveryType === 'upload' && formData.deliverable) {
+        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do novo entregável.');
         fileUrl = await uploadFile(formData.deliverable, 'deliverables');
         memberAreaLink = null; // Clear member area link if uploading
       } else if (formData.deliveryType === 'deliverableLink') {
+        console.log('ADMIN_PRODUCTS_DEBUG: Usando novo link direto para entregável.');
         fileUrl = formData.deliverableLink;
         memberAreaLink = null; // Clear member area link if using deliverable link
       } else if (formData.deliveryType === 'link') {
+        console.log('ADMIN_PRODUCTS_DEBUG: Usando novo link da área de membros.');
         memberAreaLink = formData.memberAreaLink;
         fileUrl = null; // Clear file url if using member area link
       } else {
-        fileUrl = null;
-        memberAreaLink = null;
+        console.log('ADMIN_PRODUCTS_DEBUG: Nenhum novo arquivo/link de entregável fornecido, mantendo o existente.');
+        fileUrl = null; // Ensure fileUrl is null if not 'upload' or 'deliverableLink'
+        memberAreaLink = null; // Ensure memberAreaLink is null if not 'link'
       }
 
+
+      console.log('ADMIN_PRODUCTS_DEBUG: Dados para atualização no DB:', {
+        member_area_id: formData.member_area_id,
+        name: formData.name,
+        description: formData.description,
+        price: parseInt(formData.price) * 100,
+        banner_url: bannerUrl,
+        logo_url: logoUrl,
+        file_url: fileUrl,
+        member_area_link: memberAreaLink,
+        access_url: formData.accessUrl,
+        email_template: formData.emailTemplate,
+      });
 
       // Update product in database
       const { error } = await supabase
@@ -447,7 +492,10 @@ const AdminProducts = () => {
         })
         .eq('id', editingProduct.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('ADMIN_PRODUCTS_DEBUG: ERRO AO ATUALIZAR PRODUTO NO DB:', error);
+        throw error;
+      }
 
       toast({
         title: "Sucesso",
@@ -480,13 +528,14 @@ const AdminProducts = () => {
 
       fetchProducts();
     } catch (error: any) {
-      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao atualizar produto:', error);
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao atualizar produto (catch block):', error);
       toast({
         title: "Erro",
         description: error.message || "Não foi possível atualizar o produto",
         variant: "destructive"
       });
     } finally {
+      console.log('ADMIN_PRODUCTS_DEBUG: Finalizando handleUpdate (atualizar produto).');
       setIsLoading(false);
     }
   };
