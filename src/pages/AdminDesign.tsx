@@ -226,11 +226,11 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
   const currentDefaultSettings = getDefaultSettings(currentMemberAreaId, user?.id || null);
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Palette className="h-5 w-5" /> Configurações Visuais
             </CardTitle>
           </CardHeader>
@@ -274,7 +274,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
               </Select>
             </div>
 
-            <h3 className="font-semibold mt-6">Paleta de Cores</h3>
+            <h3 className="font-semibold mt-6 text-base sm:text-lg">Paleta de Cores</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(settings.colors || {}).map(([key, value]) => (
                 <div key={key} className="space-y-2">
@@ -287,11 +287,11 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
               ))}
             </div>
 
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={handleRestoreDefault} disabled={saving}>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={handleRestoreDefault} disabled={saving} className="w-full sm:w-auto">
                 <RotateCcw className="mr-2 h-4 w-4" /> Restaurar Padrão
               </Button>
-              <Button onClick={handleSaveSettings} disabled={saving}>
+              <Button onClick={handleSaveSettings} disabled={saving} className="w-full sm:w-auto">
                 <Save className="mr-2 h-4 w-4" /> {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </div>
@@ -300,7 +300,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Type className="h-5 w-5" /> Pré-visualização
             </CardTitle>
           </CardHeader>

@@ -108,11 +108,11 @@ const ProductsAssociation: React.FC<ProductsAssociationProps> = ({ memberAreaId 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <Package className="h-5 w-5" />
           Produtos Associados
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm sm:text-base">
           Selecione quais produtos darão acesso a esta área de membros quando forem comprados
         </CardDescription>
       </CardHeader>
@@ -138,8 +138,8 @@ const ProductsAssociation: React.FC<ProductsAssociationProps> = ({ memberAreaId 
                     htmlFor={product.id}
                     className="flex-1 cursor-pointer"
                   >
-                    <div className="font-medium">{product.name}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="font-medium text-sm sm:text-base">{product.name}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       R$ {(product.price / 100).toFixed(2)}
                     </div>
                   </label>

@@ -105,20 +105,20 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-xs sm:max-w-lg lg:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Configurar Mercado Pago</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Configurar Mercado Pago</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Contas existentes */}
           {mercadoPagoAccounts.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Contas Configuradas</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Contas Configuradas</h3>
               {mercadoPagoAccounts.map((account) => (
                 <Card key={account.id}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-base">
+                    <CardTitle className="flex items-center justify-between text-sm sm:text-base">
                       {account.name}
                       <Button
                         variant="ghost"
@@ -130,7 +130,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       <p>Access Token: {account.accessToken?.substring(0, 20) || ''}...</p>
                       <p>Public Key: {account.publicKey?.substring(0, 20) || ''}...</p>
                     </div>
@@ -142,9 +142,9 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
 
           {/* Nova conta */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Adicionar Nova Conta</h3>
+            <h3 className="text-base sm:text-lg font-semibold">Adicionar Nova Conta</h3>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="name">Nome da Conta *</Label>
                 <Input
@@ -186,7 +186,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                 />
               </div>
               
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <Label htmlFor="clientSecret">Client Secret</Label>
                 <Input
                   id="clientSecret"

@@ -171,18 +171,18 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xs sm:max-w-lg lg:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Configurar Email Transacional</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Configurar Email Transacional</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {emailConfig && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Conta Configurada</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Conta Configurada</h3>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between text-base">
+                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
                     {emailConfig.displayName || emailConfig.email}
                     <Button
                       variant="ghost"
@@ -195,7 +195,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-muted-foreground">
                     <p>Email: {emailConfig.email}</p>
                     <p>Nome de Exibição: {emailConfig.displayName}</p>
                   </div>
@@ -204,11 +204,11 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
 
               {/* Seção de Teste de Conexão */}
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                <h4 className="font-semibold flex items-center gap-2">
+                <h4 className="font-semibold flex items-center gap-2 text-base sm:text-lg">
                   <Send className="h-4 w-4" />
                   Testar Conexão
                 </h4>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Envie um e-mail de teste para verificar se sua configuração SMTP está funcionando.
                 </p>
                 <div>
@@ -234,7 +234,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
           )}
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Adicionar Nova Conta</h3>
+            <h3 className="text-base sm:text-lg font-semibold">Adicionar Nova Conta</h3>
             
             <div className="space-y-4">
               <div>

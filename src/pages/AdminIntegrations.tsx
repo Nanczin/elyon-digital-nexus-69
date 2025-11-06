@@ -70,15 +70,15 @@ const AdminIntegrations = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Integrações</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Integrações</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           Configure as integrações externas da sua plataforma
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {integrations.map((integration) => {
           const IconComponent = integration.icon;
           const ConfigComponent = integration.component;
@@ -87,7 +87,7 @@ const AdminIntegrations = () => {
           return (
             <Card key={integration.name}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-3">
+                <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <IconComponent className="h-5 w-5 text-primary" />
                   </div>
@@ -95,10 +95,10 @@ const AdminIntegrations = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   {integration.description}
                 </p>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
                   <span className="text-sm text-muted-foreground">
                     Status: <span className={status === 'Configurado' ? 'text-green-600' : 'text-orange-600'}>
                       {status}

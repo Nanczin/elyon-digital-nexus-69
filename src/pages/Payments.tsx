@@ -105,16 +105,16 @@ const Payments = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Histórico de Pagamentos</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Histórico de Pagamentos</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           Visualize todos os pagamentos da plataforma
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -184,7 +184,7 @@ const Payments = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Receipt className="h-5 w-5" />
             Lista de Pagamentos
           </CardTitle>
@@ -203,9 +203,9 @@ const Payments = () => {
               {payments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4 mb-2 sm:mb-0">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                       {payment.payment_method === 'pix' ? (
                         <CreditCard className="h-5 w-5 text-primary" />
@@ -220,7 +220,7 @@ const Payments = () => {
                       <p className="text-sm text-muted-foreground">
                         {payment.metadata?.customer_data?.email || 'Email não informado'}
                       </p>
-                      <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center space-x-2 text-xs text-muted-foreground">
                         <span>{getPaymentMethodLabel(payment.payment_method)}</span>
                         <span>•</span>
                         <span>

@@ -177,25 +177,25 @@ const Reports = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Relatórios de Vendas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Relatórios de Vendas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Análise detalhada das vendas e faturamento
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2">
           <select 
             value={dateRange} 
             onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 border rounded-md"
+            className="px-3 py-2 border rounded-md text-sm"
           >
             <option value="all">Todas as vendas</option>
             <option value="7days">Últimos 7 dias</option>
             <option value="30days">Últimos 30 dias</option>
             <option value="90days">Últimos 90 dias</option>
           </select>
-          <Button onClick={exportToCSV} variant="outline">
+          <Button onClick={exportToCSV} variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
@@ -203,7 +203,7 @@ const Reports = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
@@ -248,7 +248,7 @@ const Reports = () => {
       {/* Sales Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Detalhamento das Vendas</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Detalhamento das Vendas</CardTitle>
           <CardDescription>
             Lista completa de todas as vendas realizadas
           </CardDescription>
@@ -267,14 +267,14 @@ const Reports = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Valor Bruto</TableHead>
-                    <TableHead>Comissão</TableHead>
-                    <TableHead>Valor Líquido</TableHead>
-                    <TableHead>Pagamento</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="min-w-[120px]">Data</TableHead>
+                    <TableHead className="min-w-[150px]">Cliente</TableHead>
+                    <TableHead className="min-w-[180px]">Produto</TableHead>
+                    <TableHead className="min-w-[100px]">Valor Bruto</TableHead>
+                    <TableHead className="min-w-[100px]">Comissão</TableHead>
+                    <TableHead className="min-w-[100px]">Valor Líquido</TableHead>
+                    <TableHead className="min-w-[120px]">Pagamento</TableHead>
+                    <TableHead className="min-w-[80px]">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

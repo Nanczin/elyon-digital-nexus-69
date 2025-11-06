@@ -28,9 +28,9 @@ const IntegrationsStatus = () => {
   };
 
   return (
-    <Card className="mt-8">
+    <Card className="mt-6 sm:mt-8">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <Info className="h-5 w-5" />
           Status das Integrações
         </CardTitle>

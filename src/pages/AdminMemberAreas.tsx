@@ -180,11 +180,11 @@ const AdminMemberAreas = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Minhas Áreas de Membros</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Minhas Áreas de Membros</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Crie e gerencie suas áreas de membros personalizadas
           </p>
         </div>
@@ -205,9 +205,9 @@ const AdminMemberAreas = () => {
               <Plus className="mr-2 h-4 w-4" /> Nova Área de Membros
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="max-w-xs sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingArea ? 'Editar Área de Membros' : 'Criar Nova Área de Membros'}</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl">{editingArea ? 'Editar Área de Membros' : 'Criar Nova Área de Membros'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -276,7 +276,7 @@ const AdminMemberAreas = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Suas Áreas de Membros ({memberAreas.length})</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Suas Áreas de Membros ({memberAreas.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {memberAreas.length === 0 ? (
@@ -290,8 +290,8 @@ const AdminMemberAreas = () => {
           ) : (
             <div className="space-y-4">
               {memberAreas.map(area => (
-                <div key={area.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center space-x-4">
+                <div key={area.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center space-x-4 mb-2 sm:mb-0">
                     {area.logo_url ? (
                       <img src={area.logo_url} alt={area.name} className="h-10 w-10 object-contain rounded-md" />
                     ) : (
@@ -308,7 +308,7 @@ const AdminMemberAreas = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {/* Botão para EDITAR DETALHES (Nome, Slug, etc.) */}
                     <Button variant="outline" size="sm" onClick={() => handleEdit(area)}>
                       <Edit className="h-4 w-4" />

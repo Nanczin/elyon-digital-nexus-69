@@ -622,7 +622,7 @@ const AdminProducts = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="basic" className="space-y-4 mt-4">
+                <TabsContent value="basic" className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="memberArea">Área de Membros (Opcional)</Label>
@@ -913,7 +913,7 @@ const AdminProducts = () => {
         </CardHeader>
         <CardContent>
           {products.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-8 sm:py-12">
               <Package className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
               <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum produto criado</h3>
               <p className="text-muted-foreground mb-4">

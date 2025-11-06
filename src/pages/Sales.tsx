@@ -105,10 +105,10 @@ const Sales = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Vendas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Vendas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerencie todas as suas vendas e transações
           </p>
         </div>
@@ -164,7 +164,7 @@ const Sales = () => {
       {/* Sales Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Vendas Recentes</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Vendas Recentes</CardTitle>
           <CardDescription>
             Lista das vendas mais recentes realizadas
           </CardDescription>
@@ -183,9 +183,9 @@ const Sales = () => {
               {salesData.map((sale) => (
                 <div
                   key={sale.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-1 mb-2 sm:mb-0">
                     <p className="font-medium">{sale.customers?.name || 'Cliente'}</p>
                     <p className="text-sm text-muted-foreground">{sale.product_name}</p>
                     <p className="text-xs text-muted-foreground">

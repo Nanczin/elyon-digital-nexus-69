@@ -1239,7 +1239,7 @@ const AdminCheckouts = () => {
                         </div>
                       </div>
                       
-                      {!checkoutData.payment_methods.pix && !checkoutData.payment_methods.creditCard && <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      {!checkoutData.payment_methods.pix && !checkoutData.payment_methods.creditCard && <div className="p-3 bg-yellow-50 border-yellow-200 rounded-lg">
                           <p className="text-sm text-yellow-800">
                             ⚠️ Selecione pelo menos uma forma de pagamento
                           </p>
