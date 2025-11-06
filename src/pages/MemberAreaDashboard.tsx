@@ -337,19 +337,19 @@ const MemberAreaDashboard = () => {
                       {module.description}
                     </p>
                     {isLocked ? (
-                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-xl text-white space-y-3"> {/* Aumentado opacidade para 70 e adicionado space-y-3 */}
-                          <Lock className="h-12 w-12 mb-2" /> {/* Removido mb-4, ajustado para mb-2 */}
-                          <p className="text-lg font-semibold text-center"> {/* Removido mb-4 */}
+                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-xl text-white space-y-3">
+                          <Lock className="h-12 w-12 mb-2" />
+                          <p className="text-lg font-semibold text-center">
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
-                              <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} className="mt-2"> {/* Adicionado mt-2 */}
+                              <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} className="mt-2">
                                   <Link to={finalCheckoutLink}>
                                       Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
                                   </Link>
                               </Button>
                           ) : (
-                              <p className="text-sm text-center mt-2"> {/* Adicionado mt-2 */}
+                              <p className="text-sm text-center mt-2">
                                   Produto associado não encontrado ou sem checkout.
                               </p>
                           )}
