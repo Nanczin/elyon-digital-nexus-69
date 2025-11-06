@@ -18,9 +18,8 @@ interface AnalyticsStats {
   publishedLessons: number; // Nova métrica
   avgLessonsPerModule: number; // Nova métrica
   avgLessonCompletionRate: number;
-  totalCommunityPosts: number;
-  totalCommunityComments: number;
-  avgCommentsPerPost: number; // Nova métrica
+  totalCommunityComments: number; // Alterado de totalCommunityPosts
+  avgCommentsPerLesson: number; // Alterado de avgCommentsPerPost
 }
 
 interface DailyDataPoint {
@@ -95,14 +94,6 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       if (lessonsError) throw lessonsError;
       const lessonIds = lessonsData.map(l => l.id);
 
-      // Fetch all community post IDs for the current member area
-      const { data: communityPostsData, error: communityPostsError } = await supabase
-        .from('community_posts')
-        .select('id')
-        .eq('member_area_id', currentMemberAreaId);
-      if (communityPostsError) throw communityPostsError;
-      const communityPostIds = communityPostsData.map(p => p.id);
-
       // Basic Stats
       // Total de Membros
       const { count: totalMembers } = await supabase
@@ -143,17 +134,11 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
         .in('module_id', moduleIds) // Use the fetched moduleIds
         .eq('status', 'published');
 
-      // Total de Posts da Comunidade
-      const { count: totalCommunityPosts } = await supabase
-        .from('community_posts')
-        .select('id', { count: 'exact', head: true })
-        .eq('member_area_id', currentMemberAreaId);
-
-      // Total de Comentários
+      // Total de Comentários (em aulas)
       const { count: totalCommunityComments } = await supabase
-        .from('community_comments')
+        .from('lesson_comments')
         .select('id', { count: 'exact', head: true })
-        .in('post_id', communityPostIds); // Use the fetched communityPostIds
+        .in('lesson_id', lessonIds); // Use the fetched lessonIds
 
       // Taxa Média de Conclusão de Aulas (simplificado)
       const { count: totalCompletions } = await supabase
@@ -166,8 +151,8 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       // Média de Aulas por Módulo
       const avgLessonsPerModule = (totalModules && totalLessons) ? (totalLessons / totalModules) : 0;
 
-      // Média de Comentários por Post
-      const avgCommentsPerPost = (totalCommunityPosts && totalCommunityComments) ? (totalCommunityComments / totalCommunityPosts) : 0;
+      // Média de Comentários por Aula
+      const avgCommentsPerLesson = (totalLessons && totalCommunityComments) ? (totalCommunityComments / totalLessons) : 0;
 
 
       setStats({
@@ -179,9 +164,8 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
         publishedLessons: publishedLessons || 0,
         avgLessonsPerModule: parseFloat(avgLessonsPerModule.toFixed(2)),
         avgLessonCompletionRate: parseFloat(avgLessonCompletionRate.toFixed(2)),
-        totalCommunityPosts: totalCommunityPosts || 0,
         totalCommunityComments: totalCommunityComments || 0,
-        avgCommentsPerPost: parseFloat(avgCommentsPerPost.toFixed(2)),
+        avgCommentsPerLesson: parseFloat(avgCommentsPerLesson.toFixed(2)),
       });
 
       // Chart Data - Last 30 days
@@ -336,39 +320,26 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Posts da Comunidade</CardTitle>
+            <CardTitle className="text-sm font-medium">Comentários da Comunidade</CardTitle>
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCommunityPosts}</div>
-            <p className="text-xs text-muted-foreground">
-              Total de publicações
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Comentários</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalCommunityComments}</div>
             <p className="text-xs text-muted-foreground">
-              Total de interações
+              Total de comentários em aulas
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Média de Comentários/Post</CardTitle>
+            <CardTitle className="text-sm font-medium">Média de Comentários/Aula</CardTitle>
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.avgCommentsPerPost}</div>
+            <div className="text-2xl font-bold">{stats.avgCommentsPerLesson}</div>
             <p className="text-xs text-muted-foreground">
-              Comentários por post em média
+              Comentários por aula em média
             </p>
           </CardContent>
         </Card>
