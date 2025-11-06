@@ -180,6 +180,65 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          access_url: string | null
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          email_template: string | null
+          file_url: string | null
+          id: string
+          logo_url: string | null
+          member_area_id: string | null
+          member_area_link: string | null
+          name: string
+          price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          email_template?: string | null
+          file_url?: string | null
+          id?: string
+          logo_url?: string | null
+          member_area_id?: string | null
+          member_area_link?: string | null
+          name: string
+          price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          email_template?: string | null
+          file_url?: string | null
+          id?: string
+          logo_url?: string | null
+          member_area_id?: string | null
+          member_area_link?: string | null
+          name?: string
+          price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

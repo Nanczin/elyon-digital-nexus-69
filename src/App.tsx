@@ -84,6 +84,7 @@ const App = () => {
                     <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
                     <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
                       <Route path="content" element={<AdminContent />} />
+                      <Route path="products" element={<div />} />
                       <Route path="members" element={<AdminMembers />} />
                       <Route path="design" element={<AdminDesign />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
