@@ -102,7 +102,7 @@ const MemberAreaLogin = () => {
         fontFamily: currentSettings.global_font_family || 'Nunito'
       }}
     >
-      <Card className="w-full max-w-md" style={{ backgroundColor: currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))' }}>
+      <Card className="w-full max-w-sm sm:max-w-md" style={{ backgroundColor: currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))' }}> {/* Ajustado max-w- */}
         <CardHeader className="text-center space-y-4">
           {currentSettings.logo_url && (
             <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center">

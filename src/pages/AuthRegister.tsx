@@ -42,7 +42,7 @@ const AuthRegister = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-primary/5 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-sm sm:max-w-md"> {/* Ajustado max-w- */}
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center">
             <img 

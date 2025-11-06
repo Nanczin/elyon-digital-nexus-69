@@ -45,7 +45,7 @@ const Layout: React.FC<LayoutProps> = () => {
   if (!user) {
     return <div className="min-h-screen bg-background">
         <nav className="border-b bg-card">
-          <div className="mobile-container">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8"> {/* Adicionado container responsivo */}
             <div className="flex items-center justify-between h-12 sm:h-14 lg:h-16">
               <Link to="/" className="flex items-center space-x-2">
                 <img 
@@ -87,7 +87,7 @@ const Layout: React.FC<LayoutProps> = () => {
           </div>
         </nav>
         {/* Conditional padding for main based on path */}
-        <main className={location.pathname === '/' ? "flex-1 overflow-auto" : "mobile-container py-4 sm:py-6 lg:py-8"}>
+        <main className={location.pathname === '/' ? "flex-1 overflow-auto" : "container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8"}> {/* Ajustado para usar container */}
           <Outlet /> {/* Renderiza o conteúdo da rota aninhada aqui */}
         </main>
       </div>;
@@ -136,7 +136,7 @@ const Layout: React.FC<LayoutProps> = () => {
             </div>
           </header>
           {/* Conditional padding for main based on path */}
-          <main className={location.pathname === '/' ? "flex-1 overflow-auto p-0" : "flex-1 overflow-auto mobile-container py-4 sm:py-6 lg:py-8"}>
+          <main className={location.pathname === '/' ? "flex-1 overflow-auto p-0" : "flex-1 overflow-auto container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8"}> {/* Ajustado para usar container */}
             <Outlet />
           </main>
         </div>

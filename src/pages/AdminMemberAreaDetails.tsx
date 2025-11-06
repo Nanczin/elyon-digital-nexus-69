@@ -84,12 +84,12 @@ const AdminMemberAreaDetails = () => {
 
   if (!memberArea) {
     return (
-      <div className="container mx-auto p-6 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-4">Área de Membros não encontrada</h1>
-        <p className="text-muted-foreground mb-6">
+      <div className="container mx-auto p-4 sm:p-6 text-center"> {/* Ajustado padding */}
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 sm:mb-4">Área de Membros não encontrada</h1> {/* Ajustado text size */}
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base"> {/* Ajustado text size */}
           A área de membros que você tentou acessar não existe ou você não tem permissão.
         </p>
-        <Button asChild>
+        <Button asChild className="text-sm sm:text-base"> {/* Ajustado text size */}
           <Link to="/admin/member-areas">
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Minhas Áreas
           </Link>
@@ -99,59 +99,59 @@ const AdminMemberAreaDetails = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto p-4 sm:p-6"> {/* Ajustado padding */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-0"> {/* Ajustado flex e gap */}
         <div>
-          <Button variant="ghost" asChild className="mb-2 -ml-2">
+          <Button variant="ghost" asChild className="mb-2 -ml-2 text-sm sm:text-base"> {/* Ajustado text size */}
             <Link to="/admin/member-areas">
               <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Áreas de Membros
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3"> {/* Ajustado flex e text size */}
             {memberArea.logo_url && (
-              <img src={memberArea.logo_url} alt={memberArea.name} className="h-10 w-10 object-contain rounded-md" />
+              <img src={memberArea.logo_url} alt={memberArea.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" /> {/* Ajustado image size */}
             )}
             {memberArea.name}
-            <Badge variant="secondary" className="text-sm">
+            <Badge variant="secondary" className="text-xs sm:text-sm"> {/* Ajustado text size */}
               <MonitorDot className="h-3 w-3 mr-1" /> {memberArea.slug}
             </Badge>
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
             Gerencie todos os aspectos da sua área de membros: conteúdo, membros, design e mais.
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 h-auto">
-          <TabsTrigger value="content" asChild>
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto p-1"> {/* Ajustado grid-cols e padding */}
+          <TabsTrigger value="content" asChild className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
             <Link to={`/admin/member-areas/${memberAreaId}/content`}>
-              <BookOpen className="mr-2 h-4 w-4" /> Conteúdo
+              <BookOpen className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Conteúdo
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="products" asChild>
+          <TabsTrigger value="products" asChild className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
             <Link to={`/admin/member-areas/${memberAreaId}/products`}>
-              <Package className="mr-2 h-4 w-4" /> Produtos
+              <Package className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Produtos
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="members" asChild>
+          <TabsTrigger value="members" asChild className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
             <Link to={`/admin/member-areas/${memberAreaId}/members`}>
-              <UserSquare className="mr-2 h-4 w-4" /> Membros
+              <UserSquare className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Membros
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="design" asChild>
+          <TabsTrigger value="design" asChild className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
             <Link to={`/admin/member-areas/${memberAreaId}/design`}>
-              <Palette className="mr-2 h-4 w-4" /> Design
+              <Palette className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Design
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="analytics" asChild>
+          <TabsTrigger value="analytics" asChild className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
             <Link to={`/admin/member-areas/${memberAreaId}/analytics`}>
-              <BarChart2 className="mr-2 h-4 w-4" /> Analytics
+              <BarChart2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Analytics
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="community" asChild>
+          <TabsTrigger value="community" asChild className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
             <Link to={`/admin/member-areas/${memberAreaId}/community`}>
-              <MessageSquare className="mr-2 h-4 w-4" /> Comunidade
+              <MessageSquare className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Comunidade
             </Link>
           </TabsTrigger>
         </TabsList>

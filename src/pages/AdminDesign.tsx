@@ -226,11 +226,11 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
   const currentDefaultSettings = getDefaultSettings(currentMemberAreaId, user?.id || null);
 
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"> {/* Ajustado gap */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
               <Palette className="h-5 w-5" /> Configurações Visuais
             </CardTitle>
           </CardHeader>
@@ -274,7 +274,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
               </Select>
             </div>
 
-            <h3 className="font-semibold mt-6">Paleta de Cores</h3>
+            <h3 className="font-semibold mt-6 text-base sm:text-lg">Paleta de Cores</h3> {/* Ajustado text size */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(settings.colors || {}).map(([key, value]) => (
                 <div key={key} className="space-y-2">
@@ -287,11 +287,11 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
               ))}
             </div>
 
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={handleRestoreDefault} disabled={saving}>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6"> {/* Ajustado flex e gap */}
+              <Button variant="outline" onClick={handleRestoreDefault} disabled={saving} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
                 <RotateCcw className="mr-2 h-4 w-4" /> Restaurar Padrão
               </Button>
-              <Button onClick={handleSaveSettings} disabled={saving}>
+              <Button onClick={handleSaveSettings} disabled={saving} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
                 <Save className="mr-2 h-4 w-4" /> {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </div>
@@ -300,7 +300,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
               <Type className="h-5 w-5" /> Pré-visualização
             </CardTitle>
           </CardHeader>
@@ -321,16 +321,16 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
                 }}
               >
                 <div 
-                  className="w-full max-w-sm p-6 rounded-lg shadow-lg text-center space-y-4"
+                  className="w-full max-w-xs sm:max-w-sm p-6 rounded-lg shadow-lg text-center space-y-4" {/* Ajustado max-w- */}
                   style={{ backgroundColor: settings.colors?.card_login || currentDefaultSettings.colors?.card_login }}
                 >
                   {settings.logo_url && (
                     <img src={settings.logo_url} alt="Logo" className="mx-auto h-16 mb-4" />
                   )}
-                  <h2 className="text-2xl font-bold" style={{ color: settings.colors?.text_primary || currentDefaultSettings.colors?.text_primary }}>
+                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: settings.colors?.text_primary || currentDefaultSettings.colors?.text_primary }}> {/* Ajustado text size */}
                     {settings.login_title || currentDefaultSettings.login_title}
                   </h2>
-                  <p className="text-sm" style={{ color: settings.colors?.text_secondary || currentDefaultSettings.colors?.text_secondary }}>
+                  <p className="text-sm sm:text-base" style={{ color: settings.colors?.text_secondary || currentDefaultSettings.colors?.text_secondary }}> {/* Ajustado text size */}
                     {settings.login_subtitle || currentDefaultSettings.login_subtitle}
                   </p>
                   <Input placeholder="Email" type="email" className="mt-4" />

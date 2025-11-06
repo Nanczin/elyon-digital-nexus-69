@@ -691,20 +691,6 @@ const AdminProducts = () => {
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                    {/* REMOVIDO: Banner do Produto */}
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="banner" className="text-sm font-medium">Banner do Produto</Label>
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          id="banner" 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={e => handleFileChange('banner', e.target.files?.[0] || null)} 
-                          className="text-sm file:text-xs"
-                        />
-                        <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </div> */}
                     <div className="space-y-2">
                       <Label htmlFor="logo" className="text-sm font-medium">Logo do Produto</Label>
                       <div className="flex items-center gap-2">
@@ -801,36 +787,6 @@ const AdminProducts = () => {
 
                   <Separator />
 
-                  {/* REMOVIDO: Configurações de Acesso e E-mail */}
-                  {/* <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Configurações de Acesso e E-mail</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="accessUrl">URL de Acesso ao Produto</Label>
-                      <Input 
-                        id="accessUrl" 
-                        type="url" 
-                        value={formData.accessUrl} 
-                        onChange={e => handleInputChange('accessUrl', e.target.value)} 
-                        placeholder="https://seuplataforma.com/acesso" 
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Link para onde o cliente será direcionado para acessar o produto.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="emailTemplate">Template de E-mail de Acesso</Label>
-                      <Textarea 
-                        id="emailTemplate" 
-                        value={formData.emailTemplate} 
-                        onChange={e => handleInputChange('emailTemplate', e.target.value)} 
-                        placeholder="Olá {{nome}}, seu acesso é..." 
-                        rows={8} 
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Use variáveis como <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{nome}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{produto}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{username}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{password}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{url_acesso}}'}</code> e <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{suporte}}'}</code>.
-                      </p>
-                    </div>
-                  </div> */}
                 </TabsContent>
 
                 <TabsContent value="order-bumps" className="space-y-4">
@@ -965,7 +921,7 @@ const AdminProducts = () => {
                                      Excluir
                                    </DropdownMenuItem>
                                  </AlertDialogTrigger>
-                                 <AlertDialogContent className="w-[95vw] max-w-md mx-auto">
+                                 <AlertDialogContent className="w-[95vw] max-w-md mx-auto"> {/* Ajustado max-w- */}
                                    <AlertDialogHeader>
                                      <AlertDialogTitle className="text-base sm:text-lg">
                                        Confirmar exclusão

@@ -262,7 +262,7 @@ const AdminCheckouts = () => {
         setAutoSaveKey('checkout-new');
         // forceLoad será chamado pelo useAutoSave quando a chave mudar
       } else {
-        // Se a chave já é 'checkout-new', e não há rascunho, useAutoSave já terá carregado initialDataFn().
+        // Se a chave já é 'checkout-new', e não há rascunho, useAutoSave já terá carregado initialFormData().
         // Se houver rascunho, ele já terá carregado o rascunho.
         if (!hasSavedData) { // Verifica se já existe um rascunho para 'checkout-new'
           console.log(`[AdminCheckouts] No draft found for 'checkout-new', initializing with fresh data.`);
@@ -697,10 +697,12 @@ const AdminCheckouts = () => {
       setIsLoading(false);
     }
   };
-  return <div className="mobile-container">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Checkouts</h1>
+  return <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl"> {/* Ajustado padding */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 sm:mb-8">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground truncate">
+            Checkouts
+          </h1>
           <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             Gerencie as páginas de vendas dos seus produtos
           </p>
@@ -717,15 +719,16 @@ const AdminCheckouts = () => {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2" onClick={() => {
+            <Button className="flex items-center gap-2 text-sm sm:text-base" size="sm" onClick={() => {
                setEditingCheckout(null);
               setAutoSaveKey('checkout-new'); // Isso fará com que useAutoSave carregue o rascunho 'checkout-new' ou initialFormData
             }}>
-              <Plus className="h-4 w-4" />
-              Novo Checkout
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Novo Checkout</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xs sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4">
+          <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto mx-auto"> {/* Ajustado max-w- e mx-auto */}
             <DialogHeader>
               <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pr-2 sm:pr-8">
                 <span className="flex items-center gap-2 text-sm sm:text-base">
@@ -890,9 +893,9 @@ const AdminCheckouts = () => {
                 </TabsContent>
 
                 <TabsContent value="packages" className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado para flex-col em mobile */}
                     <h3 className="text-lg font-semibold">Pacotes</h3>
-                    <Button type="button" onClick={addPackage} size="sm">
+                    <Button type="button" onClick={addPackage} size="sm" className="w-full sm:w-auto"> {/* Ajustado largura do botão */}
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar Pacote
                     </Button>
@@ -955,9 +958,9 @@ const AdminCheckouts = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado para flex-col em mobile */}
                           <Label>Tópicos do que será entregue</Label>
-                          <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage(pkg.id)}>
+                          <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage(pkg.id)} className="w-full sm:w-auto"> {/* Ajustado largura do botão */}
                             <Plus className="h-4 w-4 mr-2" />
                             Adicionar Tópico
                           </Button>
@@ -1036,9 +1039,9 @@ const AdminCheckouts = () => {
                 </TabsContent>
 
                 <TabsContent value="bumps" className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado para flex-col em mobile */}
                     <h3 className="text-lg font-semibold">Order Bumps</h3>
-                    <Button type="button" onClick={addOrderBump} size="sm">
+                    <Button type="button" onClick={addOrderBump} size="sm" className="w-full sm:w-auto"> {/* Ajustado largura do botão */}
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar Order Bump
                     </Button>
@@ -1820,7 +1823,7 @@ const AdminCheckouts = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-3 lg:mt-0"> {/* Ajustado margin-top */}
                       <Button variant="outline" size="sm" onClick={() => window.open(`/checkout/${checkout.id}`, '_blank')} className="text-xs sm:text-sm">
                         <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         <span className="hidden sm:inline">Ver Checkout</span>

@@ -173,7 +173,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
   return (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
-        <DialogTitle>{member ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle>
+        <DialogTitle className="text-lg sm:text-xl">{member ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle> {/* Ajustado text size */}
       </DialogHeader>
       <div className="space-y-4 py-4">
         <div className="space-y-2">
@@ -187,9 +187,9 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
         {!member && (
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <div className="flex gap-2">
-              <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} required={!generatePassword} disabled={generatePassword} />
-              <Button type="button" variant="outline" onClick={handleGeneratePassword}>Gerar</Button>
+            <div className="flex flex-col sm:flex-row gap-2"> {/* Ajustado para flex-col em mobile */}
+              <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} required={!generatePassword} disabled={generatePassword} className="flex-1" /> {/* Ajustado flex-1 */}
+              <Button type="button" variant="outline" onClick={handleGeneratePassword} className="w-full sm:w-auto">Gerar</Button> {/* Ajustado largura do botão */}
             </div>
             {generatePassword && <p className="text-sm text-muted-foreground">Senha gerada: {password}</p>}
           </div>
@@ -199,7 +199,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
           <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
         </div>
 
-        <h3 className="font-semibold mt-6">Acesso aos Módulos</h3>
+        <h3 className="font-semibold mt-6 text-base sm:text-lg">Acesso aos Módulos</h3> {/* Ajustado text size */}
         <div className="space-y-2 max-h-48 overflow-y-auto border p-2 rounded-md">
           {modules.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum módulo disponível.</p>
@@ -215,14 +215,14 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
                     );
                   }}
                 />
-                <Label htmlFor={`module-${module.id}`}>{module.title}</Label>
+                <Label htmlFor={`module-${module.id}`} className="text-sm">{module.title}</Label> {/* Ajustado text size */}
               </div>
             ))
           )}
         </div>
-        <div className="flex gap-2 mt-2">
-          <Button type="button" variant="outline" onClick={() => setSelectedModules(modules.map(m => m.id))}>Liberar Tudo</Button>
-          <Button type="button" variant="outline" onClick={() => setSelectedModules([])}>Bloquear Tudo</Button>
+        <div className="flex flex-col sm:flex-row gap-2 mt-2"> {/* Ajustado flex e gap */}
+          <Button type="button" variant="outline" onClick={() => setSelectedModules(modules.map(m => m.id))} className="w-full sm:w-auto text-sm">Liberar Tudo</Button> {/* Ajustado largura do botão e text size */}
+          <Button type="button" variant="outline" onClick={() => setSelectedModules([])} className="w-full sm:w-auto text-sm">Bloquear Tudo</Button> {/* Ajustado largura do botão e text size */}
         </div>
       </div>
       <Button className="w-full" onClick={handleSave} disabled={loading}>
@@ -345,28 +345,28 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
   const platformLoginUrl = `${window.location.origin}/membros/${currentMemberAreaId}/login`; // Dynamic login URL
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
       <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>URL de Acesso à Área de Membros</CardTitle>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
+          <CardTitle className="text-lg sm:text-xl">URL de Acesso à Área de Membros</CardTitle> {/* Ajustado text size */}
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row items-center gap-3">
-          <Input value={platformLoginUrl} readOnly className="flex-1" />
-          <Button onClick={() => copyLoginUrl(platformLoginUrl)} variant="outline">
+          <Input value={platformLoginUrl} readOnly className="flex-1 text-sm" /> {/* Ajustado text size */}
+          <Button onClick={() => copyLoginUrl(platformLoginUrl)} variant="outline" className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
             <Copy className="mr-2 h-4 w-4" /> Copiar Link
           </Button>
-          <Button onClick={() => window.open(platformLoginUrl, '_blank')} variant="secondary">
+          <Button onClick={() => window.open(platformLoginUrl, '_blank')} variant="secondary" className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
             <ExternalLink className="mr-2 h-4 w-4" /> Abrir Área
           </Button>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Membros ({members.length})</CardTitle>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
+          <CardTitle className="text-lg sm:text-xl">Membros ({members.length})</CardTitle> {/* Ajustado text size */}
           <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" onClick={handleNewMemberClick}>
+              <Button size="sm" onClick={handleNewMemberClick} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
                 <UserPlus className="mr-2 h-4 w-4" /> Novo Membro
               </Button>
             </DialogTrigger>
@@ -376,52 +376,54 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
         <CardContent>
           {members.length === 0 ? (
             <div className="text-center py-8">
-              <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum membro cadastrado</h3>
-              <p className="text-muted-foreground">
+              <Users className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum membro cadastrado</h3> {/* Ajustado text size */}
+              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
                 Adicione o primeiro membro para começar
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {members.map(member => (
-                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
+                <div key={member.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-3 sm:gap-0"> {/* Ajustado flex e gap */}
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <Avatar className="h-10 w-10"> {/* Ajustado avatar size */}
                       <AvatarImage src={member.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.name}`} />
                       <AvatarFallback>{member.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{member.name}</p>
-                      <p className="text-sm text-muted-foreground">{member.email}</p>
+                      <p className="font-medium text-sm sm:text-base">{member.name}</p> {/* Ajustado text size */}
+                      <p className="text-xs sm:text-sm text-muted-foreground">{member.email}</p> {/* Ajustado text size */}
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
+                        <Badge variant={member.status === 'active' ? 'default' : 'secondary'} className="text-xs"> {/* Ajustado text size */}
                           {member.status === 'active' ? 'Ativo' : 'Inativo'}
                         </Badge>
-                        <Badge variant="outline">{member.role}</Badge>
+                        <Badge variant="outline" className="text-xs">{member.role}</Badge> {/* Ajustado text size */}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEditMember(member)}>
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
+                    <Button variant="outline" size="sm" onClick={() => handleEditMember(member)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
+                          <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
                             Tem certeza que deseja excluir o membro <strong>{member.name}</strong>? Esta ação é irreversível.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteMember(member.user_id, member.name)}>Excluir</AlertDialogAction>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
+                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
+                          <AlertDialogAction onClick={() => handleDeleteMember(member.user_id, member.name)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                            Excluir
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

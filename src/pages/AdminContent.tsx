@@ -152,9 +152,9 @@ const ModuleFormDialog = ({
   };
 
   return (
-    <DialogContent>
+    <DialogContent className="sm:max-w-[500px]"> {/* Ajustado max-w- */}
       <DialogHeader>
-        <DialogTitle>{editingModule ? 'Editar Módulo' : 'Criar Novo Módulo'}</DialogTitle>
+        <DialogTitle className="text-lg sm:text-xl">{editingModule ? 'Editar Módulo' : 'Criar Novo Módulo'}</DialogTitle> {/* Ajustado text size */}
       </DialogHeader>
       <div className="space-y-4">
         <div className="space-y-2">
@@ -378,9 +378,9 @@ const LessonFormDialog = ({
   };
 
   return (
-    <DialogContent>
+    <DialogContent className="sm:max-w-[500px]"> {/* Ajustado max-w- */}
       <DialogHeader>
-        <DialogTitle>{editingLesson ? 'Editar Aula' : 'Criar Nova Aula'}</DialogTitle>
+        <DialogTitle className="text-lg sm:text-xl">{editingLesson ? 'Editar Aula' : 'Criar Nova Aula'}</DialogTitle> {/* Ajustado text size */}
       </DialogHeader>
       <div className="space-y-4">
         <div className="space-y-2">
@@ -532,7 +532,7 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
   };
 
   if (loading) return <p>Carregando módulos...</p>;
-  if (modules.length === 0) return <p className="text-muted-foreground">Nenhum módulo criado ainda para esta área de membros.</p>;
+  if (modules.length === 0) return <p className="text-muted-foreground text-sm">Nenhum módulo criado ainda para esta área de membros.</p>; {/* Ajustado text size */}
 
   return (
     <div className="space-y-4">
@@ -548,9 +548,9 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
                 />
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold">{module.title}</h3>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base sm:text-lg">{module.title}</h3> {/* Ajustado text size */}
                 <p className="text-sm text-muted-foreground">
                   {module.description?.trim() ? `${module.description.trim().substring(0, 100)}${module.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
                 </p>
@@ -566,30 +566,32 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
                     Checkout Direto: <a href={module.checkout_link} target="_blank" rel="noopener noreferrer" className="underline">Ver</a>
                   </p>
                 )}
-                <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">
+                <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1 text-xs"> {/* Ajustado text size */}
                   {module.status === 'published' ? 'Publicado' : 'Rascunho'}
                 </Badge>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => onEditModule(module)}>
+              <div className="flex items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
+                <Button variant="outline" size="sm" onClick={() => onEditModule(module)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
                   <Edit className="h-4 w-4" />
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
+                    <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                      <AlertDialogDescription>
+                      <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
+                      <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
                         Tem certeza que deseja excluir o módulo <strong>"{module.title}"</strong>? Todas as aulas e acessos associados também serão excluídos. Esta ação é irreversível.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)}>Excluir</AlertDialogAction>
+                    <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
+                      <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
+                      <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                        Excluir
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -740,7 +742,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
   };
 
   if (loading) return <p>Carregando aulas...</p>;
-  if (lessons.length === 0) return <p className="text-muted-foreground">Nenhuma aula criada para este módulo.</p>;
+  if (lessons.length === 0) return <p className="text-muted-foreground text-sm">Nenhuma aula criada para este módulo.</p>; {/* Ajustado text size */}
 
   return (
     <div className="space-y-4">
@@ -750,40 +752,42 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
           <Card key={lesson.id}>
             <CardContent className="p-4">
               <Collapsible open={isOpen} onOpenChange={() => toggleLesson(lesson.id)}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex-1 flex flex-col">
-                    <h3 className="font-semibold truncate">{lesson.title}</h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2"> {/* Ajustado flex e gap */}
+                  <div className="flex-1 flex flex-col min-w-0">
+                    <h3 className="font-semibold text-base sm:text-lg truncate">{lesson.title}</h3> {/* Ajustado text size */}
                     {lesson.description?.trim() && (
                       <p className="text-sm text-muted-foreground truncate">
                         {lesson.description.trim()}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)}>
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
+                    <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar Exclusção</AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusção</AlertDialogTitle> {/* Ajustado text size */}
+                          <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
                             Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)}>Excluir</AlertDialogAction>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
+                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
+                          <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                            Excluir
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
                         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
                     </CollapsibleTrigger>
@@ -934,24 +938,24 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
       <Tabs defaultValue="modules">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="modules">
-            <BookOpen className="mr-2 h-4 w-4" /> Módulos
+        <TabsList className="grid w-full grid-cols-2 h-auto p-1"> {/* Ajustado padding */}
+          <TabsTrigger value="modules" className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
+            <BookOpen className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Módulos
           </TabsTrigger>
-          <TabsTrigger value="lessons">
-            <Video className="mr-2 h-4 w-4" /> Aulas
+          <TabsTrigger value="lessons" className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
+            <Video className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Aulas
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="modules" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Módulos</CardTitle>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
+              <CardTitle className="text-lg sm:text-xl">Módulos</CardTitle> {/* Ajustado text size */}
               <Dialog open={isModuleFormOpen} onOpenChange={setIsModuleFormOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" onClick={() => setEditingModule(undefined)}>
+                  <Button size="sm" onClick={() => setEditingModule(undefined)} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
                     <Plus className="mr-2 h-4 w-4" /> Novo Módulo
                   </Button>
                 </DialogTrigger>
@@ -978,11 +982,11 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
         <TabsContent value="lessons" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Aulas</CardTitle>
-              <div className="flex items-center gap-2">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
+              <CardTitle className="text-lg sm:text-xl">Aulas</CardTitle> {/* Ajustado text size */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto"> {/* Ajustado flex e largura */}
                 <Select value={currentModuleId || "none"} onValueChange={value => setCurrentModuleId(value === "none" ? null : value)}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]"> {/* Ajustado largura */}
                     <SelectValue placeholder="Selecionar Módulo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -999,7 +1003,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                 </Select>
                 <Dialog open={isLessonFormOpen} onOpenChange={setIsLessonFormOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)}>
+                    <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
                       <Plus className="mr-2 h-4 w-4" /> Nova Aula
                     </Button>
                   </DialogTrigger>
@@ -1021,7 +1025,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                   onLessonDeleted={handleLessonSaved} 
                 />
               ) : (
-                <p className="text-muted-foreground">Selecione um módulo para ver as aulas.</p>
+                <p className="text-muted-foreground text-sm">Selecione um módulo para ver as aulas.</p> {/* Ajustado text size */}
               )}
             </CardContent>
           </Card>

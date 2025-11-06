@@ -94,22 +94,22 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard Administrativo</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="container mx-auto p-4 sm:p-6"> {/* Ajustado padding */}
+      <div className="mb-6 sm:mb-8"> {/* Ajustado margin-bottom */}
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard Administrativo</h1> {/* Ajustado text size */}
+        <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
           Visão geral da sua plataforma Elyon
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"> {/* Ajustado gap e margin-bottom */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">R$ {(stats.totalRevenue / 100).toFixed(2).replace('.', ',')}</div>
+            <div className="text-xl sm:text-2xl font-bold text-primary">R$ {(stats.totalRevenue / 100).toFixed(2).replace('.', ',')}</div> {/* Ajustado text size */}
             <p className="text-xs text-muted-foreground">
               Total de vendas realizadas
             </p>
@@ -122,7 +122,7 @@ const AdminDashboard = () => {
             <ShoppingCart className="h-4 w-4 text-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-secondary">{stats.approvedSales}</div>
+            <div className="text-xl sm:text-2xl font-bold text-secondary">{stats.approvedSales}</div> {/* Ajustado text size */}
             <p className="text-xs text-muted-foreground">
               Vendas concluídas
             </p>
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalCustomers}</div> {/* Ajustado text size */}
             <p className="text-xs text-muted-foreground">
               Total de clientes cadastrados
             </p>
@@ -148,7 +148,7 @@ const AdminDashboard = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCheckouts}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalCheckouts}</div> {/* Ajustado text size */}
             <p className="text-xs text-muted-foreground">
               Checkouts criados
             </p>
@@ -156,25 +156,25 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"> {/* Ajustado gap */}
         <Card>
           <CardHeader>
-            <CardTitle>Vendas Recentes</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Vendas Recentes</CardTitle> {/* Ajustado text size */}
           </CardHeader>
           <CardContent>
             {stats.recentSales.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-muted-foreground text-sm"> {/* Ajustado text size */}
                 Nenhuma venda registrada ainda
               </div>
             ) : (
               <div className="space-y-3">
                 {stats.recentSales.map((sale) => (
-                  <div key={sale.id} className="flex justify-between items-center">
+                  <div key={sale.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 last:border-b-0 last:pb-0"> {/* Adicionado flex-col/row responsivo */}
                     <div>
                       <p className="text-sm font-medium">{sale.customers?.name || 'Cliente'}</p>
                       <p className="text-xs text-muted-foreground">{sale.product_name}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right mt-2 sm:mt-0"> {/* Ajustado text alignment */}
                       <p className="text-sm font-medium">R$ {(sale.amount / 100).toFixed(2).replace('.', ',')}</p>
                       <p className="text-xs text-muted-foreground">{sale.payment_method}</p>
                     </div>
@@ -187,22 +187,22 @@ const AdminDashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Produtos Mais Vendidos</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Produtos Mais Vendidos</CardTitle> {/* Ajustado text size */}
           </CardHeader>
           <CardContent>
             {stats.topProducts.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-muted-foreground text-sm"> {/* Ajustado text size */}
                 Nenhum produto vendido ainda
               </div>
             ) : (
               <div className="space-y-3">
                 {stats.topProducts.map((product, index) => (
-                  <div key={index} className="flex justify-between items-center">
+                  <div key={index} className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 last:border-b-0 last:pb-0"> {/* Adicionado flex-col/row responsivo */}
                     <div>
                       <p className="text-sm font-medium">{product.name}</p>
                       <p className="text-xs text-muted-foreground">{product.count} vendas</p>
                     </div>
-                    <p className="text-sm font-medium">R$ {(product.revenue / 100).toFixed(2).replace('.', ',')}</p>
+                    <p className="text-sm font-medium mt-2 sm:mt-0">R$ {(product.revenue / 100).toFixed(2).replace('.', ',')}</p> {/* Ajustado margin-top */}
                   </div>
                 ))}
               </div>
