@@ -109,7 +109,7 @@ const AdminMemberAreaDetails = () => {
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3"> {/* Ajustado flex e text size */}
             {memberArea.logo_url && (
-              <img src={memberArea.logo_url} alt={memberArea.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" /> {/* Ajustado image size */}
+              <img src={memberArea.logo_url} alt={memberArea.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" /> 
             )}
             {memberArea.name}
             <Badge variant="secondary" className="text-xs sm:text-sm"> {/* Ajustado text size */}
