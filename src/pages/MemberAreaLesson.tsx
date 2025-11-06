@@ -279,7 +279,7 @@ const MemberAreaLesson = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b" {/* Ajustado px */}
+        className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b" 
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
           borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
