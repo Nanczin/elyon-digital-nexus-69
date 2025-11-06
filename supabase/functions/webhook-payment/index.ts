@@ -70,7 +70,7 @@ serve(async (req) => {
       let userId: string | null = null;
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_id')
+        .select('user_id, products_owned')
         .eq('email', customerEmail)
         .maybeSingle();
 
@@ -79,6 +79,25 @@ serve(async (req) => {
       } else if (profile) {
         userId = profile.user_id;
         console.log('WEBHOOK_PAYMENT_DEBUG: Usuário encontrado no perfil:', userId);
+        
+        // Adicionar o produto comprado ao array products_owned
+        const currentProducts = profile.products_owned || [];
+        if (!currentProducts.includes(externalReference)) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              products_owned: [...currentProducts, externalReference] 
+            })
+            .eq('user_id', userId);
+          
+          if (updateError) {
+            console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao adicionar produto ao usuário:', updateError);
+          } else {
+            console.log('WEBHOOK_PAYMENT_DEBUG: Produto adicionado ao usuário:', externalReference);
+          }
+        } else {
+          console.log('WEBHOOK_PAYMENT_DEBUG: Usuário já possui este produto:', externalReference);
+        }
       } else {
         // Se o perfil não existir, criar um novo usuário auth.users
         console.log('WEBHOOK_PAYMENT_DEBUG: Perfil não encontrado, tentando criar novo usuário auth.users...');
@@ -96,6 +115,22 @@ serve(async (req) => {
         } else {
           userId = newUserAuth?.user?.id || null;
           console.log('WEBHOOK_PAYMENT_DEBUG: Novo usuário auth.users criado, userId:', userId);
+          
+          // Adicionar o produto comprado ao perfil recém-criado
+          if (userId) {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                products_owned: [externalReference] 
+              })
+              .eq('user_id', userId);
+            
+            if (updateError) {
+              console.error('WEBHOOK_PAYMENT_DEBUG: Erro ao adicionar produto ao novo usuário:', updateError);
+            } else {
+              console.log('WEBHOOK_PAYMENT_DEBUG: Produto adicionado ao novo usuário:', externalReference);
+            }
+          }
         }
       }
 

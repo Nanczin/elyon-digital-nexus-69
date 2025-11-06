@@ -6,13 +6,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { MonitorDot, LayoutDashboard, BookOpen, UserSquare, Palette, BarChart2, MessageSquare, ArrowLeft } from 'lucide-react';
+import { MonitorDot, LayoutDashboard, BookOpen, UserSquare, Palette, BarChart2, MessageSquare, ArrowLeft, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import AdminContent from './AdminContent';
 import AdminMembers from './AdminMembers';
 import AdminDesign from './AdminDesign';
 import AdminAnalytics from './AdminAnalytics';
 import AdminCommunity from './AdminCommunity';
+import ProductsAssociation from '@/components/member-area/ProductsAssociation';
 import { Tables } from '@/integrations/supabase/types';
 
 type MemberArea = Tables<'member_areas'>;
@@ -31,6 +32,8 @@ const AdminMemberAreaDetails = () => {
   useEffect(() => {
     if (location.pathname.includes('/content')) {
       setActiveTab('content');
+    } else if (location.pathname.includes('/products')) {
+      setActiveTab('products');
     } else if (location.pathname.includes('/members')) {
       setActiveTab('members');
     } else if (location.pathname.includes('/design')) {
@@ -120,10 +123,15 @@ const AdminMemberAreaDetails = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 h-auto">
+        <TabsList className="grid w-full grid-cols-6 h-auto">
           <TabsTrigger value="content" asChild>
             <Link to={`/admin/member-areas/${memberAreaId}/content`}>
               <BookOpen className="mr-2 h-4 w-4" /> Conteúdo
+            </Link>
+          </TabsTrigger>
+          <TabsTrigger value="products" asChild>
+            <Link to={`/admin/member-areas/${memberAreaId}/products`}>
+              <Package className="mr-2 h-4 w-4" /> Produtos
             </Link>
           </TabsTrigger>
           <TabsTrigger value="members" asChild>
@@ -150,6 +158,9 @@ const AdminMemberAreaDetails = () => {
 
         <TabsContent value="content" className="mt-6">
           <AdminContent memberAreaId={memberAreaId} />
+        </TabsContent>
+        <TabsContent value="products" className="mt-6">
+          <ProductsAssociation memberAreaId={memberAreaId!} />
         </TabsContent>
         <TabsContent value="members" className="mt-6">
           <AdminMembers memberAreaId={memberAreaId} />
