@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react'; // Adicionado ChevronDown, ChevronUp
+import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon, ChevronDown, ChevronUp, Package } from 'lucide-react'; // Adicionado ChevronDown, ChevronUp, Package
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
 type Lesson = Tables<'lessons'>;
+type Product = Tables<'products'>; // Import Product type
 
 // Função auxiliar para upload de arquivos
 const uploadFile = async (file: File, subfolder: string) => {
@@ -48,13 +49,15 @@ const ModuleFormDialog = ({
   onSave, 
   memberAreas, 
   selectedMemberAreaId,
-  onClose 
+  onClose,
+  products // Passar a lista de produtos
 }: { 
   module?: Module, 
   onSave: () => void, 
   memberAreas: MemberArea[], 
   selectedMemberAreaId: string | null,
-  onClose: () => void
+  onClose: () => void,
+  products: Product[] // Adicionar products aqui
 }) => {
   const [title, setTitle] = useState(editingModule?.title || '');
   const [description, setDescription] = useState(editingModule?.description || '');
@@ -62,6 +65,7 @@ const ModuleFormDialog = ({
   const [bannerUrl, setBannerUrl] = useState(editingModule?.banner_url || '');
   const [status, setStatus] = useState(editingModule?.status === 'published');
   const [currentMemberAreaId, setCurrentMemberAreaId] = useState(editingModule?.member_area_id || selectedMemberAreaId || '');
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(editingModule?.product_id || null); // Novo estado para produto associado
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -73,6 +77,7 @@ const ModuleFormDialog = ({
       setBannerUrl(editingModule.banner_url || '');
       setStatus(editingModule.status === 'published');
       setCurrentMemberAreaId(editingModule.member_area_id || '');
+      setSelectedProductId(editingModule.product_id || null); // Carregar produto associado
     } else {
       setTitle('');
       setDescription('');
@@ -80,6 +85,7 @@ const ModuleFormDialog = ({
       setBannerUrl('');
       setStatus(false);
       setCurrentMemberAreaId(selectedMemberAreaId || '');
+      setSelectedProductId(null); // Resetar produto associado
     }
   }, [editingModule, selectedMemberAreaId]);
 
@@ -114,6 +120,7 @@ const ModuleFormDialog = ({
         banner_url: finalBannerUrl,
         status: status ? 'published' : 'draft',
         order_index: editingModule?.order_index || 0, // Preserve order or set default
+        product_id: selectedProductId, // Salvar o produto associado
       };
 
       if (editingModule) {
@@ -183,6 +190,31 @@ const ModuleFormDialog = ({
               <Button variant="ghost" size="sm" onClick={() => setBannerUrl('')} className="text-destructive">Remover Banner</Button>
             </div>
           )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="associatedProduct">Produto Associado (Opcional)</Label>
+          <Select 
+            value={selectedProductId || "none"} 
+            onValueChange={value => setSelectedProductId(value === "none" ? null : value)}
+          >
+            <SelectTrigger id="associatedProduct">
+              <SelectValue placeholder="Associar a um produto" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {products.map(product => (
+                <SelectItem key={product.id} value={product.id}>
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    {product.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Este módulo pode ser associado a um produto específico.
+          </p>
         </div>
         <div className="flex items-center justify-between">
           <Label htmlFor="moduleStatus">Publicado</Label>
@@ -429,7 +461,7 @@ const LessonFormDialog = ({
 };
 
 // Componente para listar Módulos
-const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted }: { memberAreaId: string | null, onEditModule: (module: Module) => void, onModuleDeleted: () => void }) => {
+const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: { memberAreaId: string | null, onEditModule: (module: Module) => void, onModuleDeleted: () => void, products: Product[] }) => {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -444,7 +476,10 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted }: { memberAr
     setLoading(true);
     const { data, error } = await supabase
       .from('modules')
-      .select('*')
+      .select(`
+        *,
+        products(name)
+      `) // Incluir o nome do produto associado
       .eq('user_id', user.id)
       .eq('member_area_id', memberAreaId)
       .order('order_index', { ascending: true });
@@ -501,6 +536,12 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted }: { memberAr
                 <p className="text-sm text-muted-foreground">
                   {module.description?.trim() ? `${module.description.trim().substring(0, 100)}${module.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
                 </p>
+                {module.products?.name && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Package className="h-3 w-3" />
+                    Produto Associado: {module.products.name}
+                  </p>
+                )}
                 <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">
                   {module.status === 'published' ? 'Publicado' : 'Rascunho'}
                 </Badge>
@@ -753,6 +794,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
   const [modules, setModules] = useState<Module[]>([]); // For the lesson module selector
+  const [products, setProducts] = useState<Product[]>([]); // Novo estado para produtos
   const [currentModuleId, setCurrentModuleId] = useState<string | null>(null); // For the lesson list filter
   
   const [isModuleFormOpen, setIsModuleFormOpen] = useState(false);
@@ -764,6 +806,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
   useEffect(() => {
     if (user && isAdmin && currentMemberAreaId) {
       fetchMemberAreas();
+      fetchProducts(); // Buscar produtos
     }
   }, [user, isAdmin, currentMemberAreaId]);
 
@@ -780,6 +823,22 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
       console.error(error);
     } else {
       setMemberAreas(data || []);
+    }
+  };
+
+  const fetchProducts = async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .order('name', { ascending: true });
+    
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao carregar produtos.", variant: "destructive" });
+      console.error(error);
+    } else {
+      setProducts(data || []);
     }
   };
 
@@ -818,6 +877,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
   const handleModuleSaved = () => {
     fetchModulesForSelector(); // Refresh modules list for selector
+    fetchProducts(); // Refresh products list in case a new product was created
   };
 
   const handleLessonSaved = () => {
@@ -877,6 +937,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                   memberAreas={memberAreas} 
                   selectedMemberAreaId={currentMemberAreaId}
                   onClose={() => setIsModuleFormOpen(false)}
+                  products={products} // Passar produtos para o formulário
                 />
               </Dialog>
             </CardHeader>
@@ -885,6 +946,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                 memberAreaId={currentMemberAreaId} 
                 onEditModule={handleEditModule} 
                 onModuleDeleted={handleModuleSaved} 
+                products={products} // Passar produtos para a lista
               />
             </CardContent>
           </Card>

@@ -717,6 +717,7 @@ export type Database = {
           id: string
           member_area_id: string
           order_index: number
+          product_id: string | null
           status: string
           title: string
           updated_at: string
@@ -729,6 +730,7 @@ export type Database = {
           id?: string
           member_area_id: string
           order_index?: number
+          product_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -741,6 +743,7 @@ export type Database = {
           id?: string
           member_area_id?: string
           order_index?: number
+          product_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -752,6 +755,13 @@ export type Database = {
             columns: ["member_area_id"]
             isOneToOne: false
             referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
           {
