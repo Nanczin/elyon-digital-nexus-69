@@ -17,6 +17,7 @@ export interface PlatformColors {
   text_secondary?: string;
   checkmark_background?: string;
   checkmark_icon?: string;
+  [key: string]: string | undefined; // Add index signature
 }
 
 // Extend Tables<'platform_settings'> to use the specific PlatformColors type

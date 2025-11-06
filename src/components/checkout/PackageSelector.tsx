@@ -12,7 +12,7 @@ interface Package {
   price: number;
   originalPrice: number;
   mostSold?: boolean;
-  associatedProductId?: string | null;
+  associatedProductIds?: string | null;
   product?: Tables<'products'> | null; // Add product details for display
 }
 
@@ -66,7 +66,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
       name: pkg.name,
       hasTopics: pkg.topics?.length > 0,
       hasValidTopics: pkg.topics?.some(topic => topic.trim()),
-      associatedProductId: pkg.associatedProductId,
+      associatedProductIds: pkg.associatedProductIds,
       productName: pkg.product?.name
     }))
   });
@@ -74,7 +74,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
   if (validPackages.length === 0) return null;
 
   return (
-    <div className="space-y-4 sm:space-y-8"> {/* Ajustado space-y */}
+    <div className="space-y-4 sm:space-y-8">
       
       <RadioGroup 
         value={selectedPackage?.toString()} 
@@ -82,7 +82,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
           console.log('RadioGroup onChange:', value, typeof value);
           onSelectPackage(parseInt(value));
         }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-start" {/* Ajustado gap */}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-start"
       >
         {validPackages.map((pkg) => {
           const isSelected = selectedPackage === pkg.id;
@@ -107,7 +107,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
               />
               <label 
                 htmlFor={`package-${pkg.id}`}
-                className={`relative rounded-2xl p-6 sm:p-8 bg-white backdrop-blur-sm transition-all duration-300 border-2 flex flex-col cursor-pointer block ${ /* Ajustado p */
+                className={`relative rounded-2xl p-6 sm:p-8 bg-white backdrop-blur-sm transition-all duration-300 border-2 flex flex-col cursor-pointer block ${
                   isSelected ? 'border-2 shadow-lg' : 'border-gray-100 hover:border-gray-200'
                 }`}
                 style={{
@@ -118,7 +118,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                 {/* Badge destacado para pacote selecionado */}
                 {isSelected && (
                   <div 
-                    className="absolute top-2 right-2 sm:top-4 sm:right-4 px-2 sm:px-3 py-1 rounded-lg text-white text-xs sm:text-sm font-medium" {/* Ajustado top, right, px, text size */}
+                    className="absolute top-2 right-2 sm:top-4 sm:right-4 px-2 sm:px-3 py-1 rounded-lg text-white text-xs sm:text-sm font-medium"
                     style={{ backgroundColor: primaryColor }}
                   >
                     Selecionado
@@ -128,7 +128,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                 {/* Badge "Mais Vendido" */}
                 {pkg.mostSold && !isSelected && (
                   <div 
-                    className="absolute top-0 left-0 px-2 sm:px-3 py-1 rounded-br-xl rounded-tl-2xl text-white text-xs font-bold" {/* Ajustado px, text size */}
+                    className="absolute top-0 left-0 px-2 sm:px-3 py-1 rounded-br-xl rounded-tl-2xl text-white text-xs font-bold"
                     style={{ backgroundColor: '#f59e0b' }}
                   >
                     🔥 MAIS VENDIDO
@@ -136,17 +136,17 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                 )}
 
                 {/* Header com Radio Button visual e Nome */}
-                <div className="flex items-start gap-4 sm:gap-6 mb-4 sm:mb-8"> {/* Ajustado gap, mb */}
-                  <div className="mt-1 sm:mt-2"> {/* Ajustado mt */}
+                <div className="flex items-start gap-4 sm:gap-6 mb-4 sm:mb-8">
+                  <div className="mt-1 sm:mt-2">
                     <div 
-                      className={`h-6 w-6 sm:h-7 sm:w-7 rounded-full border-2 flex items-center justify-center ${ /* Ajustado h, w */
+                      className={`h-6 w-6 sm:h-7 sm:w-7 rounded-full border-2 flex items-center justify-center ${
                         isSelected ? 'border-2' : 'border-gray-300'
                       }`}
                       style={{ borderColor: isSelected ? primaryColor : undefined }}
                     >
                       {isSelected && (
                         <div 
-                          className="h-3 w-3 sm:h-4 sm:w-4 rounded-full" {/* Ajustado h, w */}
+                          className="h-3 w-3 sm:h-4 sm:w-4 rounded-full"
                           style={{ backgroundColor: primaryColor }}
                         />
                       )}
@@ -154,13 +154,13 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                   </div>
                   <div className="flex-1">
                     <span 
-                      className="text-xl sm:text-2xl font-bold block leading-tight" {/* Ajustado text size */}
+                      className="text-xl sm:text-2xl font-bold block leading-tight"
                       style={{ color: textColor }}
                     >
                       {pkg.name || `Pacote ${pkg.id}`}
                     </span>
                     {pkg.product?.name && pkg.product.name !== pkg.name && (
-                      <span className="text-xs sm:text-sm text-muted-foreground block mt-1"> {/* Ajustado text size */}
+                      <span className="text-xs sm:text-sm text-muted-foreground block mt-1">
                         Produto: {pkg.product.name}
                       </span>
                     )}
@@ -168,20 +168,20 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                 </div>
                 
                 {/* Preços */}
-                <div className="flex items-baseline gap-2 sm:gap-4 mb-4 sm:mb-8"> {/* Ajustado gap, mb */}
+                <div className="flex items-baseline gap-2 sm:gap-4 mb-4 sm:mb-8">
                   <span 
-                    className="text-4xl sm:text-5xl font-black tracking-tight" {/* Ajustado text size */}
+                    className="text-4xl sm:text-5xl font-black tracking-tight"
                     style={{ color: primaryColor }}
                   >
                     R${pkg.price.toFixed(2).replace('.', ',')}
                   </span>
                   {pkg.originalPrice > 0 && pkg.originalPrice !== pkg.price && (
-                    <div className="flex flex-col gap-1 sm:gap-2"> {/* Ajustado gap */}
-                      <span className="text-lg sm:text-xl text-gray-400 line-through"> {/* Ajustado text size */}
+                    <div className="flex flex-col gap-1 sm:gap-2">
+                      <span className="text-lg sm:text-xl text-gray-400 line-through">
                         R${pkg.originalPrice.toFixed(2).replace('.', ',')}
                       </span>
                       <span 
-                        className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full text-white" {/* Ajustado px, text size */}
+                        className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full text-white"
                         style={{ backgroundColor: primaryColor }}
                       >
                         {Math.round((1 - pkg.price / pkg.originalPrice) * 100)}% OFF
@@ -192,7 +192,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                 
                 {/* Descrição */}
                 {pkg.description && (
-                  <p className="text-sm sm:text-lg text-gray-600 mb-4 sm:mb-8 leading-relaxed"> {/* Ajustado text size, mb */}
+                  <p className="text-sm sm:text-lg text-gray-600 mb-4 sm:mb-8 leading-relaxed">
                     {pkg.description}
                   </p>
                 )}
@@ -207,7 +207,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                         e.stopPropagation();
                         toggleExpanded(pkg.id);
                       }}
-                      className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base font-medium mb-4 sm:mb-8 transition-all duration-200 hover:opacity-70" {/* Ajustado gap, text size, mb */}
+                      className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base font-medium mb-4 sm:mb-8 transition-all duration-200 hover:opacity-70"
                       style={{ color: primaryColor }}
                     >
                       Ver o que está incluso
@@ -220,17 +220,17 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
 
                     {/* Conteúdo expansível */}
                     {expandedPackages.has(pkg.id) && (
-                      <div className="space-y-3 sm:space-y-4 animate-fade-in bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-gray-100"> {/* Ajustado space-y, p */}
-                        <ul className="space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
+                      <div className="space-y-3 sm:space-y-4 animate-fade-in bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-gray-100">
+                        <ul className="space-y-3 sm:space-y-4">
                           {pkg.topics.filter(topic => topic.trim()).map((topic, topicIndex) => (
-                            <li key={topicIndex} className="flex items-start gap-3 sm:gap-4"> {/* Ajustado gap */}
-                              <div className="mt-1 flex-shrink-0 p-1.5 sm:p-2 rounded-full" style={{ backgroundColor: `${primaryColor}15` }}> {/* Ajustado p */}
+                            <li key={topicIndex} className="flex items-start gap-3 sm:gap-4">
+                              <div className="mt-1 flex-shrink-0 p-1.5 sm:p-2 rounded-full" style={{ backgroundColor: `${primaryColor}15` }}>
                                 <Check 
-                                  className="w-4 h-4 sm:w-5 sm:h-5" {/* Ajustado w, h */}
+                                  className="w-4 h-4 sm:w-5 sm:h-5"
                                   style={{ color: primaryColor }}
                                 />
                               </div>
-                              <span className="text-sm sm:text-lg leading-relaxed flex-1 font-medium text-gray-700"> {/* Ajustado text size */}
+                              <span className="text-sm sm:text-lg leading-relaxed flex-1 font-medium text-gray-700">
                                 {formatTopicText(topic)}
                               </span>
                             </li>

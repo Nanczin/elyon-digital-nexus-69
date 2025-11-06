@@ -171,18 +171,18 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-md sm:max-w-xl mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
+      <DialogContent className="max-w-md sm:max-w-xl mx-2 sm:mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Configurar Email Transacional</DialogTitle> {/* Ajustado text size */}
+          <DialogTitle className="text-lg sm:text-xl">Configurar Email Transacional</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {emailConfig && (
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold">Conta Configurada</h3> {/* Ajustado text size */}
+              <h3 className="text-base sm:text-lg font-semibold">Conta Configurada</h3>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base"> {/* Ajustado text size */}
+                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
                     {emailConfig.displayName || emailConfig.email}
                     <Button
                       variant="ghost"
@@ -195,7 +195,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
+                  <div className="text-xs sm:text-sm text-muted-foreground">
                     <p>Email: {emailConfig.email}</p>
                     <p>Nome de Exibição: {emailConfig.displayName}</p>
                   </div>
@@ -204,15 +204,15 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
 
               {/* Seção de Teste de Conexão */}
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                <h4 className="font-semibold flex items-center gap-2 text-base sm:text-lg"> {/* Ajustado text size */}
+                <h4 className="font-semibold flex items-center gap-2 text-base sm:text-lg">
                   <Send className="h-4 w-4" />
                   Testar Conexão
                 </h4>
-                <p className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Envie um e-mail de teste para verificar se sua configuração SMTP está funcionando.
                 </p>
                 <div>
-                  <Label htmlFor="testRecipientEmail" className="text-sm">Enviar e-mail de teste para:</Label> {/* Ajustado text size */}
+                  <Label htmlFor="testRecipientEmail" className="text-sm">Enviar e-mail de teste para:</Label>
                   <Input
                     id="testRecipientEmail"
                     type="email"
@@ -225,7 +225,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                 <Button 
                   onClick={handleTestConnection} 
                   disabled={testingConnection || !testRecipientEmail.includes('@')} 
-                  className="w-full text-sm sm:text-base" {/* Ajustado text size */}
+                  className="w-full text-sm sm:text-base"
                 >
                   {testingConnection ? 'Enviando Teste...' : 'Enviar E-mail de Teste'}
                 </Button>
@@ -234,30 +234,30 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
           )}
 
           <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold">Adicionar Nova Conta</h3> {/* Ajustado text size */}
+            <h3 className="text-base sm:text-lg font-semibold">Adicionar Nova Conta</h3>
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="email" className="text-sm">Email *</Label> {/* Ajustado text size */}
+                <Label htmlFor="email" className="text-sm">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={newAccount.email}
                   onChange={(e) => setNewAccount({...newAccount, email: e.target.value})}
                   placeholder="seu-email@exemplo.com"
-                  className="text-sm" {/* Ajustado text size */}
+                  className="text-sm"
                 />
               </div>
               
               <div>
-                <Label htmlFor="appPassword" className="text-sm">Senha do App *</Label> {/* Ajustado text size */}
+                <Label htmlFor="appPassword" className="text-sm">Senha do App *</Label>
                 <Input
                   id="appPassword"
                   type="password"
                   value={newAccount.appPassword}
                   onChange={(e) => setNewAccount({...newAccount, appPassword: e.target.value})}
                   placeholder="Sua senha de aplicativo (não a senha principal)"
-                  className="text-sm" {/* Ajustado text size */}
+                  className="text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Para Gmail, gere uma senha de app em Configurações de Segurança da sua conta Google.
@@ -265,18 +265,18 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
               </div>
               
               <div>
-                <Label htmlFor="displayName" className="text-sm">Nome de Exibição *</Label> {/* Ajustado text size */}
+                <Label htmlFor="displayName" className="text-sm">Nome de Exibição *</Label>
                 <Input
                   id="displayName"
                   value={newAccount.displayName}
                   onChange={(e) => setNewAccount({...newAccount, displayName: e.target.value})}
                   placeholder="Nome da sua empresa ou seu nome"
-                  className="text-sm" {/* Ajustado text size */}
+                  className="text-sm"
                 />
               </div>
             </div>
             
-            <Button onClick={addAccount} disabled={saving || loading || !isNewAccountFormValid} className="w-full text-sm sm:text-base"> {/* Ajustado text size */}
+            <Button onClick={addAccount} disabled={saving || loading || !isNewAccountFormValid} className="w-full text-sm sm:text-base">
               <Plus className="h-4 w-4 mr-2" />
               {saving ? 'Salvando...' : 'Adicionar Conta'}
             </Button>

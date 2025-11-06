@@ -50,7 +50,7 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHistory((data as any) || []);
+      setHistory((data as HistoryEntry[]) || []);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
       toast({
@@ -86,13 +86,13 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
   const getActionBadge = (actionType: string) => {
     switch (actionType) {
       case 'created':
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">Criado</Badge>; {/* Ajustado text size */}
+        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">Criado</Badge>;
       case 'updated':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">Atualizado</Badge>; {/* Ajustado text size */}
+        return <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">Atualizado</Badge>;
       case 'deleted':
-        return <Badge variant="destructive" className="text-xs">Excluído</Badge>; {/* Ajustado text size */}
+        return <Badge variant="destructive" className="text-xs">Excluído</Badge>;
       default:
-        return <Badge variant="outline" className="text-xs">{actionType}</Badge>; {/* Ajustado text size */}
+        return <Badge variant="outline" className="text-xs">{actionType}</Badge>;
     }
   };
 
@@ -107,17 +107,17 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
     const { changes, old_values, new_values } = entry;
     
     return (
-      <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs sm:text-sm"> {/* Ajustado mt, p, text size */}
-        <h4 className="font-medium mb-2 text-sm">Detalhes das Modificações:</h4> {/* Ajustado mb, text size */}
+      <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs sm:text-sm">
+        <h4 className="font-medium mb-2 text-sm">Detalhes das Modificações:</h4>
         
         {changes.order_bumps_changed && (
-          <div className="mb-2"> {/* Ajustado mb */}
-            <div className="flex items-center gap-2 mb-1"> {/* Ajustado mb */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Package className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-sm">Order Bumps</span> {/* Ajustado text size */}
+              <span className="font-medium text-sm">Order Bumps</span>
             </div>
             {old_values?.order_bumps && new_values?.order_bumps && (
-              <div className="space-y-1 text-xs"> {/* Ajustado text size */}
+              <div className="space-y-1 text-xs">
                 <div>
                   <span className="font-medium">Antes:</span> {old_values.order_bumps.length} item(s)
                 </div>
@@ -130,12 +130,12 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
         )}
 
         {changes.price_changed && (
-          <div className="mb-2"> {/* Ajustado mb */}
-            <div className="flex items-center gap-2 mb-1"> {/* Ajustado mb */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <DollarSign className="h-4 w-4 text-green-600" />
-              <span className="font-medium text-sm">Preço</span> {/* Ajustado text size */}
+              <span className="font-medium text-sm">Preço</span>
             </div>
-            <div className="space-y-1 text-xs"> {/* Ajustado text size */}
+            <div className="space-y-1 text-xs">
               <div>
                 <span className="font-medium">Antes:</span> {formatPrice(old_values?.price || 0)}
               </div>
@@ -147,12 +147,12 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
         )}
 
         {changes.promotional_price_changed && (
-          <div className="mb-2"> {/* Ajustado mb */}
-            <div className="flex items-center gap-2 mb-1"> {/* Ajustado mb */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <DollarSign className="h-4 w-4 text-orange-600" />
-              <span className="font-medium text-sm">Preço Promocional</span> {/* Ajustado text size */}
+              <span className="font-medium text-sm">Preço Promocional</span>
             </div>
-            <div className="space-y-1 text-xs"> {/* Ajustado text size */}
+            <div className="space-y-1 text-xs">
               <div>
                 <span className="font-medium">Antes:</span> {old_values?.promotional_price ? formatPrice(old_values.promotional_price) : 'Não definido'}
               </div>
@@ -164,24 +164,24 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
         )}
 
         {changes.packages_changed && (
-          <div className="mb-2"> {/* Ajustado mb */}
-            <div className="flex items-center gap-2 mb-1"> {/* Ajustado mb */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Package className="h-4 w-4 text-purple-600" />
-              <span className="font-medium text-sm">Pacotes</span> {/* Ajustado text size */}
+              <span className="font-medium text-sm">Pacotes</span>
             </div>
-            <div className="text-xs text-gray-600"> {/* Ajustado text size */}
+            <div className="text-xs text-gray-600">
               Configurações de pacotes foram modificadas
             </div>
           </div>
         )}
 
         {changes.layout_changed && (
-          <div className="mb-2"> {/* Ajustado mb */}
-            <div className="flex items-center gap-2 mb-1"> {/* Ajustado mb */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Palette className="h-4 w-4 text-indigo-600" />
-              <span className="font-medium text-sm">Layout</span> {/* Ajustado text size */}
+              <span className="font-medium text-sm">Layout</span>
             </div>
-            <div className="space-y-1 text-xs"> {/* Ajustado text size */}
+            <div className="space-y-1 text-xs">
               <div>
                 <span className="font-medium">Antes:</span> {old_values?.layout || 'horizontal'}
               </div>
@@ -199,13 +199,13 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Clock className="h-5 w-5" />
             Histórico de Modificações
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6 text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
+          <div className="text-center py-6 text-muted-foreground text-sm sm:text-base">
             Carregando histórico...
           </div>
         </CardContent>
@@ -216,38 +216,38 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <Clock className="h-5 w-5" />
           Histórico de Modificações
         </CardTitle>
-        <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
+        <p className="text-sm sm:text-base text-muted-foreground">
           Acompanhe todas as alterações feitas neste checkout
         </p>
       </CardHeader>
       <CardContent>
         {history.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
+          <div className="text-center py-6 text-muted-foreground text-sm sm:text-base">
             Nenhuma modificação registrada
           </div>
         ) : (
-          <ScrollArea className="h-72 sm:h-96"> {/* Ajustado h */}
-            <div className="space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
+          <ScrollArea className="h-72 sm:h-96">
+            <div className="space-y-3 sm:space-y-4">
               {history.map((entry, index) => (
                 <div key={entry.id} className="relative">
                   {index < history.length - 1 && (
-                    <div className="absolute left-4 top-10 sm:top-12 bottom-0 w-px bg-border" /> {/* Ajustado top */}
+                    <div className="absolute left-4 top-10 sm:top-12 bottom-0 w-px bg-border" />
                   )}
                   
-                  <div className="flex gap-3 sm:gap-4"> {/* Ajustado gap */}
-                    <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-background border flex items-center justify-center"> {/* Ajustado w, h */}
+                  <div className="flex gap-3 sm:gap-4">
+                    <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-background border flex items-center justify-center">
                       {getActionIcon(entry.action_type)}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1 sm:mb-2"> {/* Ajustado mb */}
+                      <div className="flex items-center justify-between mb-1 sm:mb-2">
                         <div className="flex items-center gap-2">
                           {getActionBadge(entry.action_type)}
-                          <span className="text-sm font-medium"> {/* Ajustado text size */}
+                          <span className="text-sm font-medium">
                             {entry.description}
                           </span>
                         </div>
@@ -257,7 +257,7 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => toggleDetails(entry.id)}
-                            className="h-6 px-2 text-xs" {/* Ajustado h, px, text size */}
+                            className="h-6 px-2 text-xs"
                           >
                             {showDetails[entry.id] ? (
                               <EyeOff className="h-3 w-3" />
@@ -268,7 +268,7 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-2"> {/* Ajustado text size */}
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-2">
                         <User className="h-3 w-3" />
                         <span>{entry.profiles?.name || entry.profiles?.email || 'Sistema'}</span>
                         <span>•</span>
@@ -286,7 +286,7 @@ const CheckoutHistory: React.FC<CheckoutHistoryProps> = ({ checkoutId }) => {
                     </div>
                   </div>
                   
-                  {index < history.length - 1 && <Separator className="mt-3 sm:mt-4" />} {/* Ajustado mt */}
+                  {index < history.length - 1 && <Separator className="mt-3 sm:mt-4" />}
                 </div>
               ))}
             </div>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Link } from 'react-router-dom'; // Import Link
 
 interface MemberAreaPreviewContentProps {
   settings: any; // Usar o tipo PlatformSettings de AdminDesign.tsx
@@ -70,7 +71,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
     >
       {/* Header da Área de Membros */}
       <header 
-        className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4" {/* Ajustado px */}
+        className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b"
         style={{ 
           backgroundColor: settings.colors?.background_login || 'hsl(var(--member-area-background))', // Use background_login
           borderBottom: `1px solid transparent`, // No border
@@ -82,20 +83,20 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
             <img 
               src={settings.logo_url} 
               alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-12 w-12 sm:h-16 sm:w-16 object-contain" {/* Ajustado h e w */}
+              className="h-12 w-12 sm:h-16 sm:w-16 object-contain"
             />
           ) : (
-            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200"> {/* Ajustado h e w */}
-              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold"> {/* Ajustado text size */}
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200">
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold">
                 {memberAreaNameInitials}
               </AvatarFallback>
             </Avatar>
           )}
-          <span className="text-lg sm:text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span> {/* Ajustado text size */}
+          <span className="text-lg sm:text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
         </div>
         <Button onClick={onLogout} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full">
-          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200"> {/* Ajustado h, w */}
-            <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold"> {/* Ajustado text size */}
+          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200">
+            <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold">
               {userInitial}
             </AvatarFallback>
           </Avatar>
@@ -103,17 +104,17 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6"> {/* Ajustado px, py, space-y */}
-        <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}> {/* Ajustado text size */}
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6">
+        <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}>
           Olá, {userName}!
         </h1>
-        <p className="text-lg sm:text-xl" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
+        <p className="text-lg sm:text-xl" style={{ color: secondaryTextColor }}>
           Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-16 max-w-6xl mx-auto"> {/* Ajustado gap, mt, max-w- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-16 max-w-6xl mx-auto">
           {modulesToDisplay.length === 0 && (
-            <p className="text-memberArea-text-muted text-sm sm:text-base">Nenhum módulo disponível para você ainda.</p> {/* Ajustado text size */}
+            <p className="text-memberArea-text-muted text-sm sm:text-base">Nenhum módulo disponível para você ainda.</p>
           )}
           {modulesToDisplay.length > 0 && (
             modulesToDisplay.map((module) => (
@@ -122,36 +123,37 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48"> {/* Ajustado h */}
+                <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48">
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
                       alt={module.title} 
-                      className="w-full h-full object-cover" 
+                      className={`w-full h-full object-cover ${module.isCompleted ? '' : 'grayscale brightness-50'}`} 
                     />
                   )}
                   {module.isCompleted && (
                     <div 
-                      className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full flex items-center justify-center" {/* Ajustado top, right, p */}
+                      className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full"
                       style={{ backgroundColor: checkmarkBgColor }}
                     >
-                      <Check className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: checkmarkIconColor }} /> {/* Ajustado h, w */}
+                      <Check className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: checkmarkIconColor }} />
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]"> {/* Ajustado p, space-y, h */}
-                  <h3 className="text-lg sm:text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}> {/* Ajustado text size */}
+                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]">
+                  <h3 className="text-lg sm:text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}>
                     {module.title}
                   </h3>
-                  <p className="text-xs sm:text-sm flex-1" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
+                  <p className="text-xs sm:text-sm flex-1" style={{ color: secondaryTextColor }}>
                     {module.description}
                   </p>
+                  
                   <Button 
-                    className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base" {/* Ajustado h, text size */}
+                    className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base"
                     style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                     asChild
                   >
-                    <Link to={`/membros/${memberArea?.id}/modules/${module.id}`}> {/* Corrigido o link para usar memberArea.id */}
+                    <Link to={`/membros/${memberArea?.id}/modules/${module.id}`}>
                       Acessar Módulo <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>

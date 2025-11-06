@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate, useParams } from 'react-router-dom'; // Import useParams
+import { Navigate, useParams, Link } from 'react-router-dom'; // Import useParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon, ChevronDown, ChevronUp, Package, Link as LinkIcon } from 'lucide-react'; // Adicionado ChevronDown, ChevronUp, Package, LinkIcon
@@ -20,7 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 
 type MemberArea = Tables<'member_areas'>;
-type Module = Tables<'modules'>;
+type Module = Tables<'modules'> & { products?: { name: string } | null }; // Adicionado products para a relação
 type Lesson = Tables<'lessons'>;
 type Product = Tables<'products'>; // Import Product type
 
@@ -152,9 +152,9 @@ const ModuleFormDialog = ({
   };
 
   return (
-    <DialogContent className="sm:max-w-[500px]"> {/* Ajustado max-w- */}
+    <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle className="text-lg sm:text-xl">{editingModule ? 'Editar Módulo' : 'Criar Novo Módulo'}</DialogTitle> {/* Ajustado text size */}
+        <DialogTitle className="text-lg sm:text-xl">{editingModule ? 'Editar Módulo' : 'Criar Novo Módulo'}</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
         <div className="space-y-2">
@@ -378,9 +378,9 @@ const LessonFormDialog = ({
   };
 
   return (
-    <DialogContent className="sm:max-w-[500px]"> {/* Ajustado max-w- */}
+    <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle className="text-lg sm:text-xl">{editingLesson ? 'Editar Aula' : 'Criar Nova Aula'}</DialogTitle> {/* Ajustado text size */}
+        <DialogTitle className="text-lg sm:text-xl">{editingLesson ? 'Editar Aula' : 'Criar Nova Aula'}</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
         <div className="space-y-2">
@@ -506,7 +506,7 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
       toast({ title: "Erro", description: "Falha ao carregar módulos.", variant: "destructive" });
       console.error(error);
     } else {
-      setModules(data || []);
+      setModules(data as Module[] || []);
     }
     setLoading(false);
   }, [user?.id, memberAreaId, toast]);
@@ -548,9 +548,9 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
                 />
               </div>
             )}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base sm:text-lg">{module.title}</h3> {/* Ajustado text size */}
+                <h3 className="font-semibold text-base sm:text-lg">{module.title}</h3>
                 <p className="text-sm text-muted-foreground">
                   {module.description?.trim() ? `${module.description.trim().substring(0, 100)}${module.description.trim().length > 100 ? '...' : ''}` : 'Nenhuma descrição'}
                 </p>
@@ -560,36 +560,36 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
                     Produto Associado: {module.products.name}
                   </p>
                 )}
-                {module.checkout_link && ( // NOVO: Exibir link de checkout direto
+                {module.checkout_link && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     <LinkIcon className="h-3 w-3" />
                     Checkout Direto: <a href={module.checkout_link} target="_blank" rel="noopener noreferrer" className="underline">Ver</a>
                   </p>
                 )}
-                <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1 text-xs"> {/* Ajustado text size */}
+                <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1 text-xs">
                   {module.status === 'published' ? 'Publicado' : 'Rascunho'}
                 </Badge>
               </div>
-              <div className="flex items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
-                <Button variant="outline" size="sm" onClick={() => onEditModule(module)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+              <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                <Button variant="outline" size="sm" onClick={() => onEditModule(module)} className="text-xs sm:text-sm">
                   <Edit className="h-4 w-4" />
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                    <Button variant="destructive" size="sm" className="text-xs sm:text-sm">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
+                  <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
-                      <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                      <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle>
+                      <AlertDialogDescription className="text-xs sm:text-sm">
                         Tem certeza que deseja excluir o módulo <strong>"{module.title}"</strong>? Todas as aulas e acessos associados também serão excluídos. Esta ação é irreversível.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
-                      <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
-                      <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                    <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                      <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteModule(module.id, module.title)} className="text-xs sm:text-sm">
                         Excluir
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -752,42 +752,42 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
           <Card key={lesson.id}>
             <CardContent className="p-4">
               <Collapsible open={isOpen} onOpenChange={() => toggleLesson(lesson.id)}>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2"> {/* Ajustado flex e gap */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
                   <div className="flex-1 flex flex-col min-w-0">
-                    <h3 className="font-semibold text-base sm:text-lg truncate">{lesson.title}</h3> {/* Ajustado text size */}
+                    <h3 className="font-semibold text-base sm:text-lg truncate">{lesson.title}</h3>
                     {lesson.description?.trim() && (
                       <p className="text-sm text-muted-foreground truncate">
                         {lesson.description.trim()}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
-                    <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                    <Button variant="outline" size="sm" onClick={() => onEditLesson(lesson)} className="text-xs sm:text-sm">
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                        <Button variant="destructive" size="sm" className="text-xs sm:text-sm">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
+                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusção</AlertDialogTitle> {/* Ajustado text size */}
-                          <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusção</AlertDialogTitle>
+                          <AlertDialogDescription className="text-xs sm:text-sm">
                             Tem certeza que deseja excluir a aula <strong>"{lesson.title}"</strong>? Esta ação é irreversível.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
-                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
-                          <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteLesson(lesson.id, lesson.title)} className="text-xs sm:text-sm">
                             Excluir
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
                         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
                     </CollapsibleTrigger>
@@ -850,7 +850,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
       toast({ title: "Erro", description: "Falha ao carregar áreas de membros.", variant: "destructive" });
       console.error(error);
     } else {
-      setMemberAreas(data || []);
+      setMemberAreas(data as MemberArea[] || []);
     }
   };
 
@@ -866,7 +866,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
       toast({ title: "Erro", description: "Falha ao carregar produtos.", variant: "destructive" });
       console.error(error);
     } else {
-      setProducts(data || []);
+      setProducts(data as Product[] || []);
     }
   };
 
@@ -887,7 +887,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
       toast({ title: "Erro", description: "Falha ao carregar módulos para seleção.", variant: "destructive" });
       console.error(error);
     } else {
-      setModules(data || []);
+      setModules(data as Module[] || []);
       if (data && data.length > 0 && !currentModuleId) {
         setCurrentModuleId(data[0].id); // Select the first module by default
       } else if (data && data.length > 0 && currentModuleId && !data.some(m => m.id === currentModuleId)) {
@@ -938,24 +938,24 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
   }
 
   return (
-    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
+    <div className="p-4 sm:p-6">
       <Tabs defaultValue="modules">
-        <TabsList className="grid w-full grid-cols-2 h-auto p-1"> {/* Ajustado padding */}
-          <TabsTrigger value="modules" className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
+        <TabsList className="grid w-full grid-cols-2 h-auto p-1">
+          <TabsTrigger value="modules" className="text-xs sm:text-sm py-2">
             <BookOpen className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Módulos
           </TabsTrigger>
-          <TabsTrigger value="lessons" className="text-xs sm:text-sm py-2"> {/* Ajustado text size e padding */}
+          <TabsTrigger value="lessons" className="text-xs sm:text-sm py-2">
             <Video className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Aulas
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="modules" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
-              <CardTitle className="text-lg sm:text-xl">Módulos</CardTitle> {/* Ajustado text size */}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <CardTitle className="text-lg sm:text-xl">Módulos</CardTitle>
               <Dialog open={isModuleFormOpen} onOpenChange={setIsModuleFormOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" onClick={() => setEditingModule(undefined)} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
+                  <Button size="sm" onClick={() => setEditingModule(undefined)} className="w-full sm:w-auto text-sm">
                     <Plus className="mr-2 h-4 w-4" /> Novo Módulo
                   </Button>
                 </DialogTrigger>
@@ -965,7 +965,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                   memberAreas={memberAreas} 
                   selectedMemberAreaId={currentMemberAreaId}
                   onClose={() => setIsModuleFormOpen(false)}
-                  products={products} // Passar produtos para o formulário
+                  products={products}
                 />
               </Dialog>
             </CardHeader>
@@ -974,7 +974,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                 memberAreaId={currentMemberAreaId} 
                 onEditModule={handleEditModule} 
                 onModuleDeleted={handleModuleSaved} 
-                products={products} // Passar produtos para a lista
+                products={products}
               />
             </CardContent>
           </Card>
@@ -982,11 +982,11 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
         <TabsContent value="lessons" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"> {/* Ajustado flex e gap */}
-              <CardTitle className="text-lg sm:text-xl">Aulas</CardTitle> {/* Ajustado text size */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto"> {/* Ajustado flex e largura */}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <CardTitle className="text-lg sm:text-xl">Aulas</CardTitle>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                 <Select value={currentModuleId || "none"} onValueChange={value => setCurrentModuleId(value === "none" ? null : value)}>
-                  <SelectTrigger className="w-full sm:w-[180px]"> {/* Ajustado largura */}
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Selecionar Módulo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1003,7 +1003,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                 </Select>
                 <Dialog open={isLessonFormOpen} onOpenChange={setIsLessonFormOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
+                    <Button size="sm" disabled={!currentModuleId} onClick={() => setEditingLesson(undefined)} className="w-full sm:w-auto text-sm">
                       <Plus className="mr-2 h-4 w-4" /> Nova Aula
                     </Button>
                   </DialogTrigger>

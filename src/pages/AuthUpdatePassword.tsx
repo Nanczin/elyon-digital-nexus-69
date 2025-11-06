@@ -8,11 +8,9 @@ import { Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
+import { PlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
 import { deepMerge } from '@/lib/utils';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
-
-type PlatformSettings = Tables<'platform_settings'>;
 
 const AuthUpdatePassword = () => {
   const [searchParams] = useSearchParams();
@@ -121,7 +119,7 @@ const AuthUpdatePassword = () => {
         fontFamily: currentSettings.global_font_family || 'Nunito'
       }}
     >
-      <Card className="w-full max-w-sm sm:max-w-md" style={{ backgroundColor: currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))' }}> {/* Ajustado max-w- */}
+      <Card className="w-full max-w-sm sm:max-w-md" style={{ backgroundColor: currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))' }}>
         <CardHeader className="text-center space-y-4">
           {currentSettings.logo_url && (
             <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center">

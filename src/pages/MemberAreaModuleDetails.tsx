@@ -214,11 +214,7 @@ const MemberAreaModuleDetails = () => {
       >
         <div className="flex items-center space-x-3">
           {currentSettings.logo_url ? (
-            <img 
-              src={currentSettings.logo_url} 
-              alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-12 w-12 sm:h-16 sm:w-16 object-contain"
-            />
+            <img src={currentSettings.logo_url} alt={memberArea?.name || "Logo da Plataforma"} className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
           ) : (
             <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200">
               <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold">

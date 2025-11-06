@@ -13,30 +13,7 @@ import { deepMerge } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MemberAreaPreviewContent from '@/components/member-area/MemberAreaPreviewContent';
 import { Tables } from '@/integrations/supabase/types';
-import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
-
-interface PlatformSettings {
-  id: string;
-  user_id: string | null;
-  member_area_id: string;
-  logo_url: string | null;
-  login_title: string | null;
-  login_subtitle: string | null;
-  global_font_family: string | null;
-  colors: {
-    background_login?: string;
-    card_login?: string;
-    header_background?: string;
-    header_border?: string;
-    button_background?: string;
-    text_primary?: string;
-    text_header?: string;
-    text_cards?: string;
-    text_secondary?: string;
-    checkmark_background?: string;
-    checkmark_icon?: string;
-  } | null;
-}
+import { getDefaultSettings, PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada e tipos
 
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
@@ -90,7 +67,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
       toast({ title: "Erro", description: "Falha ao carregar configurações de design.", variant: "destructive" });
       console.error(error);
     } else if (data) {
-      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), data as Partial<PlatformSettings>));
+      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...data, colors: data.colors as PlatformColors | null } as Partial<PlatformSettings>));
     } else {
       setSettings(getDefaultSettings(currentMemberAreaId!, user?.id || null));
     }
@@ -122,7 +99,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
     setSettings(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleColorChange = (colorField: keyof (PlatformSettings['colors'] extends object ? PlatformSettings['colors'] : {}), value: string) => {
+  const handleColorChange = (colorField: keyof PlatformColors, value: string) => {
     setSettings(prev => ({
       ...prev,
       colors: {
@@ -226,11 +203,11 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
   const currentDefaultSettings = getDefaultSettings(currentMemberAreaId, user?.id || null);
 
   return (
-    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"> {/* Ajustado gap */}
+    <div className="p-4 sm:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Palette className="h-5 w-5" /> Configurações Visuais
             </CardTitle>
           </CardHeader>
@@ -274,24 +251,24 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
               </Select>
             </div>
 
-            <h3 className="font-semibold mt-6 text-base sm:text-lg">Paleta de Cores</h3> {/* Ajustado text size */}
+            <h3 className="font-semibold mt-6 text-base sm:text-lg">Paleta de Cores</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(settings.colors || {}).map(([key, value]) => (
                 <div key={key} className="space-y-2">
                   <Label htmlFor={`color-${key}`}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</Label>
                   <div className="flex gap-2">
-                    <Input type="color" value={value || '#ffffff'} onChange={(e) => handleColorChange(key as any, e.target.value)} className="w-16 h-10 p-1" />
-                    <Input id={`color-${key}`} value={value || '#ffffff'} onChange={(e) => handleColorChange(key as any, e.target.value)} />
+                    <Input type="color" value={value || '#ffffff'} onChange={(e) => handleColorChange(key as keyof PlatformColors, e.target.value)} className="w-16 h-10 p-1" />
+                    <Input id={`color-${key}`} value={value || '#ffffff'} onChange={(e) => handleColorChange(key as keyof PlatformColors, e.target.value)} />
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6"> {/* Ajustado flex e gap */}
-              <Button variant="outline" onClick={handleRestoreDefault} disabled={saving} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
+            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={handleRestoreDefault} disabled={saving} className="w-full sm:w-auto text-sm">
                 <RotateCcw className="mr-2 h-4 w-4" /> Restaurar Padrão
               </Button>
-              <Button onClick={handleSaveSettings} disabled={saving} className="w-full sm:w-auto text-sm"> {/* Ajustado largura do botão e text size */}
+              <Button onClick={handleSaveSettings} disabled={saving} className="w-full sm:w-auto text-sm">
                 <Save className="mr-2 h-4 w-4" /> {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </div>
@@ -300,7 +277,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Type className="h-5 w-5" /> Pré-visualização
             </CardTitle>
           </CardHeader>
@@ -321,16 +298,16 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
                 }}
               >
                 <div 
-                  className="w-full max-w-xs sm:max-w-sm p-6 rounded-lg shadow-lg text-center space-y-4" {/* Ajustado max-w- */}
+                  className="w-full max-w-xs sm:max-w-sm p-6 rounded-lg shadow-lg text-center space-y-4"
                   style={{ backgroundColor: settings.colors?.card_login || currentDefaultSettings.colors?.card_login }}
                 >
                   {settings.logo_url && (
                     <img src={settings.logo_url} alt="Logo" className="mx-auto h-16 mb-4" />
                   )}
-                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: settings.colors?.text_primary || currentDefaultSettings.colors?.text_primary }}> {/* Ajustado text size */}
+                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: settings.colors?.text_primary || currentDefaultSettings.colors?.text_primary }}>
                     {settings.login_title || currentDefaultSettings.login_title}
                   </h2>
-                  <p className="text-sm sm:text-base" style={{ color: settings.colors?.text_secondary || currentDefaultSettings.colors?.text_secondary }}> {/* Ajustado text size */}
+                  <p className="text-sm sm:text-base" style={{ color: settings.colors?.text_secondary || currentDefaultSettings.colors?.text_secondary }}>
                     {settings.login_subtitle || currentDefaultSettings.login_subtitle}
                   </p>
                   <Input placeholder="Email" type="email" className="mt-4" />

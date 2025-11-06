@@ -443,7 +443,11 @@ const AdminCheckouts = () => {
     }
   };
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Carregando...
+      </div>
+    );
   }
   if (!user) {
     return <Navigate to="/auth/login" replace />;
@@ -513,8 +517,8 @@ const AdminCheckouts = () => {
     handleInputChange(`form_fields.packages[${packageIndex}].associatedProductIds`, updatedIds);
   };
 
-  const addTopicToPackage = () => {
-    const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === selectedPackage ? {
+  const addTopicToPackage = (packageId: number) => { // Added packageId parameter
+    const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === packageId ? {
       ...pkg,
       topics: [...pkg.topics, '']
     } : pkg);
@@ -697,7 +701,8 @@ const AdminCheckouts = () => {
       setIsLoading(false);
     }
   };
-  return <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
+  return (
+    <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 sm:mb-8">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground truncate">
@@ -960,7 +965,7 @@ const AdminCheckouts = () => {
                       <div className="space-y-2">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                           <Label>Tópicos do que será entregue</Label>
-                          <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage()} className="w-full sm:w-auto">
+                          <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage(pkg.id)} className="w-full sm:w-auto">
                             <Plus className="h-4 w-4 mr-2" />
                             Adicionar Tópico
                           </Button>
@@ -1335,2143 +1340,440 @@ const AdminCheckouts = () => {
                               ))
                             )}
                           </SelectContent>
-<dyad-problem-report summary="190 problems">
-<problem file="src/components/checkout/CheckoutChangeHistory.tsx" line="125" column="76" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/CheckoutHistory.tsx" line="238" column="98" code="1005">')' expected.</problem>
-<problem file="src/components/checkout/CheckoutHistory.tsx" line="239" column="20" code="1381">Unexpected token. Did you mean `{'}'}` or `&amp;rbrace;`?</problem>
-<problem file="src/components/checkout/CheckoutHistory.tsx" line="260" column="90" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/CountdownTimer.tsx" line="50" column="193" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="95" column="60" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="108" column="58" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="140" column="100" code="1005">')' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="141" column="20" code="1005">'}' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="141" column="21" code="1381">Unexpected token. Did you mean `{'}'}` or `&amp;rbrace;`?</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="157" column="105" code="1005">')' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="158" column="20" code="1005">'}' expected.</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="158" column="21" code="1381">Unexpected token. Did you mean `{'}'}` or `&amp;rbrace;`?</problem>
-<problem file="src/components/checkout/CreditCardForm.tsx" line="172" column="62" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="79" column="115" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="114" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="129" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="144" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="159" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="174" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="227" column="134" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/HorizontalLayout.tsx" line="426" column="261" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="73" column="115" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="107" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="122" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="137" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="152" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="167" column="68" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/MosaicLayout.tsx" line="388" column="261" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="85" column="99" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="121" column="188" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="131" column="160" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="149" column="94" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="157" column="110" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="173" column="105" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="184" column="141" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="210" column="193" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/PackageSelector.tsx" line="229" column="89" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/SecuritySection.tsx" line="49" column="66" code="1005">'...' expected.</problem>
-<problem file="src/components/checkout/SecuritySection.tsx" line="65" column="74" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/EmailConfig.tsx" line="228" column="84" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/EmailConfig.tsx" line="248" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/EmailConfig.tsx" line="260" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/EmailConfig.tsx" line="274" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MercadoPagoConfig.tsx" line="155" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MercadoPagoConfig.tsx" line="167" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MercadoPagoConfig.tsx" line="178" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MercadoPagoConfig.tsx" line="189" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MercadoPagoConfig.tsx" line="201" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MetaPixelConfig.tsx" line="149" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MetaPixelConfig.tsx" line="160" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/MetaPixelConfig.tsx" line="172" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/UTMifyConfig.tsx" line="144" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/UTMifyConfig.tsx" line="155" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/integrations/UTMifyConfig.tsx" line="166" column="64" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/LessonComments.tsx" line="205" column="73" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/LessonComments.tsx" line="210" column="82" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="73" column="100" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="85" column="89" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="116" column="122" code="1005">')' expected.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="117" column="12" code="1381">Unexpected token. Did you mean `{'}'}` or `&amp;rbrace;`?</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="135" column="166" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="150" column="231" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/ProductsAssociation.tsx" line="152" column="80" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/ProfileSettingsDialog.tsx" line="274" column="84" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/ProfileSettingsDialog.tsx" line="302" column="87" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/ProfileSettingsDialog.tsx" line="338" column="87" code="1005">'...' expected.</problem>
-<problem file="src/components/member-area/ProfileSettingsDialog.tsx" line="362" column="84" code="1005">'...' expected.</problem>
-<problem file="src/pages/AdminDesign.tsx" line="324" column="128" code="1005">'...' expected.</problem>
-<problem file="src/pages/Checkout.tsx" line="507" column="130" code="1005">'...' expected.</problem>
-<problem file="src/pages/Customers.tsx" line="200" column="199" code="1005">'...' expected.</problem>
-<problem file="src/pages/Customers.tsx" line="263" column="152" code="1005">'...' expected.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="234" column="109" code="1005">'...' expected.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="246" column="89" code="1005">'...' expected.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="300" column="122" code="1005">')' expected.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="301" column="12" code="1381">Unexpected token. Did you mean `{'}'}` or `&amp;rbrace;`?</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="323" column="229" code="1005">'...' expected.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="359" column="235" code="1005">'...' expected.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="294" column="89" code="1005">'...' expected.</problem>
-<problem file="src/pages/Payments.tsx" line="206" column="199" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="364" column="133" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="434" column="84" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="441" column="84" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="513" column="92" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="526" column="176" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="547" column="141" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="568" column="118" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="578" column="118" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="588" column="118" code="1005">'...' expected.</problem>
-<problem file="src/pages/PaymentSuccess.tsx" line="598" column="118" code="1005">'...' expected.</problem>
-<problem file="src/pages/Reports.tsx" line="191" column="126" code="1005">'...' expected.</problem>
-<problem file="src/pages/Sales.tsx" line="186" column="199" code="1005">'...' expected.</problem>
-<problem file="src/pages/Settings.tsx" line="48" column="73" code="1005">'...' expected.</problem>
-<problem file="src/pages/Settings.tsx" line="57" column="64" code="1005">'...' expected.</problem>
-<problem file="src/pages/AdminProducts.tsx" line="94" column="22" code="2345">Argument of type '{ id: string; name: string; slug: string; }[]' is not assignable to parameter of type 'SetStateAction&lt;{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }[]&gt;'.
-  Type '{ id: string; name: string; slug: string; }[]' is not assignable to type '{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }[]'.
-    Type '{ id: string; name: string; slug: string; }' is missing the following properties from type '{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }': associated_products, created_at, description, logo_url, and 3 more.</problem>
-<problem file="src/hooks/useIntegrations.ts" line="94" column="127" code="2352">Conversion of type '{ [key: string]: Json; } | Json[]' to type 'EmailConfig' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Type 'Json[]' is missing the following properties from type 'EmailConfig': email, appPassword, displayName</problem>
-<problem file="src/pages/AdminCheckouts.tsx" line="341" column="19" code="2345">Argument of type '{ id: string; name: string; price: number; description: string; access_url: string; file_url: string; member_area_link: string; }[]' is not assignable to parameter of type 'SetStateAction&lt;{ access_url: string; banner_url: string; created_at: string; description: string; email_template: string; file_url: string; id: string; is_active: boolean; logo_url: string; member_area_id: string; ... 6 more ...; user_id: string; }[]&gt;'.
-  Type '{ id: string; name: string; price: number; description: string; access_url: string; file_url: string; member_area_link: string; }[]' is not assignable to type '{ access_url: string; banner_url: string; created_at: string; description: string; email_template: string; file_url: string; id: string; is_active: boolean; logo_url: string; member_area_id: string; ... 6 more ...; user_id: string; }[]'.
-    Type '{ id: string; name: string; price: number; description: string; access_url: string; file_url: string; member_area_link: string; }' is missing the following properties from type '{ access_url: string; banner_url: string; created_at: string; description: string; email_template: string; file_url: string; id: string; is_active: boolean; logo_url: string; member_area_id: string; ... 6 more ...; user_id: string; }': banner_url, created_at, email_template, is_active, and 6 more.</problem>
-<problem file="src/pages/AdminCheckouts.tsx" line="355" column="22" code="2345">Argument of type '{ id: string; name: string; slug: string; }[]' is not assignable to parameter of type 'SetStateAction&lt;{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }[]&gt;'.
-  Type '{ id: string; name: string; slug: string; }[]' is not assignable to type '{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }[]'.
-    Type '{ id: string; name: string; slug: string; }' is missing the following properties from type '{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }': associated_products, created_at, description, logo_url, and 3 more.</problem>
-<problem file="src/components/integrations/IntegrationsStatus.tsx" line="90" column="32" code="2345">Argument of type 'string' is not assignable to parameter of type 'boolean'.</problem>
-<problem file="src/components/integrations/IntegrationsStatus.tsx" line="94" column="33" code="2345">Argument of type 'string' is not assignable to parameter of type 'boolean'.</problem>
-<problem file="src/pages/AdminContent.tsx" line="557" column="25" code="2339">Property 'products' does not exist on type '{ banner_url: string; checkout_link: string; created_at: string; description: string; id: string; member_area_id: string; order_index: number; product_id: string; status: string; title: string; updated_at: string; user_id: string; }'.</problem>
-<problem file="src/pages/AdminContent.tsx" line="560" column="48" code="2339">Property 'products' does not exist on type '{ banner_url: string; checkout_link: string; created_at: string; description: string; id: string; member_area_id: string; order_index: number; product_id: string; status: string; title: string; updated_at: string; user_id: string; }'.</problem>
-<problem file="src/pages/AdminContent.tsx" line="853" column="22" code="2345">Argument of type '{ id: string; name: string; slug: string; }[]' is not assignable to parameter of type 'SetStateAction&lt;{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }[]&gt;'.
-  Type '{ id: string; name: string; slug: string; }[]' is not assignable to type '{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }[]'.
-    Type '{ id: string; name: string; slug: string; }' is missing the following properties from type '{ associated_products: string[]; created_at: string; description: string; id: string; logo_url: string; name: string; primary_color: string; slug: string; updated_at: string; user_id: string; }': associated_products, created_at, description, logo_url, and 3 more.</problem>
-<problem file="src/pages/AdminContent.tsx" line="869" column="19" code="2345">Argument of type '{ id: string; name: string; }[]' is not assignable to parameter of type 'SetStateAction&lt;{ access_url: string; banner_url: string; created_at: string; description: string; email_template: string; file_url: string; id: string; is_active: boolean; logo_url: string; member_area_id: string; ... 6 more ...; user_id: string; }[]&gt;'.
-  Type '{ id: string; name: string; }[]' is not assignable to type '{ access_url: string; banner_url: string; created_at: string; description: string; email_template: string; file_url: string; id: string; is_active: boolean; logo_url: string; member_area_id: string; ... 6 more ...; user_id: string; }[]'.
-    Type '{ id: string; name: string; }' is missing the following properties from type '{ access_url: string; banner_url: string; created_at: string; description: string; email_template: string; file_url: string; id: string; is_active: boolean; logo_url: string; member_area_id: string; ... 6 more ...; user_id: string; }': access_url, banner_url, created_at, description, and 11 more.</problem>
-<problem file="src/pages/AdminContent.tsx" line="890" column="18" code="2345">Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'SetStateAction&lt;{ banner_url: string; checkout_link: string; created_at: string; description: string; id: string; member_area_id: string; order_index: number; product_id: string; status: string; title: string; updated_at: string; user_id: string; }[]&gt;'.
-  Type '{ id: string; title: string; }[]' is not assignable to type '{ banner_url: string; checkout_link: string; created_at: string; description: string; id: string; member_area_id: string; order_index: number; product_id: string; status: string; title: string; updated_at: string; user_id: string; }[]'.
-    Type '{ id: string; title: string; }' is missing the following properties from type '{ banner_url: string; checkout_link: string; created_at: string; description: string; id: string; member_area_id: string; order_index: number; product_id: string; status: string; title: string; updated_at: string; user_id: string; }': banner_url, checkout_link, created_at, description, and 6 more.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="154" column="22" code="2304">Cannot find name 'Link'.</problem>
-<problem file="src/components/member-area/MemberAreaPreviewContent.tsx" line="156" column="23" code="2304">Cannot find name 'Link'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="42" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="42" column="65" code="2345">Argument of type 'Partial&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;' is not assignable to parameter of type 'Partial&lt;PlatformSettings&gt;'.
-  Types of property 'colors' are incompatible.
-    Type 'Json' is not assignable to type 'PlatformColors'.
-      Type 'string' has no properties in common with type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="44" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="101" column="50" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="105" column="103" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="117" column="95" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="120" column="70" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="128" column="78" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="140" column="81" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="158" column="89" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="160" column="86" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="170" column="65" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="177" column="76" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLogin.tsx" line="179" column="149" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="70" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="70" column="65" code="2345">Argument of type 'Partial&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;' is not assignable to parameter of type 'Partial&lt;PlatformSettings&gt;'.
-  Types of property 'colors' are incompatible.
-    Type 'Json' is not assignable to type 'PlatformColors'.
-      Type 'string' has no properties in common with type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="72" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="210" column="48" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="211" column="45" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="212" column="54" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="213" column="50" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="215" column="52" code="2339">Property 'checkmark_background' does not exist on type 'Json | PlatformColors'.
-  Property 'checkmark_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="216" column="54" code="2339">Property 'checkmark_icon' does not exist on type 'Json | PlatformColors'.
-  Property 'checkmark_icon' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="228" column="50" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="236" column="52" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="237" column="48" code="2339">Property 'header_border' does not exist on type 'Json | PlatformColors'.
-  Property 'header_border' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaDashboard.tsx" line="238" column="42" code="2339">Property 'text_header' does not exist on type 'Json | PlatformColors'.
-  Property 'text_header' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="67" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="67" column="65" code="2345">Argument of type 'Partial&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;' is not assignable to parameter of type 'Partial&lt;PlatformSettings&gt;'.
-  Types of property 'colors' are incompatible.
-    Type 'Json' is not assignable to type 'PlatformColors'.
-      Type 'string' has no properties in common with type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="69" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="188" column="48" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="189" column="45" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="190" column="54" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="191" column="50" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="202" column="50" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="210" column="52" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="211" column="48" code="2339">Property 'header_border' does not exist on type 'Json | PlatformColors'.
-  Property 'header_border' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaModuleDetails.tsx" line="212" column="42" code="2339">Property 'text_header' does not exist on type 'Json | PlatformColors'.
-  Property 'text_header' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="68" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="68" column="65" code="2345">Argument of type 'Partial&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;' is not assignable to parameter of type 'Partial&lt;PlatformSettings&gt;'.
-  Types of property 'colors' are incompatible.
-    Type 'Json' is not assignable to type 'PlatformColors'.
-      Type 'string' has no properties in common with type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="70" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="206" column="163" code="2339">Property 'text_cards' does not exist on type 'Json | PlatformColors'.
-  Property 'text_cards' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="263" column="45" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="264" column="54" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="265" column="50" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="276" column="50" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="284" column="52" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="285" column="48" code="2339">Property 'header_border' does not exist on type 'Json | PlatformColors'.
-  Property 'header_border' does not exist on type 'string'.</problem>
-<problem file="src/pages/MemberAreaLesson.tsx" line="286" column="42" code="2339">Property 'text_header' does not exist on type 'Json | PlatformColors'.
-  Property 'text_header' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="42" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="42" column="65" code="2345">Argument of type 'Partial&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;' is not assignable to parameter of type 'Partial&lt;PlatformSettings&gt;'.
-  Types of property 'colors' are incompatible.
-    Type 'Json' is not assignable to type 'PlatformColors'.
-      Type 'string' has no properties in common with type 'PlatformColors'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="44" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="108" column="50" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="112" column="103" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="124" column="95" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="127" column="70" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="139" column="78" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="145" column="67" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="153" column="80" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="161" column="69" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="161" column="157" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="169" column="67" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthForgotPassword.tsx" line="178" column="139" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="46" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="46" column="65" code="2345">Argument of type 'Partial&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;' is not assignable to parameter of type 'Partial&lt;PlatformSettings&gt;'.
-  Types of property 'colors' are incompatible.
-    Type 'Json' is not assignable to type 'PlatformColors'.
-      Type 'string' has no properties in common with type 'PlatformColors'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="48" column="21" code="2345">Argument of type 'PlatformSettings' is not assignable to parameter of type 'SetStateAction&lt;{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }&gt;'.
-  Type 'PlatformSettings' is not assignable to type '{ colors: Json; created_at: string; global_font_family: string; id: string; logo_url: string; login_subtitle: string; login_title: string; member_area_id: string; updated_at: string; user_id: string; }'.
-    Types of property 'colors' are incompatible.
-      Type 'PlatformColors' is not assignable to type 'Json'.
-        Type 'PlatformColors' is not assignable to type '{ [key: string]: Json; }'.
-          Index signature for type 'string' is missing in type 'PlatformColors'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="120" column="50" code="2339">Property 'background_login' does not exist on type 'Json | PlatformColors'.
-  Property 'background_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="124" column="103" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="136" column="95" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="139" column="70" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="154" column="67" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="162" column="83" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="171" column="71" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="171" column="159" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="181" column="91" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="183" column="88" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="190" column="90" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="199" column="71" code="2339">Property 'card_login' does not exist on type 'Json | PlatformColors'.
-  Property 'card_login' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="199" column="159" code="2339">Property 'text_primary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_primary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="209" column="91" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="211" column="88" code="2339">Property 'text_secondary' does not exist on type 'Json | PlatformColors'.
-  Property 'text_secondary' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="221" column="67" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-<problem file="src/pages/AuthUpdatePassword.tsx" line="230" column="139" code="2339">Property 'button_background' does not exist on type 'Json | PlatformColors'.
-  Property 'button_background' does not exist on type 'string'.</problem>
-</dyad-problem-report><think>**Tackling JSX Issues**
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          {metaPixels.length === 0 
+                            ? "Configure um Meta Pixel na página de Integrações" 
+                            : "Pixel que será usado para rastrear conversões deste checkout"
+                          }
+                        </p>
+                      </div>
 
-I've discovered the root cause of many errors lies in JSX comments. Specifically, comments placed inline after attributes or before closing tags, such as `{/* Ajustado text size */}`, are triggering syntax errors. The solution seems to be removing or relocating these comments.
+                      {/* Nova seção para Email Transacional */}
+                      <div className="space-y-2">
+                        <Label>Conta de Email Transacional</Label>
+                        <Select 
+                          value={checkoutData.integrations?.selectedEmailAccount || "none"} 
+                          onValueChange={value => {
+                            if (value !== 'no-email-config' && value !== "none") {
+                              handleInputChange('integrations.selectedEmailAccount', value);
+                            } else {
+                              handleInputChange('integrations.selectedEmailAccount', '');
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma conta de email configurada" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhuma</SelectItem>
+                            {emailConfig ? (
+                              <SelectItem key="default-email-config" value="default-email-config">
+                                {emailConfig.displayName || emailConfig.email}
+                              </SelectItem>
+                            ) : (
+                              <SelectItem value="no-email-config" disabled>
+                                Nenhuma conta de email configurada
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          {emailConfig
+                            ? "Conta que será usada para enviar e-mails transacionais deste checkout"
+                            : "Configure uma conta de e-mail na página de Integrações para habilitar esta opção"
+                          }
+                        </p>
+                      </div>
 
+                      {(mercadoPagoAccounts.length === 0 || metaPixels.length === 0 || !emailConfig) && (
+                        <Card className="p-4 bg-blue-50 border-blue-200">
+                          <div className="flex items-center gap-2 text-blue-800">
+                            <CreditCard className="h-4 w-4" />
+                            <span className="font-medium">Configure suas integrações</span>
+                          </div>
+                          <p className="text-sm text-blue-700 mt-1">
+                            Para usar todas as funcionalidades, configure suas integrações na página de Administração.
+                          </p>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => toast({ title: "Redirecionar", description: "Funcionalidade não implementada." })}
+                            className="mt-3"
+                          >
+                            Ir para Integrações
+                          </Button>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
 
-**Refining Type Consistency**
+                <TabsContent value="styles" className="space-y-4">
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold">Cores e Textos</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Cor Primária</Label>
+                        <div className="flex gap-2">
+                          <Input type="color" value={checkoutData.styles.primaryColor || '#3b82f6'} onChange={e => handleInputChange('styles.primaryColor', e.target.value)} className="w-16 h-10 p-1" />
+                          <Input type="text" value={checkoutData.styles.primaryColor || '#3b82f6'} onChange={e => handleInputChange('styles.primaryColor', e.target.value)} placeholder="#3b82f6" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cor do Gradiente</Label>
+                        <div className="flex gap-2">
+                          <Input type="color" value={checkoutData.styles.gradientColor || '#60a5fa'} onChange={e => handleInputChange('styles.gradientColor', e.target.value)} className="w-16 h-10 p-1" />
+                          <Input type="text" value={checkoutData.styles.gradientColor || '#60a5fa'} onChange={e => handleInputChange('styles.gradientColor', e.target.value)} placeholder="#60a5fa" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cor de Destaque</Label>
+                        <div className="flex gap-2">
+                          <Input type="color" value={checkoutData.styles.highlightColor || '#3b82f6'} onChange={e => handleInputChange('styles.highlightColor', e.target.value)} className="w-16 h-10 p-1" />
+                          <Input type="text" value={checkoutData.styles.highlightColor || '#3b82f6'} onChange={e => handleInputChange('styles.highlightColor', e.target.value)} placeholder="#3b82f6" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cor do Fundo</Label>
+                        <div className="flex gap-2">
+                          <Input type="color" value={checkoutData.styles.backgroundColor || '#ffffff'} onChange={e => handleInputChange('styles.backgroundColor', e.target.value)} className="w-16 h-10 p-1" />
+                          <Input type="text" value={checkoutData.styles.backgroundColor || '#ffffff'} onChange={e => handleInputChange('styles.backgroundColor', e.target.value)} placeholder="#ffffff" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cor do Texto</Label>
+                        <div className="flex gap-2">
+                          <Input type="color" value={checkoutData.styles.textColor || '#000000'} onChange={e => handleInputChange('styles.textColor', e.target.value)} className="w-16 h-10 p-1" />
+                          <Input type="text" value={checkoutData.styles.textColor || '#000000'} onChange={e => handleInputChange('styles.textColor', e.target.value)} placeholder="#000000" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cor do Título</Label>
+                        <div className="flex gap-2">
+                          <Input type="color" value={checkoutData.styles.headlineColor || '#000000'} onChange={e => handleInputChange('styles.headlineColor', e.target.value)} className="w-16 h-10 p-1" />
+                          <Input type="text" value={checkoutData.styles.headlineColor || '#000000'} onChange={e => handleInputChange('styles.headlineColor', e.target.value)} placeholder="#000000" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Texto do Título</Label>
+                      <Textarea value={checkoutData.styles.headlineText || ''} onChange={e => handleInputChange('styles.headlineText', e.target.value)} placeholder="Sua transformação começa agora!" rows={2} />
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold">Timer de Escassez</h3>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Habilitar Timer</Label>
+                        <p className="text-sm text-muted-foreground">Mostrar um contador de tempo no checkout</p>
+                      </div>
+                      <Switch checked={checkoutData.timer?.enabled || false} onCheckedChange={checked => handleInputChange('timer.enabled', checked)} />
+                    </div>
+                    {checkoutData.timer?.enabled && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Duração (minutos)</Label>
+                            <Input type="number" value={checkoutData.timer.duration || 15} onChange={e => handleInputChange('timer.duration', Number(e.target.value))} placeholder="15" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Cor do Timer</Label>
+                            <div className="flex gap-2">
+                              <Input type="color" value={checkoutData.timer.color || '#dc2626'} onChange={e => handleInputChange('timer.color', e.target.value)} className="w-16 h-10 p-1" />
+                              <Input type="text" value={checkoutData.timer.color || '#dc2626'} onChange={e => handleInputChange('timer.color', e.target.value)} placeholder="#dc2626" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Texto do Timer</Label>
+                          <Input value={checkoutData.timer.text || 'Oferta por tempo limitado'} onChange={e => handleInputChange('timer.text', e.target.value)} placeholder="Oferta por tempo limitado" />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </TabsContent>
 
-I'm now zeroing in on type inconsistencies across the codebase. Several errors stemmed from `PlatformSettings.colors` incorrectly being inferred as `Json` instead of `PlatformColors`. I've made fixes in the codebase to resolve this, now it's a matter of ensuring the user has the most up to date data. Also, I realized that data retrieved from Supabase needed to be casted to the correct types, and have addressed this issue in `AdminCheckouts.tsx`.
+                <TabsContent value="deliverable" className="space-y-4">
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold">Configuração de Entregável</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Defina como o produto principal (ou o pacote selecionado) será entregue após a compra.
+                    </p>
 
+                    <div className="space-y-4">
+                      <Label>Tipo de Entregável</Label>
+                      <Select 
+                        value={checkoutData.form_fields.deliverable?.type || 'none'} 
+                        onValueChange={value => handleInputChange('form_fields.deliverable.type', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de entregável" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhum (usar link do produto)</SelectItem>
+                          <SelectItem value="link">Link Direto</SelectItem>
+                          <SelectItem value="upload">Upload de Arquivo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-**Addressing Remaining Issues**
+                    {checkoutData.form_fields.deliverable?.type === 'link' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="deliverableLink">Link Direto do Entregável *</Label>
+                        <Input 
+                          id="deliverableLink" 
+                          type="url" 
+                          value={checkoutData.form_fields.deliverable.link || ''} 
+                          onChange={e => handleInputChange('form_fields.deliverable.link', e.target.value)} 
+                          placeholder="https://exemplo.com/meu-ebook.pdf" 
+                          required 
+                        />
+                      </div>
+                    )}
 
-I'm now focusing on specific file locations to fix the remaining TypeScript issues. I'll meticulously go through `AdminProducts.tsx`, `useIntegrations.ts`, and `AdminCheckouts.tsx` to apply explicit casts as indicated. I've also identified a crucial type refinement needed in `AdminContent.tsx` to handle product relations within the `Module` type. I'll make sure to incorporate this correction to ensure data integrity and compatibility. Finally, I'll revisit `src/integrations/supabase/types.ts` and `src/hooks/useGlobalPlatformSettings.ts` for final verification.
+                    {checkoutData.form_fields.deliverable?.type === 'upload' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="checkoutDeliverableFile">Upload de Arquivo Entregável *</Label>
+                        <Input 
+                          id="checkoutDeliverableFile" 
+                          type="file" 
+                          onChange={e => handleCheckoutDeliverableFileChange(e.target.files?.[0] || null)} 
+                          required={!checkoutData.form_fields.deliverable?.fileUrl && !checkoutDeliverableFile}
+                        />
+                        {checkoutData.form_fields.deliverable?.fileUrl && !checkoutDeliverableFile && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Link className="h-4 w-4" />
+                            <span>Arquivo atual: <a href={checkoutData.form_fields.deliverable.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => {
+                                handleInputChange('form_fields.deliverable.fileUrl', null);
+                                handleInputChange('form_fields.deliverable.link', null);
+                              }}
+                              className="h-6 px-2 text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Remover
+                            </Button>
+                          </div>
+                        )}
+                        {checkoutDeliverableFile && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Upload className="h-4 w-4" />
+                            <span>Novo arquivo selecionado: {checkoutDeliverableFile.name}</span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleCheckoutDeliverableFileChange(null)}
+                              className="h-6 px-2 text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Remover
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
+                    <Separator />
 
-**Fixing Remaining Errors**
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Email Transacional
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Configure o e-mail que será enviado ao cliente após a compra.
+                      </p>
+                      
+                      {!isEmailIntegrationConfigured && (
+                        <Alert variant="default" className="bg-yellow-50 border-yellow-200 text-yellow-800">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription className="text-sm">
+                            Nenhuma conta de e-mail SMTP configurada. O envio de e-mails transacionais está desabilitado.
+                          </AlertDescription>
+                        </Alert>
+                      )}
 
-I'm now methodically addressing the remaining TypeScript errors, starting with JSX comments and type inconsistencies. I've re-verified that `FormFields` is exported and `PlatformSettings` uses `PlatformColors`. I'm specifically focusing on casting Supabase data correctly within `AdminProducts.tsx`, `useIntegrations.ts`, and `AdminCheckouts.tsx`. In `AdminContent.tsx`, I'll update the `Module` type to properly handle product relations. Also, I'll add the necessary `Link` import.
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Enviar E-mail de Acesso</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Um e-mail com o link do entregável será enviado automaticamente.
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={checkoutData.form_fields.sendTransactionalEmail && isEmailIntegrationConfigured} 
+                          onCheckedChange={checked => handleInputChange('form_fields.sendTransactionalEmail', checked)} 
+                          disabled={!isEmailIntegrationConfigured}
+                        />
+                      </div>
 
+                      {checkoutData.form_fields.sendTransactionalEmail && isEmailIntegrationConfigured && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="transactionalEmailSubject">Assunto do E-mail</Label>
+                            <Input 
+                              id="transactionalEmailSubject" 
+                              value={checkoutData.form_fields.transactionalEmailSubject || ''} 
+                              onChange={e => handleInputChange('form_fields.transactionalEmailSubject', e.target.value)} 
+                              placeholder="Seu acesso ao produto Elyon Digital!" 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="transactionalEmailBody">Corpo do E-mail</Label>
+                            <Textarea 
+                              id="transactionalEmailBody" 
+                              value={checkoutData.form_fields.transactionalEmailBody || ''} 
+                              onChange={e => handleInputChange('form_fields.transactionalEmailBody', e.target.value)} 
+                              placeholder="Olá {customer_name},\n\nObrigado por sua compra! Seu acesso ao produto '{product_name}' está liberado.\n\nAcesse aqui: {access_link}\n\nQualquer dúvida, entre em contato com nosso suporte.\n\nAtenciosamente,\nEquipe Elyon Digital" 
+                              rows={8} 
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Use as variáveis: <code>{`{customer_name}`}</code>, <code>{`{product_name}`}</code>, <code>{`{access_link}`}</code>, <code>{`{support_email}`}</code>.
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
 
-**Implementing Key Fixes**
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)}
+                  className="text-sm"
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isLoading} className="text-sm">
+                  {editingCheckout 
+                    ? (isLoading ? 'Atualizando...' : 'Atualizar Checkout')
+                    : (isLoading ? 'Criando...' : 'Criar Checkout')
+                  }
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-I'm now methodically addressing the remaining TypeScript errors based on my plan. I've re-verified that `FormFields` is exported, and `PlatformSettings` correctly uses `PlatformColors`. I am specifically focusing on casting Supabase data correctly within `AdminProducts.tsx`, `useIntegrations.ts`, and `AdminCheckouts.tsx` and updating the `Module` type definition in `AdminContent.tsx` to include `products(name)`. I'll also add the necessary `Link` import. I'm also ensuring `deepMerge` is updated.
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Seus Checkouts ({checkouts.length})</span>
+            <span className="sm:hidden">Checkouts</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {checkouts.length === 0 ? (
+            <div className="text-center py-12">
+              <CreditCard className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum checkout criado</h3>
+              <p className="text-muted-foreground mb-4">
+                Comece criando sua primeira página de vendas
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {checkouts.map((checkout) => (
+                <Card key={checkout.id} className="overflow-hidden hover-scale">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-1">
+                          <h3 className="font-semibold text-base sm:text-lg truncate pr-2">
+                            {checkout.name || checkout.products?.name || 'Checkout sem nome'}
+                          </h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0">
+                                <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem onClick={() => handleEdit(checkout)} className="text-xs sm:text-sm">
+                                <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild className="text-xs sm:text-sm">
+                                <Link to={`/checkout/${checkout.id}`} target="_blank" rel="noopener noreferrer">
+                                  <Link className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                                  Ver Checkout
+                                </Link>
+                              </DropdownMenuItem>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs sm:text-sm text-destructive">
+                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-sm sm:text-base">
+                                      Confirmar exclusão
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="text-sm">
+                                      Tem certeza de que deseja excluir o checkout "{checkout.name || checkout.products?.name}"?
+                                      Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                                    <AlertDialogCancel className="text-sm">Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(checkout.id)}
+                                      className="text-sm"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-muted-foreground text-xs sm:text-sm mb-2 line-clamp-2">
+                          {checkout.styles?.description || checkout.products?.description || 'Nenhuma descrição'}
+                        </p>
+                        {checkout.member_area_id && checkout.member_areas?.name && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                            <MonitorDot className="h-3 w-3" />
+                            <span>Área: {checkout.member_areas.name}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-primary text-sm sm:text-base">
+                            R$ {(checkout.price / 100).toFixed(2)}
+                          </span>
+                          {checkout.promotional_price && checkout.promotional_price < checkout.price && (
+                            <span className="text-xs text-muted-foreground line-through ml-2">
+                              R$ {(checkout.promotional_price / 100).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
-
-**Fixing TypeScript Issues**
-
-I'm systematically addressing the remaining TypeScript errors. I've re-verified that `FormFields` is exported and `PlatformSettings` uses `PlatformColors` correctly. My focus is now on explicitly casting Supabase data within `AdminProducts.tsx`, `useIntegrations.ts`, and `AdminCheckouts.tsx`. In `AdminContent.tsx`, I'll update the `Module` type to handle `products(name)`. I'll also add the necessary `Link` import and ensure that `deepMerge` is updated to correctly handle `Json` inputs.
-
-
-**Refining Type Consistency**
-
-I'm systematically addressing the type inconsistencies and JSX comment errors. I've re-verified `FormFields` export and `PlatformSettings` uses `PlatformColors` correctly. I'm focusing on casting Supabase data in `AdminProducts`, `AdminCheckouts`, and `useIntegrations`. Also, I'll update the `Module` type definition in `AdminContent` to handle `products(name)`. I've added the necessary `Link` import. I'll also ensure deepMerge accepts `Json`.
-
-
-**Resolving TypeScript Errors**
-
-I'm systematically addressing the remaining TypeScript errors. I've re-verified `FormFields` export and `PlatformSettings` use `PlatformColors`. I'm explicitly casting Supabase data in several files, including `AdminProducts`, `AdminCheckouts`, and `useIntegrations`. Also, I'll update the `Module` type definition in `AdminContent` to handle `products(name)`, and add necessary `Link` imports. I'll ensure `deepMerge` handles `Json` inputs, focusing on `colors`.
-
-
-**Resolving Type Mismatches**
-
-I'm systematically addressing the type inconsistencies and JSX comment errors. I've ensured `FormFields` is exported, and `PlatformSettings` uses `PlatformColors`. My focus is on casting Supabase data within `AdminProducts`, `AdminCheckouts`, and `useIntegrations`. I'm updating the `Module` type definition in `AdminContent` to handle `products(name)`, importing `Link`, and ensuring deep merge handles `Json` with `colors`.
-
-
-</think>Com certeza! Parece que os erros de compilação são causados principalmente por comentários JSX malformados e algumas inconsistências de tipo no TypeScript.
-
-Vou corrigir esses problemas de forma concisa:
-
-1.  **Remover comentários JSX problemáticos**: O compilador TypeScript/React tem dificuldade em interpretar comentários JSX (`{/* ... */}`) quando eles estão diretamente após um atributo ou antes de uma tag de fechamento. Vou remover esses comentários para resolver os erros de sintaxe.
-2.  **Ajustar tipagem de `PlatformSettings.colors`**: A propriedade `colors` dentro de `PlatformSettings` está sendo tratada como `Json` em alguns lugares, o que é muito genérico. Vou garantir que ela seja tipada corretamente como um objeto de cores.
-3.  **Ajustar tipagem de dados carregados do Supabase**: Em alguns `useState` e `setX` calls, os dados retornados do Supabase não estão perfeitamente compatíveis com os tipos `Tables<'...' >` esperados. Vou adicionar casts explícitos (`as Type[]`) para resolver isso.
-4.  **Ajustar tipo `Module` para relações**: O tipo `Module` em `AdminContent.tsx` precisa incluir a relação `products(name)` que está sendo selecionada.
-5.  **Importar `Link`**: Adicionar a importação de `Link` do `react-router-dom` onde estiver faltando.
-
-Aqui estão as alterações:
-
-<dyad-write path="src/integrations/supabase/types.ts" description="Ensuring correct typing for EmailConfig.">
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
-
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
-  public: {
-    Tables: {
-      community_comments: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          post_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          post_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          post_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "community_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      community_posts: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          is_automatic: boolean
-          lesson_id: string | null
-          member_area_id: string | null
-          module_id: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          is_automatic?: boolean
-          lesson_id?: string | null
-          member_area_id?: string | null
-          module_id?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          is_automatic?: boolean
-          lesson_id?: string | null
-          member_area_id?: string | null
-          module_id?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_posts_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_posts_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_posts_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_posts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      compras: {
-        Row: {
-          acesso_expira_em: string | null
-          cliente_documento: string | null
-          cliente_email: string
-          cliente_nome: string
-          cliente_telefone: string | null
-          created_at: string | null
-          email_entrega_id: string | null
-          entregavel_enviado: boolean | null
-          entregavel_enviado_em: string | null
-          id: string
-          mercadopago_order_id: string | null
-          mercadopago_payment_id: string
-          metodo_pagamento: string | null
-          moeda: string | null
-          password: string | null
-          produto_id: string | null
-          status_pagamento: string
-          updated_at: string | null
-          username: string | null
-          valor_pago: number
-          webhook_payload: Json | null
-        }
-        Insert: {
-          acesso_expira_em?: string | null
-          cliente_documento?: string | null
-          cliente_email: string
-          cliente_nome: string
-          cliente_telefone?: string | null
-          created_at?: string | null
-          email_entrega_id?: string | null
-          entregavel_enviado?: boolean | null
-          entregavel_enviado_em?: string | null
-          id?: string
-          mercadopago_order_id?: string | null
-          mercadopago_payment_id: string
-          metodo_pagamento?: string | null
-          moeda?: string | null
-          password?: string | null
-          produto_id?: string | null
-          status_pagamento?: string
-          updated_at?: string | null
-          username?: string | null
-          valor_pago: number
-          webhook_payload?: Json | null
-        }
-        Update: {
-          acesso_expira_em?: string | null
-          cliente_documento?: string | null
-          cliente_email?: string
-          cliente_nome?: string
-          cliente_telefone?: string | null
-          created_at?: string | null
-          email_entrega_id?: string | null
-          entregavel_enviado?: boolean | null
-          entregavel_enviado_em?: string | null
-          id?: string
-          mercadopago_order_id?: string | null
-          mercadopago_payment_id?: string
-          metodo_pagamento?: string | null
-          moeda?: string | null
-          password?: string | null
-          produto_id?: string | null
-          status_pagamento?: string
-          updated_at?: string | null
-          username?: string | null
-          valor_pago?: number
-          webhook_payload?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compras_produto_id_fkey"
-            columns: ["produto_id"]
-            isOneToOne: false
-            referencedRelation: "produtos_digitais"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      checkout_history: {
-        Row: {
-          action_type: string
-          changes: Json
-          checkout_id: string
-          created_at: string
-          description: string | null
-          id: string
-          new_values: Json | null
-          old_values: Json | null
-          user_id: string
-        }
-        Insert: {
-          action_type: string
-          changes?: Json
-          checkout_id: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          new_values?: Json | null
-          old_values?: Json | null
-          user_id: string
-        }
-        Update: {
-          action_type?: string
-          changes?: Json
-          checkout_id?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          new_values?: Json | null
-          old_values?: Json | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "checkout_history_checkout_id_fkey"
-            columns: ["checkout_id"]
-            isOneToOne: false
-            referencedRelation: "checkouts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checkout_history_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      checkouts: {
-        Row: {
-          created_at: string
-          extra_content: Json | null
-          form_fields: Json | null
-          id: string
-          integrations: Json | null
-          layout: string
-          member_area_id: string | null
-          name: string | null
-          order_bumps: Json | null
-          payment_methods: Json | null
-          price: number
-          product_id: string
-          promotional_price: number | null
-          styles: Json | null
-          support_contact: Json | null
-          timer: Json | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          extra_content?: Json | null
-          form_fields?: Json | null
-          id?: string
-          integrations?: Json | null
-          layout?: string
-          member_area_id?: string | null
-          name?: string | null
-          order_bumps?: Json | null
-          payment_methods?: Json | null
-          price: number
-          product_id: string
-          promotional_price?: number | null
-          styles?: Json | null
-          support_contact?: Json | null
-          timer?: Json | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          extra_content?: Json | null
-          form_fields?: Json | null
-          id?: string
-          integrations?: Json | null
-          layout?: string
-          member_area_id?: string | null
-          name?: string | null
-          order_bumps?: Json | null
-          payment_methods?: Json | null
-          price?: number
-          product_id?: string
-          promotional_price?: number | null
-          styles?: Json | null
-          support_contact?: Json | null
-          timer?: Json | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "checkouts_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checkouts_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checkouts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      customers: {
-        Row: {
-          created_at: string
-          cpf: string | null
-          email: string
-          id: string
-          last_purchase: string | null
-          name: string
-          phone: string | null
-          purchase_count: number | null
-          status: string | null
-          total_spent: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          cpf?: string | null
-          email: string
-          id?: string
-          last_purchase?: string | null
-          name: string
-          phone?: string | null
-          purchase_count?: number | null
-          status?: string | null
-          total_spent?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          cpf?: string | null
-          email?: string
-          id?: string
-          last_purchase?: string | null
-          name?: string
-          phone?: string | null
-          purchase_count?: number | null
-          status?: string | null
-          total_spent?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      integrations: {
-        Row: {
-          created_at: string
-          id: string
-          mercado_pago_access_token: string | null
-          mercado_pago_token_public: string | null
-          meta_pixel_id: string | null
-          smtp_config: Json | null
-          updated_at: string
-          user_id: string
-          utmify_code: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          mercado_pago_access_token?: string | null
-          mercado_pago_token_public?: string | null
-          meta_pixel_id?: string | null
-          smtp_config?: Json | null
-          updated_at?: string
-          user_id: string
-          utmify_code?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          mercado_pago_access_token?: string | null
-          mercado_pago_token_public?: string | null
-          meta_pixel_id?: string | null
-          smtp_config?: Json | null
-          updated_at?: string
-          user_id?: string
-          utmify_code?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integrations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      lesson_comments: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          lesson_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          lesson_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          lesson_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lesson_comments_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lesson_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      lesson_completions: {
-        Row: {
-          completed_at: string
-          created_at: string
-          id: string
-          lesson_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string
-          created_at?: string
-          id?: string
-          lesson_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string
-          created_at?: string
-          id?: string
-          lesson_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lesson_completions_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lesson_completions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      lessons: {
-        Row: {
-          content_type: string
-          content_url: string | null
-          created_at: string
-          description: string | null
-          duration_minutes: number | null
-          id: string
-          module_id: string
-          order_index: number
-          status: string
-          text_content: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          content_type?: string
-          content_url?: string | null
-          created_at?: string
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          module_id: string
-          order_index?: number
-          status?: string
-          text_content?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          content_type?: string
-          content_url?: string | null
-          created_at?: string
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          module_id?: string
-          order_index?: number
-          status?: string
-          text_content?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lessons_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      logs_entrega: {
-        Row: {
-          assunto: string | null
-          compra_id: string | null
-          created_at: string | null
-          destinatario: string
-          erro_mensagem: string | null
-          id: string
-          status: string
-          tentativa_numero: number | null
-          tipo: string
-        }
-        Insert: {
-          assunto?: string | null
-          compra_id?: string | null
-          created_at?: string | null
-          destinatario: string
-          erro_mensagem?: string | null
-          id?: string
-          status: string
-          tentativa_numero?: number | null
-          tipo: string
-        }
-        Update: {
-          assunto?: string | null
-          compra_id?: string | null
-          created_at?: string | null
-          destinatario?: string
-          erro_mensagem?: string | null
-          id?: string
-          status?: string
-          tentativa_numero?: number | null
-          tipo?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "logs_entrega_compra_id_fkey"
-            columns: ["compra_id"]
-            isOneToOne: false
-            referencedRelation: "compras"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      member_access: {
-        Row: {
-          access_granted_at: string
-          created_at: string
-          id: string
-          is_active: boolean
-          member_area_id: string | null
-          module_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_granted_at?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          member_area_id?: string | null
-          module_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_granted_at?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          member_area_id?: string | null
-          module_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "member_access_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_access_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_access_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      member_areas: {
-        Row: {
-          associated_products: string[] | null
-          created_at: string | null
-          description: string | null
-          id: string
-          logo_url: string | null
-          name: string
-          primary_color: string | null
-          slug: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          associated_products?: string[] | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          logo_url?: string | null
-          name: string
-          primary_color?: string | null
-          slug: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          associated_products?: string[] | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          logo_url?: string | null
-          name?: string
-          primary_color?: string | null
-          slug?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "member_areas_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      modules: {
-        Row: {
-          banner_url: string | null
-          checkout_link: string | null // NEW FIELD
-          created_at: string
-          description: string | null
-          id: string
-          member_area_id: string
-          order_index: number
-          product_id: string | null
-          status: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          banner_url?: string | null
-          checkout_link?: string | null // NEW FIELD
-          created_at?: string
-          description?: string | null
-          id?: string
-          member_area_id: string
-          order_index?: number
-          product_id?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          banner_url?: string | null
-          checkout_link?: string | null // NEW FIELD
-          created_at?: string
-          description?: string | null
-          id?: string
-          member_area_id?: string
-          order_index?: number
-          product_id?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "modules_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "modules_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "modules_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          amount: number
-          checkout_id: string | null
-          created_at: string | null
-          id: string
-          metadata: Json | null
-          mp_payment_id: string | null
-          payment_id: string | null
-          product_id: string | null
-          status: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          checkout_id?: string | null
-          created_at?: string | null
-          id?: string
-          metadata?: Json | null
-          mp_payment_id?: string | null
-          payment_id?: string | null
-          product_id?: string | null
-          status?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          checkout_id?: string | null
-          created_at?: string | null
-          id?: string
-          metadata?: Json | null
-          mp_payment_id?: string | null
-          payment_id?: string | null
-          product_id?: string | null
-          status?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_checkout_id_fkey"
-            columns: ["checkout_id"]
-            isOneToOne: false
-            referencedRelation: "checkouts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      payments: {
-        Row: {
-          amount: number
-          checkout_id: string
-          created_at: string
-          date: string
-          id: string
-          metadata: Json | null
-          mp_payment_id: string | null
-          mp_payment_status: string | null
-          payment_method: string | null
-          payment_url: string | null
-          qr_code: string | null
-          qr_code_base64: string | null
-          status: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          checkout_id: string
-          created_at?: string
-          date?: string
-          id?: string
-          metadata?: Json | null
-          mp_payment_id?: string | null
-          mp_payment_status?: string | null
-          payment_method?: string | null
-          payment_url?: string | null
-          qr_code?: string | null
-          qr_code_base64?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          checkout_id?: string
-          created_at?: string
-          date?: string
-          id?: string
-          metadata?: Json | null
-          mp_payment_id?: string | null
-          mp_payment_status?: string | null
-          payment_method?: string | null
-          payment_url?: string | null
-          qr_code?: string | null
-          qr_code_base64?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_checkout_id_fkey"
-            columns: ["checkout_id"]
-            isOneToOne: false
-            referencedRelation: "checkouts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      platform_settings: {
-        Row: {
-          colors: Json | null
-          created_at: string
-          global_font_family: string | null
-          id: string
-          logo_url: string | null
-          login_subtitle: string | null
-          login_title: string | null
-          member_area_id: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          colors?: Json | null
-          created_at?: string
-          global_font_family?: string | null
-          id?: string
-          logo_url?: string | null
-          login_subtitle?: string | null
-          login_title?: string | null
-          member_area_id: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          colors?: Json | null
-          created_at?: string
-          global_font_family?: string | null
-          id?: string
-          logo_url?: string | null
-          login_subtitle?: string | null
-          login_title?: string | null
-          member_area_id?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "platform_settings_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "platform_settings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      product_access: {
-        Row: {
-          access_granted_at: string
-          created_at: string | null
-          id: string
-          payment_id: string | null
-          product_id: string | null
-          source: string | null
-          user_id: string | null
-        }
-        Insert: {
-          access_granted_at?: string
-          created_at?: string | null
-          id?: string
-          payment_id?: string | null
-          product_id?: string | null
-          source?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          access_granted_at?: string
-          created_at?: string | null
-          id?: string
-          payment_id?: string | null
-          product_id?: string | null
-          source?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_access_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_access_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_access_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      product_deliveries: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          gmail_account_id: string | null
-          id: string
-          purchase_id: string | null
-          status: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          gmail_account_id?: string | null
-          id?: string
-          purchase_id?: string | null
-          status: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          gmail_account_id?: string | null
-          id?: string
-          purchase_id?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_deliveries_purchase_id_fkey"
-            columns: ["purchase_id"]
-            isOneToOne: false
-            referencedRelation: "product_purchases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_deliveries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      product_purchases: {
-        Row: {
-          access_sent: boolean | null
-          access_sent_at: string | null
-          amount: number
-          created_at: string | null
-          customer_email: string
-          customer_name: string
-          id: string
-          password: string | null
-          payment_id: string
-          payment_status: string
-          product_id: string | null
-          user_id: string | null
-          username: string | null
-        }
-        Insert: {
-          access_sent?: boolean | null
-          access_sent_at?: string | null
-          amount: number
-          created_at?: string | null
-          customer_email: string
-          customer_name: string
-          id?: string
-          password?: string | null
-          payment_id: string
-          payment_status: string
-          product_id?: string | null
-          user_id?: string | null
-          username?: string | null
-        }
-        Update: {
-          access_sent?: boolean | null
-          access_sent_at?: string | null
-          amount?: number
-          created_at?: string | null
-          customer_email?: string
-          customer_name?: string
-          id?: string
-          password?: string | null
-          payment_id?: string
-          payment_status?: string
-          product_id?: string | null
-          user_id?: string | null
-          username?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_purchases_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_purchases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      products: {
-        Row: {
-          access_url: string | null
-          banner_url: string | null
-          created_at: string
-          description: string | null
-          email_template: string | null
-          file_url: string | null
-          id: string
-          is_active: boolean | null
-          logo_url: string | null
-          member_area_id: string | null
-          member_area_link: string | null
-          name: string
-          price: number
-          price_original: number | null
-          project_id: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          access_url?: string | null
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          email_template?: string | null
-          file_url?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          member_area_id?: string | null
-          member_area_link?: string | null
-          name: string
-          price: number
-          price_original?: number | null
-          project_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          access_url?: string | null
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          email_template?: string | null
-          file_url?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          member_area_id?: string | null
-          member_area_link?: string | null
-          name?: string
-          price?: number
-          price_original?: number | null
-          project_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string | null
-          first_name: string | null
-          id: string
-          last_name: string | null
-          login_url: string | null
-          member_area_id: string | null
-          name: string | null
-          role: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          login_url?: string | null
-          member_area_id?: string | null
-          name?: string | null
-          role?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          login_url?: string | null
-          member_area_id?: string | null
-          name?: string | null
-          role?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_member_area_id_fkey"
-            columns: ["member_area_id"]
-            isOneToOne: false
-            referencedRelation: "member_areas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      projects: {
-        Row: {
-          access_url: string
-          created_at: string | null
-          description: string | null
-          id: string
-          logo_url: string | null
-          name: string
-          primary_color: string | null
-          secondary_color: string | null
-          status: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          access_url: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          logo_url?: string | null
-          name: string
-          primary_color?: string | null
-          secondary_color?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          access_url?: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          logo_url?: string | null
-          name?: string
-          primary_color?: string | null
-          secondary_color?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "projects_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      project_members: {
-        Row: {
-          created_at: string | null
-          id: string
-          project_id: string
-          role: string
-          status: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          project_id: string
-          role?: string
-          status?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          project_id?: string
-          role?: string
-          status?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      produtos_digitais: {
-        Row: {
-          acesso_expira_em: number | null
-          arquivo_url: string | null
-          created_at: string | null
-          descricao: string | null
-          email_assunto: string
-          email_template: string
-          gerar_credenciais: boolean | null
-          id: string
-          instrucoes_acesso: string | null
-          is_active: boolean | null
-          nome: string
-          preco: number
-          tipo_entregavel: string
-          updated_at: string | null
-          url_acesso: string | null
-        }
-        Insert: {
-          acesso_expira_em?: number | null
-          arquivo_url?: string | null
-          created_at?: string | null
-          descricao?: string | null
-          email_assunto?: string
-          email_template: string
-          gerar_credenciais?: boolean | null
-          id?: string
-          instrucoes_acesso?: string | null
-          is_active?: boolean | null
-          nome: string
-          preco: number
-          tipo_entregavel: string
-          updated_at?: string | null
-          url_acesso?: string | null
-        }
-        Update: {
-          acesso_expira_em?: number | null
-          arquivo_url?: string | null
-          created_at?: string | null
-          descricao?: string | null
-          email_assunto?: string
-          email_template?: string
-          gerar_credenciais?: boolean | null
-          id?: string
-          instrucoes_acesso?: string | null
-          is_active?: boolean | null
-          nome?: string
-          preco?: number
-          tipo_entregavel?: string
-          updated_at?: string | null
-          url_acesso?: string | null
-        }
-        Relationships: []
-      }
-      sales: {
-        Row: {
-          amount: number
-          checkout_id: string | null
-          commission_amount: number | null
-          created_at: string
-          customer_id: string | null
-          id: string
-          net_amount: number | null
-          order_bumps: Json | null
-          payment_id: string | null
-          payment_method: string | null
-          product_id: string | null
-          product_name: string
-          quantity: number | null
-          selected_package: Json | null
-          status: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          checkout_id?: string | null
-          commission_amount?: number | null
-          created_at?: string
-          customer_id?: string | null
-          id?: string
-          net_amount?: number | null
-          order_bumps?: Json | null
-          payment_id?: string | null
-          payment_method?: string | null
-          product_id?: string | null
-          product_name: string
-          quantity?: number | null
-          selected_package?: Json | null
-          status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          checkout_id?: string | null
-          commission_amount?: number | null
-          created_at?: string
-          customer_id?: string | null
-          id?: string
-          net_amount?: number | null
-          order_bumps?: Json | null
-          payment_id?: string | null
-          payment_method?: string | null
-          product_id?: string | null
-          product_name?: string
-          quantity?: number | null
-          selected_package?: Json | null
-          status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sales_checkout_id_fkey"
-            columns: ["checkout_id"]
-            isOneToOne: false
-            referencedRelation: "checkouts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      handle_new_user: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_admin: {
-        Args: {
-          user_id?: string
-        }
-        Returns: boolean
-      }
-      is_admin_of_member_area: {
-        Args: {
-          p_member_area_id: string
-        }
-        Returns: boolean
-      }
-      log_checkout_changes: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      process_completed_sale: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      update_customer_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      update_updated_at_column: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const
-
-export interface DeliverableConfig {
-  type: 'none' | 'link' | 'upload';
-  link?: string | null;
-  fileUrl?: string | null; // For uploaded files
-  name?: string | null;
-  description?: string | null;
-}
-
-export interface PackageConfig {
-  id: number;
-  name: string;
-  description: string;
-  topics: string[];
-  price: number; // in Reais
-  originalPrice: number; // in Reais
-  mostSold?: boolean;
-  associatedProductIds?: string[] | null; // Changed to array
-  // deliverable?: DeliverableConfig; // New: Package-specific deliverable
-}
-
-export interface GuaranteeConfig {
-  enabled: boolean;
-  days: number;
-  description: string;
-}
-
-export interface ReservedRightsConfig {
-  enabled: boolean;
-  text: string;
-}
-
-export interface EmailConfig {
-  email: string;
-  appPassword: string;
-  displayName: string;
-  host?: string;
-  port?: string;
-  secure?: boolean;
-  provider?: string;
-}
-
-// Export FormFields
-export interface FormFields {
-  requireName?: boolean;
-  requireEmail?: boolean;
-  requireEmailConfirm?: boolean;
-  requirePhone?: boolean;
-  requireCpf?: boolean;
-  packages?: PackageConfig[];
-  deliverable?: DeliverableConfig;
-  sendTransactionalEmail?: boolean;
-  transactionalEmailSubject?: string;
-  transactionalEmailBody?: string;
-  guarantee?: GuaranteeConfig;
-  reservedRights?: ReservedRightsConfig;
-}
+export default AdminCheckouts;

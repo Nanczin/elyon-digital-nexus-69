@@ -187,11 +187,11 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
   return (
     <Card className="shadow-lg rounded-xl" style={{ backgroundColor: 'hsl(var(--member-area-card-background))' }}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl" style={{ color: 'hsl(var(--member-area-text-dark))' }}> {/* Ajustado text size */}
-          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" /> Comentários da Comunidade ({comments.length}) {/* Ajustado h, w */}
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl" style={{ color: 'hsl(var(--member-area-text-dark))' }}>
+          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" /> Comentários da Comunidade ({comments.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+      <CardContent className="space-y-4 sm:space-y-6">
         {/* Input para novo comentário */}
         {user && (
           <div className="flex flex-col space-y-3">
@@ -202,12 +202,12 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
               rows={3}
               disabled={submitting}
               style={{ backgroundColor: 'hsl(var(--member-area-background))', color: 'hsl(var(--member-area-text-dark))', borderColor: 'hsl(var(--member-area-text-muted))' }}
-              className="text-sm sm:text-base" {/* Ajustado text size */}
+              className="text-sm sm:text-base" 
             />
             <Button
               onClick={handleSubmitComment}
               disabled={submitting || !newComment.trim()}
-              className="self-end text-sm sm:text-base" {/* Ajustado text size */}
+              className="self-end text-sm sm:text-base" 
               style={{ backgroundColor: 'hsl(var(--member-area-primary))', color: '#FFFFFF' }}
             >
               {submitting ? (
@@ -222,26 +222,26 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
 
         {/* Lista de comentários */}
         {loading ? (
-          <div className="text-center py-4 text-sm sm:text-base" style={{ color: 'hsl(var(--member-area-text-muted))' }}> {/* Ajustado text size */}
+          <div className="text-center py-4 text-sm sm:text-base" style={{ color: 'hsl(var(--member-area-text-muted))' }}>
             Carregando comentários...
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-4 text-sm sm:text-base" style={{ color: 'hsl(var(--member-area-text-muted))' }}> {/* Ajustado text size */}
+          <div className="text-center py-4 text-sm sm:text-base" style={{ color: 'hsl(var(--member-area-text-muted))' }}>
             Nenhum comentário ainda. Seja o primeiro a comentar!
           </div>
         ) : (
-          <div className="space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
+          <div className="space-y-3 sm:space-y-4">
             {comments.map((comment) => (
               <div key={comment.id} className="flex items-start space-x-3 p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--member-area-background))', border: '1px solid hsl(var(--member-area-text-muted))' }}>
-                <Avatar className="h-8 w-8 sm:h-9 sm:w-9"> {/* Ajustado h, w */}
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                   <AvatarImage src={comment.profiles?.avatar_url || undefined} alt={comment.profiles?.name || 'User'} />
-                  <AvatarFallback className="bg-gray-200 text-gray-700 text-sm"> {/* Ajustado text size */}
+                  <AvatarFallback className="bg-gray-200 text-gray-700 text-sm">
                     {comment.profiles?.name?.charAt(0).toUpperCase() || comment.user_id.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0"> {/* Ajustado flex e gap */}
-                    <p className="font-semibold text-sm sm:text-base" style={{ color: 'hsl(var(--member-area-text-dark))' }}> {/* Ajustado text size */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0">
+                    <p className="font-semibold text-sm sm:text-base" style={{ color: 'hsl(var(--member-area-text-dark))' }}>
                       {comment.profiles?.name || 'Membro'}
                       {comment.lessons?.title && (
                         <span className="text-xs text-muted-foreground ml-2">
@@ -254,30 +254,30 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
                         </span>
                       )}
                     </p>
-                    <span className="text-xs sm:text-sm" style={{ color: 'hsl(var(--member-area-text-muted))' }}> {/* Ajustado text size */}
+                    <span className="text-xs sm:text-sm" style={{ color: 'hsl(var(--member-area-text-muted))' }}>
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
                   </div>
-                  <p className="text-sm sm:text-base mt-1" style={{ color: 'hsl(var(--member-area-text-dark))' }}> {/* Ajustado text size */}
+                  <p className="text-sm sm:text-base mt-1" style={{ color: 'hsl(var(--member-area-text-dark))' }}>
                     {comment.content}
                   </p>
                   {user?.id === comment.user_id && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive h-6 px-2 mt-2 text-xs sm:text-sm"> {/* Ajustado h, px, mt, text size */}
+                        <Button variant="ghost" size="sm" className="text-destructive h-6 px-2 mt-2 text-xs sm:text-sm">
                           <Trash2 className="h-3 w-3 mr-1" /> Excluir
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
+                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
-                          <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle>
+                          <AlertDialogDescription className="text-xs sm:text-sm">
                             Tem certeza que deseja excluir este comentário? Esta ação é irreversível.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
-                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
-                          <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="text-xs sm:text-sm">Excluir</AlertDialogAction> {/* Ajustado text size */}
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="text-xs sm:text-sm">Excluir</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

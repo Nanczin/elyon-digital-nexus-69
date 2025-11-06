@@ -105,9 +105,9 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-md sm:max-w-xl mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
+      <DialogContent className="max-w-md sm:max-w-xl mx-2 sm:mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Configurar UTMify</DialogTitle> {/* Ajustado text size */}
+          <DialogTitle className="text-lg sm:text-xl">Configurar UTMify</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -115,7 +115,7 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
           {isConfigured && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base sm:text-lg">Status da Configuração</CardTitle> {/* Ajustado text size */}
+                <CardTitle className="text-base sm:text-lg">Status da Configuração</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="text-sm text-muted-foreground">
@@ -130,46 +130,46 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
 
           {/* Configuração */}
           <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold">Configurações</h3> {/* Ajustado text size */}
+            <h3 className="text-base sm:text-lg font-semibold">Configurações</h3>
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="apiKey" className="text-sm">API Key *</Label> {/* Ajustado text size */}
+                <Label htmlFor="apiKey" className="text-sm">API Key *</Label>
                 <Input
                   id="apiKey"
                   type="password"
                   value={config.apiKey}
                   onChange={(e) => setConfig({...config, apiKey: e.target.value})}
                   placeholder="sua-api-key-aqui"
-                  className="text-sm" {/* Ajustado text size */}
+                  className="text-sm"
                 />
               </div>
               
               <div>
-                <Label htmlFor="websiteId" className="text-sm">Website ID *</Label> {/* Ajustado text size */}
+                <Label htmlFor="websiteId" className="text-sm">Website ID *</Label>
                 <Input
                   id="websiteId"
                   value={config.websiteId}
                   onChange={(e) => setConfig({...config, websiteId: e.target.value})}
                   placeholder="123456"
-                  className="text-sm" {/* Ajustado text size */}
+                  className="text-sm"
                 />
               </div>
               
               <div>
-                <Label htmlFor="customDomain" className="text-sm">Domínio Personalizado (Opcional)</Label> {/* Ajustado text size */}
+                <Label htmlFor="customDomain" className="text-sm">Domínio Personalizado (Opcional)</Label>
                 <Input
                   id="customDomain"
                   value={config.customDomain}
                   onChange={(e) => setConfig({...config, customDomain: e.target.value})}
                   placeholder="track.seudominio.com"
-                  className="text-sm" {/* Ajustado text size */}
+                  className="text-sm"
                 />
               </div>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="trackPurchases" className="text-sm">Rastrear Compras</Label> {/* Ajustado text size */}
+                  <Label htmlFor="trackPurchases" className="text-sm">Rastrear Compras</Label>
                   <Switch
                     id="trackPurchases"
                     checked={config.trackPurchases}
@@ -178,7 +178,7 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="trackEvents" className="text-sm">Rastrear Eventos</Label> {/* Ajustado text size */}
+                  <Label htmlFor="trackEvents" className="text-sm">Rastrear Eventos</Label>
                   <Switch
                     id="trackEvents"
                     checked={config.trackEvents}
@@ -188,13 +188,13 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
-              <Button onClick={saveConfig} disabled={saving || loading} className="flex-1 text-sm sm:text-base"> {/* Ajustado text size */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={saveConfig} disabled={saving || loading} className="flex-1 text-sm sm:text-base">
                 {saving ? 'Salvando...' : 'Salvar Configuração'}
               </Button>
               
               {isConfigured && (
-                <Button variant="outline" onClick={clearConfig} disabled={saving || loading} className="text-sm sm:text-base"> {/* Ajustado text size */}
+                <Button variant="outline" onClick={clearConfig} disabled={saving || loading} className="text-sm sm:text-base">
                   Limpar
                 </Button>
               )}

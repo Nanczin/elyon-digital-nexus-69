@@ -91,7 +91,7 @@ const AdminProducts = () => {
         .select('id, name, slug')
         .eq('user_id', user.id);
       if (error) throw error;
-      setMemberAreas(data || []);
+      setMemberAreas(data as MemberArea[] || []);
     } catch (error) {
       console.error('ADMIN_PRODUCTS_DEBUG: Erro ao carregar áreas de membros:', error);
       toast({
@@ -622,7 +622,7 @@ const AdminProducts = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="basic" className="space-y-4 mt-4">
+                <TabsContent value="basic" className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="memberArea">Área de Membros (Opcional)</Label>
@@ -921,9 +921,9 @@ const AdminProducts = () => {
                                      Excluir
                                    </DropdownMenuItem>
                                  </AlertDialogTrigger>
-                                 <AlertDialogContent className="w-[95vw] max-w-md mx-auto"> {/* Ajustado max-w- */}
+                                 <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
                                    <AlertDialogHeader>
-                                     <AlertDialogTitle className="text-base sm:text-lg">
+                                     <AlertDialogTitle className="text-sm sm:text-base">
                                        Confirmar exclusão
                                      </AlertDialogTitle>
                                      <AlertDialogDescription className="text-sm">

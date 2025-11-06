@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Users, UserPlus, Mail, Phone, Trash2 } from 'lucide-react';
 import { NewCustomerDialog } from '@/components/dialogs/NewCustomerDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } => 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
@@ -119,10 +119,10 @@ const Customers = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"> {/* Ajustado flex e gap */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Clientes</h1> {/* Ajustado text size */}
-          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
+          <h1 className="text-2xl sm:text-3xl font-bold">Clientes</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             Gerencie seus clientes e relacionamentos
           </p>
         </div>
@@ -130,7 +130,7 @@ const Customers = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"> {/* Ajustado grid-cols */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -141,7 +141,7 @@ const Customers = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">
-              Total de clientes cadastrados
+              {((stats.active / Math.max(stats.total, 1)) * 100).toFixed(0)}% do total
             </p>
           </CardContent>
         </Card>
@@ -178,17 +178,17 @@ const Customers = () => {
       {/* Customers Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Lista de Clientes</CardTitle> {/* Ajustado text size */}
-          <CardDescription className="text-sm sm:text-base"> {/* Ajustado text size */}
+          <CardTitle className="text-lg sm:text-xl">Lista de Clientes</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Visualize e gerencie todos os seus clientes
           </CardDescription>
         </CardHeader>
         <CardContent>
           {customers.length === 0 ? (
             <div className="text-center py-8">
-              <Users className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
-              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum cliente encontrado</h3> {/* Ajustado text size */}
-              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
+              <Users className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum cliente encontrado</h3>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Os clientes aparecerão aqui quando realizarem compras
               </p>
             </div>
@@ -197,18 +197,18 @@ const Customers = () => {
               {customers.map((customer) => (
                 <div
                   key={customer.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-2" {/* Ajustado flex e gap */}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-2" 
                 >
                   <div className="flex items-center space-x-4">
-                    <Avatar className="h-10 w-10"> {/* Ajustado avatar size */}
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${customer.name}`} />
                       <AvatarFallback>
                         {customer.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
-                      <p className="font-medium text-sm sm:text-base">{customer.name}</p> {/* Ajustado text size */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-muted-foreground"> {/* Ajustado flex e gap */}
+                      <p className="font-medium text-sm sm:text-base">{customer.name}</p>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <Mail className="h-3 w-3" />
                           <span>{customer.email}</span>
@@ -221,7 +221,7 @@ const Customers = () => {
                         )}
                       </div>
                       {customer.last_purchase && (
-                        <p className="text-xs text-muted-foreground mt-1"> {/* Ajustado margin-top */}
+                        <p className="text-xs text-muted-foreground mt-1">
                           Última compra: {formatDistanceToNow(new Date(customer.last_purchase), { 
                             addSuffix: true, 
                             locale: ptBR 
@@ -230,7 +230,7 @@ const Customers = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mt-2 sm:mt-0"> {/* Ajustado flex e margin-top */}
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mt-2 sm:mt-0">
                     <div className="text-right space-y-1">
                       <p className="text-sm font-medium">
                         R$ {(customer.total_spent / 100).toFixed(2).replace('.', ',')}
@@ -239,7 +239,7 @@ const Customers = () => {
                         {customer.purchase_count} compra{customer.purchase_count !== 1 ? 's' : ''}
                       </p>
                     </div>
-                    <Badge variant={customer.status === 'active' ? 'default' : 'secondary'} className="text-xs"> {/* Ajustado text size */}
+                    <Badge variant={customer.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                       {customer.status === 'active' ? 'Ativo' : 'Inativo'}
                     </Badge>
                     <AlertDialog>
@@ -248,19 +248,19 @@ const Customers = () => {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
+                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-sm sm:text-base">Excluir Cliente</AlertDialogTitle> {/* Ajustado text size */}
-                          <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                          <AlertDialogTitle className="text-sm sm:text-base">Excluir Cliente</AlertDialogTitle>
+                          <AlertDialogDescription className="text-xs sm:text-sm">
                             Tem certeza que deseja excluir <strong>{customer.name}</strong>? 
                             Esta ação não pode ser desfeita e todos os dados do cliente serão perdidos permanentemente.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
-                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel>
                           <AlertDialogAction 
                             onClick={() => handleDeleteCustomer(customer.id, customer.name)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs sm:text-sm" {/* Ajustado text size */}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs sm:text-sm" 
                           >
                             Excluir
                           </AlertDialogAction>

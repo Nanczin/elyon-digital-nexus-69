@@ -27,7 +27,7 @@ const MemberAreaLesson = () => {
   const [loading, setLoading] = useState(true);
   const [memberArea, setMemberArea] = useState<MemberArea | null>(null);
   const [module, setModule] = useState<Module | null>(null);
-  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
 
@@ -288,40 +288,36 @@ const MemberAreaLesson = () => {
       >
         <div className="flex items-center space-x-3">
           {currentSettings.logo_url ? (
-            <img 
-              src={currentSettings.logo_url} 
-              alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-12 w-12 sm:h-16 sm:w-16 object-contain" {/* Ajustado h e w */}
-            />
+            <img src={currentSettings.logo_url} alt={memberArea?.name || "Logo da Plataforma"} className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
           ) : (
-            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200"> {/* Ajustado h e w */}
-              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold"> {/* Ajustado text size */}
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200">
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold">
                 {memberAreaNameInitials}
               </AvatarFallback>
             </Avatar>
           )}
-          <span className="text-lg sm:text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span> {/* Ajustado text size */}
+          <span className="text-lg sm:text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
-              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200"> {/* Ajustado h e w */}
+              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200">
                 <AvatarImage src={user?.user_metadata?.avatar_url || undefined} alt={userName} />
-                <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold"> {/* Ajustado text size */}
+                <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold">
                   {userInitial}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 sm:w-48" style={{ backgroundColor: cardBackground, color: textColor }}> {/* Ajustado w */}
+          <DropdownMenuContent align="end" className="w-40 sm:w-48" style={{ backgroundColor: cardBackground, color: textColor }}>
             <ProfileSettingsDialog memberAreaId={memberAreaId || ''}>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }} className="text-sm sm:text-base"> {/* Ajustado text size */}
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }} className="text-sm sm:text-base">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configurações de Perfil</span>
               </DropdownMenuItem>
             </ProfileSettingsDialog>
             <DropdownMenuSeparator style={{ backgroundColor: secondaryTextColor + '40' }} />
-            <DropdownMenuItem onClick={signOut} className="text-destructive text-sm sm:text-base"> {/* Ajustado text size */}
+            <DropdownMenuItem onClick={signOut} className="text-destructive text-sm sm:text-base">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
             </DropdownMenuItem>
@@ -330,20 +326,20 @@ const MemberAreaLesson = () => {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full"> {/* Ajustado px, py, max-w- */}
-        <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base"> {/* Ajustado mb, ml, text size */}
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full">
+        <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base">
           <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o módulo
           </Link>
         </Button>
 
-        <Card className="shadow-lg rounded-xl p-4 sm:p-8" style={{ backgroundColor: cardBackground }}> {/* Ajustado p */}
-          <CardHeader className="px-0 pt-0 mb-4 sm:mb-6"> {/* Ajustado mb */}
-            <CardTitle className="text-2xl sm:text-4xl font-bold leading-tight" style={{ color: textColor }}> {/* Ajustado text size */}
+        <Card className="shadow-lg rounded-xl p-4 sm:p-8" style={{ backgroundColor: cardBackground }}>
+          <CardHeader className="px-0 pt-0 mb-4 sm:mb-6">
+            <CardTitle className="text-2xl sm:text-4xl font-bold leading-tight" style={{ color: textColor }}>
               {lesson.title}
             </CardTitle>
             {lesson.description && (
-              <p className="text-base sm:text-xl mt-2" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
+              <p className="text-base sm:text-xl mt-2" style={{ color: secondaryTextColor }}>
                 {lesson.description.trim()}
               </p>
             )}

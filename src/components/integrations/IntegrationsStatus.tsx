@@ -17,11 +17,11 @@ const IntegrationsStatus = () => {
 
   const getStatusBadge = (configured: boolean) => {
     return configured ? (
-      <Badge variant="default" className="bg-green-100 text-green-800 text-xs"> {/* Ajustado text size */}
+      <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
         Ativo
       </Badge>
     ) : (
-      <Badge variant="secondary" className="text-xs"> {/* Ajustado text size */}
+      <Badge variant="secondary" className="text-xs">
         Inativo
       </Badge>
     );
@@ -30,7 +30,7 @@ const IntegrationsStatus = () => {
   return (
     <Card className="mt-8">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <Info className="h-5 w-5" />
           Status das Integrações
         </CardTitle>

@@ -201,36 +201,36 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px] mx-2 sm:mx-auto" style={{ backgroundColor: cardBackground, color: textColor }}> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
+      <DialogContent className="sm:max-w-[480px] mx-2 sm:mx-auto" style={{ backgroundColor: cardBackground, color: textColor }}>
         <DialogHeader>
-          <DialogTitle className="text-center text-xl sm:text-2xl font-bold" style={{ color: textColor }}> {/* Ajustado text size */}
+          <DialogTitle className="text-center text-xl sm:text-2xl font-bold" style={{ color: textColor }}>
             Configurações de Perfil
           </DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-auto p-1" style={{ backgroundColor: secondaryTextColor + '10' }}> {/* Ajustado h e p */}
-            <TabsTrigger value="profile" style={{ color: textColor }} className="text-sm sm:text-base"> {/* Ajustado text size */}
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1" style={{ backgroundColor: secondaryTextColor + '10' }}>
+            <TabsTrigger value="profile" style={{ color: textColor }} className="text-sm sm:text-base">
               <User className="mr-2 h-4 w-4" /> Perfil
             </TabsTrigger>
-            <TabsTrigger value="security" style={{ color: textColor }} className="text-sm sm:text-base"> {/* Ajustado text size */}
+            <TabsTrigger value="security" style={{ color: textColor }} className="text-sm sm:text-base">
               <Lock className="mr-2 h-4 w-4" /> Segurança
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6"> {/* Ajustado mt e space-y */}
+          <TabsContent value="profile" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
             <Form {...profileForm}>
-              <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
-                <div className="flex flex-col items-center space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
-                  <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2" style={{ borderColor: primaryColor }}> {/* Ajustado h, w */}
+              <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+                  <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2" style={{ borderColor: primaryColor }}>
                     <AvatarImage src={avatarPreview || undefined} alt={user?.user_metadata?.name || 'User Avatar'} />
-                    <AvatarFallback className="bg-gray-200 text-gray-700 text-3xl sm:text-4xl font-semibold"> {/* Ajustado text size */}
+                    <AvatarFallback className="bg-gray-200 text-gray-700 text-3xl sm:text-4xl font-semibold">
                       {userInitial}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2"> {/* Ajustado flex e space-y */}
+                  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
                     <Label htmlFor="avatarFile" className="cursor-pointer">
-                      <Button asChild variant="outline" size="sm" className="text-sm sm:text-base"> {/* Ajustado text size */}
+                      <Button asChild variant="outline" size="sm" className="text-sm sm:text-base">
                         <span><Camera className="mr-2 h-4 w-4" /> Alterar Foto</span>
                       </Button>
                     </Label>
@@ -242,7 +242,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                       onChange={handleAvatarFileChange} 
                     />
                     {avatarPreview && (
-                      <Button variant="destructive" size="sm" onClick={removeAvatar} className="text-sm sm:text-base"> {/* Ajustado text size */}
+                      <Button variant="destructive" size="sm" onClick={removeAvatar} className="text-sm sm:text-base">
                         <XCircle className="mr-2 h-4 w-4" /> Remover
                       </Button>
                     )}
@@ -254,7 +254,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel htmlFor="name" style={{ color: textColor }} className="text-sm sm:text-base">Nome</FormLabel> {/* Ajustado text size */}
+                      <FormLabel htmlFor="name" style={{ color: textColor }} className="text-sm sm:text-base">Nome</FormLabel>
                       <FormControl>
                         <Input 
                           id="name" 
@@ -264,14 +264,14 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                           className="text-sm sm:text-base"
                         />
                       </FormControl>
-                      <FormMessage className="text-xs sm:text-sm" /> {/* Ajustado text size */}
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
                 
                 <Button 
                   type="submit" 
-                  className="w-full text-sm sm:text-base" {/* Ajustado text size */}
+                  className="w-full text-sm sm:text-base"
                   disabled={isSavingProfile}
                   style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                 >
@@ -282,15 +282,15 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
             </Form>
           </TabsContent>
 
-          <TabsContent value="security" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6"> {/* Ajustado mt e space-y */}
+          <TabsContent value="security" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
             <Form {...passwordForm}>
-              <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+              <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4 sm:space-y-6">
                 <FormField
                   control={passwordForm.control}
                   name="newPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel htmlFor="newPassword" style={{ color: textColor }} className="text-sm sm:text-base">Nova Senha</FormLabel> {/* Ajustado text size */}
+                      <FormLabel htmlFor="newPassword" style={{ color: textColor }} className="text-sm sm:text-base">Nova Senha</FormLabel>
                       <div className="relative">
                         <FormControl>
                           <Input
@@ -299,7 +299,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                             placeholder="Mínimo 6 caracteres"
                             {...field}
                             style={{ backgroundColor: cardBackground, color: textColor, borderColor: secondaryTextColor + '40' }}
-                            className="text-sm sm:text-base" {/* Ajustado text size */}
+                            className="text-sm sm:text-base"
                           />
                         </FormControl>
                         <Button
@@ -316,7 +316,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                           )}
                         </Button>
                       </div>
-                      <FormMessage className="text-xs sm:text-sm" /> {/* Ajustado text size */}
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -326,7 +326,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel htmlFor="confirmPassword" style={{ color: textColor }} className="text-sm sm:text-base">Confirmar Nova Senha</FormLabel> {/* Ajustado text size */}
+                      <FormLabel htmlFor="confirmPassword" style={{ color: textColor }} className="text-sm sm:text-base">Confirmar Nova Senha</FormLabel>
                       <div className="relative">
                         <FormControl>
                           <Input
@@ -335,7 +335,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                             placeholder="Confirme sua nova senha"
                             {...field}
                             style={{ backgroundColor: cardBackground, color: textColor, borderColor: secondaryTextColor + '40' }}
-                            className="text-sm sm:text-base" {/* Ajustado text size */}
+                            className="text-sm sm:text-base"
                           />
                         </FormControl>
                         <Button
@@ -352,14 +352,14 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                           )}
                         </Button>
                       </div>
-                      <FormMessage className="text-xs sm:text-sm" /> {/* Ajustado text size */}
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
                 
                 <Button 
                   type="submit" 
-                  className="w-full text-sm sm:text-base" {/* Ajustado text size */}
+                  className="w-full text-sm sm:text-base"
                   disabled={isSavingPassword}
                   style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                 >
