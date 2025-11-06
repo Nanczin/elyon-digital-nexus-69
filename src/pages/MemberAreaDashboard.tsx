@@ -194,6 +194,8 @@ const MemberAreaDashboard = () => {
   const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
   const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
+  const checkmarkBgColor = currentSettings.colors?.checkmark_background || 'hsl(var(--member-area-checkmark-bg))'; // Definido aqui
+  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))'; // Definido aqui
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
   const userInitial = userName.charAt(0).toUpperCase();
