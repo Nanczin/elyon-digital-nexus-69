@@ -343,15 +343,7 @@ const MemberAreaDashboard = () => {
                         className={`w-full h-full object-cover ${isLocked ? 'grayscale brightness-50' : ''}`} 
                       />
                     )}
-                    {/* Placeholder para o badge de concluído */}
-                    {!isLocked && (module.title.includes('Boas-vindas') || module.title.includes('30 Dias') || module.title.includes('Exercícios')) ? (
-                      <div 
-                        className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: checkmarkBgColor }}
-                      >
-                        <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
-                      </div>
-                    ) : null}
+                    {/* O bloco do checkmark foi removido daqui */}
                   </div>
                   <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
                     <h3 className="text-xl font-bold" style={{ color: textColor }}>
