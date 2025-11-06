@@ -337,9 +337,10 @@ const MemberAreaDashboard = () => {
                       {module.description}
                     </p>
                     {isLocked ? (
-                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-xl text-white space-y-3">
+                      // Overlay que cobre todo o Card
+                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-xl text-white space-y-3 text-center">
                           <Lock className="h-12 w-12 mb-2" />
-                          <p className="text-lg font-semibold text-center">
+                          <p className="text-lg font-semibold">
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
@@ -349,7 +350,7 @@ const MemberAreaDashboard = () => {
                                   </Link>
                               </Button>
                           ) : (
-                              <p className="text-sm text-center mt-2">
+                              <p className="text-sm mt-2">
                                   Produto associado não encontrado ou sem checkout.
                               </p>
                           )}
