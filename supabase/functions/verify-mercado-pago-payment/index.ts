@@ -219,6 +219,7 @@ serve(async (req) => {
               console.log('VERIFY_MP_DEBUG: Pulando criação de ordem para produto:', productId, 'userId ou productId ausente. userId:', userId);
           }
 
+
           // Garantir acesso ao produto (idempotente) - SOMENTE SE userId E productId ESTIVEREM DISPONÍVEIS
           if (userId && productId) {
               const { data: existingAccess, error: accessExistsError } = await supabase
@@ -241,7 +242,7 @@ serve(async (req) => {
                       })
                       .select('id')
                       .single();
-                  if (accessErr) console.error('VERIFY_MP_DEBUG: Erro ao criar acesso ao produto:', productId, accessErr);
+                  if (accessErr) console.error('VERIFY_MP_DEBUG: Erro ao criar acesso ao produto:', accessErr);
                   else console.log('VERIFY_MP_DEBUG: Acesso ao produto concedido para produto:', productId, accessIns);
               } else {
                   console.log('VERIFY_MP_DEBUG: Acesso ao produto já existe para produto:', productId, existingAccess.id);

@@ -1680,7 +1680,7 @@ export interface PackageConfig {
   price: number; // in Reais
   originalPrice: number; // in Reais
   mostSold?: boolean;
-  associatedProductId?: string | null; // New: Link to a product from the 'products' table
+  associatedProductIds?: string[] | null; // Changed to array
   deliverable?: DeliverableConfig; // New: Package-specific deliverable
 }
 

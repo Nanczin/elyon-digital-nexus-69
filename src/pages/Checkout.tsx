@@ -108,21 +108,12 @@ const Checkout = () => {
       const formFieldsData = (data.form_fields || {}) as FormFields;
       const packagesConfig: PackageConfig[] = Array.isArray(formFieldsData.packages) 
         ? await Promise.all(formFieldsData.packages.map(async pkg => {
-            let associatedProductDetails = null;
-            if (pkg.associatedProductId) {
-              const { data: productData, error: productError } = await supabase
-                .from('products')
-                .select('id, name, description, banner_url, logo_url, member_area_link, file_url')
-                .eq('id', pkg.associatedProductId)
-                .maybeSingle();
-              if (productError) console.error('Error fetching associated product for package:', productError);
-              associatedProductDetails = productData;
-            }
+            // No longer fetching individual associated product details here, as package name/description are explicit
             return {
               ...pkg,
               price: pkg.price / 100, // Convert package price to reais
               originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : 0, // Convert original price to reais
-              product: associatedProductDetails, // Attach product details to package
+              // product: associatedProductDetails, // Removed: package name/description are explicit
             };
           }))
         : [];
@@ -334,16 +325,12 @@ const Checkout = () => {
       
       // Determine the selected package and its associated product/deliverable
       const selectedPackageDetails = checkout?.form_fields?.packages?.find(pkg => pkg.id === selectedPackage);
-      const packageAssociatedProduct = selectedPackageDetails?.product;
       const packageDeliverable = selectedPackageDetails?.deliverable;
-
-      // Determine the final product ID for the main purchase (from selected package)
-      const mainPurchasedProductId = packageAssociatedProduct?.id || checkout?.product_id;
 
       // Gather all purchased product IDs (from selected package and all enabled order bumps)
       const purchasedProductIds: string[] = [];
-      if (mainPurchasedProductId) {
-        purchasedProductIds.push(mainPurchasedProductId);
+      if (selectedPackageDetails?.associatedProductIds) {
+        purchasedProductIds.push(...selectedPackageDetails.associatedProductIds);
       }
       checkout?.order_bumps.forEach(bump => {
         if (bump.enabled && bump.selectedProduct) {
@@ -378,7 +365,7 @@ const Checkout = () => {
         orderBumps: selectedOrderBumps,
         selectedPackage: selectedPackage,
         paymentMethod: selectedPaymentMethod,
-        finalProductId: mainPurchasedProductId, // Pass the resolved product ID for the main package
+        // finalProductId: mainPurchasedProductId, // Removed: now using purchasedProductIds array
         purchasedProductIds: purchasedProductIds, // Pass all purchased product IDs
         // Adicionar dados de e-mail transacional e entregável ao metadata
         emailMetadata: {
@@ -386,8 +373,8 @@ const Checkout = () => {
           transactionalEmailSubject: checkout?.form_fields?.transactionalEmailSubject, // Acessado via form_fields
           transactionalEmailBody: checkout?.form_fields?.transactionalEmailBody, // Acessado via form_fields
           deliverableLink: finalDeliverableLink || null, // Garantir que seja string ou null
-          productName: packageAssociatedProduct?.name || checkout?.products?.name, // Use package product name if available
-          productDescription: packageAssociatedProduct?.description || checkout?.products?.description, // Use package product description if available
+          productName: selectedPackageDetails?.name || checkout?.products?.name, // Use package name if available
+          productDescription: selectedPackageDetails?.description || checkout?.products?.description, // Use package description if available
           sellerUserId: checkout?.user_id || null, // Passar o user_id do checkout (vendedor), garantindo que seja null se não existir
           supportEmail: checkout?.support_contact?.email,
         }
@@ -421,7 +408,7 @@ const Checkout = () => {
       if (hasIntegrations) {
         trackPurchaseEvent({
           amount: totalAmount,
-          product_id: mainPurchasedProductId, // Use the resolved product ID for tracking
+          product_id: purchasedProductIds[0] || checkout?.product_id, // Use the first purchased product ID for tracking
           checkout_id: checkoutId,
           payment_method: selectedPaymentMethod,
           customer_data: customerData

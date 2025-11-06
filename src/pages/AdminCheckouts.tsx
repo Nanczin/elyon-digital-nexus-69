@@ -18,13 +18,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables } from '@/integrations/supabase/types'; // Importar DeliverableConfig e os novos tipos
 import { Alert, AlertDescription } from '@/components/ui/alert'; // Importação adicionada
 import { setNestedValue, deepMerge } from '@/lib/utils'; // Importar setNestedValue e deepMerge
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+
 
 type MemberArea = Tables<'member_areas'>;
 type Product = Tables<'products'>; // Import Product type
@@ -61,7 +65,6 @@ const AdminCheckouts = () => {
   const getInitialFormData = useCallback(() => {
     const initial: any = { // Use 'any' temporarily for easier merging, will be typed later
       name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
-      // selectedProduct: '', // REMOVIDO: Produto base agora é definido por pacote
       layout: 'horizontal' as string,
       form_fields: { // Corresponde à coluna 'form_fields' na tabela 'checkouts'
         requireName: true,
@@ -77,7 +80,7 @@ const AdminCheckouts = () => {
           price: 97.00, // Default price in Reais
           originalPrice: 0,
           mostSold: false,
-          associatedProductId: null, // New default
+          associatedProductIds: [], // Changed to array
           deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null } // New default
         }] as PackageConfig[],
         guarantee: {
@@ -188,7 +191,7 @@ const AdminCheckouts = () => {
       price: pkg.price ? pkg.price / 100 : priceInReais,
       originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
       mostSold: pkg.mostSold ?? false,
-      associatedProductId: pkg.associatedProductId || null, // Load new field
+      associatedProductIds: Array.isArray(pkg.associatedProductIds) ? pkg.associatedProductIds : (pkg.associatedProductId ? [pkg.associatedProductId] : []), // Load new field, handle old single ID
       deliverable: pkg.deliverable || initial.form_fields.packages[0].deliverable // Load new field
     })) : initial.form_fields.packages; // Usar initial.form_fields.packages como fallback
 
@@ -208,7 +211,6 @@ const AdminCheckouts = () => {
 
     return deepMerge(initial, { // Usar deepMerge para garantir que todos os campos padrão estejam presentes
       name: checkout.name || checkout.products?.name || '', // Carregar o novo campo 'name'
-      // selectedProduct: checkout.product_id || '', // REMOVIDO: Produto base agora é definido por pacote
       layout: 'horizontal', // Layout fixo como 'horizontal'
       form_fields: { // Mapear para a nova estrutura aninhada
         requireName: checkout.form_fields?.requireName ?? true,
@@ -493,7 +495,7 @@ const AdminCheckouts = () => {
       price: 0,
       originalPrice: 0,
       mostSold: false,
-      associatedProductId: null,
+      associatedProductIds: [], // Changed to array
       deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null }
     }] as PackageConfig[]; // Tipado explicitamente
     handleInputChange('form_fields.packages', newPackages);
@@ -519,30 +521,19 @@ const AdminCheckouts = () => {
     handleInputChange('form_fields.packages', packages);
   };
 
-  const loadProductAsPackage = (packageId: number, productId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      const priceInReais = product.price / 100;
-      const originalPriceInReais = product.price_original ? product.price_original / 100 : 0;
+  const toggleProductAssociation = (packageId: number, productId: string, isChecked: boolean) => {
+    const packageIndex = checkoutData.form_fields.packages.findIndex((p: PackageConfig) => p.id === packageId);
+    if (packageIndex === -1) return;
 
-      const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === packageId ? {
-        ...pkg,
-        name: product.name,
-        description: product.description || '',
-        price: priceInReais,
-        originalPrice: originalPriceInReais,
-        associatedProductId: product.id,
-        // Load deliverable from product if available
-        deliverable: {
-          type: product.file_url ? (product.file_url.startsWith('http') ? 'link' : 'upload') : (product.member_area_link ? 'link' : 'none'),
-          link: product.file_url?.startsWith('http') ? product.file_url : product.member_area_link,
-          fileUrl: product.file_url && !product.file_url.startsWith('http') ? product.file_url : null,
-          name: product.name,
-          description: product.description
-        }
-      } : pkg);
-      handleInputChange('form_fields.packages', packages);
+    const currentAssociatedIds = checkoutData.form_fields.packages[packageIndex].associatedProductIds || [];
+    let updatedIds: string[];
+
+    if (isChecked) {
+      updatedIds = [...currentAssociatedIds, productId];
+    } else {
+      updatedIds = currentAssociatedIds.filter((id: string) => id !== productId);
     }
+    handleInputChange(`form_fields.packages[${packageIndex}].associatedProductIds`, updatedIds);
   };
 
   const addTopicToPackage = (packageId: number) => {
@@ -684,7 +675,7 @@ const AdminCheckouts = () => {
         member_area_id: checkoutData.member_area_id || null, // Adicionar member_area_id
         name: checkoutData.name, // Salvar o novo campo 'name'
         // product_id agora é derivado do primeiro pacote
-        product_id: checkoutData.form_fields.packages[0]?.associatedProductId || checkoutData.selectedProduct || '', // Use associatedProductId of first package, fallback to selectedProduct
+        product_id: checkoutData.form_fields.packages[0]?.associatedProductIds?.[0] || null, // Use the first associated product ID of the first package as the main product_id
         price: Math.round(checkoutData.form_fields.packages[0]?.price * 100) || 0, // Aplicar Math.round
         promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null, // Aplicar Math.round
         form_fields: {
@@ -884,23 +875,6 @@ const AdminCheckouts = () => {
                         Associe este checkout a uma área de membros específica.
                       </p>
                     </div>
-                    {/* REMOVIDO: Produto Base agora é definido por pacote */}
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="selectedProduct">Produto Base</Label>
-                      <Select value={checkoutData.selectedProduct} onValueChange={value => handleInputChange('selectedProduct', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um produto criado ou deixe em branco para manual" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.filter(product => product.id && product.id.trim() !== '').map(product => <SelectItem key={product.id} value={product.id}>
-                              {product.name}
-                            </SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        Se selecionado, os order bumps do produto serão carregados automaticamente
-                      </p>
-                    </div> */}
                     
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome do Checkout *</Label>
@@ -1044,33 +1018,53 @@ const AdminCheckouts = () => {
                       <div className="space-y-4">
                         <h4 className="font-semibold flex items-center gap-2">
                           <ShoppingBag className="h-5 w-5" />
-                          Produto Associado (Opcional)
+                          Produtos Associados (Opcional)
                         </h4>
                         <p className="text-sm text-muted-foreground">
-                          Associe este pacote a um produto existente. Isso pode preencher automaticamente o nome, descrição e entregável.
+                          Selecione os produtos que serão liberados ao comprar este pacote.
                         </p>
-                        <Select 
-                          value={pkg.associatedProductId || "none"} 
-                          onValueChange={value => {
-                            if (value === "none") {
-                              updatePackage(pkg.id, 'associatedProductId', null);
-                            } else {
-                              loadProductAsPackage(pkg.id, value);
-                            }
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Associar a um produto" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Nenhum Produto Associado</SelectItem>
-                            {products.map(product => (
-                              <SelectItem key={product.id} value={product.id}>
-                                {product.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              {pkg.associatedProductIds && pkg.associatedProductIds.length > 0
+                                ? `${pkg.associatedProductIds.length} produto(s) selecionado(s)`
+                                : "Selecionar produtos..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar produto..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                                <CommandGroup>
+                                  {products.map((product) => (
+                                    <CommandItem
+                                      key={product.id}
+                                      value={product.id}
+                                      onSelect={() => {
+                                        toggleProductAssociation(pkg.id, product.id, !pkg.associatedProductIds?.includes(product.id));
+                                      }}
+                                    >
+                                      <Checkbox
+                                        checked={pkg.associatedProductIds?.includes(product.id)}
+                                        onCheckedChange={(checked) => {
+                                          toggleProductAssociation(pkg.id, product.id, checked as boolean);
+                                        }}
+                                        className="mr-2"
+                                      />
+                                      {product.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       <Separator className="my-4" />
@@ -1102,7 +1096,7 @@ const AdminCheckouts = () => {
                           </Select>
                         </div>
 
-                        {pkg.deliverable?.type !== 'none' && (
+                        {pkg.deliverable?.type !== 'none' && ( // Mostrar nome/descrição se não for 'none'
                           <>
                             <div className="space-y-2">
                               <Label htmlFor={`package-${pkg.id}-deliverableName`}>Nome do Entregável</Label>
