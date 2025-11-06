@@ -1791,33 +1791,33 @@ const AdminCheckouts = () => {
                             <Link className="h-4 w-4" />
                             <span>Arquivo atual: <a href={checkoutData.form_fields.deliverable.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
                             <Button 
-                              type="button" 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleInputChange('form_fields.deliverable.fileUrl', null)}
-                              className="h-6 px-2 text-destructive hover:text-destructive"
-                            >
-                              <XCircle className="h-3 w-3 mr-1" /> Remover
-                            </Button>
-                          </div>
-                        )}
-                        {checkoutDeliverableFile && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                            <Upload className="h-4 w-4" />
-                            <span>Novo arquivo selecionado: {checkoutDeliverableFile.name}</span>
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleCheckoutDeliverableFileChange(null)}
-                              className="h-6 px-2 text-destructive hover:text-destructive"
-                            >
-                              <XCircle className="h-3 w-3 mr-1" /> Remover
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                               type="button" 
+                               variant="ghost" 
+                               size="sm" 
+                               onClick={() => handleInputChange('form_fields.deliverable.fileUrl', null)}
+                               className="h-6 px-2 text-destructive hover:text-destructive"
+                             >
+                               <XCircle className="h-3 w-3 mr-1" /> Remover
+                             </Button>
+                           </div>
+                         )}
+                         {checkoutDeliverableFile && (
+                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                             <Upload className="h-4 w-4" />
+                             <span>Novo arquivo selecionado: {checkoutDeliverableFile.name}</span>
+                             <Button 
+                               type="button" 
+                               variant="ghost" 
+                               size="sm" 
+                               onClick={() => handleCheckoutDeliverableFileChange(null)}
+                               className="h-6 px-2 text-destructive hover:text-destructive"
+                             >
+                               <XCircle className="h-3 w-3 mr-1" /> Remover
+                             </Button>
+                           </div>
+                         )}
+                       </div>
+                     )}
 
                     <Separator />
 

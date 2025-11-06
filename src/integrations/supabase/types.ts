@@ -257,8 +257,8 @@ export type Database = {
       }
       checkouts: {
         Row: {
-          amount: number | null
           created_at: string
+          extra_content: Json | null
           form_fields: Json | null
           id: string
           integrations: Json | null
@@ -277,8 +277,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          amount?: number | null
           created_at?: string
+          extra_content?: Json | null
           form_fields?: Json | null
           id?: string
           integrations?: Json | null
@@ -297,8 +297,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          amount?: number | null
           created_at?: string
+          extra_content?: Json | null
           form_fields?: Json | null
           id?: string
           integrations?: Json | null

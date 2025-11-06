@@ -67,6 +67,7 @@ export interface CheckoutData {
   };
   support_contact: any;
   integrations: any;
+  extra_content?: any; // Novo campo para conteúdo extra
   products: { // This refers to the `checkouts.product_id`
     id: string;
     name: string;

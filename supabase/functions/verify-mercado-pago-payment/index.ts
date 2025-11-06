@@ -252,6 +252,64 @@ serve(async (req) => {
           }
         } // End of for loop for purchasedProductIds
 
+        // --- NOVO: Lógica para conceder acesso a módulos da área de membros ---
+        if (userId && purchasedProductIds.length > 0) {
+          console.log('VERIFY_MP_DEBUG: Iniciando lógica de acesso a módulos da área de membros para userId:', userId);
+          
+          // 1. Encontrar todas as áreas de membros que associam qualquer um dos produtos comprados
+          const { data: memberAreasData, error: memberAreasError } = await supabase
+            .from('member_areas')
+            .select('id, user_id') // Selecionar id e user_id da área de membros
+            .overlaps('associated_products', purchasedProductIds); // Usa o operador @> para verificar se o array contém qualquer um dos IDs
+
+          if (memberAreasError) {
+            console.error('VERIFY_MP_DEBUG: Erro ao buscar áreas de membros associadas:', memberAreasError);
+          } else if (memberAreasData && memberAreasData.length > 0) {
+            console.log('VERIFY_MP_DEBUG: Áreas de membros associadas encontradas:', memberAreasData.map(ma => ma.id));
+
+            for (const memberArea of memberAreasData) {
+              // 2. Para cada área de membros, buscar todos os módulos publicados
+              const { data: modulesData, error: modulesError } = await supabase
+                .from('modules')
+                .select('id')
+                .eq('member_area_id', memberArea.id)
+                .eq('status', 'published');
+
+              if (modulesError) {
+                console.error(`VERIFY_MP_DEBUG: Erro ao buscar módulos publicados para a área ${memberArea.id}:`, modulesError);
+              } else if (modulesData && modulesData.length > 0) {
+                console.log(`VERIFY_MP_DEBUG: Módulos publicados encontrados para a área ${memberArea.id}:`, modulesData.map(m => m.id));
+
+                // 3. Conceder acesso a cada módulo para o usuário
+                const accessInserts = modulesData.map(module => ({
+                  user_id: userId,
+                  module_id: module.id,
+                  is_active: true,
+                  member_area_id: memberArea.id,
+                }));
+
+                if (accessInserts.length > 0) {
+                  const { error: insertAccessError } = await supabase
+                    .from('member_access')
+                    .insert(accessInserts)
+                    .onConflict('user_id, module_id') // Garante idempotência
+                    .doNothing();
+
+                  if (insertAccessError) {
+                    console.error(`VERIFY_MP_DEBUG: Erro ao conceder acesso aos módulos para a área ${memberArea.id}:`, insertAccessError);
+                  } else {
+                    console.log(`VERIFY_MP_DEBUG: Acesso concedido/atualizado para ${accessInserts.length} módulos na área ${memberArea.id} para o usuário ${userId}.`);
+                  }
+                }
+              }
+            }
+          } else {
+            console.log('VERIFY_MP_DEBUG: Nenhum área de membros associada aos produtos comprados.');
+          }
+        }
+        // --- FIM NOVO: Lógica para conceder acesso a módulos da área de membros ---
+
+
         // --- Lógica de envio de e-mail transacional (após aprovação) ---
         const emailTransactionalData = (payment?.metadata as any)?.email_transactional_data;
         console.log('VERIFY_MP_DEBUG: emailTransactionalData do payment metadata:', JSON.stringify(emailTransactionalData, null, 2));
