@@ -256,7 +256,7 @@ const MemberAreaModuleDetails = () => {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-4xl mx-auto w-full">
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full"> {/* Alterado max-w-4xl para max-w-6xl */}
         <Button variant="ghost" asChild className="mb-8 -ml-4" style={{ color: secondaryTextColor }}>
           <Link to={`/membros/${memberAreaId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o painel
