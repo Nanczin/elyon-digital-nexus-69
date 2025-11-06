@@ -33,6 +33,7 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
 
   const fetchCommunityComments = async (postId: string) => {
     setLoadingCommunityComments(true);
+    console.log('ADMIN_COMMUNITY_DEBUG: Fetching community comments for postId:', postId);
     const { data, error } = await supabase
       .from('community_comments')
       .select(`
@@ -44,8 +45,9 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
     
     if (error) {
       toast({ title: "Erro", description: "Falha ao carregar comentários da comunidade.", variant: "destructive" });
-      console.error(error);
+      console.error('ADMIN_COMMUNITY_DEBUG: Error fetching community comments:', error);
     } else {
+      console.log('ADMIN_COMMUNITY_DEBUG: Community comments fetched:', data);
       setCommunityComments(data || []);
     }
     setLoadingCommunityComments(false);
@@ -53,6 +55,7 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
 
   const fetchLessonComments = async (lessonId: string) => {
     setLoadingLessonComments(true);
+    console.log('ADMIN_COMMUNITY_DEBUG: Fetching lesson comments for lessonId:', lessonId);
     const { data, error } = await supabase
       .from('lesson_comments')
       .select(`
@@ -64,8 +67,9 @@ const PostDetailsDialog = ({ post, onClose, memberAreaId }: { post: any, onClose
     
     if (error) {
       toast({ title: "Erro", description: "Falha ao carregar comentários da aula.", variant: "destructive" });
-      console.error(error);
+      console.error('ADMIN_COMMUNITY_DEBUG: Error fetching lesson comments:', error);
     } else {
+      console.log('ADMIN_COMMUNITY_DEBUG: Lesson comments fetched:', data);
       setLessonComments(data || []);
     }
     setLoadingLessonComments(false);

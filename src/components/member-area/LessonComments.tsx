@@ -142,6 +142,14 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
       return;
     }
 
+    const commentToDelete = comments.find(c => c.id === commentId);
+    if (!commentToDelete) {
+      console.error('LESSON_COMMENTS_DEBUG: Comment not found for deletion:', commentId);
+      return;
+    }
+
+    console.log('LESSON_COMMENTS_DEBUG: Attempting to delete comment. User ID:', user.id, 'Comment User ID:', commentToDelete.user_id);
+
     try {
       const { error } = await memberAreaSupabase
         .from('lesson_comments')
@@ -149,7 +157,10 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
         .eq('id', commentId)
         .eq('user_id', user.id); // Ensure only the owner can delete
 
-      if (error) throw error;
+      if (error) {
+        console.error('LESSON_COMMENTS_DEBUG: Error deleting comment:', error);
+        throw error;
+      }
 
       toast({
         title: 'Sucesso',
@@ -157,7 +168,7 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
       });
       // Realtime listener will trigger fetchComments
     } catch (error: any) {
-      console.error('Error deleting comment:', error);
+      console.error('LESSON_COMMENTS_DEBUG: Error deleting comment in catch block:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível excluir o comentário.',
