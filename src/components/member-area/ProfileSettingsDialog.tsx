@@ -254,14 +254,14 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <Label htmlFor="name" style={{ color: textColor }} className="text-sm sm:text-base">Nome</Label> {/* Ajustado text size */}
+                      <FormLabel htmlFor="name" style={{ color: textColor }} className="text-sm sm:text-base">Nome</FormLabel> {/* Ajustado text size */}
                       <FormControl>
                         <Input 
                           id="name" 
                           placeholder="Seu nome completo" 
                           {...field} 
                           style={{ backgroundColor: cardBackground, color: textColor, borderColor: secondaryTextColor + '40' }}
-                          className="text-sm sm:text-base" {/* Ajustado text size */}
+                          className="text-sm sm:text-base"
                         />
                       </FormControl>
                       <FormMessage className="text-xs sm:text-sm" /> {/* Ajustado text size */}
@@ -290,7 +290,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   name="newPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <Label htmlFor="newPassword" style={{ color: textColor }} className="text-sm sm:text-base">Nova Senha</Label> {/* Ajustado text size */}
+                      <FormLabel htmlFor="newPassword" style={{ color: textColor }} className="text-sm sm:text-base">Nova Senha</FormLabel> {/* Ajustado text size */}
                       <div className="relative">
                         <FormControl>
                           <Input
@@ -326,7 +326,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <Label htmlFor="confirmPassword" style={{ color: textColor }} className="text-sm sm:text-base">Confirmar Nova Senha</Label> {/* Ajustado text size */}
+                      <FormLabel htmlFor="confirmPassword" style={{ color: textColor }} className="text-sm sm:text-base">Confirmar Nova Senha</FormLabel> {/* Ajustado text size */}
                       <div className="relative">
                         <FormControl>
                           <Input
