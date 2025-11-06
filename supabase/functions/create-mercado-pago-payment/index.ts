@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"; // Updated Supabase JS version
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"; // Corrected: Added 'from' keyword
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -161,7 +161,6 @@ serve(async (req) => {
         order_bumps: orderBumps,
         selected_package: selectedPackage,
         payment_method: paymentMethod,
-        // final_product_id: finalProductId, // Removed: now using purchasedProductIds array
         purchased_product_ids: purchasedProductIds, // NEW: Pass all purchased product IDs
         // Adicionar todos os dados de e-mail transacional e entregável aqui
         email_transactional_data: emailMetadata,
@@ -323,7 +322,6 @@ serve(async (req) => {
           customer_data: customerData,
           order_bumps: orderBumps,
           selected_package: selectedPackage,
-          // final_product_id: finalProductId, // Removed: now using purchasedProductIds array
           purchased_product_ids: purchasedProductIds, // Persist all purchased product IDs
           payment_method: paymentMethod,
           // Persistir os dados de e-mail transacional e entregável no metadata do pagamento
