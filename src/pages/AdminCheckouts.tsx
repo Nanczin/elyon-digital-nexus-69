@@ -472,7 +472,7 @@ const AdminCheckouts = () => {
   const addPackage = () => {
     const newPackages = [...checkoutData.form_fields.packages, {
       id: Date.now(),
-      name: '',
+      name: 'Novo Pacote', // Default name for new package
       description: '',
       topics: [''],
       price: 0,
@@ -898,17 +898,19 @@ const AdminCheckouts = () => {
                     </Button>
                   </div>
                   
-                  {checkoutData.form_fields.packages.map((pkg: PackageConfig, index: number) => <Card key={pkg.id} className="p-4">
+                  {checkoutData.form_fields.packages.map((pkg: PackageConfig, index: number) => (
+                    <Card key={pkg.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold flex items-center gap-2">
                           <Package className="h-4 w-4" />
                           Pacote {index + 1}
                         </h4>
-                        {checkoutData.form_fields.packages.length > 1 && <Button type="button" variant="destructive" size="sm" onClick={() => removePackage(pkg.id)}>
+                        {checkoutData.form_fields.packages.length > 1 && (
+                          <Button type="button" variant="destructive" size="sm" onClick={() => removePackage(pkg.id)}>
                             <Trash2 className="h-4 w-4" />
-                          </Button>}
+                          </Button>
+                        )}
                       </div>
-            
             
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="space-y-2">
@@ -961,12 +963,16 @@ const AdminCheckouts = () => {
                           </Button>
                         </div>
                         
-                         {pkg.topics.map((topic, topicIndex) => <div key={topicIndex} className="flex items-center gap-2">
+                         {pkg.topics.map((topic, topicIndex) => (
+                           <div key={topicIndex} className="flex items-center gap-2">
                               <Input value={topic} onChange={e => updatePackageTopic(pkg.id, topicIndex, e.target.value)} placeholder="Ex: Acesso vitalício: ao conteúdo" />
-                             {pkg.topics.length > 1 && <Button type="button" variant="destructive" size="sm" onClick={() => removeTopicFromPackage(pkg.id, topicIndex)}>
+                             {pkg.topics.length > 1 && (
+                               <Button type="button" variant="destructive" size="sm" onClick={() => removeTopicFromPackage(pkg.id, topicIndex)}>
                                  <Trash2 className="h-4 w-4" />
-                               </Button>}
-                           </div>)}
+                               </Button>
+                             )}
+                           </div>
+                         ))}
                          <div className="text-xs text-muted-foreground mt-2">
                            💡 O texto antes dos dois pontos (:) será destacado em negrito automaticamente
                          </div>
@@ -1025,7 +1031,8 @@ const AdminCheckouts = () => {
                           </PopoverContent>
                         </Popover>
                       </div>
-                    </Card>}
+                    </Card>
+                  ))}
                 </TabsContent>
 
                 <TabsContent value="bumps" className="space-y-4">
@@ -1037,7 +1044,8 @@ const AdminCheckouts = () => {
                     </Button>
                   </div>
                   
-                  {checkoutData.order_bumps.map((bump, index) => <Card key={bump.id} className="p-4">
+                  {checkoutData.order_bumps.map((bump, index) => (
+                    <Card key={bump.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold flex items-center gap-2">
                           <DollarSign className="h-4 w-4" />
@@ -1062,12 +1070,14 @@ const AdminCheckouts = () => {
                               <SelectValue placeholder="Selecione um produto ou configure manualmente" />
                             </SelectTrigger>
                             <SelectContent>
-                              {products.filter(product => product.id && product.id.trim() !== '').map(product => <SelectItem key={product.id} value={product.id}>
+                              {products.filter(product => product.id && product.id.trim() !== '').map(product => (
+                                <SelectItem key={product.id} value={product.id}>
                                   <div className="flex items-center gap-2">
                                     <Package className="h-4 w-4" />
                                     {product.name}
                                   </div>
-                                </SelectItem>)}
+                                </SelectItem>
+                              ))}
                               <SelectItem value="manual">
                                 <div className="flex items-center gap-2">
                                   <Edit className="h-4 w-4" />
@@ -1114,7 +1124,8 @@ const AdminCheckouts = () => {
                              <p className="text-sm">{products.find(p => p.id === bump.selectedProduct)?.description || 'Nenhuma descrição disponível'}</p>
                            </div>}
                       </div>
-                    </Card>}
+                    </Card>
+                  ))}
                 </TabsContent>
 
                 <TabsContent value="guarantee" className="space-y-4">
