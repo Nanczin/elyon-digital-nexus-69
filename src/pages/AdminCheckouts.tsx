@@ -57,7 +57,7 @@ const AdminCheckouts = () => {
   const [currentTab, setCurrentTab] = useState('basic');
   
   // State to manage file uploads for package deliverables
-  const [packageDeliverableFiles, setPackageDeliverableFiles] = useState<Record<number, File | null>>({});
+  // const [packageDeliverableFiles, setPackageDeliverableFiles] = useState<Record<number, File | null>>({}); // REMOVIDO
   // State to manage file upload for checkout-level deliverable
   const [checkoutDeliverableFile, setCheckoutDeliverableFile] = useState<File | null>(null);
 
@@ -81,7 +81,7 @@ const AdminCheckouts = () => {
           originalPrice: 0,
           mostSold: false,
           associatedProductIds: [], // Changed to array
-          deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null } // New default
+          // deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null } // REMOVIDO
         }] as PackageConfig[],
         guarantee: {
           enabled: true,
@@ -192,21 +192,21 @@ const AdminCheckouts = () => {
       originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
       mostSold: pkg.mostSold ?? false,
       associatedProductIds: Array.isArray(pkg.associatedProductIds) ? pkg.associatedProductIds : (pkg.associatedProductId ? [pkg.associatedProductId] : []), // Load new field, handle old single ID
-      deliverable: pkg.deliverable || initial.form_fields.packages[0].deliverable // Load new field
+      // deliverable: pkg.deliverable || initial.form_fields.packages[0].deliverable // REMOVIDO
     })) : initial.form_fields.packages; // Usar initial.form_fields.packages como fallback
 
     // Definir o arquivo selecionado localmente se houver um fileUrl existente
     if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
       setCheckoutDeliverableFile(null); // Clear local file state for checkout-level deliverable
     }
-    // Clear local file states for package deliverables
-    const initialPackageFiles: Record<number, File | null> = {};
-    packagesConfig.forEach(pkg => {
-      if (pkg.deliverable?.fileUrl && pkg.deliverable?.type === 'upload') {
-        initialPackageFiles[pkg.id] = null;
-      }
-    });
-    setPackageDeliverableFiles(initialPackageFiles);
+    // Clear local file states for package deliverables // REMOVIDO
+    // const initialPackageFiles: Record<number, File | null> = {};
+    // packagesConfig.forEach(pkg => {
+    //   if (pkg.deliverable?.fileUrl && pkg.deliverable?.type === 'upload') {
+    //     initialPackageFiles[pkg.id] = null;
+    //   }
+    // });
+    // setPackageDeliverableFiles(initialPackageFiles);
 
 
     return deepMerge(initial, { // Usar deepMerge para garantir que todos os campos padrão estejam presentes
@@ -405,7 +405,7 @@ const AdminCheckouts = () => {
       loadData(originalData); // Usar loadData para sobrescrever o estado
       clearSavedData(); // Limpar o rascunho do localStorage
       setCheckoutDeliverableFile(null); // Limpar checkout-level file
-      setPackageDeliverableFiles({}); // Limpar package-level files
+      // setPackageDeliverableFiles({}); // REMOVIDO
       
       toast({
         title: "Dados recarregados",
@@ -415,7 +415,7 @@ const AdminCheckouts = () => {
       loadData(getInitialFormData()); // Para novo checkout, resetar para initialFormData
       clearSavedData();
       setCheckoutDeliverableFile(null); // Limpar checkout-level file
-      setPackageDeliverableFiles({}); // Limpar package-level files
+      // setPackageDeliverableFiles({}); // REMOVIDO
       toast({
         title: "Formulário limpo",
         description: "Formulário resetado para valores padrão"
@@ -431,7 +431,7 @@ const AdminCheckouts = () => {
     
     // Limpar os arquivos selecionados localmente ao iniciar a edição
     setCheckoutDeliverableFile(null);
-    setPackageDeliverableFiles({});
+    // setPackageDeliverableFiles({}); // REMOVIDO
 
     setIsDialogOpen(true);
   };
@@ -485,16 +485,16 @@ const AdminCheckouts = () => {
     }
   };
 
-  const handlePackageDeliverableFileChange = (packageId: number, file: File | null) => {
-    setPackageDeliverableFiles(prev => ({ ...prev, [packageId]: file }));
-    if (file) {
-      const packageIndex = checkoutData.form_fields.packages.findIndex((p: PackageConfig) => p.id === packageId);
-      if (packageIndex !== -1) {
-        handleInputChange(`form_fields.packages[${packageIndex}].deliverable.link`, null); // Clear existing link
-        handleInputChange(`form_fields.packages[${packageIndex}].deliverable.fileUrl`, null); // Clear existing fileUrl
-      }
-    }
-  };
+  // const handlePackageDeliverableFileChange = (packageId: number, file: File | null) => { // REMOVIDO
+  //   setPackageDeliverableFiles(prev => ({ ...prev, [packageId]: file }));
+  //   if (file) {
+  //     const packageIndex = checkoutData.form_fields.packages.findIndex((p: PackageConfig) => p.id === packageId);
+  //     if (packageIndex !== -1) {
+  //       handleInputChange(`form_fields.packages[${packageIndex}].deliverable.link`, null); // Clear existing link
+  //       handleInputChange(`form_fields.packages[${packageIndex}].deliverable.fileUrl`, null); // Clear existing fileUrl
+  //     }
+  //   }
+  // };
 
   const addPackage = () => {
     const newPackages = [...checkoutData.form_fields.packages, {
@@ -506,7 +506,7 @@ const AdminCheckouts = () => {
       originalPrice: 0,
       mostSold: false,
       associatedProductIds: [], // Changed to array
-      deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null }
+      // deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null } // REMOVIDO
     }] as PackageConfig[]; // Tipado explicitamente
     handleInputChange('form_fields.packages', newPackages);
   };
@@ -517,11 +517,11 @@ const AdminCheckouts = () => {
       return;
     }
     handleInputChange('form_fields.packages', newPackages);
-    setPackageDeliverableFiles(prev => {
-      const newState = { ...prev };
-      delete newState[id];
-      return newState;
-    });
+    // setPackageDeliverableFiles(prev => { // REMOVIDO
+    //   const newState = { ...prev };
+    //   delete newState[id];
+    //   return newState;
+    // });
   };
   const updatePackage = (id: number, field: string, value: any) => {
     const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === id ? {
@@ -663,24 +663,24 @@ const AdminCheckouts = () => {
         finalCheckoutDeliverable.link = null;
       }
 
-      // Handle package-level deliverable file uploads
-      const packagesWithDeliverables = await Promise.all(
-        checkoutData.form_fields.packages.map(async (pkg: PackageConfig) => {
-          let packageDeliverable: DeliverableConfig = { ...pkg.deliverable };
-          const fileForPackage = packageDeliverableFiles[pkg.id];
+      // Handle package-level deliverable file uploads // REMOVIDO
+      // const packagesWithDeliverables = await Promise.all(
+      //   checkoutData.form_fields.packages.map(async (pkg: PackageConfig) => {
+      //     let packageDeliverable: DeliverableConfig = { ...pkg.deliverable };
+      //     const fileForPackage = packageDeliverableFiles[pkg.id];
 
-          if (packageDeliverable.type === 'upload' && fileForPackage) {
-            console.log(`ADMIN_CHECKOUTS_DEBUG: Uploading package ${pkg.id} deliverable file:`, fileForPackage.name);
-            packageDeliverable.fileUrl = await uploadFile(fileForPackage, `package-deliverables/${pkg.id}`);
-          } else if (packageDeliverable.type === 'link') {
-            packageDeliverable.fileUrl = packageDeliverable.link; // Use link as fileUrl for consistency
-          } else {
-            packageDeliverable.fileUrl = null;
-            packageDeliverable.link = null;
-          }
-          return { ...pkg, deliverable: packageDeliverable };
-        })
-      );
+      //     if (packageDeliverable.type === 'upload' && fileForPackage) {
+      //       console.log(`ADMIN_CHECKOUTS_DEBUG: Uploading package ${pkg.id} deliverable file:`, fileForPackage.name);
+      //       packageDeliverable.fileUrl = await uploadFile(fileForPackage, `package-deliverables/${pkg.id}`);
+      //     } else if (packageDeliverable.type === 'link') {
+      //       packageDeliverable.fileUrl = packageDeliverable.link; // Use link as fileUrl for consistency
+      //     } else {
+      //       packageDeliverable.fileUrl = null;
+      //       packageDeliverable.link = null;
+      //     }
+      //     return { ...pkg, deliverable: packageDeliverable };
+      //   })
+      // );
 
       const checkoutPayload = {
         user_id: user?.id, // Adicionar user_id
@@ -692,7 +692,7 @@ const AdminCheckouts = () => {
         promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null, // Aplicar Math.round
         form_fields: {
           ...checkoutData.form_fields, // Usar o objeto form_fields já estruturado
-          packages: packagesWithDeliverables.map(pkg => ({ // Converter preços de pacotes para centavos
+          packages: checkoutData.form_fields.packages.map(pkg => ({ // Converter preços de pacotes para centavos
             ...pkg,
             price: Math.round(pkg.price * 100), // Aplicar Math.round
             originalPrice: Math.round((pkg.originalPrice || 0) * 100) // Aplicar Math.round
@@ -737,7 +737,7 @@ const AdminCheckouts = () => {
       setEditingCheckout(null);
       clearSavedData(); // Limpar dados salvos após salvar com sucesso
       setCheckoutDeliverableFile(null); // Limpar checkout-level file after save
-      setPackageDeliverableFiles({}); // Limpar package-level files after save
+      // setPackageDeliverableFiles({}); // REMOVIDO
       fetchCheckouts();
     } catch (error: any) { // Improved error logging
       console.error('ADMIN_CHECKOUTS_DEBUG: Detailed error saving checkout:', error);
@@ -1079,7 +1079,8 @@ const AdminCheckouts = () => {
                         </Popover>
                       </div>
 
-                      <Separator className="my-4" />
+                      {/* REMOVIDO: Entregável do Pacote (Opcional) */}
+                      {/* <Separator className="my-4" />
 
                       <div className="space-y-4">
                         <h4 className="font-semibold flex items-center gap-2">
@@ -1187,8 +1188,8 @@ const AdminCheckouts = () => {
                             )}
                           </div>
                         )}
-                      </div>
-                    </Card>)}
+                      </div> */}
+                    </Card>}
                 </TabsContent>
 
                 <TabsContent value="bumps" className="space-y-4">
@@ -1898,14 +1899,16 @@ const AdminCheckouts = () => {
 
               </Tabs>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsDialogOpen(false);
-                  setEditingCheckout(null);
-                }}>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)}
+                  className="text-sm"
+                >
                   Cancelar
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={isLoading} className="text-sm">
                   {editingCheckout ? 'Salvar Alterações' : 'Criar Checkout'}
                 </Button>
               </div>

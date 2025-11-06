@@ -24,7 +24,7 @@ const PaymentSuccess = () => {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
   const [productData, setProductData] = useState<CheckoutData['products'] | null>(null); // Main checkout product
   const [checkoutDeliverable, setCheckoutDeliverable] = useState<DeliverableConfig | null>(null); // Checkout-level deliverable
-  const [packageDeliverable, setPackageDeliverable] = useState<DeliverableConfig | null>(null); // Package-specific deliverable
+  // const [packageDeliverable, setPackageDeliverable] = useState<DeliverableConfig | null>(null); // REMOVIDO
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
   const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null);
@@ -44,21 +44,21 @@ const PaymentSuccess = () => {
   const deriveDeliverableLink = (
     product: CheckoutData['products'] | null,
     checkoutDeliverableConfig: DeliverableConfig | null,
-    packageDeliverableConfig: DeliverableConfig | null, // New parameter
+    // packageDeliverableConfig: DeliverableConfig | null, // REMOVIDO
     emailTransactionalDeliverableLink: string | null
   ): string | null => {
-    console.log('PAYMENT_SUCCESS_DEBUG: deriveDeliverableLink called with:', { product, checkoutDeliverableConfig, packageDeliverableConfig, emailTransactionalDeliverableLink });
+    console.log('PAYMENT_SUCCESS_DEBUG: deriveDeliverableLink called with:', { product, checkoutDeliverableConfig, emailTransactionalDeliverableLink });
     
     // 1. Prioritize link from emailTransactionalDeliverableLink (passed from Edge Function)
     if (emailTransactionalDeliverableLink) {
       console.log('PAYMENT_SUCCESS_DEBUG: Derived link from emailTransactionalDeliverableLink (highest priority):', emailTransactionalDeliverableLink);
       return emailTransactionalDeliverableLink;
     }
-    // 2. Then, package-specific deliverable
-    if (packageDeliverableConfig?.type !== 'none' && (packageDeliverableConfig?.link || packageDeliverableConfig?.fileUrl)) {
-      console.log('PAYMENT_SUCCESS_DEBUG: Derived link from packageDeliverableConfig:', packageDeliverableConfig.link || packageDeliverableConfig.fileUrl);
-      return packageDeliverableConfig.link || packageDeliverableConfig.fileUrl;
-    }
+    // 2. Then, package-specific deliverable // REMOVIDO
+    // if (packageDeliverableConfig?.type !== 'none' && (packageDeliverableConfig?.link || packageDeliverableConfig?.fileUrl)) {
+    //   console.log('PAYMENT_SUCCESS_DEBUG: Derived link from packageDeliverableConfig:', packageDeliverableConfig.link || packageDeliverableConfig.fileUrl);
+    //   return packageDeliverableConfig.link || packageDeliverableConfig.fileUrl;
+    // }
     // 3. Then, checkout-level deliverable
     if (checkoutDeliverableConfig?.type !== 'none' && (checkoutDeliverableConfig?.link || checkoutDeliverableConfig?.fileUrl)) {
       console.log('PAYMENT_SUCCESS_DEBUG: Derived link from checkoutDeliverableConfig:', checkoutDeliverableConfig.link || checkoutDeliverableConfig.fileUrl);
@@ -134,29 +134,29 @@ const PaymentSuccess = () => {
       const currentCheckoutDeliverableConfig = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
       
-      // Get package-specific deliverable from fetched payment
-      const selectedPackageId = (fetchedPaymentFromDb.metadata as any)?.selected_package;
-      const packages = fetchedPaymentFromDb.checkouts?.form_fields?.packages as PackageConfig[] || [];
-      const selectedPackageDetails = packages.find(pkg => pkg.id === selectedPackageId);
-      const currentPackageDeliverableConfig = selectedPackageDetails?.deliverable || null;
+      // Get package-specific deliverable from fetched payment // REMOVIDO
+      // const selectedPackageId = (fetchedPaymentFromDb.metadata as any)?.selected_package;
+      // const packages = fetchedPaymentFromDb.checkouts?.form_fields?.packages as PackageConfig[] || [];
+      // const selectedPackageDetails = packages.find(pkg => pkg.id === selectedPackageId);
+      // const currentPackageDeliverableConfig = selectedPackageDetails?.deliverable || null;
 
       setProductData(currentProduct);
       setCheckoutDeliverable(currentCheckoutDeliverableConfig);
-      setPackageDeliverable(currentPackageDeliverableConfig); // Set package-specific deliverable
+      // setPackageDeliverable(currentPackageDeliverableConfig); // REMOVIDO
       setSendTransactionalEmail(currentSendTransactionalEmail);
 
       const determinedLink = deriveDeliverableLink(
         currentProduct,
         currentCheckoutDeliverableConfig,
-        currentPackageDeliverableConfig, // Pass package-specific deliverable
+        // currentPackageDeliverableConfig, // REMOVIDO
         emailTransactionalDeliverableLink
       );
       setDeliverableLinkToDisplay(determinedLink);
-      console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentCheckoutDeliverableConfig, currentPackageDeliverableConfig, determinedLink, currentSendTransactionalEmail });
+      console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentCheckoutDeliverableConfig, determinedLink, currentSendTransactionalEmail });
     } else {
       setProductData(null);
       setCheckoutDeliverable(null);
-      setPackageDeliverable(null); // Clear package-specific deliverable
+      // setPackageDeliverable(null); // REMOVIDO
       setDeliverableLinkToDisplay(null);
       setSendTransactionalEmail(true); // Default to true if no specific data
     }
@@ -178,20 +178,20 @@ const PaymentSuccess = () => {
       const checkoutDeliverableFromLocalStorage = initialPaymentData.payment?.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const emailTransactionalDeliverableLinkFromLocalStorage = initialPaymentData.deliverableLink || null;
       
-      // Get package-specific deliverable from localStorage
-      const selectedPackageId = initialPaymentData.selectedPackage;
-      const packages = initialPaymentData.payment?.checkouts?.form_fields?.packages as PackageConfig[] || [];
-      const selectedPackageDetails = packages.find(pkg => pkg.id === selectedPackageId);
-      const packageDeliverableFromLocalStorage = selectedPackageDetails?.deliverable || null;
+      // Get package-specific deliverable from localStorage // REMOVIDO
+      // const selectedPackageId = initialPaymentData.selectedPackage;
+      // const packages = initialPaymentData.payment?.checkouts?.form_fields?.packages as PackageConfig[] || [];
+      // const selectedPackageDetails = packages.find(pkg => pkg.id === selectedPackageId);
+      // const packageDeliverableFromLocalStorage = selectedPackageDetails?.deliverable || null;
 
       setProductData(productFromLocalStorage);
       setCheckoutDeliverable(checkoutDeliverableFromLocalStorage);
-      setPackageDeliverable(packageDeliverableFromLocalStorage); // Set package-specific deliverable
+      // setPackageDeliverable(packageDeliverableFromLocalStorage); // REMOVIDO
 
       const initialDeterminedLink = deriveDeliverableLink(
         productFromLocalStorage,
         checkoutDeliverableFromLocalStorage,
-        packageDeliverableFromLocalStorage, // Pass package-specific deliverable
+        // packageDeliverableFromLocalStorage, // REMOVIDO
         emailTransactionalDeliverableLinkFromLocalStorage
       );
       setDeliverableLinkToDisplay(initialDeterminedLink);
@@ -290,9 +290,9 @@ const PaymentSuccess = () => {
 
   const getDeliverableButtonText = (link: string | null) => {
     if (!link) return 'Acessar Produto';
-    if (packageDeliverable?.name) { // Prioritize package deliverable name
-      return `Acessar ${packageDeliverable.name}`;
-    }
+    // if (packageDeliverable?.name) { // REMOVIDO
+    //   return `Acessar ${packageDeliverable.name}`;
+    // }
     if (checkoutDeliverable?.name) { // Then checkout-level deliverable name
       return `Acessar ${checkoutDeliverable.name}`;
     }
@@ -349,12 +349,13 @@ const PaymentSuccess = () => {
                 {deliverableLinkToDisplay && (
                   <div className="bg-white border border-green-200 rounded-lg p-6 space-y-4">
                     <h3 className="font-semibold text-lg text-gray-800">
-                      {packageDeliverable?.name || checkoutDeliverable?.name || productData?.name || 'Seu Produto'}
+                      {/* {packageDeliverable?.name || checkoutDeliverable?.name || productData?.name || 'Seu Produto'} */}
+                      {checkoutDeliverable?.name || productData?.name || 'Seu Produto'}
                     </h3>
                     
-                    {(packageDeliverable?.description || checkoutDeliverable?.description || productData?.description) && (
+                    {(/* packageDeliverable?.description || */ checkoutDeliverable?.description || productData?.description) && (
                       <p className="text-gray-600 text-sm">
-                        {packageDeliverable?.description || checkoutDeliverable?.description || productData?.description}
+                        {/* {packageDeliverable?.description || */ checkoutDeliverable?.description || productData?.description}
                       </p>
                     )}
                     

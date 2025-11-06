@@ -1691,7 +1691,7 @@ export interface PackageConfig {
   originalPrice: number; // in Reais
   mostSold?: boolean;
   associatedProductIds?: string[] | null; // Changed to array
-  deliverable?: DeliverableConfig; // New: Package-specific deliverable
+  // deliverable?: DeliverableConfig; // New: Package-specific deliverable
 }
 
 export interface GuaranteeConfig {

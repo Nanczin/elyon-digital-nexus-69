@@ -326,7 +326,7 @@ const Checkout = () => {
       
       // Determine the selected package and its associated product/deliverable
       const selectedPackageDetails = checkout?.form_fields?.packages?.find(pkg => pkg.id === selectedPackage);
-      const packageDeliverable = selectedPackageDetails?.deliverable;
+      // const packageDeliverable = selectedPackageDetails?.deliverable; // REMOVIDO
 
       // Gather all purchased product IDs (from selected package and all enabled order bumps)
       const purchasedProductIds: string[] = [];
@@ -343,9 +343,10 @@ const Checkout = () => {
 
       // Determine the final deliverable link based on priority: package > checkout-level > main product
       let finalDeliverableLink: string | null = null;
-      if (packageDeliverable?.type !== 'none' && (packageDeliverable?.link || packageDeliverable?.fileUrl)) {
-        finalDeliverableLink = packageDeliverable.link || packageDeliverable.fileUrl || null;
-      } else if (checkout?.form_fields?.deliverable?.type !== 'none' && (checkout?.form_fields?.deliverable?.link || checkout?.form_fields?.deliverable?.fileUrl)) {
+      // if (packageDeliverable?.type !== 'none' && (packageDeliverable?.link || packageDeliverable?.fileUrl)) { // REMOVIDO
+      //   finalDeliverableLink = packageDeliverable.link || packageDeliverable.fileUrl || null;
+      // } else 
+      if (checkout?.form_fields?.deliverable?.type !== 'none' && (checkout?.form_fields?.deliverable?.link || checkout?.form_fields?.deliverable?.fileUrl)) {
         finalDeliverableLink = checkout.form_fields.deliverable.link || checkout.form_fields.deliverable.fileUrl || null;
       } else if (checkout?.products?.member_area_link || checkout?.products?.file_url) {
         finalDeliverableLink = checkout.products.member_area_link || checkout.products.file_url || null;
