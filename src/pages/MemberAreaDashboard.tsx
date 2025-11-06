@@ -5,7 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut } from 'lucide-react';
+import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut, Lock } from 'lucide-react'; // Adicionado Lock
 import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -16,6 +16,8 @@ import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Impor
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
+type ProductAccess = Tables<'product_access'>;
+type Checkout = Tables<'checkouts'>;
 
 const MemberAreaDashboard = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();
@@ -27,6 +29,8 @@ const MemberAreaDashboard = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
+  const [userProductAccessIds, setUserProductAccessIds] = useState<string[]>([]); // IDs dos produtos que o usuário tem acesso
+  const [productCheckoutLinks, setProductCheckoutLinks] = useState<Record<string, string>>({}); // Mapeia productId para checkoutLink
 
   const fetchMemberAreaAndContent = useCallback(async () => {
     if (!memberAreaId || !user?.id) {
@@ -82,7 +86,7 @@ const MemberAreaDashboard = () => {
       }
       setHasAccess(true);
 
-      // 4. Fetch modules the user has access to
+      // 4. Fetch modules the user has access to (or all modules if not restricted by product_id)
       const { data: modulesData, error: modulesError } = await supabase
         .from('modules')
         .select(`
@@ -101,6 +105,38 @@ const MemberAreaDashboard = () => {
       } else {
         setModules(modulesData || []);
       }
+
+      // 5. Fetch user's product access
+      const { data: accessData, error: accessError } = await supabase
+        .from('product_access')
+        .select('product_id')
+        .eq('user_id', user.id);
+      if (accessError) console.error('Error fetching product access:', accessError);
+      const accessedProductIds = accessData?.map(a => a.product_id).filter(Boolean) as string[] || [];
+      setUserProductAccessIds(accessedProductIds);
+      console.log('MEMBER_AREA_DASHBOARD_DEBUG: User has access to products:', accessedProductIds);
+
+      // 6. Fetch checkout links for products associated with modules
+      const moduleProductIds = modulesData?.map(m => m.product_id).filter(Boolean) as string[] || [];
+      const uniqueModuleProductIds = [...new Set(moduleProductIds)];
+      const checkoutLinksMap: Record<string, string> = {};
+
+      if (uniqueModuleProductIds.length > 0) {
+        const { data: checkoutsForProducts, error: checkoutsError } = await supabase
+          .from('checkouts')
+          .select('id, product_id')
+          .in('product_id', uniqueModuleProductIds);
+
+        if (checkoutsError) console.error('Error fetching checkouts for products:', checkoutsError);
+
+        checkoutsForProducts?.forEach(chk => {
+          if (chk.product_id && !checkoutLinksMap[chk.product_id]) {
+            checkoutLinksMap[chk.product_id] = `/checkout/${chk.id}`;
+          }
+        });
+      }
+      setProductCheckoutLinks(checkoutLinksMap);
+      console.log('MEMBER_AREA_DASHBOARD_DEBUG: Product checkout links:', checkoutLinksMap);
 
     } catch (error: any) {
       console.error('Error in MemberAreaDashboard:', error);
@@ -246,49 +282,74 @@ const MemberAreaDashboard = () => {
             <p className="text-memberArea-text-muted">Nenhum módulo disponível para você ainda.</p>
           )}
           {modules.length > 0 && (
-            modules.map((module) => (
-              <Card 
-                key={module.id} 
-                className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
-                style={{ backgroundColor: cardBackground }}
-              >
-                <div className="relative aspect-video w-full bg-gray-200 h-48">
-                  {module.banner_url && (
-                    <img 
-                      src={module.banner_url} 
-                      alt={module.title} 
-                      className="w-full h-full object-cover" 
-                    />
-                  )}
-                  {/* Placeholder para o badge de concluído */}
-                  {module.title.includes('Boas-vindas') || module.title.includes('30 Dias') || module.title.includes('Exercícios') ? (
-                    <div 
-                      className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: checkmarkBgColor }}
-                    >
-                      <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
-                    </div>
-                  ) : null}
-                </div>
-                <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
-                  <h3 className="text-xl font-bold" style={{ color: textColor }}>
-                    {module.title}
-                  </h3>
-                  <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
-                    {module.description}
-                  </p>
-                  <Button 
-                    className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
-                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
-                    asChild
-                  >
-                    <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
-                      Acessar Módulo <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))
+            modules.map((module) => {
+              const isLocked = module.product_id && !userProductAccessIds.includes(module.product_id);
+              const checkoutLink = module.product_id ? productCheckoutLinks[module.product_id] : null;
+
+              return (
+                <Card 
+                  key={module.id} 
+                  className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative"
+                  style={{ backgroundColor: cardBackground }}
+                >
+                  <div className="relative aspect-video w-full bg-gray-200 h-48">
+                    {module.banner_url && (
+                      <img 
+                        src={module.banner_url} 
+                        alt={module.title} 
+                        className={`w-full h-full object-cover ${isLocked ? 'filter blur-sm' : ''}`} 
+                      />
+                    )}
+                    {/* Placeholder para o badge de concluído */}
+                    {!isLocked && (module.title.includes('Boas-vindas') || module.title.includes('30 Dias') || module.title.includes('Exercícios')) ? (
+                      <div 
+                        className="absolute top-4 right-4 p-2 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: checkmarkBgColor }}
+                      >
+                        <Check className="h-5 w-5" style={{ color: checkmarkIconColor }} />
+                      </div>
+                    ) : null}
+                  </div>
+                  <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
+                    <h3 className="text-xl font-bold" style={{ color: textColor }}>
+                      {module.title}
+                    </h3>
+                    <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
+                      {module.description}
+                    </p>
+                    {isLocked ? (
+                      <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 rounded-xl">
+                          <Lock className="h-12 w-12 text-white mb-4" />
+                          <p className="text-white text-lg font-semibold text-center mb-4">
+                              Módulo Bloqueado
+                          </p>
+                          {checkoutLink ? (
+                              <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}>
+                                  <Link to={checkoutLink}>
+                                      Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
+                                  </Link>
+                              </Button>
+                          ) : (
+                              <p className="text-white text-sm text-center">
+                                  Produto associado não encontrado ou sem checkout.
+                              </p>
+                          )}
+                      </div>
+                    ) : (
+                      <Button 
+                        className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
+                        style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                        asChild
+                      >
+                        <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
+                          Acessar Módulo <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
