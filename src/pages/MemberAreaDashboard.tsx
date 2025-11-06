@@ -194,8 +194,6 @@ const MemberAreaDashboard = () => {
   const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
   const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
-  const checkmarkBgColor = currentSettings.colors?.checkmark_background || 'hsl(var(--member-area-checkmark-background))';
-  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
   const userInitial = userName.charAt(0).toUpperCase();
@@ -268,7 +266,7 @@ const MemberAreaDashboard = () => {
       </header>
 
       {/* SEÇÃO DE BOAS-VINDAS */}
-      <div className="flex-1 px-8 py-16 text-center space-y-6">
+      <div className="flex-1 px-8 py-16 text-center space-y-6 max-w-6xl mx-auto w-full">
         <h1 className="text-5xl font-semibold leading-tight" style={{ color: textColor }}>
           Olá, {userName}!
         </h1>
@@ -277,7 +275,7 @@ const MemberAreaDashboard = () => {
         </p>
 
         {/* CARDS DE MÓDULOS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
           {modules.length === 0 && (
             <p className="text-memberArea-text-muted">Nenhum módulo disponível para você ainda.</p>
           )}
