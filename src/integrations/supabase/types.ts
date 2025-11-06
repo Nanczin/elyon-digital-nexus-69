@@ -1717,3 +1717,19 @@ export interface EmailConfig {
   secure?: boolean;
   provider?: string;
 }
+
+// Export FormFields
+export interface FormFields {
+  requireName?: boolean;
+  requireEmail?: boolean;
+  requireEmailConfirm?: boolean;
+  requirePhone?: boolean;
+  requireCpf?: boolean;
+  packages?: PackageConfig[];
+  deliverable?: DeliverableConfig;
+  sendTransactionalEmail?: boolean;
+  transactionalEmailSubject?: string;
+  transactionalEmailBody?: string;
+  guarantee?: GuaranteeConfig;
+  reservedRights?: ReservedRightsConfig;
+}

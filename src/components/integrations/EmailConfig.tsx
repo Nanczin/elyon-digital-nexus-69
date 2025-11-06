@@ -219,7 +219,7 @@ const EmailConfig: React.FC<EmailConfigProps> = ({ children }) => {
                     value={testRecipientEmail}
                     onChange={(e) => setTestRecipientEmail(e.target.value)}
                     placeholder="seu-email-de-teste@exemplo.com"
-                    className="mt-1 text-sm" {/* Ajustado text size */}
+                    className="mt-1 text-sm" 
                   />
                 </div>
                 <Button 

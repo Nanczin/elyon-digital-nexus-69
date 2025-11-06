@@ -4,7 +4,25 @@ import { Tables } from '@/integrations/supabase/types';
 import { useLocation, useParams } from 'react-router-dom';
 import { deepMerge } from '@/lib/utils';
 
-type PlatformSettings = Tables<'platform_settings'>;
+// Define a more specific type for colors to avoid Json type issues
+export interface PlatformColors {
+  background_login?: string;
+  card_login?: string;
+  header_background?: string;
+  header_border?: string;
+  button_background?: string;
+  text_primary?: string;
+  text_header?: string;
+  text_cards?: string;
+  text_secondary?: string;
+  checkmark_background?: string;
+  checkmark_icon?: string;
+}
+
+// Extend Tables<'platform_settings'> to use the specific PlatformColors type
+export type PlatformSettings = Omit<Tables<'platform_settings'>, 'colors'> & {
+  colors: PlatformColors | null;
+};
 
 const DEFAULT_FONT_FAMILY = 'Inter, sans-serif';
 
@@ -64,7 +82,12 @@ export const useGlobalPlatformSettings = () => {
         console.error('Erro ao buscar configurações da plataforma:', error);
         setSettings(getDefaultSettings(currentMemberAreaId)); // Fallback para defaults
       } else if (data) {
-        setSettings(deepMerge(getDefaultSettings(currentMemberAreaId), data as Partial<PlatformSettings>));
+        // Explicitly cast data.colors to PlatformColors
+        const mergedData = deepMerge(
+          getDefaultSettings(currentMemberAreaId),
+          { ...data, colors: data.colors as PlatformColors | null } as Partial<PlatformSettings>
+        );
+        setSettings(mergedData);
       } else {
         setSettings(getDefaultSettings(currentMemberAreaId)); // Use default if no settings found
       }
