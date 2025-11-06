@@ -23,6 +23,12 @@ interface Comment {
     name: string | null;
     avatar_url: string | null;
   } | null;
+  lessons: { // NEW: Added lessons and modules for display
+    title: string | null;
+    modules: {
+      title: string | null;
+    } | null;
+  } | null;
 }
 
 interface LessonCommentsProps {
@@ -74,7 +80,8 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
         user_id,
         content,
         created_at,
-        profiles (name, avatar_url)
+        profiles (name, avatar_url),
+        lessons (title, modules(title))
       `)
       .eq('lesson_id', lessonId)
       .order('created_at', { ascending: true });
@@ -181,7 +188,7 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
     <Card className="shadow-lg rounded-xl" style={{ backgroundColor: 'hsl(var(--member-area-card-background))' }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2" style={{ color: 'hsl(var(--member-area-text-dark))' }}>
-          <MessageCircle className="h-6 w-6" /> Comentários ({comments.length})
+          <MessageCircle className="h-6 w-6" /> Comentários da Comunidade ({comments.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -235,6 +242,16 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-sm" style={{ color: 'hsl(var(--member-area-text-dark))' }}>
                       {comment.profiles?.name || 'Membro'}
+                      {comment.lessons?.title && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          • Aula: {comment.lessons.title}
+                        </span>
+                      )}
+                      {comment.lessons?.modules?.title && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          • Módulo: {comment.lessons.modules.title}
+                        </span>
+                      )}
                     </p>
                     <span className="text-xs" style={{ color: 'hsl(var(--member-area-text-muted))' }}>
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
