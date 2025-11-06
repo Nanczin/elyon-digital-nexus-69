@@ -308,7 +308,7 @@ const MemberAreaDashboard = () => {
               return (
                 <Card 
                   key={module.id} 
-                  className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative"
+                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative ${isLocked ? 'opacity-50 grayscale' : ''}`} // Aplicar opacidade e tons de cinza aqui
                   style={{ backgroundColor: cardBackground }}
                 >
                   <div className="relative aspect-video w-full bg-gray-200 h-48">
@@ -316,7 +316,7 @@ const MemberAreaDashboard = () => {
                       <img 
                         src={module.banner_url} 
                         alt={module.title} 
-                        className={`w-full h-full object-cover ${isLocked ? 'filter blur-sm' : ''}`} 
+                        className="w-full h-full object-cover" // Remover blur da imagem
                       />
                     )}
                     {/* Placeholder para o badge de concluído */}
@@ -336,11 +336,11 @@ const MemberAreaDashboard = () => {
                     <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
                       {module.description}
                     </p>
+                    
                     {isLocked ? (
-                      // Overlay que cobre todo o Card
-                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-xl text-white space-y-3 text-center">
-                          <Lock className="h-12 w-12 mb-2" />
-                          <p className="text-lg font-semibold">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10"> {/* Z-index para ficar acima do conteúdo desbotado */}
+                          <Lock className="h-12 w-12 mb-4 text-gray-700 dark:text-gray-300" /> {/* Ícone de cadeado proeminente */}
+                          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
@@ -350,7 +350,7 @@ const MemberAreaDashboard = () => {
                                   </Link>
                               </Button>
                           ) : (
-                              <p className="text-sm mt-2">
+                              <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
                                   Produto associado não encontrado ou sem checkout.
                               </p>
                           )}
