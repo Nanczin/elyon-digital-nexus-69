@@ -5,7 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut, Lock } from 'lucide-react';
+import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings';
 import { FormFields, PackageConfig } from '@/integrations/supabase/types';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -32,6 +33,19 @@ const MemberAreaDashboard = () => {
   const [hasAccess, setHasAccess] = useState(false);
   const [userProductAccessIds, setUserProductAccessIds] = useState<string[]>([]);
   const [productCheckoutLinks, setProductCheckoutLinks] = useState<Record<string, string>>({});
+  const [openModules, setOpenModules] = useState<Set<string>>(new Set()); // Estado para controlar módulos abertos/fechados
+
+  const toggleModule = (moduleId: string) => {
+    setOpenModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
+  };
 
   const fetchMemberAreaAndContent = useCallback(async () => {
     if (!memberAreaId || !user?.id) {
@@ -311,8 +325,8 @@ const MemberAreaDashboard = () => {
                   className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} 
                   style={{ backgroundColor: cardBackground }}
                 >
-                  {isLocked && ( // Move the overlay here, as a direct child of Card
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10 rounded-xl" // Add rounded-xl to match card corners
+                  {isLocked && ( // Overlay para módulos bloqueados
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10 rounded-xl" 
                          style={{ backgroundColor: `${cardBackground}E0` }}>
                         <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} />
                         <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}>
@@ -353,27 +367,47 @@ const MemberAreaDashboard = () => {
                       </div>
                     ) : null}
                   </div>
-                  <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
-                    <h3 className="text-xl font-bold" style={{ color: textColor }}>
-                      {module.title}
-                    </h3>
-                    <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
-                      {module.description}
-                    </p>
-                    
-                    {/* This button should only show if NOT locked */}
-                    {!isLocked && (
-                      <Button 
-                        className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
-                        style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
-                        asChild
-                      >
-                        <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
-                          Acessar Módulo <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    )}
-                  </CardContent>
+                  
+                  {/* Conteúdo do Card - Condicionalmente envolto por Collapsible */}
+                  {!isLocked ? (
+                    <Collapsible open={openModules.has(module.id)} onOpenChange={() => toggleModule(module.id)}>
+                      <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
+                        <CollapsibleTrigger asChild>
+                          <div className="flex items-center justify-between cursor-pointer">
+                            <h3 className="text-xl font-bold" style={{ color: textColor }}>
+                              {module.title}
+                            </h3>
+                            {openModules.has(module.id) ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-4">
+                          <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
+                            {module.description}
+                          </p>
+                          <Button 
+                            className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
+                            style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                            asChild
+                          >
+                            <Link to={`/membros/${memberAreaId}/modules/${module.id}`}>
+                              Acessar Módulo <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </CollapsibleContent>
+                      </CardContent>
+                    </Collapsible>
+                  ) : (
+                    // Se bloqueado, renderiza o CardContent diretamente (a sobreposição já lida com a interação)
+                    <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
+                      <h3 className="text-xl font-bold" style={{ color: textColor }}>
+                        {module.title}
+                      </h3>
+                      <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
+                        {module.description}
+                      </p>
+                      {/* O botão de acesso está na sobreposição quando bloqueado, então não há botão aqui */}
+                    </CardContent>
+                  )}
                 </Card>
               );
             })
