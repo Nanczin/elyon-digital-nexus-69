@@ -97,20 +97,20 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-xs sm:max-w-lg lg:max-w-2xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Configurar Meta Pixel</DialogTitle>
+          <DialogTitle>Configurar Meta Pixel</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Pixels existentes */}
           {metaPixels.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold">Pixels Configurados</h3>
+              <h3 className="text-lg font-semibold">Pixels Configurados</h3>
               {metaPixels.map((pixel) => (
                 <Card key={pixel.id}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-sm sm:text-base">
+                    <CardTitle className="flex items-center justify-between text-base">
                       {pixel.name}
                       <Button
                         variant="ghost"
@@ -122,7 +122,7 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-xs sm:text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground">
                       <p>Pixel ID: {pixel.pixelId}</p>
                       {pixel.accessToken && (
                         <p>Access Token: {pixel.accessToken.substring(0, 20)}...</p>
@@ -136,9 +136,9 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
 
           {/* Novo pixel */}
           <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold">Adicionar Novo Pixel</h3>
+            <h3 className="text-lg font-semibold">Adicionar Novo Pixel</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="pixelName">Nome do Pixel *</Label>
                 <Input
@@ -159,7 +159,7 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
                 />
               </div>
               
-              <div className="col-span-1 md:col-span-2">
+              <div className="col-span-2">
                 <Label htmlFor="accessToken">Access Token (Opcional)</Label>
                 <Input
                   id="accessToken"

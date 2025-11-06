@@ -119,10 +119,10 @@ const Customers = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Clientes</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <h1 className="text-3xl font-bold">Clientes</h1>
+          <p className="text-muted-foreground">
             Gerencie seus clientes e relacionamentos
           </p>
         </div>
@@ -150,7 +150,7 @@ const Customers = () => {
             <CardTitle className="text-sm font-medium">
               Clientes Ativos
             </CardTitle>
-            <Users className="h-4 w-4 text-green-500" />
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.active}</div>
@@ -178,7 +178,7 @@ const Customers = () => {
       {/* Customers Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Lista de Clientes</CardTitle>
+          <CardTitle>Lista de Clientes</CardTitle>
           <CardDescription>
             Visualize e gerencie todos os seus clientes
           </CardDescription>
@@ -197,9 +197,9 @@ const Customers = () => {
               {customers.map((customer) => (
                 <div
                   key={customer.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center space-x-4 mb-2 sm:mb-0">
+                  <div className="flex items-center space-x-4">
                     <Avatar>
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${customer.name}`} />
                       <AvatarFallback>
@@ -208,7 +208,7 @@ const Customers = () => {
                     </Avatar>
                     <div className="space-y-1">
                       <p className="font-medium">{customer.name}</p>
-                      <div className="flex flex-wrap items-center space-x-2 sm:space-x-4 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <Mail className="h-3 w-3" />
                           <span>{customer.email}</span>

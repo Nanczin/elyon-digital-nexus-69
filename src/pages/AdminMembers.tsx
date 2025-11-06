@@ -82,7 +82,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
               first_name: name.split(' ')[0], 
               last_name: name.split(' ').slice(1).join(' ') || '',
               member_area_id: memberAreaId, // Garantir que member_area_id esteja no metadata
-              status: isActive ? 'active' : 'inactive' // Passar status para o user_metadata
+              status: isActive ? 'active' : 'inactive'
             }
           }
         );
@@ -171,9 +171,9 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
   };
 
   return (
-    <DialogContent className="max-w-xs sm:max-w-[425px]">
+    <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
-        <DialogTitle className="text-lg sm:text-xl">{member ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle>
+        <DialogTitle>{member ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle>
       </DialogHeader>
       <div className="space-y-4 py-4">
         <div className="space-y-2">
@@ -187,8 +187,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
         {!member && (
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} required={!generatePassword} disabled={generatePassword} className="flex-1" />
+            <div className="flex gap-2">
+              <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} required={!generatePassword} disabled={generatePassword} />
               <Button type="button" variant="outline" onClick={handleGeneratePassword}>Gerar</Button>
             </div>
             {generatePassword && <p className="text-sm text-muted-foreground">Senha gerada: {password}</p>}
@@ -199,7 +199,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
           <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
         </div>
 
-        <h3 className="font-semibold mt-6 text-base sm:text-lg">Acesso aos Módulos</h3>
+        <h3 className="font-semibold mt-6">Acesso aos Módulos</h3>
         <div className="space-y-2 max-h-48 overflow-y-auto border p-2 rounded-md">
           {modules.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum módulo disponível.</p>
@@ -215,14 +215,14 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
                     );
                   }}
                 />
-                <Label htmlFor={`module-${module.id}`} className="text-sm">{module.title}</Label>
+                <Label htmlFor={`module-${module.id}`}>{module.title}</Label>
               </div>
             ))
           )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 mt-2">
-          <Button type="button" variant="outline" onClick={() => setSelectedModules(modules.map(m => m.id))} className="flex-1">Liberar Tudo</Button>
-          <Button type="button" variant="outline" onClick={() => setSelectedModules([])} className="flex-1">Bloquear Tudo</Button>
+        <div className="flex gap-2 mt-2">
+          <Button type="button" variant="outline" onClick={() => setSelectedModules(modules.map(m => m.id))}>Liberar Tudo</Button>
+          <Button type="button" variant="outline" onClick={() => setSelectedModules([])}>Bloquear Tudo</Button>
         </div>
       </div>
       <Button className="w-full" onClick={handleSave} disabled={loading}>
@@ -345,25 +345,25 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
   const platformLoginUrl = `${window.location.origin}/membros/${currentMemberAreaId}/login`; // Dynamic login URL
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-6">
       <Card className="mb-6">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-          <CardTitle className="text-lg sm:text-xl">URL de Acesso à Área de Membros</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>URL de Acesso à Área de Membros</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row items-center gap-3">
-          <Input value={platformLoginUrl} readOnly className="flex-1 text-sm" />
-          <Button onClick={() => copyLoginUrl(platformLoginUrl)} variant="outline" size="sm">
+          <Input value={platformLoginUrl} readOnly className="flex-1" />
+          <Button onClick={() => copyLoginUrl(platformLoginUrl)} variant="outline">
             <Copy className="mr-2 h-4 w-4" /> Copiar Link
           </Button>
-          <Button onClick={() => window.open(platformLoginUrl, '_blank')} variant="secondary" size="sm">
+          <Button onClick={() => window.open(platformLoginUrl, '_blank')} variant="secondary">
             <ExternalLink className="mr-2 h-4 w-4" /> Abrir Área
           </Button>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-          <CardTitle className="text-lg sm:text-xl">Membros ({members.length})</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Membros ({members.length})</CardTitle>
           <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={handleNewMemberClick}>
@@ -385,24 +385,24 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
           ) : (
             <div className="space-y-4">
               {members.map(member => (
-                <div key={member.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center space-x-4 mb-2 sm:mb-0">
+                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center space-x-4">
                     <Avatar>
                       <AvatarImage src={member.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.name}`} />
                       <AvatarFallback>{member.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-sm sm:text-base">{member.name}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{member.email}</p>
+                      <p className="font-medium">{member.name}</p>
+                      <p className="text-sm text-muted-foreground">{member.email}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={member.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                        <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                           {member.status === 'active' ? 'Ativo' : 'Inativo'}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">{member.role}</Badge>
+                        <Badge variant="outline">{member.role}</Badge>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditMember(member)}>
                       <Edit className="h-4 w-4" />
                     </Button>

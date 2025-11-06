@@ -201,19 +201,19 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-xs sm:max-w-[480px]" style={{ backgroundColor: cardBackground, color: textColor }}>
+      <DialogContent className="sm:max-w-[480px]" style={{ backgroundColor: cardBackground, color: textColor }}>
         <DialogHeader>
-          <DialogTitle className="text-center text-lg sm:text-2xl font-bold" style={{ color: textColor }}>
+          <DialogTitle className="text-center text-2xl font-bold" style={{ color: textColor }}>
             Configurações de Perfil
           </DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-auto" style={{ backgroundColor: secondaryTextColor + '10' }}>
-            <TabsTrigger value="profile" className="text-sm sm:text-base py-2" style={{ color: textColor }}>
+          <TabsList className="grid w-full grid-cols-2" style={{ backgroundColor: secondaryTextColor + '10' }}>
+            <TabsTrigger value="profile" style={{ color: textColor }}>
               <User className="mr-2 h-4 w-4" /> Perfil
             </TabsTrigger>
-            <TabsTrigger value="security" className="text-sm sm:text-base py-2" style={{ color: textColor }}>
+            <TabsTrigger value="security" style={{ color: textColor }}>
               <Lock className="mr-2 h-4 w-4" /> Segurança
             </TabsTrigger>
           </TabsList>
@@ -222,9 +222,9 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ children,
             <Form {...profileForm}>
               <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-6">
                 <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2" style={{ borderColor: primaryColor }}>
+                  <Avatar className="h-24 w-24 border-2" style={{ borderColor: primaryColor }}>
                     <AvatarImage src={avatarPreview || undefined} alt={user?.user_metadata?.name || 'User Avatar'} />
-                    <AvatarFallback className="bg-gray-200 text-gray-700 text-3xl sm:text-4xl font-semibold">
+                    <AvatarFallback className="bg-gray-200 text-gray-700 text-4xl font-semibold">
                       {userInitial}
                     </AvatarFallback>
                   </Avatar>

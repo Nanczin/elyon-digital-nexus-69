@@ -95,7 +95,7 @@ const AuthUpdatePassword = () => {
       console.error('Error updating password:', error);
       toast({
         title: "Erro",
-        description: error.message || "Falha ao atualizar senha.",
+        description: error.message || "Falha ao atualizar a senha.",
         variant: "destructive",
       });
     } finally {
@@ -115,7 +115,7 @@ const AuthUpdatePassword = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8"
+      className="min-h-screen flex items-center justify-center p-4"
       style={{ 
         backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: currentSettings.global_font_family || 'Nunito'

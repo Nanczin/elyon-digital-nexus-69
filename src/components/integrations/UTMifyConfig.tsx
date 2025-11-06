@@ -105,9 +105,9 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-xs sm:max-w-lg lg:max-w-xl">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Configurar UTMify</DialogTitle>
+          <DialogTitle>Configurar UTMify</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -115,10 +115,10 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
           {isConfigured && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base sm:text-lg">Status da Configuração</CardTitle>
+                <CardTitle className="text-base">Status da Configuração</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-xs sm:text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground">
                   <p>API Key: {config.apiKey.substring(0, 20)}...</p>
                   <p>Website ID: {config.websiteId}</p>
                   <p>Rastreamento de Compras: {config.trackPurchases ? 'Ativo' : 'Inativo'}</p>
@@ -130,7 +130,7 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
 
           {/* Configuração */}
           <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold">Configurações</h3>
+            <h3 className="text-lg font-semibold">Configurações</h3>
             
             <div className="space-y-4">
               <div>
@@ -185,7 +185,7 @@ const UTMifyConfig: React.FC<UTMifyConfigProps> = ({ children }) => {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex gap-2">
               <Button onClick={saveConfig} disabled={saving || loading} className="flex-1">
                 {saving ? 'Salvando...' : 'Salvar Configuração'}
               </Button>

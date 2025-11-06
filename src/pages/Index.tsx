@@ -65,13 +65,13 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Tudo que você precisa para vender online
             </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Nossa plataforma oferece todas as ferramentas necessárias 
               para o sucesso do seu negócio digital
             </p>
@@ -100,12 +100,12 @@ const Index = () => {
 
       {/* CTA Section */}
       {!user && (
-        <section className="bg-primary/5 py-12 sm:py-16 lg:py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <section className="bg-primary/5 py-20">
+          <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Pronto para começar?
             </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Junte-se a milhares de criadores que já confiam na Elyon 
               para vender seus produtos digitais
             </p>
