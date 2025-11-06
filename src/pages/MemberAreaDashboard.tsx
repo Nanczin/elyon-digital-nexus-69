@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
+import { FormFields, PackageConfig } from '@/integrations/supabase/types'; // Importar FormFields e PackageConfig
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -86,7 +87,7 @@ const MemberAreaDashboard = () => {
       }
       setHasAccess(true);
 
-      // 4. Fetch ALL published modules for this member area (regardless of individual member_access)
+      // 4. Fetch ALL published modules for this member area
       const { data: allPublishedModulesData, error: allPublishedModulesError } = await supabase
         .from('modules')
         .select('*')
@@ -113,21 +114,42 @@ const MemberAreaDashboard = () => {
       console.log('MEMBER_AREA_DASHBOARD_DEBUG: User has access to products:', accessedProductIds);
 
       // 6. Fetch checkout links for products associated with modules
-      const moduleProductIds = allPublishedModulesData?.map(m => m.product_id).filter(Boolean) as string[] || [];
-      const uniqueModuleProductIds = [...new Set(moduleProductIds)];
+      const uniqueModuleProductIds = [...new Set(allPublishedModulesData?.map(m => m.product_id).filter(Boolean))] as string[];
       const checkoutLinksMap: Record<string, string> = {};
 
       if (uniqueModuleProductIds.length > 0) {
-        const { data: checkoutsForProducts, error: checkoutsError } = await supabase
+        // Fetch all checkouts belonging to the member area owner
+        const { data: allCheckouts, error: allCheckoutsError } = await supabase
           .from('checkouts')
-          .select('id, product_id')
-          .in('product_id', uniqueModuleProductIds);
+          .select('id, product_id, form_fields')
+          .eq('user_id', areaData.user_id); // Filter by the owner of the member area
 
-        if (checkoutsError) console.error('Error fetching checkouts for products:', checkoutsError);
+        if (allCheckoutsError) {
+          console.error('Error fetching all checkouts for member area owner:', allCheckoutsError);
+        }
 
-        checkoutsForProducts?.forEach(chk => {
-          if (chk.product_id && !checkoutLinksMap[chk.product_id]) {
-            checkoutLinksMap[chk.product_id] = `/checkout/${chk.id}`;
+        allCheckouts?.forEach(checkout => {
+          // Check if the main product of the checkout is one of the module products
+          if (checkout.product_id && uniqueModuleProductIds.includes(checkout.product_id)) {
+            if (!checkoutLinksMap[checkout.product_id]) {
+              checkoutLinksMap[checkout.product_id] = `/checkout/${checkout.id}`;
+            }
+          }
+
+          // Check if any product associated with a package in this checkout is one of the module products
+          const packages = (checkout.form_fields as FormFields)?.packages;
+          if (packages && Array.isArray(packages)) {
+            packages.forEach((pkg: PackageConfig) => { // Explicitly type pkg as PackageConfig
+              if (pkg.associatedProductIds && Array.isArray(pkg.associatedProductIds)) {
+                pkg.associatedProductIds.forEach(associatedProductId => {
+                  if (uniqueModuleProductIds.includes(associatedProductId)) {
+                    if (!checkoutLinksMap[associatedProductId]) {
+                      checkoutLinksMap[associatedProductId] = `/checkout/${checkout.id}`;
+                    }
+                  }
+                });
+              }
+            });
           }
         });
       }
