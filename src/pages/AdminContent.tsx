@@ -532,7 +532,7 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
   };
 
   if (loading) return <p>Carregando módulos...</p>;
-  if (modules.length === 0) return <p className="text-muted-foreground text-sm">Nenhum módulo criado ainda para esta área de membros.</p>; {/* Ajustado text size */}
+  if (modules.length === 0) return <p className="text-muted-foreground text-sm">Nenhum módulo criado ainda para esta área de membros.</p>;
 
   return (
     <div className="space-y-4">
@@ -742,7 +742,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
   };
 
   if (loading) return <p>Carregando aulas...</p>;
-  if (lessons.length === 0) return <p className="text-muted-foreground text-sm">Nenhuma aula criada para este módulo.</p>; {/* Ajustado text size */}
+  if (lessons.length === 0) return <p className="text-muted-foreground text-sm">Nenhuma aula criada para este módulo.</p>;
 
   return (
     <div className="space-y-4">
@@ -1025,7 +1025,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                   onLessonDeleted={handleLessonSaved} 
                 />
               ) : (
-                <p className="text-muted-foreground text-sm">Selecione um módulo para ver as aulas.</p> {/* Ajustado text size */}
+                <p className="text-muted-foreground text-sm">Selecione um módulo para ver as aulas.</p>
               )}
             </CardContent>
           </Card>
