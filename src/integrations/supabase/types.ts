@@ -1155,7 +1155,7 @@ export type Database = {
           id: string;
           user_id: string;
           module_id: string | null;
-          lesson_id: string | null;
+          lesson_id: string | null; /* Adicionada nova coluna 'lesson_id' */
           title: string;
           content: string;
           is_automatic: boolean;
@@ -1167,7 +1167,7 @@ export type Database = {
           id?: string;
           user_id: string;
           module_id?: string | null;
-          lesson_id?: string | null;
+          lesson_id?: string | null; /* Adicionada nova coluna 'lesson_id' */
           title: string;
           content: string;
           is_automatic?: boolean;
@@ -1179,7 +1179,7 @@ export type Database = {
           id?: string;
           user_id?: string;
           module_id?: string | null;
-          lesson_id?: string | null;
+          lesson_id?: string | null; /* Adicionada nova coluna 'lesson_id' */
           title?: string;
           content?: string;
           is_automatic?: boolean;
@@ -1193,7 +1193,7 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "community_posts_module_id_fkey";
@@ -1256,7 +1256,7 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            referencedColumns: ["user_id"];
           },
         ];
       };
