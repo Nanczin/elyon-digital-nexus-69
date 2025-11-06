@@ -39,14 +39,14 @@ const AdminProducts = () => {
     name: '',
     description: '',
     price: '',
-    banner: null as File | null,
+    // banner: null as File | null, // REMOVIDO
     logo: null as File | null,
     deliveryType: 'link' as 'link' | 'upload' | 'deliverableLink',
     memberAreaLink: '',
     deliverable: null as File | null,
     deliverableLink: '',
     accessUrl: '',
-    emailTemplate: '',
+    // emailTemplate: '', // REMOVIDO
     orderBumps: [{
       id: 1,
       name: '',
@@ -226,15 +226,15 @@ const AdminProducts = () => {
     setIsLoading(true);
     console.log('ADMIN_PRODUCTS_DEBUG: Iniciando handleSubmit (criar produto).');
     try {
-      let bannerUrl = null;
+      // let bannerUrl = null; // REMOVIDO
       let logoUrl = null;
       let fileUrl = null;
 
-      // Upload banner if exists
-      if (formData.banner) {
-        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do banner.');
-        bannerUrl = await uploadFile(formData.banner, 'banners');
-      }
+      // Upload banner if exists // REMOVIDO
+      // if (formData.banner) {
+      //   console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do banner.');
+      //   bannerUrl = await uploadFile(formData.banner, 'banners');
+      // }
 
       // Upload logo if exists
       if (formData.logo) {
@@ -257,12 +257,12 @@ const AdminProducts = () => {
         name: formData.name,
         description: formData.description,
         price: parseInt(formData.price) * 100,
-        banner_url: bannerUrl,
+        // banner_url: bannerUrl, // REMOVIDO
         logo_url: logoUrl,
         file_url: fileUrl,
         member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null,
         access_url: formData.accessUrl,
-        email_template: formData.emailTemplate,
+        // email_template: formData.emailTemplate, // REMOVIDO
       });
 
       // Create product in database
@@ -274,12 +274,12 @@ const AdminProducts = () => {
           name: formData.name,
           description: formData.description,
           price: parseInt(formData.price) * 100, // Convert to cents
-          banner_url: bannerUrl,
+          // banner_url: bannerUrl, // REMOVIDO
           logo_url: logoUrl,
           file_url: fileUrl, // Save deliverable link here
           member_area_link: formData.deliveryType === 'link' ? formData.memberAreaLink : null,
           access_url: formData.accessUrl, // Salvar access_url
-          email_template: formData.emailTemplate, // Salvar email_template
+          // email_template: formData.emailTemplate, // REMOVIDO
         });
 
       if (error) {
@@ -297,14 +297,14 @@ const AdminProducts = () => {
         name: '',
         description: '',
         price: '',
-        banner: null,
+        // banner: null, // REMOVIDO
         logo: null,
         deliveryType: 'link',
         memberAreaLink: '',
         deliverable: null,
         deliverableLink: '',
         accessUrl: '',
-        emailTemplate: '',
+        // emailTemplate: '', // REMOVIDO
         orderBumps: [{
           id: 1,
           name: '',
@@ -336,14 +336,14 @@ const AdminProducts = () => {
       name: product.name,
       description: product.description || '',
       price: (product.price / 100).toString(),
-      banner: null,
+      // banner: null, // REMOVIDO
       logo: null,
       deliveryType: product.member_area_link ? 'link' : (product.file_url && !product.file_url.startsWith('http') ? 'upload' : (product.file_url ? 'deliverableLink' : 'link')), // Determine delivery type
       memberAreaLink: product.member_area_link || '',
       deliverable: null,
       deliverableLink: product.file_url && product.file_url.startsWith('http') ? product.file_url : '', // Load deliverable link
       accessUrl: product.access_url || '', // Carregar access_url
-      emailTemplate: product.email_template || '', // Carregar email_template
+      // emailTemplate: product.email_template || '', // REMOVIDO
       orderBumps: [{
         id: 1,
         name: '',
@@ -427,16 +427,16 @@ const AdminProducts = () => {
     setIsLoading(true);
     console.log('ADMIN_PRODUCTS_DEBUG: Iniciando handleUpdate (atualizar produto).');
     try {
-      let bannerUrl = editingProduct.banner_url;
+      // let bannerUrl = editingProduct.banner_url; // REMOVIDO
       let logoUrl = editingProduct.logo_url;
       let fileUrl = editingProduct.file_url;
       let memberAreaLink = editingProduct.member_area_link;
 
-      // Upload new files if provided
-      if (formData.banner) {
-        console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do novo banner.');
-        bannerUrl = await uploadFile(formData.banner, 'banners');
-      }
+      // Upload new files if provided // REMOVIDO
+      // if (formData.banner) {
+      //   console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do novo banner.');
+      //   bannerUrl = await uploadFile(formData.banner, 'banners');
+      // }
 
       if (formData.logo) {
         console.log('ADMIN_PRODUCTS_DEBUG: Tentando upload do novo logo.');
@@ -467,12 +467,12 @@ const AdminProducts = () => {
         name: formData.name,
         description: formData.description,
         price: parseInt(formData.price) * 100,
-        banner_url: bannerUrl,
+        // banner_url: bannerUrl, // REMOVIDO
         logo_url: logoUrl,
         file_url: fileUrl,
         member_area_link: memberAreaLink,
         access_url: formData.accessUrl,
-        email_template: formData.emailTemplate,
+        // email_template: formData.emailTemplate, // REMOVIDO
       });
 
       // Update product in database
@@ -483,12 +483,12 @@ const AdminProducts = () => {
           name: formData.name,
           description: formData.description,
           price: parseInt(formData.price) * 100,
-          banner_url: bannerUrl,
+          // banner_url: bannerUrl, // REMOVIDO
           logo_url: logoUrl,
           file_url: fileUrl, // Save deliverable link here
           member_area_link: memberAreaLink,
           access_url: formData.accessUrl, // Salvar access_url
-          email_template: formData.emailTemplate, // Salvar email_template
+          // email_template: formData.emailTemplate, // REMOVIDO
         })
         .eq('id', editingProduct.id);
 
@@ -505,14 +505,14 @@ const AdminProducts = () => {
         name: '',
         description: '',
         price: '',
-        banner: null,
+        // banner: null, // REMOVIDO
         logo: null,
         deliveryType: 'link',
         memberAreaLink: '',
         deliverable: null,
         deliverableLink: '',
         accessUrl: '',
-        emailTemplate: '',
+        // emailTemplate: '', // REMOVIDO
         orderBumps: [{
           id: 1,
           name: '',
@@ -555,14 +555,14 @@ const AdminProducts = () => {
               name: '',
               description: '',
               price: '',
-              banner: null,
+              // banner: null, // REMOVIDO
               logo: null,
               deliveryType: 'link',
               memberAreaLink: '',
               deliverable: null,
               deliverableLink: '',
               accessUrl: '',
-              emailTemplate: '',
+              // emailTemplate: '', // REMOVIDO
               orderBumps: [{
                 id: 1,
                 name: '',
@@ -581,14 +581,14 @@ const AdminProducts = () => {
                 name: '',
                 description: '',
                 price: '',
-                banner: null,
+                // banner: null, // REMOVIDO
                 logo: null,
                 deliveryType: 'link',
                 memberAreaLink: '',
                 deliverable: null,
                 deliverableLink: '',
                 accessUrl: '',
-                emailTemplate: '',
+                // emailTemplate: '', // REMOVIDO
                 orderBumps: [{
                   id: 1,
                   name: '',
@@ -691,6 +691,20 @@ const AdminProducts = () => {
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                    {/* REMOVIDO: Banner do Produto */}
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="banner" className="text-sm font-medium">Banner do Produto</Label>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          id="banner" 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={e => handleFileChange('banner', e.target.files?.[0] || null)} 
+                          className="text-sm file:text-xs"
+                        />
+                        <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
+                    </div> */}
                     <div className="space-y-2">
                       <Label htmlFor="logo" className="text-sm font-medium">Logo do Produto</Label>
                       <div className="flex items-center gap-2">
@@ -699,19 +713,6 @@ const AdminProducts = () => {
                           type="file" 
                           accept="image/*" 
                           onChange={e => handleFileChange('logo', e.target.files?.[0] || null)} 
-                          className="text-sm file:text-xs"
-                        />
-                        <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="banner" className="text-sm font-medium">Banner do Produto</Label>
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          id="banner" 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={e => handleFileChange('banner', e.target.files?.[0] || null)} 
                           className="text-sm file:text-xs"
                         />
                         <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -800,7 +801,8 @@ const AdminProducts = () => {
 
                   <Separator />
 
-                  <div className="space-y-4">
+                  {/* REMOVIDO: Configurações de Acesso e E-mail */}
+                  {/* <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Configurações de Acesso e E-mail</h3>
                     <div className="space-y-2">
                       <Label htmlFor="accessUrl">URL de Acesso ao Produto</Label>
@@ -828,7 +830,7 @@ const AdminProducts = () => {
                         Use variáveis como <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{nome}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{produto}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{username}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{password}}'}</code>, <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{url_acesso}}'}</code> e <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{suporte}}'}</code>.
                       </p>
                     </div>
-                  </div>
+                  </div> */}
                 </TabsContent>
 
                 <TabsContent value="order-bumps" className="space-y-4">
