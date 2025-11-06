@@ -377,6 +377,7 @@ const AdminCheckouts = () => {
   };
 
   const uploadFile = async (file: File, folder: string) => {
+    console.log(`[AdminCheckouts] Attempting to upload file: ${file.name} to folder: ${folder}`);
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
@@ -385,12 +386,16 @@ const AdminCheckouts = () => {
       .from('products') // Using 'products' bucket, but a specific folder
       .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error(`[AdminCheckouts] Error uploading file ${file.name}:`, uploadError);
+      throw uploadError;
+    }
 
     const { data } = supabase.storage
       .from('products')
       .getPublicUrl(filePath);
 
+    console.log(`[AdminCheckouts] File uploaded successfully: ${data.publicUrl}`);
     return data.publicUrl;
   };
 
@@ -475,14 +480,19 @@ const AdminCheckouts = () => {
   const handleCheckoutDeliverableFileChange = (file: File | null) => {
     setCheckoutDeliverableFile(file);
     if (file) {
-      handleInputChange('form_fields.deliverable.fileUrl', null); // Clear existing URL if new file is selected
+      handleInputChange('form_fields.deliverable.link', null); // Clear existing link if new file is selected
+      handleInputChange('form_fields.deliverable.fileUrl', null); // Clear existing fileUrl if new file is selected
     }
   };
 
   const handlePackageDeliverableFileChange = (packageId: number, file: File | null) => {
     setPackageDeliverableFiles(prev => ({ ...prev, [packageId]: file }));
     if (file) {
-      handleInputChange(`form_fields.packages[${checkoutData.form_fields.packages.findIndex((p: PackageConfig) => p.id === packageId)}].deliverable.fileUrl`, null);
+      const packageIndex = checkoutData.form_fields.packages.findIndex((p: PackageConfig) => p.id === packageId);
+      if (packageIndex !== -1) {
+        handleInputChange(`form_fields.packages[${packageIndex}].deliverable.link`, null); // Clear existing link
+        handleInputChange(`form_fields.packages[${packageIndex}].deliverable.fileUrl`, null); // Clear existing fileUrl
+      }
     }
   };
 
@@ -639,11 +649,12 @@ const AdminCheckouts = () => {
 
     setIsLoading(true);
     try {
-      console.log('Timer sendo salvo:', checkoutData.timer);
+      console.log('ADMIN_CHECKOUTS_DEBUG: Submitting form. Timer:', checkoutData.timer);
 
       // Handle checkout-level deliverable file upload
       let finalCheckoutDeliverable: DeliverableConfig = { ...checkoutData.form_fields.deliverable };
       if (finalCheckoutDeliverable.type === 'upload' && checkoutDeliverableFile) {
+        console.log('ADMIN_CHECKOUTS_DEBUG: Uploading checkout-level deliverable file:', checkoutDeliverableFile.name);
         finalCheckoutDeliverable.fileUrl = await uploadFile(checkoutDeliverableFile, 'checkout-deliverables');
       } else if (finalCheckoutDeliverable.type === 'link') {
         finalCheckoutDeliverable.fileUrl = finalCheckoutDeliverable.link; // Use link as fileUrl for consistency
@@ -659,6 +670,7 @@ const AdminCheckouts = () => {
           const fileForPackage = packageDeliverableFiles[pkg.id];
 
           if (packageDeliverable.type === 'upload' && fileForPackage) {
+            console.log(`ADMIN_CHECKOUTS_DEBUG: Uploading package ${pkg.id} deliverable file:`, fileForPackage.name);
             packageDeliverable.fileUrl = await uploadFile(fileForPackage, `package-deliverables/${pkg.id}`);
           } else if (packageDeliverable.type === 'link') {
             packageDeliverable.fileUrl = packageDeliverable.link; // Use link as fileUrl for consistency
@@ -700,7 +712,7 @@ const AdminCheckouts = () => {
         timer: checkoutData.timer || null // Usar o objeto timer já estruturado
       };
 
-      console.log('DEBUG: Final checkoutPayload before DB operation:', JSON.stringify(checkoutPayload, null, 2)); // Log detalhado
+      console.log('ADMIN_CHECKOUTS_DEBUG: Final checkoutPayload before DB operation:', JSON.stringify(checkoutPayload, null, 2)); // Log detalhado
 
       if (editingCheckout) {
         const {
@@ -728,7 +740,7 @@ const AdminCheckouts = () => {
       setPackageDeliverableFiles({}); // Limpar package-level files after save
       fetchCheckouts();
     } catch (error: any) { // Improved error logging
-      console.error('Detailed error saving checkout:', error);
+      console.error('ADMIN_CHECKOUTS_DEBUG: Detailed error saving checkout:', error);
       toast({
         title: "Erro",
         description: error.message || "Erro ao salvar checkout. Verifique o console para mais detalhes.",
@@ -1772,7 +1784,7 @@ const AdminCheckouts = () => {
                           id="deliverableFile" 
                           type="file" 
                           onChange={e => handleCheckoutDeliverableFileChange(e.target.files?.[0] || null)} 
-                          required={!checkoutData.form_fields.deliverable.fileUrl && !checkoutDeliverableFile} // Condição de required
+                          required={!checkoutData.form_fields.deliverable.fileUrl && !checkoutDeliverableFile}
                         />
                         {checkoutData.form_fields.deliverable.fileUrl && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
