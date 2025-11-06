@@ -75,7 +75,11 @@ const MemberAreaLogin = () => {
     setLoading(true);
     const { error } = await signIn(email, password);
     if (!error) {
-      // On successful login, the useEffect above will handle redirection
+      // Explicitly navigate to the member area dashboard on successful login
+      // Add a small delay to ensure state updates and potential profile data propagation
+      setTimeout(() => {
+        navigate(`/membros/${memberAreaId}`);
+      }, 500); // Reduced delay from 1000ms to 500ms, can be adjusted
     }
     setLoading(false);
   };
