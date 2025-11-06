@@ -308,7 +308,7 @@ const MemberAreaDashboard = () => {
               return (
                 <Card 
                   key={module.id} 
-                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} {/* Removed grayscale and opacity from here */}
+                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} /* Removed grayscale and opacity from here */
                   style={{ backgroundColor: cardBackground }}
                 >
                   <div className="relative aspect-video w-full bg-gray-200 h-48">
@@ -316,7 +316,7 @@ const MemberAreaDashboard = () => {
                       <img 
                         src={module.banner_url} 
                         alt={module.title} 
-                        className={`w-full h-full object-cover ${isLocked ? 'grayscale brightness-50' : ''}`} {/* Apply grayscale and brightness to image */}
+                        className={`w-full h-full object-cover ${isLocked ? 'grayscale brightness-50' : ''}`} /* Apply grayscale and brightness to image */
                       />
                     )}
                     {/* Placeholder para o badge de concluído */}
