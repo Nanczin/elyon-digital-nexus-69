@@ -32,7 +32,7 @@ export interface FormFields {
   requirePhone?: boolean;
   requireCpf?: boolean;
   packages?: PackageConfig[]; // Usar o novo tipo PackageConfig
-  deliverable?: DeliverableConfig; // Usar o tipo DeliverableConfig
+  deliverable?: DeliverableConfig; // Usar o tipo DeliverableConfig (this is the checkout-level deliverable)
   sendTransactionalEmail?: boolean; // Adicionado para controlar o envio de e-mail transacional
   transactionalEmailSubject?: string; // Novo campo para o assunto do e-mail
   transactionalEmailBody?: string; // Novo campo para o corpo do e-mail
@@ -42,7 +42,7 @@ export interface FormFields {
 
 export interface CheckoutData {
   id: string;
-  product_id: string;
+  product_id: string; // This will now represent the *default* product if no package is selected, or the primary product.
   price: number;
   promotional_price: number | null;
   layout: string;
@@ -67,7 +67,7 @@ export interface CheckoutData {
   };
   support_contact: any;
   integrations: any;
-  products: {
+  products: { // This refers to the `checkouts.product_id`
     id: string;
     name: string;
     description: string;

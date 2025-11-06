@@ -21,6 +21,7 @@ interface PaymentRequest {
   orderBumps?: any[]; // Pode ser mais específico se tivermos a estrutura
   selectedPackage?: number;
   paymentMethod: string;
+  finalProductId?: string; // New: The resolved product ID for the main purchase
   cardData?: {
     cardNumber?: string;
     cardholderName: string;
@@ -58,11 +59,12 @@ serve(async (req) => {
     console.log('CREATE_MP_PAYMENT_DEBUG: 1. Raw request body received:', JSON.stringify(requestBody, null, 2));
 
     // Desestruturar com a interface definida
-    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, cardData, cardToken, emailMetadata }: PaymentRequest = requestBody;
+    const { checkoutId, amount, customerData, selectedMercadoPagoAccount, orderBumps, selectedPackage, paymentMethod, finalProductId, cardData, cardToken, emailMetadata }: PaymentRequest = requestBody;
 
     console.log('CREATE_MP_PAYMENT_DEBUG: 2. Raw amount received from requestBody:', amount, typeof amount);
     console.log('CREATE_MP_PAYMENT_DEBUG: 2.1. emailMetadata.sendTransactionalEmail (from frontend):', emailMetadata?.sendTransactionalEmail);
     console.log('CREATE_MP_PAYMENT_DEBUG: 2.2. emailMetadata.sellerUserId (from frontend):', emailMetadata?.sellerUserId);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 2.3. finalProductId (from frontend):', finalProductId);
 
 
     // Aplicar a conversão robusta sugerida para o 'amount' (que está em centavos)
@@ -158,6 +160,7 @@ serve(async (req) => {
         order_bumps: orderBumps,
         selected_package: selectedPackage,
         payment_method: paymentMethod,
+        final_product_id: finalProductId, // Pass the resolved product ID to MP metadata
         // Adicionar todos os dados de e-mail transacional e entregável aqui
         email_transactional_data: emailMetadata,
       }
@@ -318,6 +321,7 @@ serve(async (req) => {
           customer_data: customerData,
           order_bumps: orderBumps,
           selected_package: selectedPackage,
+          final_product_id: finalProductId, // Persist the resolved product ID in payment metadata
           payment_method: paymentMethod,
           // Persistir os dados de e-mail transacional e entregável no metadata do pagamento
           email_transactional_data: emailMetadata,

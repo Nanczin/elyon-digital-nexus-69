@@ -102,19 +102,9 @@ serve(async (req) => {
         const checkoutId = mpPayment.external_reference || existingPayment?.checkout_id || (existingPayment?.metadata as any)?.checkout_id;
         console.log('VERIFY_MP_DEBUG: Checkout ID para pós-processamento:', checkoutId);
 
-        // Obter product_id, user_id do vendedor, form_fields e dados do produto
-        let productId: string | null = null;
-
-        if (checkoutId) {
-          const { data: chk, error: chkError } = await supabase
-            .from('checkouts')
-            .select('product_id')
-            .eq('id', checkoutId)
-            .maybeSingle();
-          if (chkError) console.error('VERIFY_MP_DEBUG: Erro ao buscar product_id do checkout:', chkError);
-          productId = chk?.product_id || null;
-        }
-        console.log('VERIFY_MP_DEBUG: Product ID para pós-processamento:', productId);
+        // Get the final product ID from payment metadata (set by create-mercado-pago-payment)
+        const productId = (payment?.metadata as any)?.final_product_id || null;
+        console.log('VERIFY_MP_DEBUG: Product ID para pós-processamento (from payment metadata):', productId);
 
         // Resolver usuário por email
         const email = existingPayment?.metadata?.customer_data?.email || mpPayment?.payer?.email || null;

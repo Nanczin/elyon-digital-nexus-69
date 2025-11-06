@@ -12,7 +12,7 @@ import nubankLogo from '@/assets/banks/nubank-logo.png';
 import itauLogo from '@/assets/banks/itau-logo.png';
 import bradescoLogo from '@/assets/banks/bradesco-logo.png';
 import santanderLogo from '@/assets/banks/santander-logo.png';
-import { DeliverableConfig, FormFields } from '@/integrations/supabase/types';
+import { DeliverableConfig, FormFields, PackageConfig } from '@/integrations/supabase/types';
 import { CheckoutData } from '@/components/checkout/CheckoutLayoutProps';
 
 const PaymentSuccess = () => {
@@ -22,8 +22,9 @@ const PaymentSuccess = () => {
   const [paymentData, setPaymentData] = useState<any>(null);
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
-  const [productData, setProductData] = useState<CheckoutData['products'] | null>(null);
-  const [checkoutDeliverable, setCheckoutDeliverable] = useState<DeliverableConfig | null>(null);
+  const [productData, setProductData] = useState<CheckoutData['products'] | null>(null); // Main checkout product
+  const [checkoutDeliverable, setCheckoutDeliverable] = useState<DeliverableConfig | null>(null); // Checkout-level deliverable
+  const [packageDeliverable, setPackageDeliverable] = useState<DeliverableConfig | null>(null); // Package-specific deliverable
   const [isChecking, setIsChecking] = useState(true);
   const [lastDetail, setLastDetail] = useState<string | null>(null);
   const [deliverableLinkToDisplay, setDeliverableLinkToDisplay] = useState<string | null>(null);
@@ -42,18 +43,28 @@ const PaymentSuccess = () => {
 
   const deriveDeliverableLink = (
     product: CheckoutData['products'] | null,
-    deliverableConfig: DeliverableConfig | null,
+    checkoutDeliverableConfig: DeliverableConfig | null,
+    packageDeliverableConfig: DeliverableConfig | null, // New parameter
     emailTransactionalDeliverableLink: string | null
   ): string | null => {
-    console.log('PAYMENT_SUCCESS_DEBUG: deriveDeliverableLink called with:', { product, deliverableConfig, emailTransactionalDeliverableLink });
+    console.log('PAYMENT_SUCCESS_DEBUG: deriveDeliverableLink called with:', { product, checkoutDeliverableConfig, packageDeliverableConfig, emailTransactionalDeliverableLink });
+    
+    // 1. Prioritize link from emailTransactionalDeliverableLink (passed from Edge Function)
     if (emailTransactionalDeliverableLink) {
       console.log('PAYMENT_SUCCESS_DEBUG: Derived link from emailTransactionalDeliverableLink (highest priority):', emailTransactionalDeliverableLink);
       return emailTransactionalDeliverableLink;
     }
-    if (deliverableConfig?.type !== 'none' && (deliverableConfig?.link || deliverableConfig?.fileUrl)) {
-      console.log('PAYMENT_SUCCESS_DEBUG: Derived link from checkoutDeliverableConfig:', deliverableConfig.link || deliverableConfig.fileUrl);
-      return deliverableConfig.link || deliverableConfig.fileUrl;
+    // 2. Then, package-specific deliverable
+    if (packageDeliverableConfig?.type !== 'none' && (packageDeliverableConfig?.link || packageDeliverableConfig?.fileUrl)) {
+      console.log('PAYMENT_SUCCESS_DEBUG: Derived link from packageDeliverableConfig:', packageDeliverableConfig.link || packageDeliverableConfig.fileUrl);
+      return packageDeliverableConfig.link || packageDeliverableConfig.fileUrl;
     }
+    // 3. Then, checkout-level deliverable
+    if (checkoutDeliverableConfig?.type !== 'none' && (checkoutDeliverableConfig?.link || checkoutDeliverableConfig?.fileUrl)) {
+      console.log('PAYMENT_SUCCESS_DEBUG: Derived link from checkoutDeliverableConfig:', checkoutDeliverableConfig.link || checkoutDeliverableConfig.fileUrl);
+      return checkoutDeliverableConfig.link || checkoutDeliverableConfig.fileUrl;
+    }
+    // 4. Finally, main product deliverable
     if (product?.member_area_link || product?.file_url) {
       console.log('PAYMENT_SUCCESS_DEBUG: Derived link from productData:', product.member_area_link || product.file_url);
       return product.member_area_link || product.file_url;
@@ -122,21 +133,30 @@ const PaymentSuccess = () => {
       const emailTransactionalDeliverableLink = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink || null;
       const currentCheckoutDeliverableConfig = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
+      
+      // Get package-specific deliverable from fetched payment
+      const selectedPackageId = (fetchedPaymentFromDb.metadata as any)?.selected_package;
+      const packages = fetchedPaymentFromDb.checkouts?.form_fields?.packages as PackageConfig[] || [];
+      const selectedPackageDetails = packages.find(pkg => pkg.id === selectedPackageId);
+      const currentPackageDeliverableConfig = selectedPackageDetails?.deliverable || null;
 
       setProductData(currentProduct);
       setCheckoutDeliverable(currentCheckoutDeliverableConfig);
+      setPackageDeliverable(currentPackageDeliverableConfig); // Set package-specific deliverable
       setSendTransactionalEmail(currentSendTransactionalEmail);
 
       const determinedLink = deriveDeliverableLink(
         currentProduct,
         currentCheckoutDeliverableConfig,
+        currentPackageDeliverableConfig, // Pass package-specific deliverable
         emailTransactionalDeliverableLink
       );
       setDeliverableLinkToDisplay(determinedLink);
-      console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentCheckoutDeliverableConfig, determinedLink, currentSendTransactionalEmail });
+      console.log('PAYMENT_SUCCESS_DEBUG: 21. Product/Deliverable data updated from fetched payment:', { currentProduct, currentCheckoutDeliverableConfig, currentPackageDeliverableConfig, determinedLink, currentSendTransactionalEmail });
     } else {
       setProductData(null);
       setCheckoutDeliverable(null);
+      setPackageDeliverable(null); // Clear package-specific deliverable
       setDeliverableLinkToDisplay(null);
       setSendTransactionalEmail(true); // Default to true if no specific data
     }
@@ -157,13 +177,21 @@ const PaymentSuccess = () => {
       const productFromLocalStorage = initialPaymentData.payment?.checkouts?.products as CheckoutData['products'] || null;
       const checkoutDeliverableFromLocalStorage = initialPaymentData.payment?.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const emailTransactionalDeliverableLinkFromLocalStorage = initialPaymentData.deliverableLink || null;
+      
+      // Get package-specific deliverable from localStorage
+      const selectedPackageId = initialPaymentData.selectedPackage;
+      const packages = initialPaymentData.payment?.checkouts?.form_fields?.packages as PackageConfig[] || [];
+      const selectedPackageDetails = packages.find(pkg => pkg.id === selectedPackageId);
+      const packageDeliverableFromLocalStorage = selectedPackageDetails?.deliverable || null;
 
       setProductData(productFromLocalStorage);
       setCheckoutDeliverable(checkoutDeliverableFromLocalStorage);
+      setPackageDeliverable(packageDeliverableFromLocalStorage); // Set package-specific deliverable
 
       const initialDeterminedLink = deriveDeliverableLink(
         productFromLocalStorage,
         checkoutDeliverableFromLocalStorage,
+        packageDeliverableFromLocalStorage, // Pass package-specific deliverable
         emailTransactionalDeliverableLinkFromLocalStorage
       );
       setDeliverableLinkToDisplay(initialDeterminedLink);
@@ -262,10 +290,13 @@ const PaymentSuccess = () => {
 
   const getDeliverableButtonText = (link: string | null) => {
     if (!link) return 'Acessar Produto';
-    if (checkoutDeliverable?.name) {
+    if (packageDeliverable?.name) { // Prioritize package deliverable name
+      return `Acessar ${packageDeliverable.name}`;
+    }
+    if (checkoutDeliverable?.name) { // Then checkout-level deliverable name
       return `Acessar ${checkoutDeliverable.name}`;
     }
-    if (productData?.name) {
+    if (productData?.name) { // Finally main product name
       return `Acessar ${productData.name}`;
     }
     return 'Acessar Produto';
@@ -318,12 +349,12 @@ const PaymentSuccess = () => {
                 {deliverableLinkToDisplay && (
                   <div className="bg-white border border-green-200 rounded-lg p-6 space-y-4">
                     <h3 className="font-semibold text-lg text-gray-800">
-                      {checkoutDeliverable?.name || productData?.name || 'Seu Produto'}
+                      {packageDeliverable?.name || checkoutDeliverable?.name || productData?.name || 'Seu Produto'}
                     </h3>
                     
-                    {(checkoutDeliverable?.description || productData?.description) && (
+                    {(packageDeliverable?.description || checkoutDeliverable?.description || productData?.description) && (
                       <p className="text-gray-600 text-sm">
-                        {checkoutDeliverable?.description || productData?.description}
+                        {packageDeliverable?.description || checkoutDeliverable?.description || productData?.description}
                       </p>
                     )}
                     

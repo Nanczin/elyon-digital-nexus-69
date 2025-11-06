@@ -22,11 +22,12 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables } from '@/integrations/supabase/types'; // Importar Tables
+import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables } from '@/integrations/supabase/types'; // Importar DeliverableConfig e os novos tipos
 import { Alert, AlertDescription } from '@/components/ui/alert'; // Importação adicionada
 import { setNestedValue, deepMerge } from '@/lib/utils'; // Importar setNestedValue e deepMerge
 
 type MemberArea = Tables<'member_areas'>;
+type Product = Tables<'products'>; // Import Product type
 
 const AdminCheckouts = () => {
   const {
@@ -47,14 +48,18 @@ const AdminCheckouts = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [editingCheckout, setEditingCheckout] = useState<any>(null);
   const [checkouts, setCheckouts] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]); // Usar Product type
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]); // Novo estado para áreas de membros
   const [currentTab, setCurrentTab] = useState('basic');
-  const [selectedDeliverableFile, setSelectedDeliverableFile] = useState<File | null>(null); // Novo estado para o arquivo
   
+  // State to manage file uploads for package deliverables
+  const [packageDeliverableFiles, setPackageDeliverableFiles] = useState<Record<number, File | null>>({});
+  // State to manage file upload for checkout-level deliverable
+  const [checkoutDeliverableFile, setCheckoutDeliverableFile] = useState<File | null>(null);
+
   // Refatorado initialFormData para ser uma função que retorna um novo objeto
   const getInitialFormData = useCallback(() => {
-    const initial = {
+    const initial: any = { // Use 'any' temporarily for easier merging, will be typed later
       name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
       selectedProduct: '',
       layout: 'horizontal' as string,
@@ -71,7 +76,9 @@ const AdminCheckouts = () => {
           topics: ['Acesso vitalício: ao conteúdo principal'],
           price: 97.00, // Default price in Reais
           originalPrice: 0,
-          mostSold: false
+          mostSold: false,
+          associatedProductId: null, // New default
+          deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null } // New default
         }] as PackageConfig[],
         guarantee: {
           enabled: true,
@@ -82,12 +89,12 @@ const AdminCheckouts = () => {
           enabled: true,
           text: 'Todos os direitos reservados. Este produto é protegido por direitos autorais.'
         } as ReservedRightsConfig,
-        deliverable: {
+        deliverable: { // Checkout-level deliverable
           type: 'none' as 'none' | 'link' | 'upload',
-          link: '',
-          fileUrl: '',
-          name: '',
-          description: '',
+          link: null,
+          fileUrl: null,
+          name: null,
+          description: null,
         } as DeliverableConfig,
         sendTransactionalEmail: true,
         transactionalEmailSubject: 'Seu acesso ao produto Elyon Digital!',
@@ -180,16 +187,23 @@ const AdminCheckouts = () => {
       topics: Array.isArray(pkg.topics) ? pkg.topics.filter((t: any) => typeof t === 'string') : [''],
       price: pkg.price ? pkg.price / 100 : priceInReais,
       originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
-      mostSold: pkg.mostSold ?? false
+      mostSold: pkg.mostSold ?? false,
+      associatedProductId: pkg.associatedProductId || null, // Load new field
+      deliverable: pkg.deliverable || initial.form_fields.packages[0].deliverable // Load new field
     })) : initial.form_fields.packages; // Usar initial.form_fields.packages como fallback
 
     // Definir o arquivo selecionado localmente se houver um fileUrl existente
     if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
-      // Não podemos recriar um objeto File a partir de uma URL, então apenas limpamos o estado local
-      // e o usuário precisará fazer upload novamente se quiser alterar o arquivo.
-      // O fileUrl existente será mantido no checkoutData.
-      setSelectedDeliverableFile(null); 
+      setCheckoutDeliverableFile(null); // Clear local file state for checkout-level deliverable
     }
+    // Clear local file states for package deliverables
+    const initialPackageFiles: Record<number, File | null> = {};
+    packagesConfig.forEach(pkg => {
+      if (pkg.deliverable?.fileUrl && pkg.deliverable?.type === 'upload') {
+        initialPackageFiles[pkg.id] = null;
+      }
+    });
+    setPackageDeliverableFiles(initialPackageFiles);
 
 
     return deepMerge(initial, { // Usar deepMerge para garantir que todos os campos padrão estejam presentes
@@ -205,12 +219,12 @@ const AdminCheckouts = () => {
         packages: packagesConfig, // Usar os pacotes processados
         guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initial.form_fields.guarantee,
         reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initial.form_fields.reservedRights,
-        deliverable: {
+        deliverable: { // Checkout-level deliverable
           type: checkout.form_fields?.deliverable?.type || 'none',
-          link: checkout.form_fields?.deliverable?.link || '',
-          fileUrl: checkout.form_fields?.deliverable?.fileUrl || '',
-          name: checkout.form_fields?.deliverable?.name || '',
-          description: checkout.form_fields?.deliverable?.description || ''
+          link: checkout.form_fields?.deliverable?.link || null,
+          fileUrl: checkout.form_fields?.deliverable?.fileUrl || null,
+          name: checkout.form_fields?.deliverable?.name || null,
+          description: checkout.form_fields?.deliverable?.description || null
         },
         sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true,
         transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initial.form_fields.transactionalEmailSubject,
@@ -331,7 +345,7 @@ const AdminCheckouts = () => {
       const {
         data,
         error
-      } = await supabase.from('products').select('id, name, price, description, access_url').order('created_at', {
+      } = await supabase.from('products').select('id, name, price, description, access_url, file_url, member_area_link').order('created_at', {
         ascending: false
       });
       if (error) throw error;
@@ -362,7 +376,7 @@ const AdminCheckouts = () => {
 
   const uploadFile = async (file: File, folder: string) => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -383,7 +397,8 @@ const AdminCheckouts = () => {
       const originalData = loadOriginalCheckoutData(editingCheckout);
       loadData(originalData); // Usar loadData para sobrescrever o estado
       clearSavedData(); // Limpar o rascunho do localStorage
-      setSelectedDeliverableFile(null); // Limpar arquivo local
+      setCheckoutDeliverableFile(null); // Limpar checkout-level file
+      setPackageDeliverableFiles({}); // Limpar package-level files
       
       toast({
         title: "Dados recarregados",
@@ -392,7 +407,8 @@ const AdminCheckouts = () => {
     } else {
       loadData(getInitialFormData()); // Para novo checkout, resetar para initialFormData
       clearSavedData();
-      setSelectedDeliverableFile(null); // Limpar arquivo local
+      setCheckoutDeliverableFile(null); // Limpar checkout-level file
+      setPackageDeliverableFiles({}); // Limpar package-level files
       toast({
         title: "Formulário limpo",
         description: "Formulário resetado para valores padrão"
@@ -406,8 +422,9 @@ const AdminCheckouts = () => {
     const newKey = `checkout-edit-${checkout.id}`;
     setAutoSaveKey(newKey); // useAutoSave irá carregar o rascunho para esta chave (se existir)
     
-    // Limpar o arquivo selecionado localmente ao iniciar a edição
-    setSelectedDeliverableFile(null);
+    // Limpar os arquivos selecionados localmente ao iniciar a edição
+    setCheckoutDeliverableFile(null);
+    setPackageDeliverableFiles({});
 
     setIsDialogOpen(true);
   };
@@ -453,13 +470,17 @@ const AdminCheckouts = () => {
     });
   };
 
-  const handleFileChange = (file: File | null) => {
-    setSelectedDeliverableFile(file);
-    // Se um novo arquivo é selecionado, limpar o fileUrl existente no estado do checkout
-    // para que o novo upload gere uma nova URL.
-    // Se o arquivo for null (removido), manter o fileUrl existente ou limpá-lo se for o caso.
+  const handleCheckoutDeliverableFileChange = (file: File | null) => {
+    setCheckoutDeliverableFile(file);
     if (file) {
-      handleInputChange('form_fields.deliverable.fileUrl', '');
+      handleInputChange('form_fields.deliverable.fileUrl', null); // Clear existing URL if new file is selected
+    }
+  };
+
+  const handlePackageDeliverableFileChange = (packageId: number, file: File | null) => {
+    setPackageDeliverableFiles(prev => ({ ...prev, [packageId]: file }));
+    if (file) {
+      handleInputChange(`form_fields.packages[${checkoutData.form_fields.packages.findIndex((p: PackageConfig) => p.id === packageId)}].deliverable.fileUrl`, null);
     }
   };
 
@@ -471,7 +492,9 @@ const AdminCheckouts = () => {
       topics: [''],
       price: 0,
       originalPrice: 0,
-      mostSold: false
+      mostSold: false,
+      associatedProductId: null,
+      deliverable: { type: 'none', link: null, fileUrl: null, name: null, description: null }
     }] as PackageConfig[]; // Tipado explicitamente
     handleInputChange('form_fields.packages', newPackages);
   };
@@ -482,30 +505,62 @@ const AdminCheckouts = () => {
       return;
     }
     handleInputChange('form_fields.packages', newPackages);
+    setPackageDeliverableFiles(prev => {
+      const newState = { ...prev };
+      delete newState[id];
+      return newState;
+    });
   };
   const updatePackage = (id: number, field: string, value: any) => {
-    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === id ? {
+    const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === id ? {
       ...pkg,
       [field]: value
     } : pkg);
     handleInputChange('form_fields.packages', packages);
   };
+
+  const loadProductAsPackage = (packageId: number, productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      const priceInReais = product.price / 100;
+      const originalPriceInReais = product.price_original ? product.price_original / 100 : 0;
+
+      const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === packageId ? {
+        ...pkg,
+        name: product.name,
+        description: product.description || '',
+        price: priceInReais,
+        originalPrice: originalPriceInReais,
+        associatedProductId: product.id,
+        // Load deliverable from product if available
+        deliverable: {
+          type: product.file_url ? (product.file_url.startsWith('http') ? 'link' : 'upload') : (product.member_area_link ? 'link' : 'none'),
+          link: product.file_url?.startsWith('http') ? product.file_url : product.member_area_link,
+          fileUrl: product.file_url && !product.file_url.startsWith('http') ? product.file_url : null,
+          name: product.name,
+          description: product.description
+        }
+      } : pkg);
+      handleInputChange('form_fields.packages', packages);
+    }
+  };
+
   const addTopicToPackage = (packageId: number) => {
-    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
+    const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === packageId ? {
       ...pkg,
       topics: [...pkg.topics, '']
     } : pkg);
     handleInputChange('form_fields.packages', packages);
   };
   const removeTopicFromPackage = (packageId: number, topicIndex: number) => {
-    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
+    const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === packageId ? {
       ...pkg,
       topics: pkg.topics.filter((_, index) => index !== topicIndex)
     } : pkg);
     handleInputChange('form_fields.packages', packages);
   };
   const updatePackageTopic = (packageId: number, topicIndex: number, value: string) => {
-    const packages = checkoutData.form_fields.packages.map(pkg => pkg.id === packageId ? {
+    const packages = checkoutData.form_fields.packages.map((pkg: PackageConfig) => pkg.id === packageId ? {
       ...pkg,
       topics: pkg.topics.map((topic, index) => index === topicIndex ? value : topic)
     } : pkg);
@@ -594,14 +649,34 @@ const AdminCheckouts = () => {
     try {
       console.log('Timer sendo salvo:', checkoutData.timer);
 
-      let deliverableFileUrl = checkoutData.form_fields.deliverable.fileUrl;
-      if (checkoutData.form_fields.deliverable.type === 'upload' && selectedDeliverableFile) { // Usar selectedDeliverableFile
-        deliverableFileUrl = await uploadFile(selectedDeliverableFile, 'checkout-deliverables');
-      } else if (checkoutData.form_fields.deliverable.type === 'link') {
-        deliverableFileUrl = checkoutData.form_fields.deliverable.link;
+      // Handle checkout-level deliverable file upload
+      let finalCheckoutDeliverable: DeliverableConfig = { ...checkoutData.form_fields.deliverable };
+      if (finalCheckoutDeliverable.type === 'upload' && checkoutDeliverableFile) {
+        finalCheckoutDeliverable.fileUrl = await uploadFile(checkoutDeliverableFile, 'checkout-deliverables');
+      } else if (finalCheckoutDeliverable.type === 'link') {
+        finalCheckoutDeliverable.fileUrl = finalCheckoutDeliverable.link; // Use link as fileUrl for consistency
       } else {
-        deliverableFileUrl = ''; // Clear if type is 'none'
+        finalCheckoutDeliverable.fileUrl = null;
+        finalCheckoutDeliverable.link = null;
       }
+
+      // Handle package-level deliverable file uploads
+      const packagesWithDeliverables = await Promise.all(
+        checkoutData.form_fields.packages.map(async (pkg: PackageConfig) => {
+          let packageDeliverable: DeliverableConfig = { ...pkg.deliverable };
+          const fileForPackage = packageDeliverableFiles[pkg.id];
+
+          if (packageDeliverable.type === 'upload' && fileForPackage) {
+            packageDeliverable.fileUrl = await uploadFile(fileForPackage, `package-deliverables/${pkg.id}`);
+          } else if (packageDeliverable.type === 'link') {
+            packageDeliverable.fileUrl = packageDeliverable.link; // Use link as fileUrl for consistency
+          } else {
+            packageDeliverable.fileUrl = null;
+            packageDeliverable.link = null;
+          }
+          return { ...pkg, deliverable: packageDeliverable };
+        })
+      );
 
       const checkoutPayload = {
         user_id: user?.id, // Adicionar user_id
@@ -612,17 +687,12 @@ const AdminCheckouts = () => {
         promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null, // Aplicar Math.round
         form_fields: {
           ...checkoutData.form_fields, // Usar o objeto form_fields já estruturado
-          packages: checkoutData.form_fields.packages.map(pkg => ({ // Converter preços de pacotes para centavos
+          packages: packagesWithDeliverables.map(pkg => ({ // Converter preços de pacotes para centavos
             ...pkg,
             price: Math.round(pkg.price * 100), // Aplicar Math.round
             originalPrice: Math.round((pkg.originalPrice || 0) * 100) // Aplicar Math.round
           })),
-          deliverable: { // Salvar dados do entregável
-            ...checkoutData.form_fields.deliverable,
-            link: checkoutData.form_fields.deliverable.type === 'link' ? checkoutData.form_fields.deliverable.link : null,
-            fileUrl: deliverableFileUrl, // URL do arquivo carregado ou link direto
-            // 'file' não existe mais aqui
-          }
+          deliverable: finalCheckoutDeliverable // Save processed checkout-level deliverable
         },
         payment_methods: checkoutData.payment_methods, // Usar o objeto payment_methods já estruturado
         order_bumps: checkoutData.order_bumps.map(bump => ({
@@ -661,7 +731,8 @@ const AdminCheckouts = () => {
       setIsDialogOpen(false);
       setEditingCheckout(null);
       clearSavedData(); // Limpar dados salvos após salvar com sucesso
-      setSelectedDeliverableFile(null); // Limpar arquivo local após salvar
+      setCheckoutDeliverableFile(null); // Limpar checkout-level file after save
+      setPackageDeliverableFiles({}); // Limpar package-level files after save
       fetchCheckouts();
     } catch (error: any) { // Improved error logging
       console.error('Detailed error saving checkout:', error);
@@ -891,7 +962,7 @@ const AdminCheckouts = () => {
                     </Button>
                   </div>
                   
-                  {checkoutData.form_fields.packages.map((pkg, index) => <Card key={pkg.id} className="p-4">
+                  {checkoutData.form_fields.packages.map((pkg: PackageConfig, index: number) => <Card key={pkg.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold flex items-center gap-2">
                           <Package className="h-4 w-4" />
@@ -963,6 +1034,150 @@ const AdminCheckouts = () => {
                          <div className="text-xs text-muted-foreground mt-2">
                            💡 O texto antes dos dois pontos (:) será destacado em negrito automaticamente
                          </div>
+                      </div>
+
+                      <Separator className="my-4" />
+
+                      <div className="space-y-4">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <ShoppingBag className="h-5 w-5" />
+                          Produto Associado (Opcional)
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Associe este pacote a um produto existente. Isso pode preencher automaticamente o nome, descrição e entregável.
+                        </p>
+                        <Select 
+                          value={pkg.associatedProductId || "none"} 
+                          onValueChange={value => {
+                            if (value === "none") {
+                              updatePackage(pkg.id, 'associatedProductId', null);
+                            } else {
+                              loadProductAsPackage(pkg.id, value);
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Associar a um produto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhum Produto Associado</SelectItem>
+                            {products.map(product => (
+                              <SelectItem key={product.id} value={product.id}>
+                                {product.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Separator className="my-4" />
+
+                      <div className="space-y-4">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Upload className="h-5 w-5" />
+                          Entregável do Pacote (Opcional)
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Configure um arquivo ou link que será disponibilizado na página de sucesso do pagamento para ESTE PACOTE.
+                          Isso sobrescreve o entregável do produto associado e do checkout principal.
+                        </p>
+
+                        <div className="space-y-2">
+                          <Label>Tipo de Entregável</Label>
+                          <Select 
+                            value={pkg.deliverable?.type || 'none'} 
+                            onValueChange={value => updatePackage(pkg.id, 'deliverable.type', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo de entregável" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Nenhum</SelectItem>
+                              <SelectItem value="link">Link Direto</SelectItem>
+                              <SelectItem value="upload">Upload de Arquivo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {pkg.deliverable?.type !== 'none' && (
+                          <>
+                            <div className="space-y-2">
+                              <Label htmlFor={`package-${pkg.id}-deliverableName`}>Nome do Entregável</Label>
+                              <Input 
+                                id={`package-${pkg.id}-deliverableName`} 
+                                value={pkg.deliverable?.name || ''} 
+                                onChange={e => updatePackage(pkg.id, 'deliverable.name', e.target.value)} 
+                                placeholder="Ex: E-book Exclusivo" 
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`package-${pkg.id}-deliverableDescription`}>Descrição do Entregável</Label>
+                              <Textarea 
+                                id={`package-${pkg.id}-deliverableDescription`} 
+                                value={pkg.deliverable?.description || ''} 
+                                onChange={e => updatePackage(pkg.id, 'deliverable.description', e.target.value)} 
+                                placeholder="Uma breve descrição do que o cliente receberá." 
+                                rows={3}
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {pkg.deliverable?.type === 'link' && (
+                          <div className="space-y-2">
+                            <Label htmlFor={`package-${pkg.id}-deliverableLink`}>Link do Entregável *</Label>
+                            <Input 
+                              id={`package-${pkg.id}-deliverableLink`} 
+                              type="url" 
+                              value={pkg.deliverable?.link || ''} 
+                              onChange={e => updatePackage(pkg.id, 'deliverable.link', e.target.value)} 
+                              placeholder="https://exemplo.com/meu-ebook.pdf" 
+                              required 
+                            />
+                          </div>
+                        )}
+
+                        {pkg.deliverable?.type === 'upload' && (
+                          <div className="space-y-2">
+                            <Label htmlFor={`package-${pkg.id}-deliverableFile`}>Arquivo Entregável *</Label>
+                            <Input 
+                              id={`package-${pkg.id}-deliverableFile`} 
+                              type="file" 
+                              onChange={e => handlePackageDeliverableFileChange(pkg.id, e.target.files?.[0] || null)} 
+                              required={!pkg.deliverable?.fileUrl && !packageDeliverableFiles[pkg.id]}
+                            />
+                            {pkg.deliverable?.fileUrl && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                <Link className="h-4 w-4" />
+                                <span>Arquivo atual: <a href={pkg.deliverable.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updatePackage(pkg.id, 'deliverable.fileUrl', null)}
+                                  className="h-6 px-2 text-destructive hover:text-destructive"
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" /> Remover
+                                </Button>
+                              </div>
+                            )}
+                            {packageDeliverableFiles[pkg.id] && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                <Upload className="h-4 w-4" />
+                                <span>Novo arquivo selecionado: {packageDeliverableFiles[pkg.id]?.name}</span>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handlePackageDeliverableFileChange(pkg.id, null)}
+                                  className="h-6 px-2 text-destructive hover:text-destructive"
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" /> Remover
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </Card>)}
                 </TabsContent>
@@ -1491,11 +1706,11 @@ const AdminCheckouts = () => {
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                       <Upload className="h-5 w-5" />
-                      Entregável do Checkout
+                      Entregável do Checkout (Padrão)
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       Configure um arquivo ou link que será disponibilizado na página de sucesso do pagamento.
-                      Isso sobrescreve o entregável do produto base, se houver.
+                      Este é o entregável padrão, que pode ser sobrescrito por um entregável específico de um pacote.
                     </p>
 
                     <div className="space-y-4">
@@ -1559,8 +1774,8 @@ const AdminCheckouts = () => {
                         <Input 
                           id="deliverableFile" 
                           type="file" 
-                          onChange={e => handleFileChange(e.target.files?.[0] || null)} 
-                          required={!checkoutData.form_fields.deliverable.fileUrl && !selectedDeliverableFile} // Condição de required
+                          onChange={e => handleCheckoutDeliverableFileChange(e.target.files?.[0] || null)} 
+                          required={!checkoutData.form_fields.deliverable.fileUrl && !checkoutDeliverableFile} // Condição de required
                         />
                         {checkoutData.form_fields.deliverable.fileUrl && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -1570,22 +1785,22 @@ const AdminCheckouts = () => {
                               type="button" 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => handleInputChange('form_fields.deliverable.fileUrl', '')}
+                              onClick={() => handleInputChange('form_fields.deliverable.fileUrl', null)}
                               className="h-6 px-2 text-destructive hover:text-destructive"
                             >
                               <XCircle className="h-3 w-3 mr-1" /> Remover
                             </Button>
                           </div>
                         )}
-                        {selectedDeliverableFile && (
+                        {checkoutDeliverableFile && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                             <Upload className="h-4 w-4" />
-                            <span>Novo arquivo selecionado: {selectedDeliverableFile.name}</span>
+                            <span>Novo arquivo selecionado: {checkoutDeliverableFile.name}</span>
                             <Button 
                               type="button" 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => setSelectedDeliverableFile(null)}
+                              onClick={() => handleCheckoutDeliverableFileChange(null)}
                               className="h-6 px-2 text-destructive hover:text-destructive"
                             >
                               <XCircle className="h-3 w-3 mr-1" /> Remover
@@ -1702,7 +1917,7 @@ const AdminCheckouts = () => {
           {checkouts.length === 0 ? <div className="text-center py-8 sm:py-12">
               <CreditCard className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
               <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum checkout criado</h3>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-4">
                 Crie sua primeira página de vendas personalizada com Mercado Pago
               </p>
             </div> : <div className="space-y-3 sm:space-y-4">

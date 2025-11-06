@@ -107,10 +107,23 @@ const Checkout = () => {
       // Mapear form_fields para a estrutura esperada, convertendo preços de pacotes
       const formFieldsData = (data.form_fields || {}) as FormFields;
       const packagesConfig: PackageConfig[] = Array.isArray(formFieldsData.packages) 
-        ? formFieldsData.packages.map(pkg => ({
-            ...pkg,
-            price: pkg.price / 100, // Convert package price to reais
-            originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : 0, // Convert original price to reais
+        ? await Promise.all(formFieldsData.packages.map(async pkg => {
+            let associatedProductDetails = null;
+            if (pkg.associatedProductId) {
+              const { data: productData, error: productError } = await supabase
+                .from('products')
+                .select('id, name, description, banner_url, logo_url, member_area_link, file_url')
+                .eq('id', pkg.associatedProductId)
+                .maybeSingle();
+              if (productError) console.error('Error fetching associated product for package:', productError);
+              associatedProductDetails = productData;
+            }
+            return {
+              ...pkg,
+              price: pkg.price / 100, // Convert package price to reais
+              originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : 0, // Convert original price to reais
+              product: associatedProductDetails, // Attach product details to package
+            };
           }))
         : [];
 
@@ -319,12 +332,23 @@ const Checkout = () => {
         return;
       }
       
-      // Obter dados do produto e entregável para passar para a Edge Function
-      const productData = checkout?.products as CheckoutData['products'];
-      const checkoutDeliverable = checkout?.form_fields?.deliverable as DeliverableConfig | undefined; // Acessado via form_fields
-      const finalDeliverableLink = checkoutDeliverable?.type !== 'none' && (checkoutDeliverable?.link || checkoutDeliverable?.fileUrl)
-        ? (checkoutDeliverable.link || checkoutDeliverable.fileUrl)
-        : productData?.member_area_link || productData?.file_url;
+      // Determine the selected package and its associated product/deliverable
+      const selectedPackageDetails = checkout?.form_fields?.packages?.find(pkg => pkg.id === selectedPackage);
+      const packageAssociatedProduct = selectedPackageDetails?.product;
+      const packageDeliverable = selectedPackageDetails?.deliverable;
+
+      // Determine the final product ID for the order/access
+      const finalProductId = packageAssociatedProduct?.id || checkout?.product_id;
+
+      // Determine the final deliverable link based on priority: package > checkout-level > main product
+      let finalDeliverableLink: string | null = null;
+      if (packageDeliverable?.type !== 'none' && (packageDeliverable?.link || packageDeliverable?.fileUrl)) {
+        finalDeliverableLink = packageDeliverable.link || packageDeliverable.fileUrl || null;
+      } else if (checkout?.form_fields?.deliverable?.type !== 'none' && (checkout?.form_fields?.deliverable?.link || checkout?.form_fields?.deliverable?.fileUrl)) {
+        finalDeliverableLink = checkout.form_fields.deliverable.link || checkout.form_fields.deliverable.fileUrl || null;
+      } else if (checkout?.products?.member_area_link || checkout?.products?.file_url) {
+        finalDeliverableLink = checkout.products.member_area_link || checkout.products.file_url || null;
+      }
 
       console.log('CHECKOUT_FRONTEND_DEBUG: Final deliverable link to save in localStorage:', finalDeliverableLink); // ADDED LOG
 
@@ -341,14 +365,15 @@ const Checkout = () => {
         orderBumps: selectedOrderBumps,
         selectedPackage: selectedPackage,
         paymentMethod: selectedPaymentMethod,
+        finalProductId: finalProductId, // Pass the resolved product ID
         // Adicionar dados de e-mail transacional e entregável ao metadata
         emailMetadata: {
           sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true, // Acessado via form_fields
           transactionalEmailSubject: checkout?.form_fields?.transactionalEmailSubject, // Acessado via form_fields
           transactionalEmailBody: checkout?.form_fields?.transactionalEmailBody, // Acessado via form_fields
           deliverableLink: finalDeliverableLink || null, // Garantir que seja string ou null
-          productName: productData?.name,
-          productDescription: productData?.description,
+          productName: packageAssociatedProduct?.name || checkout?.products?.name, // Use package product name if available
+          productDescription: packageAssociatedProduct?.description || checkout?.products?.description, // Use package product description if available
           sellerUserId: checkout?.user_id || null, // Passar o user_id do checkout (vendedor), garantindo que seja null se não existir
           supportEmail: checkout?.support_contact?.email,
         }
@@ -382,7 +407,7 @@ const Checkout = () => {
       if (hasIntegrations) {
         trackPurchaseEvent({
           amount: totalAmount,
-          product_id: checkout?.product_id,
+          product_id: finalProductId, // Use the resolved product ID for tracking
           checkout_id: checkoutId,
           payment_method: selectedPaymentMethod,
           customer_data: customerData

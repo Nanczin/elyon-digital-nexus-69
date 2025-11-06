@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { formatTopicText } from '@/utils/textFormatting';
+import { Tables } from '@/integrations/supabase/types'; // Import Tables type
 
 interface Package {
   id: number;
@@ -11,6 +12,8 @@ interface Package {
   price: number;
   originalPrice: number;
   mostSold?: boolean;
+  associatedProductId?: string | null;
+  product?: Tables<'products'> | null; // Add product details for display
 }
 
 interface PackageSelectorProps {
@@ -62,7 +65,9 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
       id: pkg.id,
       name: pkg.name,
       hasTopics: pkg.topics?.length > 0,
-      hasValidTopics: pkg.topics?.some(topic => topic.trim())
+      hasValidTopics: pkg.topics?.some(topic => topic.trim()),
+      associatedProductId: pkg.associatedProductId,
+      productName: pkg.product?.name
     }))
   });
 
@@ -154,6 +159,11 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
                     >
                       {pkg.name || `Pacote ${pkg.id}`}
                     </span>
+                    {pkg.product?.name && pkg.product.name !== pkg.name && (
+                      <span className="text-sm text-muted-foreground block mt-1">
+                        Produto: {pkg.product.name}
+                      </span>
+                    )}
                   </div>
                 </div>
                 
