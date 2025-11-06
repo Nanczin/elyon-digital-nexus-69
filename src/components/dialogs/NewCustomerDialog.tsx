@@ -91,14 +91,14 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="text-sm sm:text-base"> {/* Ajustado text size */}
           <UserPlus className="mr-2 h-4 w-4" />
           Novo Cliente
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
         <DialogHeader>
-          <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Cadastrar Novo Cliente</DialogTitle> {/* Ajustado text size */}
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -107,11 +107,11 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome Completo *</FormLabel>
+                  <FormLabel className="text-sm">Nome Completo *</FormLabel> {/* Ajustado text size */}
                   <FormControl>
-                    <Input placeholder="Nome completo do cliente" {...field} />
+                    <Input placeholder="Nome completo do cliente" {...field} className="text-sm" /> {/* Ajustado text size */}
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
                 </FormItem>
               )}
             />
@@ -121,11 +121,11 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email *</FormLabel>
+                  <FormLabel className="text-sm">Email *</FormLabel> {/* Ajustado text size */}
                   <FormControl>
-                    <Input type="email" placeholder="email@exemplo.com" {...field} />
+                    <Input type="email" placeholder="email@exemplo.com" {...field} className="text-sm" /> {/* Ajustado text size */}
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
                 </FormItem>
               )}
             />
@@ -135,11 +135,11 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefone</FormLabel>
+                  <FormLabel className="text-sm">Telefone</FormLabel> {/* Ajustado text size */}
                   <FormControl>
-                    <Input placeholder="(11) 99999-9999" {...field} />
+                    <Input placeholder="(11) 99999-9999" {...field} className="text-sm" /> {/* Ajustado text size */}
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
                 </FormItem>
               )}
             />
@@ -149,20 +149,20 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
               name="cpf"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CPF</FormLabel>
+                  <FormLabel className="text-sm">CPF</FormLabel> {/* Ajustado text size */}
                   <FormControl>
-                    <Input placeholder="000.000.000-00" {...field} />
+                    <Input placeholder="000.000.000-00" {...field} className="text-sm" /> {/* Ajustado text size */}
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
                 </FormItem>
               )}
             />
             
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2"> {/* Ajustado flex e space-y */}
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto text-sm"> {/* Ajustado w, text size */}
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto text-sm"> {/* Ajustado w, text size */}
                 {loading ? 'Cadastrando...' : 'Cadastrar Cliente'}
               </Button>
             </div>

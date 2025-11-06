@@ -105,10 +105,10 @@ const Sales = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"> {/* Ajustado flex e gap */}
         <div>
-          <h1 className="text-3xl font-bold">Vendas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Vendas</h1> {/* Ajustado text size */}
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
             Gerencie todas as suas vendas e transações
           </p>
         </div>
@@ -116,7 +116,7 @@ const Sales = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"> {/* Ajustado grid-cols */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -164,17 +164,17 @@ const Sales = () => {
       {/* Sales Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Vendas Recentes</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Vendas Recentes</CardTitle> {/* Ajustado text size */}
+          <CardDescription className="text-sm sm:text-base"> {/* Ajustado text size */}
             Lista das vendas mais recentes realizadas
           </CardDescription>
         </CardHeader>
         <CardContent>
           {salesData.length === 0 ? (
             <div className="text-center py-8">
-              <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma venda encontrada</h3>
-              <p className="text-muted-foreground">
+              <ShoppingCart className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhuma venda encontrada</h3> {/* Ajustado text size */}
+              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
                 As vendas aparecerão aqui quando forem realizadas
               </p>
             </div>
@@ -183,18 +183,18 @@ const Sales = () => {
               {salesData.map((sale) => (
                 <div
                   key={sale.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-2" {/* Ajustado flex e gap */}
                 >
                   <div className="space-y-1">
-                    <p className="font-medium">{sale.customers?.name || 'Cliente'}</p>
-                    <p className="text-sm text-muted-foreground">{sale.product_name}</p>
+                    <p className="font-medium text-sm sm:text-base">{sale.customers?.name || 'Cliente'}</p> {/* Ajustado text size */}
+                    <p className="text-xs sm:text-sm text-muted-foreground">{sale.product_name}</p> {/* Ajustado text size */}
                     <p className="text-xs text-muted-foreground">
                       {sale.customers?.email}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
                     <div className="text-right">
-                      <p className="font-medium">R$ {(sale.amount / 100).toFixed(2).replace('.', ',')}</p>
+                      <p className="font-medium text-sm sm:text-base">R$ {(sale.amount / 100).toFixed(2).replace('.', ',')}</p> {/* Ajustado text size */}
                       <p className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(sale.created_at), { 
                           addSuffix: true, 
@@ -203,7 +203,7 @@ const Sales = () => {
                       </p>
                       <p className="text-xs text-muted-foreground">{sale.payment_method}</p>
                     </div>
-                    <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'}>
+                    <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'} className="text-xs"> {/* Ajustado text size */}
                       {sale.status === 'completed' ? 'Concluída' : 'Pendente'}
                     </Badge>
                   </div>

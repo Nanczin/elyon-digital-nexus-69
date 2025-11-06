@@ -35,9 +35,9 @@ const CommentDetailsDialog = ({ comment, onClose, memberAreaId }: { comment: any
   };
 
   return (
-    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
       <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
+        <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
           <MessageCircle className="h-5 w-5" /> Detalhes do Comentário
         </DialogTitle>
       </DialogHeader>
@@ -64,25 +64,25 @@ const CommentDetailsDialog = ({ comment, onClose, memberAreaId }: { comment: any
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">
+            <Button variant="destructive" className="w-full text-sm sm:text-base"> {/* Ajustado text size */}
               <Trash2 className="h-4 w-4 mr-2" /> Excluir Comentário
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
+              <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
                 Tem certeza que deseja excluir este comentário? Esta ação é irreversível.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleDeleteComment(comment.id)}>Excluir</AlertDialogAction>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
+              <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
+              <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="text-xs sm:text-sm">Excluir</AlertDialogAction> {/* Ajustado text size */}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      <Button onClick={onClose} className="w-full mt-4">Fechar</Button>
+      <Button onClick={onClose} className="w-full mt-4 text-sm sm:text-base">Fechar</Button> {/* Ajustado text size */}
     </DialogContent>
   );
 };
@@ -166,59 +166,59 @@ const AdminCommunity = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
       <Card>
         <CardHeader>
-          <CardTitle>Comentários da Comunidade ({comments.length})</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Comentários da Comunidade ({comments.length})</CardTitle> {/* Ajustado text size */}
         </CardHeader>
         <CardContent>
           {comments.length === 0 ? (
             <div className="text-center py-8">
-              <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum comentário na comunidade</h3>
-              <p className="text-muted-foreground">
+              <MessageCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum comentário na comunidade</h3> {/* Ajustado text size */}
+              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
                 Comentários feitos nas aulas aparecerão aqui
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {comments.map(comment => (
-                <div key={comment.id} className="p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={comment.id} className="p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors"> {/* Ajustado padding */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-2"> {/* Ajustado flex e gap */}
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10"> {/* Ajustado avatar size */}
                         <AvatarImage src={comment.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${comment.profiles?.name}`} />
                         <AvatarFallback>{comment.profiles?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</AvatarFallback>
                       </Avatar>
-                      <h3 className="font-semibold text-lg">{comment.profiles?.name || 'Membro'}</h3>
+                      <h3 className="font-semibold text-sm sm:text-base">{comment.profiles?.name || 'Membro'}</h3> {/* Ajustado text size */}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleViewComment(comment)}>
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado margin-top */}
+                      <Button variant="outline" size="sm" onClick={() => handleViewComment(comment)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
                         <Eye className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
+                          <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
+                            <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
                               Tem certeza que deseja excluir este comentário? Esta ação é irreversível.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteComment(comment.id)}>Excluir</AlertDialogAction>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
+                            <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
+                            <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="text-xs sm:text-sm">Excluir</AlertDialogAction> {/* Ajustado text size */}
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{comment.content}</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{comment.content}</p> {/* Ajustado text size */}
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-2"> {/* Ajustado flex e gap */}
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}</span>

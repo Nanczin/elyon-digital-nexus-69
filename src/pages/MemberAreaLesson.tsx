@@ -279,7 +279,7 @@ const MemberAreaLesson = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4 border-b"
+        className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b" {/* Ajustado px */}
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
           borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
@@ -291,37 +291,37 @@ const MemberAreaLesson = () => {
             <img 
               src={currentSettings.logo_url} 
               alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-16 w-16 object-contain" 
+              className="h-12 w-12 sm:h-16 sm:w-16 object-contain" {/* Ajustado h e w */}
             />
           ) : (
-            <Avatar className="h-16 w-16 border border-gray-200">
-              <AvatarFallback className="bg-white text-memberArea-text-dark text-xl font-semibold">
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200"> {/* Ajustado h e w */}
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold"> {/* Ajustado text size */}
                 {memberAreaNameInitials}
               </AvatarFallback>
             </Avatar>
           )}
-          <span className="text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
+          <span className="text-lg sm:text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span> {/* Ajustado text size */}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
-              <Avatar className="h-9 w-9 border border-gray-200">
+              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200"> {/* Ajustado h e w */}
                 <AvatarImage src={user?.user_metadata?.avatar_url || undefined} alt={userName} />
-                <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
+                <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold"> {/* Ajustado text size */}
                   {userInitial}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48" style={{ backgroundColor: cardBackground, color: textColor }}>
+          <DropdownMenuContent align="end" className="w-40 sm:w-48" style={{ backgroundColor: cardBackground, color: textColor }}> {/* Ajustado w */}
             <ProfileSettingsDialog memberAreaId={memberAreaId || ''}>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }}>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }} className="text-sm sm:text-base"> {/* Ajustado text size */}
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configurações de Perfil</span>
               </DropdownMenuItem>
             </ProfileSettingsDialog>
             <DropdownMenuSeparator style={{ backgroundColor: secondaryTextColor + '40' }} />
-            <DropdownMenuItem onClick={signOut} className="text-destructive">
+            <DropdownMenuItem onClick={signOut} className="text-destructive text-sm sm:text-base"> {/* Ajustado text size */}
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
             </DropdownMenuItem>
@@ -330,20 +330,20 @@ const MemberAreaLesson = () => {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full">
-        <Button variant="ghost" asChild className="mb-8 -ml-4" style={{ color: secondaryTextColor }}>
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full"> {/* Ajustado px, py, max-w- */}
+        <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base"> {/* Ajustado mb, ml, text size */}
           <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o módulo
           </Link>
         </Button>
 
-        <Card className="shadow-lg rounded-xl p-6 sm:p-8" style={{ backgroundColor: cardBackground }}>
-          <CardHeader className="px-0 pt-0 mb-6">
-            <CardTitle className="text-3xl sm:text-4xl font-bold leading-tight" style={{ color: textColor }}>
+        <Card className="shadow-lg rounded-xl p-4 sm:p-8" style={{ backgroundColor: cardBackground }}> {/* Ajustado p */}
+          <CardHeader className="px-0 pt-0 mb-4 sm:mb-6"> {/* Ajustado mb */}
+            <CardTitle className="text-2xl sm:text-4xl font-bold leading-tight" style={{ color: textColor }}> {/* Ajustado text size */}
               {lesson.title}
             </CardTitle>
             {lesson.description && (
-              <p className="text-lg sm:text-xl mt-2" style={{ color: secondaryTextColor }}>
+              <p className="text-base sm:text-xl mt-2" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
                 {lesson.description.trim()}
               </p>
             )}

@@ -304,17 +304,17 @@ const PaymentSuccess = () => {
 
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4"> {/* Ajustado padding */}
         <div className="container mx-auto px-4 max-w-2xl">
           <Card className="border-blue-200">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <div className="w-8 h-8 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4"> {/* Ajustado w, h */}
+                <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div> {/* Ajustado w, h */}
               </div>
-              <CardTitle className="text-2xl text-blue-700">
+              <CardTitle className="text-xl sm:text-2xl text-blue-700"> {/* Ajustado text size */}
                 Verificando Pagamento...
               </CardTitle>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
                 Aguarde enquanto confirmamos seu pagamento
               </p>
             </CardHeader>
@@ -326,42 +326,42 @@ const PaymentSuccess = () => {
 
   if (paymentStatus === 'completed') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-4"> {/* Ajustado padding */}
         <div className="container mx-auto px-4 max-w-2xl">
           <Card className="border-green-200">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mb-4"> {/* Ajustado w, h */}
+                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" /> {/* Ajustado h, w */}
               </div>
-              <CardTitle className="text-2xl text-green-700">
+              <CardTitle className="text-xl sm:text-2xl text-green-700"> {/* Ajustado text size */}
                 🎉 Pagamento Aprovado!
               </CardTitle>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
                 Sua compra foi processada com sucesso
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center space-y-4">
-                <p className="text-lg font-medium text-green-800">
+            <CardContent className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+              <div className="text-center space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
+                <p className="text-base sm:text-lg font-medium text-green-800"> {/* Ajustado text size */}
                   Parabéns! Agora você tem acesso completo ao seu produto.
                 </p>
                 
                 {deliverableLinkToDisplay && (
-                  <div className="bg-white border border-green-200 rounded-lg p-6 space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-800">
+                  <div className="bg-white border border-green-200 rounded-lg p-4 sm:p-6 space-y-3 sm:space-y-4"> {/* Ajustado p, space-y */}
+                    <h3 className="font-semibold text-base sm:text-lg text-gray-800"> {/* Ajustado text size */}
                       {/* {packageDeliverable?.name || checkoutDeliverable?.name || productData?.name || 'Seu Produto'} */}
                       {checkoutDeliverable?.name || productData?.name || 'Seu Produto'}
                     </h3>
                     
                     {(/* packageDeliverable?.description || */ checkoutDeliverable?.description || productData?.description) && (
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-xs sm:text-sm text-gray-600"> {/* Ajustado text size */}
                         {/* {packageDeliverable?.description || */ checkoutDeliverable?.description || productData?.description}
                       </p>
                     )}
                     
                     <div className="space-y-3">
                       <Button 
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base" {/* Ajustado text size */}
                         onClick={() => window.open(deliverableLinkToDisplay, '_blank')}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
@@ -372,16 +372,16 @@ const PaymentSuccess = () => {
                 )}
                 
                 {!deliverableLinkToDisplay && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-yellow-800 text-sm">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4"> {/* Ajustado p */}
+                    <p className="text-sm text-yellow-800"> {/* Ajustado text size */}
                       O acesso ao produto será enviado por e-mail em breve.
                     </p>
                   </div>
                 )}
                 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-green-800 mb-2">Importante:</h3>
-                  <ul className="text-sm text-green-700 space-y-1 text-left">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4"> {/* Ajustado p */}
+                  <h3 className="font-semibold text-green-800 mb-2 text-base sm:text-lg">Importante:</h3> {/* Ajustado text size */}
+                  <ul className="text-sm text-green-700 space-y-1 text-left"> {/* Ajustado text size */}
                     {sendTransactionalEmail && (
                       <li>• Você também receberá um e-mail com os detalhes</li>
                     )}
@@ -399,29 +399,29 @@ const PaymentSuccess = () => {
   
   if (paymentStatus === 'failed') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4"> {/* Ajustado padding */}
         <div className="container mx-auto px-4 max-w-2xl">
           <Card className="border-red-200">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mb-4"> {/* Ajustado w, h */}
+                <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" /> {/* Ajustado h, w */}
               </div>
-              <CardTitle className="text-2xl text-red-700">
+              <CardTitle className="text-xl sm:text-2xl text-red-700"> {/* Ajustado text size */}
                 Pagamento Não Aprovado
               </CardTitle>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
                 Houve um problema com seu pagamento
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center space-y-4">
-                <p className="text-lg">
+            <CardContent className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+              <div className="text-center space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
+                <p className="text-base sm:text-lg"> {/* Ajustado text size */}
                   Não se preocupe! Você pode tentar novamente.
                 </p>
                 
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-red-800 mb-2">Possíveis causas:</h3>
-                  <ul className="text-sm text-red-700 space-y-1">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4"> {/* Ajustado p */}
+                  <h3 className="font-semibold text-red-800 mb-2 text-base sm:text-lg">Possíveis causas:</h3> {/* Ajustado text size */}
+                  <ul className="text-sm text-red-700 space-y-1"> {/* Ajustado text size */}
                     <li>• Saldo insuficiente</li>
                     <li>• Dados incorretos</li>
                     <li>• Problema temporário</li>
@@ -431,14 +431,14 @@ const PaymentSuccess = () => {
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base" {/* Ajustado text size */}
                   onClick={() => navigate(-1)}
                 >
                   Tentar Novamente
                 </Button>
                 <Button 
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base" {/* Ajustado text size */}
                   onClick={() => navigate('/')}
                 >
                   Voltar ao início
@@ -454,21 +454,21 @@ const PaymentSuccess = () => {
   if (paymentStatus === 'pending') {
     if (paymentData?.paymentMethod === 'creditCard') {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4"> {/* Ajustado padding */}
           <Card className="border-blue-200">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <CreditCard className="h-8 w-8 text-blue-600 animate-pulse" />
+              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4"> {/* Ajustado w, h */}
+                <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 animate-pulse" /> {/* Ajustado h, w */}
               </div>
-              <CardTitle className="text-2xl text-blue-700">
+              <CardTitle className="text-xl sm:text-2xl text-blue-700"> {/* Ajustado text size */}
                 Processando pagamento...
               </CardTitle>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
                 Estamos processando seu pagamento aqui no checkout. Aguarde a confirmação, sem redirecionamento externo.
               </p>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm sm:text-base text-muted-foreground mt-2"> {/* Ajustado text size */}
                 Status atual: {paymentStatus}{lastDetail ? ` (${lastDetail})` : ''}
               </p>
             </CardContent>
@@ -480,40 +480,40 @@ const PaymentSuccess = () => {
     const primaryColor = paymentData?.checkoutStyles?.primaryColor || '#ec4899';
     const gradientColor = paymentData?.checkoutStyles?.gradientColor || primaryColor;
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-4"> {/* Ajustado padding */}
         <div className="container mx-auto px-4 max-w-2xl">
           <Card className="border-green-200">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primaryColor}20` }}>
-                <Clock className="h-8 w-8" style={{ color: primaryColor }} />
+              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primaryColor}20` }}> {/* Ajustado w, h */}
+                <Clock className="h-6 w-6 sm:h-8 sm:w-8" style={{ color: primaryColor }} /> {/* Ajustado h, w */}
               </div>
-              <CardTitle className="text-2xl text-gray-700 mb-2">
+              <CardTitle className="text-xl sm:text-2xl text-gray-700 mb-2"> {/* Ajustado text size */}
                 Falta pouco! Sua transformação está a um passo de começar.
               </CardTitle>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
                 Para concluir, escaneie o QR Code ou use o "Copia e Cola" no seu app do banco.
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center space-y-4">
-                <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: `${primaryColor}40` }}>
-                  <h3 className="font-semibold mb-2" style={{ color: primaryColor }}>Valor a pagar:</h3>
-                  <p className="text-2xl font-bold" style={{ color: primaryColor }}>
+            <CardContent className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+              <div className="text-center space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
+                <div className="bg-white p-4 sm:p-6 rounded-lg border-2" style={{ borderColor: `${primaryColor}40` }}> {/* Ajustado p */}
+                  <h3 className="font-semibold mb-2 text-base sm:text-lg" style={{ color: primaryColor }}>Valor a pagar:</h3> {/* Ajustado text size */}
+                  <p className="text-xl sm:text-2xl font-bold" style={{ color: primaryColor }}> {/* Ajustado text size */}
                     R$ {paymentData.total.toFixed(2).replace('.', ',')}
                   </p>
                 </div>
 
                 {paymentData.payment?.qr_code_base64 && (
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h3 className="font-semibold mb-2">QR Code PIX:</h3>
+                  <div className="bg-white p-4 sm:p-6 rounded-lg border"> {/* Ajustado p */}
+                    <h3 className="font-semibold mb-2 text-base sm:text-lg">QR Code PIX:</h3> {/* Ajustado text size */}
                     <div className="flex justify-center mb-4">
                       <img 
                         src={`data:image/png;base64,${paymentData.payment.qr_code_base64}`}
                         alt="QR Code PIX"
-                        className="max-w-48 h-auto"
+                        className="max-w-[12rem] sm:max-w-48 h-auto" {/* Ajustado max-w- */}
                       />
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
                       Abra o aplicativo do seu banco e escaneie o QR Code acima
                     </p>
                   </div>
@@ -523,7 +523,7 @@ const PaymentSuccess = () => {
                   <div className="space-y-4">
                     <Button 
                        onClick={copyQRCode}
-                       className="w-full text-white py-4 text-lg font-semibold hover:opacity-90 transition-all duration-300"
+                       className="w-full text-white py-3 sm:py-4 text-base sm:text-lg font-semibold hover:opacity-90 transition-all duration-300" {/* Ajustado py, text size */}
                        style={{ 
                          background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
                          boxShadow: `0 4px 15px ${primaryColor}33`
@@ -535,7 +535,7 @@ const PaymentSuccess = () => {
                     
                     <Alert className="bg-yellow-50 border-yellow-200">
                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                      <AlertDescription className="text-yellow-800">
+                      <AlertDescription className="text-xs sm:text-sm text-yellow-800"> {/* Ajustado text size */}
                         Os bancos reforçaram a segurança do Pix e podem exibir avisos preventivos. Não se preocupe, sua transação está protegida.
                       </AlertDescription>
                     </Alert>
@@ -544,20 +544,20 @@ const PaymentSuccess = () => {
                       <CollapsibleTrigger asChild>
                         <Button 
                           variant="outline" 
-                          className="w-full justify-between text-sm border-gray-300 hover:bg-gray-50"
+                          className="w-full justify-between text-sm sm:text-base border-gray-300 hover:bg-gray-50" {/* Ajustado text size */}
                         >
                           Proteção Bancária: Saiba mais
                           <ChevronDown className={`h-4 w-4 transition-transform ${isProtectionOpen ? 'rotate-180' : ''}`} />
                         </Button>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-2">
-                        <div className="bg-white border rounded-lg p-4">
+                        <div className="bg-white border rounded-lg p-4 sm:p-6"> {/* Ajustado p */}
                           <Tabs defaultValue="nubank" className="w-full">
-                            <TabsList className="grid w-full grid-cols-4">
-                              <TabsTrigger value="nubank" className="text-xs">Nubank</TabsTrigger>
-                              <TabsTrigger value="itau" className="text-xs">Itaú</TabsTrigger>
-                              <TabsTrigger value="bradesco" className="text-xs">Bradesco</TabsTrigger>
-                              <TabsTrigger value="santander" className="text-xs">Santander</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-4 h-auto p-1"> {/* Ajustado h, p */}
+                              <TabsTrigger value="nubank" className="text-xs sm:text-sm py-2">Nubank</TabsTrigger> {/* Ajustado text size, py */}
+                              <TabsTrigger value="itau" className="text-xs sm:text-sm py-2">Itaú</TabsTrigger> {/* Ajustado text size, py */}
+                              <TabsTrigger value="bradesco" className="text-xs sm:text-sm py-2">Bradesco</TabsTrigger> {/* Ajustado text size, py */}
+                              <TabsTrigger value="santander" className="text-xs sm:text-sm py-2">Santander</TabsTrigger> {/* Ajustado text size, py */}
                             </TabsList>
                             
                             <TabsContent value="nubank" className="mt-4 space-y-3">
@@ -565,7 +565,7 @@ const PaymentSuccess = () => {
                                 <img 
                                   src="/lovable-uploads/ecad8c6d-aea7-4fb7-a728-d52632530987.png" 
                                   alt="Alerta de Golpe Nubank"
-                                  className="w-full max-w-sm rounded-lg shadow-sm"
+                                  className="w-full max-w-xs sm:max-w-sm rounded-lg shadow-sm" {/* Ajustado max-w- */}
                                 />
                               </div>
                             </TabsContent>
@@ -575,7 +575,7 @@ const PaymentSuccess = () => {
                                 <img 
                                   src="/lovable-uploads/a76239a2-eeaf-4efa-9312-9084cbcd1865.png" 
                                   alt="Alerta de Golpe Itaú"
-                                  className="w-full max-w-sm rounded-lg shadow-sm"
+                                  className="w-full max-w-xs sm:max-w-sm rounded-lg shadow-sm" {/* Ajustado max-w- */}
                                 />
                               </div>
                             </TabsContent>
@@ -585,7 +585,7 @@ const PaymentSuccess = () => {
                                 <img 
                                   src="/lovable-uploads/8ae820f6-6087-42c8-b64e-aff574e6fdf7.png" 
                                   alt="Alerta de Golpe Bradesco"
-                                  className="w-full max-w-sm rounded-lg shadow-sm"
+                                  className="w-full max-w-xs sm:max-w-sm rounded-lg shadow-sm" {/* Ajustado max-w- */}
                                 />
                               </div>
                             </TabsContent>
@@ -595,7 +595,7 @@ const PaymentSuccess = () => {
                                 <img 
                                   src="/lovable-uploads/0009e46d-54a9-415f-b6e6-b5262f1bc520.png" 
                                   alt="Alerta de Golpe Santander"
-                                  className="w-full max-w-sm rounded-lg shadow-sm"
+                                  className="w-full max-w-xs sm:max-w-sm rounded-lg shadow-sm" {/* Ajustado max-w- */}
                                 />
                               </div>
                             </TabsContent>
@@ -613,14 +613,14 @@ const PaymentSuccess = () => {
                 )}
               </div>
 
-              <div className="bg-white border rounded-lg p-6 text-center">
-                <div className="mx-auto w-12 h-12 mb-4">
+              <div className="bg-white border rounded-lg p-4 sm:p-6 text-center"> {/* Ajustado p */}
+                <div className="mx-auto w-10 h-10 sm:w-12 sm:h-12 mb-4"> {/* Ajustado w, h */}
                   <div className="w-full h-full border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
                 </div>
-                <h3 className="font-semibold text-gray-700 mb-2">
+                <h3 className="font-semibold text-gray-700 mb-2 text-base sm:text-lg"> {/* Ajustado text size */}
                   Aguardando confirmação do pagamento...
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 mb-4"> {/* Ajustado text size */}
                   Você será redirecionado automaticamente. Após a confirmação, o acesso é liberado e você receberá um e-mail com os detalhes.
                 </p>
               </div>
@@ -633,22 +633,22 @@ const PaymentSuccess = () => {
 
   // Fallback return for unexpected payment statuses or initial states
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4"> {/* Ajustado padding */}
       <div className="container mx-auto px-4 max-w-2xl">
         <Card className="border-gray-200">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="h-8 w-8 text-gray-600" />
+            <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"> {/* Ajustado w, h */}
+              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" /> {/* Ajustado h, w */}
             </div>
-            <CardTitle className="text-2xl text-gray-700">
+            <CardTitle className="text-xl sm:text-2xl text-gray-700"> {/* Ajustado text size */}
               Status do Pagamento Desconhecido
             </CardTitle>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground"> {/* Ajustado text size */}
               Não foi possível determinar o status do seu pagamento. Por favor, verifique seu e-mail ou entre em contato com o suporte.
             </p>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => navigate('/')}>Voltar ao Início</Button>
+            <Button onClick={() => navigate('/')} className="text-sm sm:text-base">Voltar ao Início</Button> {/* Ajustado text size */}
           </CardContent>
         </Card>
       </div>

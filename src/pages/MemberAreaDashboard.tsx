@@ -231,7 +231,7 @@ const MemberAreaDashboard = () => {
     >
       {/* HEADER */}
       <header 
-        className="flex items-center justify-between h-[72px] px-8 py-4 border-b"
+        className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b" {/* Ajustado px */}
         style={{ 
           backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
           borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
@@ -243,41 +243,41 @@ const MemberAreaDashboard = () => {
             <img 
               src={currentSettings.logo_url} 
               alt={memberArea?.name || "Logo da Plataforma"} 
-              className="h-16 w-16 object-contain" 
+              className="h-12 w-12 sm:h-16 sm:w-16 object-contain" {/* Ajustado h e w */}
             />
           ) : (
-            <Avatar className="h-16 w-16 border border-gray-200">
-              <AvatarFallback className="bg-white text-memberArea-text-dark text-xl font-semibold">
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200"> {/* Ajustado h e w */}
+              <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold"> {/* Ajustado text size */}
                 {memberAreaNameInitials}
               </AvatarFallback>
             </Avatar>
           )}
-          <span className="text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span>
+          <span className="text-lg sm:text-xl font-semibold" style={{ color: textColor }}>{memberArea?.name || 'Área de Membros'}</span> {/* Ajustado text size */}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full" style={{ color: secondaryTextColor }}>
-              <Avatar className="h-9 w-9 border border-gray-200">
+              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200"> {/* Ajustado h e w */}
                 <AvatarImage 
                   key={user?.user_metadata?.avatar_url || 'default-avatar'}
                   src={user?.user_metadata?.avatar_url || undefined} 
                   alt={userName} 
                 />
-                <AvatarFallback className="bg-white text-memberArea-text-dark text-base font-semibold">
+                <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold"> {/* Ajustado text size */}
                   {userInitial}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48" style={{ backgroundColor: cardBackground, color: textColor }}>
+          <DropdownMenuContent align="end" className="w-40 sm:w-48" style={{ backgroundColor: cardBackground, color: textColor }}> {/* Ajustado w */}
             <ProfileSettingsDialog memberAreaId={memberAreaId || ''}>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }}>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()} style={{ color: textColor }} className="text-sm sm:text-base"> {/* Ajustado text size */}
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configurações de Perfil</span>
               </DropdownMenuItem>
             </ProfileSettingsDialog>
             <DropdownMenuSeparator style={{ backgroundColor: secondaryTextColor + '40' }} />
-            <DropdownMenuItem onClick={signOut} className="text-destructive">
+            <DropdownMenuItem onClick={signOut} className="text-destructive text-sm sm:text-base"> {/* Ajustado text size */}
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
             </DropdownMenuItem>
@@ -286,18 +286,18 @@ const MemberAreaDashboard = () => {
       </header>
 
       {/* SEÇÃO DE BOAS-VINDAS */}
-      <div className="flex-1 px-8 py-16 text-center space-y-6 max-w-6xl mx-auto w-full">
-        <h1 className="text-5xl font-semibold leading-tight" style={{ color: textColor }}>
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6 max-w-6xl mx-auto w-full"> {/* Ajustado px, py, space-y */}
+        <h1 className="text-3xl sm:text-5xl font-semibold leading-tight" style={{ color: textColor }}> {/* Ajustado text size */}
           Olá, {userName}!
         </h1>
-        <p className="text-xl font-normal leading-relaxed" style={{ color: secondaryTextColor }}>
+        <p className="text-lg sm:text-xl font-normal leading-relaxed" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
           Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
         </p>
 
         {/* CARDS DE MÓDULOS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-16"> {/* Ajustado gap e mt */}
           {modules.length === 0 && (
-            <p className="text-memberArea-text-muted">Nenhum módulo disponível para você ainda.</p>
+            <p className="text-memberArea-text-muted text-sm sm:text-base">Nenhum módulo disponível para você ainda.</p> {/* Ajustado text size */}
           )}
           {modules.length > 0 && (
             modules.map((module) => {
@@ -314,13 +314,13 @@ const MemberAreaDashboard = () => {
                   {isLocked && ( // Move the overlay here, as a direct child of Card
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10 rounded-xl" // Add rounded-xl to match card corners
                          style={{ backgroundColor: `${cardBackground}E0` }}>
-                        <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} />
-                        <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}>
+                        <Lock className="h-8 w-8 sm:h-12 sm:w-12 mb-2 sm:mb-4" style={{ color: primaryColor }} /> {/* Ajustado h, w, mb */}
+                        <p className="text-base sm:text-lg font-semibold mb-2 sm:mb-4" style={{ color: primaryColor }}> {/* Ajustado text size */}
                             Módulo Bloqueado
                         </p>
                         {finalCheckoutLink ? (
                             <Button asChild
-                              className="mt-2 w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:opacity-90 transition-colors duration-300"
+                              className="mt-2 w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:opacity-90 transition-colors duration-300 text-sm sm:text-base" {/* Ajustado h, text size */}
                               style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                             >
                                 <Link to={finalCheckoutLink}>
@@ -328,14 +328,14 @@ const MemberAreaDashboard = () => {
                                 </Link>
                             </Button>
                         ) : (
-                            <p className="text-sm mt-2" style={{ color: secondaryTextColor }}>
+                            <p className="text-xs sm:text-sm mt-2" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
                                 Produto associado não encontrado ou sem checkout.
                             </p>
                         )}
                     </div>
                   )}
 
-                  <div className="relative aspect-video w-full bg-gray-200 h-48">
+                  <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48"> {/* Ajustado h */}
                     {module.banner_url && (
                       <img 
                         src={module.banner_url} 
@@ -345,18 +345,18 @@ const MemberAreaDashboard = () => {
                     )}
                     {/* O bloco do checkmark foi removido daqui */}
                   </div>
-                  <CardContent className="p-6 space-y-4 flex flex-col h-[calc(100%-12rem)]">
-                    <h3 className="text-xl font-bold" style={{ color: textColor }}>
+                  <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]"> {/* Ajustado p, space-y, h */}
+                    <h3 className="text-lg sm:text-xl font-bold" style={{ color: textColor }}> {/* Ajustado text size */}
                       {module.title}
                     </h3>
-                    <p className="text-sm flex-1" style={{ color: secondaryTextColor }}>
+                    <p className="text-xs sm:text-sm flex-1" style={{ color: secondaryTextColor }}> {/* Ajustado text size */}
                       {module.description}
                     </p>
                     
                     {/* This button should only show if NOT locked */}
                     {!isLocked && (
                       <Button 
-                        className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
+                        className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base" {/* Ajustado h, text size */}
                         style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
                         asChild
                       >

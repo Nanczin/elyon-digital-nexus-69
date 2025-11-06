@@ -42,17 +42,17 @@ const SecuritySection = ({ supportEmail, primaryColor = '#3b82f6' }: SecuritySec
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6 mt-8">
-      <div className="text-center mb-6">
-        <div className="flex justify-center mb-3">
+    <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mt-4 sm:mt-8"> {/* Ajustado p, mt */}
+      <div className="text-center mb-4 sm:mb-6"> {/* Ajustado mb */}
+        <div className="flex justify-center mb-2 sm:mb-3"> {/* Ajustado mb */}
           <div 
-            className="p-3 rounded-full"
+            className="p-2 sm:p-3 rounded-full" {/* Ajustado p */}
             style={{ backgroundColor: getTransparentColor(primaryColor) }}
           >
-            <Shield className="h-8 w-8" style={{ color: primaryColor }} />
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8" style={{ color: primaryColor }} /> {/* Ajustado h, w */}
           </div>
         </div>
-        <h3 className="text-xl font-bold text-gray-800">Sua Compra 100% Segura</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-800">Sua Compra 100% Segura</h3> {/* Ajustado text size */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -60,22 +60,22 @@ const SecuritySection = ({ supportEmail, primaryColor = '#3b82f6' }: SecuritySec
           const IconComponent = feature.icon;
           return (
             <div key={index} className="text-center">
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-2 sm:mb-3"> {/* Ajustado mb */}
                 <div 
-                  className="p-2 rounded-full"
+                  className="p-1.5 sm:p-2 rounded-full" {/* Ajustado p */}
                   style={{ backgroundColor: getTransparentColor(primaryColor) }}
                 >
-                  <IconComponent className="h-6 w-6" style={{ color: primaryColor }} />
+                  <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: primaryColor }} /> {/* Ajustado h, w */}
                 </div>
               </div>
-              <h4 className="font-semibold text-gray-800 mb-2">{feature.title}</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
+              <h4 className="font-semibold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">{feature.title}</h4> {/* Ajustado mb, text size */}
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{feature.description}</p> {/* Ajustado text size */}
             </div>
           );
         })}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+      <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 text-center text-xs sm:text-sm text-gray-500"> {/* Ajustado mt, pt, text size */}
         <div className="mb-2">
           Copyright © 2025 Elyon Digital. Todos os direitos reservados.
         </div>

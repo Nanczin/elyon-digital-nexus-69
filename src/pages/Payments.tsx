@@ -76,11 +76,11 @@ const Payments = () => {
     const mpStatus = payment.mp_payment_status;
     
     if (status === 'completed' || mpStatus === 'approved') {
-      return <Badge className="bg-green-100 text-green-800">Aprovado</Badge>;
+      return <Badge className="bg-green-100 text-green-800 text-xs">Aprovado</Badge>; {/* Ajustado text size */}
     } else if (status === 'failed' || mpStatus === 'rejected') {
-      return <Badge variant="destructive">Rejeitado</Badge>;
+      return <Badge variant="destructive" className="text-xs">Rejeitado</Badge>; {/* Ajustado text size */}
     } else {
-      return <Badge variant="outline">Pendente</Badge>;
+      return <Badge variant="outline" className="text-xs">Pendente</Badge>; {/* Ajustado text size */}
     }
   };
 
@@ -105,16 +105,16 @@ const Payments = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Histórico de Pagamentos</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="container mx-auto p-4 sm:p-6 space-y-8"> {/* Ajustado padding */}
+      <div className="mb-6 sm:mb-8"> {/* Ajustado margin-bottom */}
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Histórico de Pagamentos</h1> {/* Ajustado text size */}
+        <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
           Visualize todos os pagamentos da plataforma
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"> {/* Ajustado grid-cols */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -184,7 +184,7 @@ const Payments = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
             <Receipt className="h-5 w-5" />
             Lista de Pagamentos
           </CardTitle>
@@ -192,9 +192,9 @@ const Payments = () => {
         <CardContent>
           {payments.length === 0 ? (
             <div className="text-center py-12">
-              <CreditCard className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum pagamento encontrado</h3>
-              <p className="text-muted-foreground">
+              <CreditCard className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum pagamento encontrado</h3> {/* Ajustado text size */}
+              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
                 Os pagamentos aparecerão aqui quando realizados
               </p>
             </div>
@@ -203,10 +203,10 @@ const Payments = () => {
               {payments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-2" {/* Ajustado flex e gap */}
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"> {/* Ajustado size */}
                       {payment.payment_method === 'pix' ? (
                         <CreditCard className="h-5 w-5 text-primary" />
                       ) : (
@@ -214,13 +214,13 @@ const Payments = () => {
                       )}
                     </div>
                     <div className="space-y-1">
-                      <p className="font-medium">
+                      <p className="font-medium text-sm sm:text-base"> {/* Ajustado text size */}
                         {payment.metadata?.customer_data?.name || 'Cliente'}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {payment.metadata?.customer_data?.email || 'Email não informado'}
                       </p>
-                      <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center space-x-2 text-xs text-muted-foreground"> {/* Ajustado flex-wrap */}
                         <span>{getPaymentMethodLabel(payment.payment_method)}</span>
                         <span>•</span>
                         <span>
@@ -238,7 +238,7 @@ const Payments = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mt-2 sm:mt-0"> {/* Ajustado flex e margin-top */}
                     <div className="text-right space-y-1">
                       <p className="text-sm font-medium">
                         R$ {(payment.amount / 100).toFixed(2).replace('.', ',')}

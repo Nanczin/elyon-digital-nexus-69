@@ -47,13 +47,13 @@ const MosaicLayout = ({
     setSelectedPackage?.(packageId);
   };
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"> {/* Adicionado py */}
       {/* Countdown Timer */}
       {(() => {
         console.log('Verificando timer no Mosaic:', checkout.timer);
         console.log('Timer enabled no Mosaic?', checkout.timer?.enabled);
         return checkout.timer?.enabled && (
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-8"> {/* Ajustado mb */}
             <CountdownTimer
               duration={checkout.timer.duration || 15}
               color={checkout.timer.color || primaryColor}
@@ -64,39 +64,39 @@ const MosaicLayout = ({
       })()}
 
       {/* Header centralizado */}
-      <div className="text-center space-y-6 py-12 mb-12">
+      <div className="text-center space-y-4 sm:space-y-6 py-8 sm:py-12 mb-8 sm:mb-12"> {/* Ajustado space-y, py, mb */}
         {checkout.products.logo_url && (
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6 sm:mb-8"> {/* Ajustado mb */}
             <img 
               src={checkout.products.logo_url} 
               alt={checkout.products.name}
-              className="h-32 sm:h-36 lg:h-40 w-auto object-contain animate-fade-in hover-scale"
+              className="h-24 sm:h-32 lg:h-40 w-auto object-contain animate-fade-in hover-scale" {/* Ajustado h */}
             />
           </div>
         )}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
           <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold animate-fade-in leading-tight" style={{ color: headlineColor }}>
             {processHeadlineText(headlineText, checkout.styles?.highlightColor || primaryColor)}
           </h1>
           
-          <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed animate-fade-in">
+          <p className="text-base sm:text-lg lg:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed animate-fade-in"> {/* Ajustado text size */}
             {description}
           </p>
         </div>
       </div>
       
       {/* Container Principal com todas as seções */}
-      <Card className="shadow-2xl border-2 max-w-5xl mx-auto mb-12">
-        <CardContent className="p-6 sm:p-8 lg:p-10">
-          <form onSubmit={handleSubmit} className="space-y-10">
+      <Card className="shadow-2xl border-2 max-w-5xl mx-auto mb-8 sm:mb-12"> {/* Ajustado mb */}
+        <CardContent className="p-4 sm:p-8 lg:p-10"> {/* Ajustado p */}
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-10"> {/* Ajustado space-y */}
             {/* Section 1: Seus dados */}
-            <div className="space-y-6">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-4 text-center">Seus dados</h2>
+            <div className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Seus dados</h2> {/* Ajustado pb */}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-8"> {/* Ajustado mt */}
                 {(checkout.form_fields?.requireName !== false) && (
                   <div>
-                    <Label htmlFor="name">Nome completo</Label>
+                    <Label htmlFor="name" className="text-sm">Nome completo</Label> {/* Ajustado text size */}
                     <Input
                       id="name"
                       type="text"
@@ -104,13 +104,14 @@ const MosaicLayout = ({
                       value={customerData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       required
+                      className="text-sm" {/* Ajustado text size */}
                     />
                   </div>
                 )}
 
                 {(checkout.form_fields?.requireEmail !== false) && (
                   <div>
-                    <Label htmlFor="email">E-mail</Label>
+                    <Label htmlFor="email" className="text-sm">E-mail</Label> {/* Ajustado text size */}
                     <Input
                       id="email"
                       type="email"
@@ -118,13 +119,14 @@ const MosaicLayout = ({
                       value={customerData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       required
+                      className="text-sm" {/* Ajustado text size */}
                     />
                   </div>
                 )}
 
                 {(checkout.form_fields?.requireEmailConfirm !== false) && (
                   <div>
-                    <Label htmlFor="emailConfirm">Confirmar E-mail</Label>
+                    <Label htmlFor="emailConfirm" className="text-sm">Confirmar E-mail</Label> {/* Ajustado text size */}
                     <Input
                       id="emailConfirm"
                       type="email"
@@ -132,13 +134,14 @@ const MosaicLayout = ({
                       value={customerData.emailConfirm}
                       onChange={(e) => handleInputChange('emailConfirm', e.target.value)}
                       required
+                      className="text-sm" {/* Ajustado text size */}
                     />
                   </div>
                 )}
 
                 {(checkout.form_fields?.requirePhone !== false) && (
                   <div>
-                    <Label htmlFor="phone">Telefone</Label>
+                    <Label htmlFor="phone" className="text-sm">Telefone</Label> {/* Ajustado text size */}
                     <Input
                       id="phone"
                       type="tel"
@@ -146,13 +149,14 @@ const MosaicLayout = ({
                       value={customerData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       required
+                      className="text-sm" {/* Ajustado text size */}
                     />
                   </div>
                 )}
 
                 {(checkout.form_fields?.requireCpf !== false) && (
                   <div>
-                    <Label htmlFor="cpf">CPF</Label>
+                    <Label htmlFor="cpf" className="text-sm">CPF</Label> {/* Ajustado text size */}
                     <Input
                       id="cpf"
                       type="text"
@@ -160,6 +164,7 @@ const MosaicLayout = ({
                       value={customerData.cpf}
                       onChange={(e) => handleInputChange('cpf', e.target.value)}
                       required
+                      className="text-sm" {/* Ajustado text size */}
                     />
                   </div>
                 )}
@@ -168,8 +173,8 @@ const MosaicLayout = ({
 
             {/* Section 2: Escolha seu pacote */}
             {(checkout.form_fields as any)?.packages && (checkout.form_fields as any).packages.length > 0 && (
-              <div className="space-y-8">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-4 text-center">Escolha seu pacote</h2>
+              <div className="space-y-4 sm:space-y-8"> {/* Ajustado space-y */}
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2> {/* Ajustado pb */}
                 
                 <PackageSelector
                   packages={(checkout.form_fields as any).packages}
@@ -183,11 +188,11 @@ const MosaicLayout = ({
 
             {/* Section 3: Turbine sua jornada */}
             {checkout.order_bumps && checkout.order_bumps.length > 0 && checkout.order_bumps.some(bump => bump.enabled) && (
-              <div className="space-y-8">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-4 text-center">Turbine sua jornada</h2>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 text-center max-w-3xl mx-auto">Aproveite o desconto exclusivo e adicione estes guias complementares.</p>
+              <div className="space-y-4 sm:space-y-8"> {/* Ajustado space-y */}
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Turbine sua jornada</h2> {/* Ajustado pb */}
+                <p className="text-sm sm:text-lg lg:text-xl text-gray-600 text-center max-w-3xl mx-auto">Aproveite o desconto exclusivo e adicione estes guias complementares.</p> {/* Ajustado text size */}
                 
-                <div className="space-y-4 sm:space-y-6 mt-8">
+                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-8"> {/* Ajustado space-y, mt */}
                   {checkout.order_bumps
                     .filter(bump => bump.enabled)
                     .map((bump) => {
@@ -231,12 +236,12 @@ const MosaicLayout = ({
                              </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                                <h4 className="font-semibold text-sm sm:text-base lg:text-lg line-clamp-2">{productName}</h4>
-                                <span className="font-bold text-sm sm:text-base lg:text-lg flex-shrink-0" style={{ color: primaryColor }}>
+                                <h4 className="font-semibold text-sm sm:text-base lg:text-lg line-clamp-2">{productName}</h4> {/* Ajustado text size */}
+                                <span className="font-bold text-sm sm:text-base lg:text-lg flex-shrink-0" style={{ color: primaryColor }}> {/* Ajustado text size */}
                                   {formatCurrency(bump.price)}
                                 </span>
                               </div>
-                              <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{productDescription}</p>
+                              <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{productDescription}</p> {/* Ajustado text size */}
                             </div>
                           </div>
                         </div>
@@ -247,14 +252,14 @@ const MosaicLayout = ({
             )}
 
             {/* Section 4: Método de Pagamento */}
-            <div className="space-y-6">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-4 text-center">Forma de Pagamento</h2>
+            <div className="space-y-4 sm:space-y-6"> {/* Ajustado space-y */}
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Forma de Pagamento</h2> {/* Ajustado pb */}
               
-              <div className="space-y-4 mt-8">
+              <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-8"> {/* Ajustado space-y, mt */}
                 {checkout.payment_methods?.pix && (
                   <div
                     onClick={() => setSelectedPaymentMethod('pix')}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${ /* Ajustado p */
                       selectedPaymentMethod === 'pix' ? 'border-current shadow-lg' : 'border-gray-200'
                     }`}
                     style={{ borderColor: selectedPaymentMethod === 'pix' ? primaryColor : undefined }}
@@ -270,19 +275,19 @@ const MosaicLayout = ({
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <QrCode className="h-5 w-5" />
-                          <span className="font-semibold">PIX</span>
+                          <span className="font-semibold text-sm sm:text-base">PIX</span> {/* Ajustado text size */}
                         </div>
-                        <p className="text-sm text-gray-600">Aprovação instantânea</p>
+                        <p className="text-xs sm:text-sm text-gray-600">Aprovação instantânea</p> {/* Ajustado text size */}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {checkout.payment_methods?.creditCard && (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4"> {/* Ajustado space-y */}
                     <div
                       onClick={() => setSelectedPaymentMethod('creditCard')}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${ /* Ajustado p */
                         selectedPaymentMethod === 'creditCard' ? 'border-current shadow-lg' : 'border-gray-200'
                       }`}
                       style={{ borderColor: selectedPaymentMethod === 'creditCard' ? primaryColor : undefined }}
@@ -298,9 +303,9 @@ const MosaicLayout = ({
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <CreditCard className="h-5 w-5" />
-                            <span className="font-semibold">Cartão de Crédito</span>
+                            <span className="font-semibold text-sm sm:text-base">Cartão de Crédito</span> {/* Ajustado text size */}
                           </div>
-                          <p className="text-sm text-gray-600">Parcelamento em até 12x sem juros</p>
+                          <p className="text-xs sm:text-sm text-gray-600">Parcelamento em até 12x sem juros</p> {/* Ajustado text size */}
                         </div>
                       </div>
                     </div>
@@ -322,17 +327,17 @@ const MosaicLayout = ({
             </div>
 
             {/* Section 5: Resumo do pedido */}
-            <div className="space-y-6 bg-gray-50 p-6 sm:p-8 rounded-xl border-2">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-4 text-center">Resumo do Pedido</h2>
+            <div className="space-y-4 sm:space-y-6 bg-gray-50 p-4 sm:p-8 rounded-xl border-2"> {/* Ajustado space-y, p */}
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Resumo do Pedido</h2> {/* Ajustado pb */}
               
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3"> {/* Ajustado space-y */}
                 {(() => {
                   const packages = (checkout.form_fields as any)?.packages;
                   if (packages && packages.length > 0) {
                     const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
                     if (selectedPkg) {
                       return (
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base"> {/* Ajustado text size */}
                           <span className="text-gray-700">Pacote Completo</span>
                           <span className="font-semibold text-gray-800">
                             {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price))}
@@ -342,7 +347,7 @@ const MosaicLayout = ({
                     }
                   }
                   return (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm sm:text-base"> {/* Ajustado text size */}
                       <span className="text-gray-700">Pacote Completo</span>
                       <span className="font-semibold text-gray-800">
                         {formatCurrency(checkout.promotional_price || checkout.price)}
@@ -356,7 +361,7 @@ const MosaicLayout = ({
                   if (bump && bump.enabled) {
                     const productName = bump.product?.name || 'Produto adicional';
                     return (
-                      <div key={bumpId} className="flex justify-between">
+                      <div key={bumpId} className="flex justify-between text-sm sm:text-base"> {/* Ajustado text size */}
                         <span className="text-gray-600">{productName}</span>
                       <span className="text-gray-600">
                         + {formatCurrency(bump.price)}
@@ -368,8 +373,8 @@ const MosaicLayout = ({
                 })}
               </div>
 
-              <div className="border-t-2 pt-6 mt-6">
-                <div className="flex justify-between text-xl sm:text-2xl lg:text-3xl font-bold mb-8">
+              <div className="border-t-2 pt-4 sm:pt-6 mt-4 sm:mt-6"> {/* Ajustado pt, mt */}
+                <div className="flex justify-between text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-8"> {/* Ajustado text size, mb */}
                   <span className="text-gray-800">Total a pagar</span>
                   <span className="text-gray-800">
                     {formatCurrency(calculateTotal())}
@@ -380,7 +385,7 @@ const MosaicLayout = ({
               <button
                 type="submit"
                 disabled={processing}
-                className="w-full py-4 sm:py-5 text-white font-bold text-lg sm:text-xl lg:text-2xl rounded-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-3 group shadow-xl"
+                className="w-full py-3 sm:py-4 text-white font-bold text-lg sm:text-xl lg:text-2xl rounded-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-3 group shadow-xl" {/* Ajustado py, text size */}
                 style={{
                   background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
                   boxShadow: `0 8px 25px ${primaryColor}40`
@@ -399,8 +404,8 @@ const MosaicLayout = ({
                 )}
               </button>
 
-              <div className="text-center text-sm sm:text-base text-gray-600 mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
-                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+              <div className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2"> {/* Ajustado text size, mt */}
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" /> {/* Ajustado h, w */}
                 <span className="text-center">
                   {selectedPaymentMethod === 'pix' 
                     ? 'Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.'
@@ -411,7 +416,7 @@ const MosaicLayout = ({
               </div>
 
                 {checkout.support_contact && (
-                  <div className="text-center text-sm text-gray-600 mt-2">
+                  <div className="text-center text-xs sm:text-sm text-gray-600 mt-2"> {/* Ajustado text size */}
                     Dúvidas? Entre em contato: {checkout.support_contact.whatsapp || checkout.support_contact.email}
                   </div>
                 )}
@@ -421,7 +426,7 @@ const MosaicLayout = ({
         </Card>
 
         {/* Seção de Segurança */}
-        <div className="mt-16">
+        <div className="mt-8 sm:mt-16"> {/* Ajustado mt */}
           <SecuritySection 
             supportEmail={checkout.support_contact?.email} 
             primaryColor={checkout.styles?.primaryColor || '#3b82f6'}

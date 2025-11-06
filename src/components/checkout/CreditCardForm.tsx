@@ -74,14 +74,14 @@ useEffect(() => {
     <div className="space-y-4 p-4 border rounded-lg" style={{ borderColor: `${primaryColor}40` }}>
       <div className="flex items-center gap-2 mb-4">
         <CreditCard className="h-5 w-5" style={{ color: primaryColor }} />
-        <h3 className="font-semibold" style={{ color: textColor }}>Dados do Cartão</h3>
+        <h3 className="font-semibold text-base sm:text-lg" style={{ color: textColor }}>Dados do Cartão</h3> {/* Ajustado text size */}
       </div>
 
       <div className="space-y-3">
         <div>
-          <Label htmlFor="cardNumber" style={{ color: textColor }}>Número do Cartão</Label>
+          <Label htmlFor="cardNumber" style={{ color: textColor }} className="text-sm">Número do Cartão</Label> {/* Ajustado text size */}
           {useMPFields ? (
-            <div className="border rounded-md p-3 bg-white dark:bg-gray-900">
+            <div className="border rounded-md p-3 bg-white dark:bg-gray-900 text-sm"> {/* Ajustado text size */}
               <CardNumber placeholder="1234 1234 1234 1234" />
             </div>
           ) : (
@@ -92,32 +92,34 @@ useEffect(() => {
               onChange={handleCardNumberChange}
               maxLength={19}
               required
+              className="text-sm" {/* Ajustado text size */}
             />
           )}
         </div>
 
         <div>
-          <Label htmlFor="cardholderName" style={{ color: textColor }}>Nome no Cartão</Label>
+          <Label htmlFor="cardholderName" style={{ color: textColor }} className="text-sm">Nome no Cartão</Label> {/* Ajustado text size */}
           <Input
             id="cardholderName"
             placeholder="Nome como está no cartão"
             value={cardData.cardholderName}
             onChange={(e) => setCardData(prev => ({ ...prev, cardholderName: e.target.value.toUpperCase() }))}
             required
+            className="text-sm" {/* Ajustado text size */}
           />
         </div>
 
         {useMPFields ? (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label style={{ color: textColor }}>Validade</Label>
-              <div className="border rounded-md p-3 bg-white dark:bg-gray-900">
+              <Label style={{ color: textColor }} className="text-sm">Validade</Label> {/* Ajustado text size */}
+              <div className="border rounded-md p-3 bg-white dark:bg-gray-900 text-sm"> {/* Ajustado text size */}
                 <ExpirationDate placeholder="MM/YYYY" />
               </div>
             </div>
             <div>
-              <Label style={{ color: textColor }}>CVV</Label>
-              <div className="border rounded-md p-3 bg-white dark:bg-gray-900">
+              <Label style={{ color: textColor }} className="text-sm">CVV</Label> {/* Ajustado text size */}
+              <div className="border rounded-md p-3 bg-white dark:bg-gray-900 text-sm"> {/* Ajustado text size */}
                 <SecurityCode placeholder="123" />
               </div>
             </div>
@@ -125,41 +127,41 @@ useEffect(() => {
         ) : (
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label htmlFor="expirationMonth" style={{ color: textColor }}>Mês</Label>
+              <Label htmlFor="expirationMonth" style={{ color: textColor }} className="text-sm">Mês</Label> {/* Ajustado text size */}
               <Select 
                 value={cardData.expirationMonth} 
                 onValueChange={(value) => setCardData(prev => ({ ...prev, expirationMonth: value }))}
               >
-                <SelectTrigger id="expirationMonth">
+                <SelectTrigger id="expirationMonth" className="text-sm"> {/* Ajustado text size */}
                   <SelectValue placeholder="MM" />
                 </SelectTrigger>
                 <SelectContent>
                   {months.map(month => (
-                    <SelectItem key={month} value={month}>{month}</SelectItem>
+                    <SelectItem key={month} value={month} className="text-sm">{month}</SelectItem> {/* Ajustado text size */}
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="expirationYear" style={{ color: textColor }}>Ano</Label>
+              <Label htmlFor="expirationYear" style={{ color: textColor }} className="text-sm">Ano</Label> {/* Ajustado text size */}
               <Select 
                 value={cardData.expirationYear} 
                 onValueChange={(value) => setCardData(prev => ({ ...prev, expirationYear: value }))}
               >
-                <SelectTrigger id="expirationYear">
+                <SelectTrigger id="expirationYear" className="text-sm"> {/* Ajustado text size */}
                   <SelectValue placeholder="AAAA" />
                 </SelectTrigger>
                 <SelectContent>
                   {years.map(year => (
-                    <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                    <SelectItem key={year} value={String(year)} className="text-sm">{year}</SelectItem> {/* Ajustado text size */}
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="securityCode" style={{ color: textColor }}>CVV</Label>
+              <Label htmlFor="securityCode" style={{ color: textColor }} className="text-sm">CVV</Label> {/* Ajustado text size */}
               <Input
                 id="securityCode"
                 placeholder="123"
@@ -167,25 +169,26 @@ useEffect(() => {
                 onChange={handleSecurityCodeChange}
                 maxLength={4}
                 required
+                className="text-sm" {/* Ajustado text size */}
               />
             </div>
           </div>
         )}
 
         <div>
-          <Label htmlFor="installments" style={{ color: textColor }}>Parcelas</Label>
+          <Label htmlFor="installments" style={{ color: textColor }} className="text-sm">Parcelas</Label> {/* Ajustado text size */}
           <Select 
             value={String(cardData.installments)} 
             onValueChange={(value) => setCardData(prev => ({ ...prev, installments: parseInt(value) }))}
           >
-            <SelectTrigger id="installments" className="bg-white dark:bg-gray-800">
+            <SelectTrigger id="installments" className="bg-white dark:bg-gray-800 text-sm"> {/* Ajustado text size */}
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 z-50">
               {Array.from({ length: maxInstallments }, (_, i) => i + 1).map(num => {
                 const installmentValue = totalAmount / num;
                 return (
-                  <SelectItem key={num} value={String(num)}>
+                  <SelectItem key={num} value={String(num)} className="text-sm"> {/* Ajustado text size */}
                     {num}x de R$ {installmentValue.toFixed(2).replace('.', ',')} 
                     {installmentsWithInterest && num > 1 ? ' com juros' : ' sem juros'}
                   </SelectItem>

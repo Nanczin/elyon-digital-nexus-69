@@ -105,20 +105,20 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md sm:max-w-2xl mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
         <DialogHeader>
-          <DialogTitle>Configurar Mercado Pago</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Configurar Mercado Pago</DialogTitle> {/* Ajustado text size */}
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Contas existentes */}
           {mercadoPagoAccounts.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Contas Configuradas</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Contas Configuradas</h3> {/* Ajustado text size */}
               {mercadoPagoAccounts.map((account) => (
                 <Card key={account.id}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-base">
+                    <CardTitle className="flex items-center justify-between text-sm sm:text-base"> {/* Ajustado text size */}
                       {account.name}
                       <Button
                         variant="ghost"
@@ -130,7 +130,7 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
                       <p>Access Token: {account.accessToken?.substring(0, 20) || ''}...</p>
                       <p>Public Key: {account.publicKey?.substring(0, 20) || ''}...</p>
                     </div>
@@ -142,63 +142,68 @@ const MercadoPagoConfig: React.FC<MercadoPagoConfigProps> = ({ children }) => {
 
           {/* Nova conta */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Adicionar Nova Conta</h3>
+            <h3 className="text-base sm:text-lg font-semibold">Adicionar Nova Conta</h3> {/* Ajustado text size */}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Ajustado grid-cols */}
               <div>
-                <Label htmlFor="name">Nome da Conta *</Label>
+                <Label htmlFor="name" className="text-sm">Nome da Conta *</Label> {/* Ajustado text size */}
                 <Input
                   id="name"
                   value={newAccount.name}
                   onChange={(e) => setNewAccount({...newAccount, name: e.target.value})}
                   placeholder="Ex: Conta Principal"
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
               
               <div>
-                <Label htmlFor="accessToken">Access Token *</Label>
+                <Label htmlFor="accessToken" className="text-sm">Access Token *</Label> {/* Ajustado text size */}
                 <Input
                   id="accessToken"
                   type="password"
                   value={newAccount.accessToken || ''}
                   onChange={(e) => setNewAccount({...newAccount, accessToken: e.target.value})}
                   placeholder="APP_USR-..."
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
               
               <div>
-                <Label htmlFor="publicKey">Public Key *</Label>
+                <Label htmlFor="publicKey" className="text-sm">Public Key *</Label> {/* Ajustado text size */}
                 <Input
                   id="publicKey"
                   value={newAccount.publicKey || ''}
                   onChange={(e) => setNewAccount({...newAccount, publicKey: e.target.value})}
                   placeholder="APP_USR-..."
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
               
               <div>
-                <Label htmlFor="clientId">Client ID</Label>
+                <Label htmlFor="clientId" className="text-sm">Client ID</Label> {/* Ajustado text size */}
                 <Input
                   id="clientId"
                   value={newAccount.clientId || ''}
                   onChange={(e) => setNewAccount({...newAccount, clientId: e.target.value})}
                   placeholder="123456789"
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
               
-              <div className="col-span-2">
-                <Label htmlFor="clientSecret">Client Secret</Label>
+              <div className="col-span-1 md:col-span-2"> {/* Ajustado col-span */}
+                <Label htmlFor="clientSecret" className="text-sm">Client Secret</Label> {/* Ajustado text size */}
                 <Input
                   id="clientSecret"
                   type="password"
                   value={newAccount.clientSecret || ''}
                   onChange={(e) => setNewAccount({...newAccount, clientSecret: e.target.value})}
                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
             </div>
             
-            <Button onClick={addAccount} disabled={saving || loading} className="w-full">
+            <Button onClick={addAccount} disabled={saving || loading} className="w-full text-sm sm:text-base"> {/* Ajustado text size */}
               <Plus className="h-4 w-4 mr-2" />
               {saving ? 'Salvando...' : 'Adicionar Conta'}
             </Button>

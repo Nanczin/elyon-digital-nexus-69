@@ -492,22 +492,19 @@ const Checkout = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando checkout...</p>
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!checkout) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center p-4"> {/* Ajustado padding */}
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Checkout não encontrado</h1>
+          <h1 className="text-xl sm:text-2xl font-bold mb-4">Checkout não encontrado</h1> {/* Ajustado text size */}
           <button 
             onClick={() => navigate('/')}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm sm:text-base" {/* Ajustado text size */}
           >
             Voltar ao início
           </button>
@@ -572,11 +569,8 @@ const Checkout = () => {
     setSelectedInstallments
   };
 
-  if (checkout.layout === 'mosaic') {
-    return <MosaicLayout {...layoutProps} />;
-  } else {
-    return <HorizontalLayout {...layoutProps} />;
-  }
+  // Always render HorizontalLayout for responsiveness
+  return <HorizontalLayout {...layoutProps} />;
 };
 
 export default Checkout;

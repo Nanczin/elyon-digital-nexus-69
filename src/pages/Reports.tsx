@@ -177,25 +177,25 @@ const Reports = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"> {/* Ajustado flex e gap */}
         <div>
-          <h1 className="text-3xl font-bold">Relatórios de Vendas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Relatórios de Vendas</h1> {/* Ajustado text size */}
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
             Análise detalhada das vendas e faturamento
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
           <select 
             value={dateRange} 
             onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 border rounded-md"
+            className="px-3 py-2 border rounded-md text-sm sm:text-base w-full sm:w-auto" {/* Ajustado text size e largura */}
           >
             <option value="all">Todas as vendas</option>
             <option value="7days">Últimos 7 dias</option>
             <option value="30days">Últimos 30 dias</option>
             <option value="90days">Últimos 90 dias</option>
           </select>
-          <Button onClick={exportToCSV} variant="outline">
+          <Button onClick={exportToCSV} variant="outline" className="w-full sm:w-auto text-sm sm:text-base"> {/* Ajustado largura do botão e text size */}
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
@@ -203,7 +203,7 @@ const Reports = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"> {/* Ajustado grid-cols */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
@@ -248,33 +248,33 @@ const Reports = () => {
       {/* Sales Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Detalhamento das Vendas</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Detalhamento das Vendas</CardTitle> {/* Ajustado text size */}
+          <CardDescription className="text-sm sm:text-base"> {/* Ajustado text size */}
             Lista completa de todas as vendas realizadas
           </CardDescription>
         </CardHeader>
         <CardContent>
           {sales.length === 0 ? (
             <div className="text-center py-8">
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma venda encontrada</h3>
-              <p className="text-muted-foreground">
+              <FileText className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhuma venda encontrada</h3> {/* Ajustado text size */}
+              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
                 Não há vendas para o período selecionado
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto"> {/* Adicionado overflow-x-auto para tabelas em mobile */}
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Valor Bruto</TableHead>
-                    <TableHead>Comissão</TableHead>
-                    <TableHead>Valor Líquido</TableHead>
-                    <TableHead>Pagamento</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Data</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Cliente</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Produto</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Valor Bruto</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Comissão</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Valor Líquido</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Pagamento</TableHead> {/* Ajustado text size */}
+                    <TableHead className="text-xs sm:text-sm">Status</TableHead> {/* Ajustado text size */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -328,7 +328,7 @@ const Reports = () => {
                         <p className="text-sm">{sale.payment_method}</p>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'}>
+                        <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'} className="text-xs"> {/* Ajustado text size */}
                           {sale.status === 'completed' ? 'Concluída' : 'Pendente'}
                         </Badge>
                       </TableCell>

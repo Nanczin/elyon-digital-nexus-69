@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
@@ -36,19 +35,19 @@ const CountdownTimer = ({ duration, color, text }: CountdownTimerProps) => {
 
   if (timeLeft <= 0) {
     return (
-      <div className="w-full max-w-4xl mx-auto mb-6">
-        <div className="flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-red-50 border border-red-200">
-          <Clock className="h-5 w-5 text-red-500" />
-          <span className="text-red-700 font-medium text-lg">Oferta expirada!</span>
+      <div className="w-full max-w-4xl mx-auto mb-4 sm:mb-6"> {/* Ajustado mb */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-lg bg-red-50 border border-red-200"> {/* Ajustado gap, px, py */}
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" /> {/* Ajustado h, w */}
+          <span className="text-red-700 font-medium text-base sm:text-lg">Oferta expirada!</span> {/* Ajustado text size */}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto mb-6">
+    <div className="w-full max-w-4xl mx-auto mb-4 sm:mb-6"> {/* Ajustado mb */}
       <div 
-        className="flex items-center justify-center gap-4 px-8 py-4 rounded-lg border-2 shadow-lg animate-pulse"
+        className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-4 sm:px-8 py-3 sm:py-4 rounded-lg border-2 shadow-lg animate-pulse" {/* Ajustado flex, gap, px, py */}
         style={{ 
           borderColor: color,
           backgroundColor: color + '15',
@@ -56,15 +55,15 @@ const CountdownTimer = ({ duration, color, text }: CountdownTimerProps) => {
         }}
       >
         <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5" style={{ color }} />
-          <span className="font-medium text-gray-700 text-lg">{text}</span>
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} /> {/* Ajustado h, w */}
+          <span className="font-medium text-gray-700 text-base sm:text-lg">{text}</span> {/* Ajustado text size */}
         </div>
         
-        <div className="text-2xl font-bold tabular-nums" style={{ color }}>
+        <div className="text-xl sm:text-2xl font-bold tabular-nums" style={{ color }}> {/* Ajustado text size */}
           {formatTime(timeLeft)}
         </div>
         
-        <div className="text-sm text-gray-600">
+        <div className="text-xs sm:text-sm text-gray-600"> {/* Ajustado text size */}
           Não perca esta oportunidade!
         </div>
       </div>

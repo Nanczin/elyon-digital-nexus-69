@@ -98,8 +98,8 @@ const ProductsAssociation: React.FC<ProductsAssociationProps> = ({ memberAreaId 
   if (loading) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <p className="text-muted-foreground">Carregando...</p>
+        <CardContent className="p-4 sm:p-6"> {/* Ajustado padding */}
+          <p className="text-muted-foreground text-sm sm:text-base">Carregando...</p> {/* Ajustado text size */}
         </CardContent>
       </Card>
     );
@@ -108,17 +108,17 @@ const ProductsAssociation: React.FC<ProductsAssociationProps> = ({ memberAreaId 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"> {/* Ajustado text size */}
           <Package className="h-5 w-5" />
           Produtos Associados
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm sm:text-base"> {/* Ajustado text size */}
           Selecione quais produtos darão acesso a esta área de membros quando forem comprados
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {products.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
             Você ainda não criou nenhum produto. Crie produtos primeiro para associá-los a esta área.
           </p>
         ) : (
@@ -138,8 +138,8 @@ const ProductsAssociation: React.FC<ProductsAssociationProps> = ({ memberAreaId 
                     htmlFor={product.id}
                     className="flex-1 cursor-pointer"
                   >
-                    <div className="font-medium">{product.name}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="font-medium text-sm sm:text-base">{product.name}</div> {/* Ajustado text size */}
+                    <div className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
                       R$ {(product.price / 100).toFixed(2)}
                     </div>
                   </label>
@@ -149,7 +149,7 @@ const ProductsAssociation: React.FC<ProductsAssociationProps> = ({ memberAreaId 
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="w-full"
+              className="w-full text-sm sm:text-base" {/* Ajustado text size */}
             >
               <Save className="mr-2 h-4 w-4" />
               {saving ? 'Salvando...' : 'Salvar Associações'}

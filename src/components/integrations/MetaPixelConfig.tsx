@@ -97,20 +97,20 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md sm:max-w-2xl mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
         <DialogHeader>
-          <DialogTitle>Configurar Meta Pixel</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Configurar Meta Pixel</DialogTitle> {/* Ajustado text size */}
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Pixels existentes */}
           {metaPixels.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Pixels Configurados</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Pixels Configurados</h3> {/* Ajustado text size */}
               {metaPixels.map((pixel) => (
                 <Card key={pixel.id}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-base">
+                    <CardTitle className="flex items-center justify-between text-sm sm:text-base"> {/* Ajustado text size */}
                       {pixel.name}
                       <Button
                         variant="ghost"
@@ -122,7 +122,7 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
                       <p>Pixel ID: {pixel.pixelId}</p>
                       {pixel.accessToken && (
                         <p>Access Token: {pixel.accessToken.substring(0, 20)}...</p>
@@ -136,42 +136,45 @@ const MetaPixelConfig: React.FC<MetaPixelConfigProps> = ({ children }) => {
 
           {/* Novo pixel */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Adicionar Novo Pixel</h3>
+            <h3 className="text-base sm:text-lg font-semibold">Adicionar Novo Pixel</h3> {/* Ajustado text size */}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Ajustado grid-cols */}
               <div>
-                <Label htmlFor="pixelName">Nome do Pixel *</Label>
+                <Label htmlFor="pixelName" className="text-sm">Nome do Pixel *</Label> {/* Ajustado text size */}
                 <Input
                   id="pixelName"
                   value={newPixel.name}
                   onChange={(e) => setNewPixel({...newPixel, name: e.target.value})}
                   placeholder="Ex: Pixel Principal"
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
               
               <div>
-                <Label htmlFor="pixelId">Pixel ID *</Label>
+                <Label htmlFor="pixelId" className="text-sm">Pixel ID *</Label> {/* Ajustado text size */}
                 <Input
                   id="pixelId"
                   value={newPixel.pixelId}
                   onChange={(e) => setNewPixel({...newPixel, pixelId: e.target.value})}
                   placeholder="123456789012345"
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
               
-              <div className="col-span-2">
-                <Label htmlFor="accessToken">Access Token (Opcional)</Label>
+              <div className="col-span-1 md:col-span-2"> {/* Ajustado col-span */}
+                <Label htmlFor="accessToken" className="text-sm">Access Token (Opcional)</Label> {/* Ajustado text size */}
                 <Input
                   id="accessToken"
                   type="password"
                   value={newPixel.accessToken}
                   onChange={(e) => setNewPixel({...newPixel, accessToken: e.target.value})}
                   placeholder="Para API de Conversões"
+                  className="text-sm" {/* Ajustado text size */}
                 />
               </div>
             </div>
             
-            <Button onClick={addPixel} disabled={saving || loading} className="w-full">
+            <Button onClick={addPixel} disabled={saving || loading} className="w-full text-sm sm:text-base"> {/* Ajustado text size */}
               <Plus className="h-4 w-4 mr-2" />
               {saving ? 'Salvando...' : 'Adicionar Pixel'}
             </Button>
