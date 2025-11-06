@@ -311,6 +311,30 @@ const MemberAreaDashboard = () => {
                   className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} 
                   style={{ backgroundColor: cardBackground }}
                 >
+                  {isLocked && ( // Move the overlay here, as a direct child of Card
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10 rounded-xl" // Add rounded-xl to match card corners
+                         style={{ backgroundColor: `${cardBackground}E0` }}>
+                        <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} />
+                        <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}>
+                            Módulo Bloqueado
+                        </p>
+                        {finalCheckoutLink ? (
+                            <Button asChild
+                              className="mt-2 w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:opacity-90 transition-colors duration-300"
+                              style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                            >
+                                <Link to={finalCheckoutLink}>
+                                    Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
+                                </Link>
+                            </Button>
+                        ) : (
+                            <p className="text-sm mt-2" style={{ color: secondaryTextColor }}>
+                                Produto associado não encontrado ou sem checkout.
+                            </p>
+                        )}
+                    </div>
+                  )}
+
                   <div className="relative aspect-video w-full bg-gray-200 h-48">
                     {module.banner_url && (
                       <img 
@@ -337,29 +361,8 @@ const MemberAreaDashboard = () => {
                       {module.description}
                     </p>
                     
-                    {isLocked ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10"
-                           style={{ backgroundColor: `${cardBackground}E0` }}> 
-                          <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} /> 
-                          <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}> 
-                              Módulo Bloqueado
-                          </p>
-                          {finalCheckoutLink ? (
-                              <Button asChild 
-                                className="mt-2 w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:opacity-90 transition-colors duration-300"
-                                style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
-                              >
-                                  <Link to={finalCheckoutLink}>
-                                      Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
-                                  </Link>
-                              </Button>
-                          ) : (
-                              <p className="text-sm mt-2" style={{ color: secondaryTextColor }}> 
-                                  Produto associado não encontrado ou sem checkout.
-                              </p>
-                          )}
-                      </div>
-                    ) : (
+                    {/* This button should only show if NOT locked */}
+                    {!isLocked && (
                       <Button 
                         className="w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300" 
                         style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
