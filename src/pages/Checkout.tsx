@@ -337,8 +337,21 @@ const Checkout = () => {
       const packageAssociatedProduct = selectedPackageDetails?.product;
       const packageDeliverable = selectedPackageDetails?.deliverable;
 
-      // Determine the final product ID for the order/access
-      const finalProductId = packageAssociatedProduct?.id || checkout?.product_id;
+      // Determine the final product ID for the main purchase (from selected package)
+      const mainPurchasedProductId = packageAssociatedProduct?.id || checkout?.product_id;
+
+      // Gather all purchased product IDs (from selected package and all enabled order bumps)
+      const purchasedProductIds: string[] = [];
+      if (mainPurchasedProductId) {
+        purchasedProductIds.push(mainPurchasedProductId);
+      }
+      checkout?.order_bumps.forEach(bump => {
+        if (bump.enabled && bump.selectedProduct) {
+          purchasedProductIds.push(bump.selectedProduct);
+        }
+      });
+      console.log('CHECKOUT_FRONTEND_DEBUG: All purchased product IDs:', purchasedProductIds);
+
 
       // Determine the final deliverable link based on priority: package > checkout-level > main product
       let finalDeliverableLink: string | null = null;
@@ -365,7 +378,8 @@ const Checkout = () => {
         orderBumps: selectedOrderBumps,
         selectedPackage: selectedPackage,
         paymentMethod: selectedPaymentMethod,
-        finalProductId: finalProductId, // Pass the resolved product ID
+        finalProductId: mainPurchasedProductId, // Pass the resolved product ID for the main package
+        purchasedProductIds: purchasedProductIds, // Pass all purchased product IDs
         // Adicionar dados de e-mail transacional e entregável ao metadata
         emailMetadata: {
           sendTransactionalEmail: checkout?.form_fields?.sendTransactionalEmail ?? true, // Acessado via form_fields
@@ -407,7 +421,7 @@ const Checkout = () => {
       if (hasIntegrations) {
         trackPurchaseEvent({
           amount: totalAmount,
-          product_id: finalProductId, // Use the resolved product ID for tracking
+          product_id: mainPurchasedProductId, // Use the resolved product ID for tracking
           checkout_id: checkoutId,
           payment_method: selectedPaymentMethod,
           customer_data: customerData
