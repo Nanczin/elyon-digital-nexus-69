@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams } from 'react-router-dom'; // Import useParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon, ChevronDown, ChevronUp, Package } from 'lucide-react'; // Adicionado ChevronDown, ChevronUp, Package
+import { Plus, BookOpen, Video, MonitorDot, Edit, Trash2, FileText, Image as ImageIcon, ChevronDown, ChevronUp, Package, Link as LinkIcon } from 'lucide-react'; // Adicionado ChevronDown, ChevronUp, Package, LinkIcon
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -66,6 +66,7 @@ const ModuleFormDialog = ({
   const [status, setStatus] = useState(editingModule?.status === 'published');
   const [currentMemberAreaId, setCurrentMemberAreaId] = useState(editingModule?.member_area_id || selectedMemberAreaId || '');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(editingModule?.product_id || null); // Novo estado para produto associado
+  const [checkoutLink, setCheckoutLink] = useState<string>(editingModule?.checkout_link || ''); // NOVO: Estado para o link de checkout
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -78,6 +79,7 @@ const ModuleFormDialog = ({
       setStatus(editingModule.status === 'published');
       setCurrentMemberAreaId(editingModule.member_area_id || '');
       setSelectedProductId(editingModule.product_id || null); // Carregar produto associado
+      setCheckoutLink(editingModule.checkout_link || ''); // NOVO: Carregar link de checkout
     } else {
       setTitle('');
       setDescription('');
@@ -86,6 +88,7 @@ const ModuleFormDialog = ({
       setStatus(false);
       setCurrentMemberAreaId(selectedMemberAreaId || '');
       setSelectedProductId(null); // Resetar produto associado
+      setCheckoutLink(''); // NOVO: Resetar link de checkout
     }
   }, [editingModule, selectedMemberAreaId]);
 
@@ -121,6 +124,7 @@ const ModuleFormDialog = ({
         status: status ? 'published' : 'draft',
         order_index: editingModule?.order_index || 0, // Preserve order or set default
         product_id: selectedProductId, // Salvar o produto associado
+        checkout_link: checkoutLink.trim() || null, // NOVO: Salvar o link de checkout
       };
 
       if (editingModule) {
@@ -214,6 +218,20 @@ const ModuleFormDialog = ({
           </Select>
           <p className="text-xs text-muted-foreground">
             Este módulo pode ser associado a um produto específico.
+          </p>
+        </div>
+        {/* NOVO CAMPO: Link de Checkout Direto */}
+        <div className="space-y-2">
+          <Label htmlFor="checkoutLink">Link de Checkout Direto (Opcional)</Label>
+          <Input 
+            id="checkoutLink" 
+            type="url" 
+            value={checkoutLink} 
+            onChange={(e) => setCheckoutLink(e.target.value)} 
+            placeholder="https://seucheckout.com/link-direto" 
+          />
+          <p className="text-xs text-muted-foreground">
+            Se preenchido, este link será usado para o botão "Comprar Acesso" em vez do produto associado.
           </p>
         </div>
         <div className="flex items-center justify-between">
@@ -540,6 +558,12 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     <Package className="h-3 w-3" />
                     Produto Associado: {module.products.name}
+                  </p>
+                )}
+                {module.checkout_link && ( // NOVO: Exibir link de checkout direto
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <LinkIcon className="h-3 w-3" />
+                    Checkout Direto: <a href={module.checkout_link} target="_blank" rel="noopener noreferrer" className="underline">Ver</a>
                   </p>
                 )}
                 <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="mt-1">

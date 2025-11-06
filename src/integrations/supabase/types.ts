@@ -712,6 +712,7 @@ export type Database = {
       modules: {
         Row: {
           banner_url: string | null
+          checkout_link: string | null // NEW FIELD
           created_at: string
           description: string | null
           id: string
@@ -725,6 +726,7 @@ export type Database = {
         }
         Insert: {
           banner_url?: string | null
+          checkout_link?: string | null // NEW FIELD
           created_at?: string
           description?: string | null
           id?: string
@@ -738,6 +740,7 @@ export type Database = {
         }
         Update: {
           banner_url?: string | null
+          checkout_link?: string | null // NEW FIELD
           created_at?: string
           description?: string | null
           id?: string

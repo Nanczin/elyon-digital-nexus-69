@@ -90,7 +90,7 @@ const MemberAreaDashboard = () => {
       // 4. Fetch ALL published modules for this member area
       const { data: allPublishedModulesData, error: allPublishedModulesError } = await supabase
         .from('modules')
-        .select('*')
+        .select('*') // Select all columns, including the new checkout_link
         .eq('member_area_id', memberAreaId)
         .eq('status', 'published')
         .order('order_index', { ascending: true });
@@ -302,7 +302,8 @@ const MemberAreaDashboard = () => {
           {modules.length > 0 && (
             modules.map((module) => {
               const isLocked = module.product_id && !userProductAccessIds.includes(module.product_id);
-              const checkoutLink = module.product_id ? productCheckoutLinks[module.product_id] : null;
+              // Priorize o checkout_link direto do módulo, se existir
+              const finalCheckoutLink = module.checkout_link || (module.product_id ? productCheckoutLinks[module.product_id] : null);
 
               return (
                 <Card 
@@ -341,9 +342,9 @@ const MemberAreaDashboard = () => {
                           <p className="text-white text-lg font-semibold text-center mb-4">
                               Módulo Bloqueado
                           </p>
-                          {checkoutLink ? (
+                          {finalCheckoutLink ? (
                               <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}>
-                                  <Link to={checkoutLink}>
+                                  <Link to={finalCheckoutLink}>
                                       Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
                                   </Link>
                               </Button>
