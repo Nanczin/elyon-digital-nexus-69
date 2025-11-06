@@ -308,7 +308,7 @@ const MemberAreaDashboard = () => {
               return (
                 <Card 
                   key={module.id} 
-                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} /* Removed grayscale and opacity from here */
+                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} 
                   style={{ backgroundColor: cardBackground }}
                 >
                   <div className="relative aspect-video w-full bg-gray-200 h-48">
@@ -316,7 +316,7 @@ const MemberAreaDashboard = () => {
                       <img 
                         src={module.banner_url} 
                         alt={module.title} 
-                        className={`w-full h-full object-cover ${isLocked ? 'grayscale brightness-50' : ''}`} /* Apply grayscale and brightness to image */
+                        className={`w-full h-full object-cover ${isLocked ? 'grayscale brightness-50' : ''}`} 
                       />
                     )}
                     {/* Placeholder para o badge de concluído */}
@@ -339,9 +339,9 @@ const MemberAreaDashboard = () => {
                     
                     {isLocked ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10"
-                           style={{ backgroundColor: `${cardBackground}E0` }}> {/* Use cardBackground with 80% opacity */}
-                          <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} /> {/* Aplicar primaryColor ao ícone */}
-                          <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}> {/* Aplicar primaryColor ao título */}
+                           style={{ backgroundColor: `${cardBackground}E0` }}> 
+                          <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} /> 
+                          <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}> 
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
@@ -354,7 +354,7 @@ const MemberAreaDashboard = () => {
                                   </Link>
                               </Button>
                           ) : (
-                              <p className="text-sm mt-2" style={{ color: secondaryTextColor }}> {/* Manter secondaryTextColor para o texto de fallback */}
+                              <p className="text-sm mt-2" style={{ color: secondaryTextColor }}> 
                                   Produto associado não encontrado ou sem checkout.
                               </p>
                           )}
