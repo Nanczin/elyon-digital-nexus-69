@@ -338,13 +338,16 @@ const MemberAreaDashboard = () => {
                     </p>
                     
                     {isLocked ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10"> {/* Z-index para ficar acima do conteúdo desbotado */}
-                          <Lock className="h-12 w-12 mb-4 text-gray-700 dark:text-gray-300" /> {/* Ícone de cadeado proeminente */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 rounded-xl text-center z-10">
+                          <Lock className="h-12 w-12 mb-4 text-gray-700 dark:text-gray-300" />
                           <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
-                              <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} className="mt-2">
+                              <Button asChild 
+                                className="mt-2 w-full h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:opacity-90 transition-colors duration-300"
+                                style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                              >
                                   <Link to={finalCheckoutLink}>
                                       Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
                                   </Link>
