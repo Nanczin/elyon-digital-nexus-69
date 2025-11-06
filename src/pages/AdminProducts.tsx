@@ -74,7 +74,7 @@ const AdminProducts = () => {
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao carregar produtos:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os produtos",
@@ -93,7 +93,7 @@ const AdminProducts = () => {
       if (error) throw error;
       setMemberAreas(data || []);
     } catch (error) {
-      console.error('Erro ao carregar áreas de membros:', error);
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao carregar áreas de membros:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar as áreas de membros",
@@ -103,21 +103,31 @@ const AdminProducts = () => {
   };
 
   const uploadFile = async (file: File, folder: string) => {
+    console.log(`ADMIN_PRODUCTS_DEBUG: Iniciando upload de arquivo: ${file.name} para a pasta: ${folder}`);
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('products')
-      .upload(filePath, file);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error(`ADMIN_PRODUCTS_DEBUG: Erro no upload do arquivo ${file.name}:`, uploadError);
+        throw uploadError;
+      }
 
-    const { data } = supabase.storage
-      .from('products')
-      .getPublicUrl(filePath);
+      const { data } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
 
-    return data.publicUrl;
+      console.log(`ADMIN_PRODUCTS_DEBUG: Arquivo ${file.name} enviado com sucesso. URL: ${data.publicUrl}`);
+      return data.publicUrl;
+    } catch (error) {
+      console.error(`ADMIN_PRODUCTS_DEBUG: Exceção durante o upload do arquivo ${file.name}:`, error);
+      throw error; // Re-throw para ser capturado pelo handleSubmit/handleUpdate
+    }
   };
 
   if (loading) {
@@ -177,6 +187,7 @@ const AdminProducts = () => {
         description: "Nome, descrição e preço são obrigatórios",
         variant: "destructive"
       });
+      setIsLoading(false); // Ensure loading is false on validation error
       return;
     }
     
@@ -186,6 +197,7 @@ const AdminProducts = () => {
         description: "Link da área de membros é obrigatório",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
     
@@ -195,6 +207,7 @@ const AdminProducts = () => {
         description: "Arquivo entregável é obrigatório",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
 
@@ -204,6 +217,7 @@ const AdminProducts = () => {
         description: "Link do entregável é obrigatório",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
 
@@ -279,11 +293,11 @@ const AdminProducts = () => {
 
       // Refresh products list
       fetchProducts();
-    } catch (error) {
-      console.error('Erro ao criar produto:', error);
+    } catch (error: any) {
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao criar produto:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o produto",
+        description: error.message || "Não foi possível criar o produto",
         variant: "destructive"
       });
     } finally {
@@ -333,7 +347,7 @@ const AdminProducts = () => {
 
       fetchProducts();
     } catch (error) {
-      console.error('Erro ao excluir produto:', error);
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao excluir produto:', error);
       toast({
         title: "Erro",
         description: "Não foi possível excluir o produto",
@@ -351,6 +365,7 @@ const AdminProducts = () => {
         description: "Nome, descrição e preço são obrigatórios",
         variant: "destructive"
       });
+      setIsLoading(false); // Ensure loading is false on validation error
       return;
     }
 
@@ -360,15 +375,17 @@ const AdminProducts = () => {
         description: "Link da área de membros é obrigatório",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
     
-    if (formData.deliveryType === 'upload' && !formData.deliverable) {
+    if (formData.deliveryType === 'upload' && !formData.deliverable && !editingProduct?.file_url) {
       toast({
         title: "Erro",
         description: "Arquivo entregável é obrigatório",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
 
@@ -378,6 +395,7 @@ const AdminProducts = () => {
         description: "Link do entregável é obrigatório",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
 
@@ -461,11 +479,11 @@ const AdminProducts = () => {
       });
 
       fetchProducts();
-    } catch (error) {
-      console.error('Erro ao atualizar produto:', error);
+    } catch (error: any) {
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao atualizar produto:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o produto",
+        description: error.message || "Não foi possível atualizar o produto",
         variant: "destructive"
       });
     } finally {
@@ -690,7 +708,42 @@ const AdminProducts = () => {
 
                     {formData.deliveryType === 'upload' && <div className="space-y-2">
                         <Label htmlFor="deliverable">Arquivo Entregável *</Label>
-                        <Input id="deliverable" type="file" onChange={e => handleFileChange('deliverable', e.target.files?.[0] || null)} required />
+                        <Input 
+                          id="deliverable" 
+                          type="file" 
+                          onChange={e => handleFileChange('deliverable', e.target.files?.[0] || null)} 
+                          required={!editingProduct?.file_url && !formData.deliverable} // Only required if no existing file and no new file selected
+                        />
+                        {editingProduct?.file_url && !formData.deliverable && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Link className="h-4 w-4" />
+                            <span>Arquivo atual: <a href={editingProduct.file_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleInputChange('file_url', null)} // Clear existing file_url
+                              className="h-6 px-2 text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Remover
+                            </Button>
+                          </div>
+                        )}
+                        {formData.deliverable && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Upload className="h-4 w-4" />
+                            <span>Novo arquivo selecionado: {formData.deliverable.name}</span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleFileChange('deliverable', null)}
+                              className="h-6 px-2 text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Remover
+                            </Button>
+                          </div>
+                        )}
                       </div>}
 
                     {formData.deliveryType === 'deliverableLink' && <div className="space-y-2">
@@ -804,16 +857,17 @@ const AdminProducts = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Seus Produtos ({products.length})
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Package className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Seus Produtos ({products.length})</span>
+            <span className="sm:hidden">Produtos</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {products.length === 0 ? (
             <div className="text-center py-12">
-              <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum produto criado</h3>
+              <Package className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum produto criado</h3>
               <p className="text-muted-foreground mb-4">
                 Comece criando seu primeiro infoproduto
               </p>
