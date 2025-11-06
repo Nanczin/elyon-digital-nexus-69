@@ -338,9 +338,9 @@ const MemberAreaDashboard = () => {
                     </p>
                     
                     {isLocked ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 rounded-xl text-center z-10">
-                          <Lock className="h-12 w-12 mb-4 text-gray-700 dark:text-gray-300" />
-                          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10"> {/* Z-index para ficar acima do conteúdo desbotado */}
+                          <Lock className="h-12 w-12 mb-4" style={{ color: textColor }} /> {/* Aplicar textColor ao ícone */}
+                          <p className="text-lg font-semibold mb-4" style={{ color: textColor }}> {/* Aplicar textColor ao título */}
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
@@ -353,7 +353,7 @@ const MemberAreaDashboard = () => {
                                   </Link>
                               </Button>
                           ) : (
-                              <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                              <p className="text-sm mt-2" style={{ color: secondaryTextColor }}> {/* Aplicar secondaryTextColor ao texto de fallback */}
                                   Produto associado não encontrado ou sem checkout.
                               </p>
                           )}
