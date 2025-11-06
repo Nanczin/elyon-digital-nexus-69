@@ -290,52 +290,52 @@ const AdminMemberAreas = () => {
           ) : (
             <div className="space-y-4">
               {memberAreas.map(area => (
-                <div key={area.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-3 sm:gap-0"> {/* Ajustado flex e gap */}
+                <div key={area.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-3 sm:gap-0">
                   <div className="flex items-center space-x-3 sm:space-x-4">
                     {area.logo_url ? (
-                      <img src={area.logo_url} alt={area.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" /> 
+                      <img src={area.logo_url} alt={area.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" />
                     ) : (
-                      <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-md flex items-center justify-center"> {/* Ajustado div size */}
-                        <MonitorDot className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" /> {/* Ajustado icon size */}
+                      <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-md flex items-center justify-center">
+                        <MonitorDot className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                       </div>
                     )}
                     <div>
-                      <p className="font-medium text-sm sm:text-base">{area.name}</p> {/* Ajustado text size */}
-                      <p className="text-xs sm:text-sm text-muted-foreground">Slug: {area.slug}</p> {/* Ajustado text size */}
+                      <p className="font-medium text-sm sm:text-base">{area.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Slug: {area.slug}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Palette className="h-3 w-3" style={{ color: area.primary_color || '#3b82f6' }} />
                         Cor Principal: {area.primary_color}
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0"> {/* Ajustado flex e margin-top */}
+                  <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     {/* Botão para EDITAR DETALHES (Nome, Slug, etc.) */}
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(area)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(area)} className="text-xs sm:text-sm">
                       <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                     {/* Botão para GERENCIAR CONTEÚDO */}
-                    <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                    <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm">
                       <Link to={`/admin/member-areas/${area.id}/content`}>
                         <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Link>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                        <Button variant="destructive" size="sm" className="text-xs sm:text-sm">
                           <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4"> {/* Ajustado max-w- */}
+                      <AlertDialogContent className="max-w-xs sm:max-w-md mx-2 sm:mx-4">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle> {/* Ajustado text size */}
-                          <AlertDialogDescription className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                          <AlertDialogTitle className="text-sm sm:text-base">Confirmar Exclusão</AlertDialogTitle>
+                          <AlertDialogDescription className="text-xs sm:text-sm">
                             Tem certeza que deseja excluir a área de membros <strong>"{area.name}"</strong>?
                             Esta ação é irreversível e todos os conteúdos e membros associados serão afetados.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-col sm:flex-row gap-2"> {/* Ajustado flex e gap */}
-                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel> {/* Ajustado text size */}
-                          <AlertDialogAction onClick={() => handleDelete(area.id, area.name)} className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(area.id, area.name)} className="text-xs sm:text-sm">
                             Excluir
                           </AlertDialogAction>
                         </AlertDialogFooter>
