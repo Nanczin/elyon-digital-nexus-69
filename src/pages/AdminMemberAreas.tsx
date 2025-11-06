@@ -293,7 +293,7 @@ const AdminMemberAreas = () => {
                 <div key={area.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-3 sm:gap-0"> {/* Ajustado flex e gap */}
                   <div className="flex items-center space-x-3 sm:space-x-4">
                     {area.logo_url ? (
-                      <img src={area.logo_url} alt={area.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" />
+                      <img src={area.logo_url} alt={area.name} className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" /> 
                     ) : (
                       <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-md flex items-center justify-center"> {/* Ajustado div size */}
                         <MonitorDot className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" /> {/* Ajustado icon size */}
