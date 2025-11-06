@@ -5,14 +5,14 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut, Lock } from 'lucide-react'; // Adicionado Lock
+import { Check, BookOpen, User, MessageSquare, ArrowRight, Settings, LogOut, Lock } from 'lucide-react';
 import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
-import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
-import { FormFields, PackageConfig } from '@/integrations/supabase/types'; // Importar FormFields e PackageConfig
+import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings';
+import { FormFields, PackageConfig } from '@/integrations/supabase/types';
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -30,8 +30,8 @@ const MemberAreaDashboard = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
-  const [userProductAccessIds, setUserProductAccessIds] = useState<string[]>([]); // IDs dos produtos que o usuário tem acesso
-  const [productCheckoutLinks, setProductCheckoutLinks] = useState<Record<string, string>>({}); // Mapeia productId para checkoutLink
+  const [userProductAccessIds, setUserProductAccessIds] = useState<string[]>([]);
+  const [productCheckoutLinks, setProductCheckoutLinks] = useState<Record<string, string>>({});
 
   const fetchMemberAreaAndContent = useCallback(async () => {
     if (!memberAreaId || !user?.id) {
@@ -90,7 +90,7 @@ const MemberAreaDashboard = () => {
       // 4. Fetch ALL published modules for this member area
       const { data: allPublishedModulesData, error: allPublishedModulesError } = await supabase
         .from('modules')
-        .select('*') // Select all columns, including the new checkout_link
+        .select('*')
         .eq('member_area_id', memberAreaId)
         .eq('status', 'published')
         .order('order_index', { ascending: true });
@@ -122,7 +122,7 @@ const MemberAreaDashboard = () => {
         const { data: allCheckouts, error: allCheckoutsError } = await supabase
           .from('checkouts')
           .select('id, product_id, form_fields')
-          .eq('user_id', areaData.user_id); // Filter by the owner of the member area
+          .eq('user_id', areaData.user_id);
 
         if (allCheckoutsError) {
           console.error('Error fetching all checkouts for member area owner:', allCheckoutsError);
@@ -139,7 +139,7 @@ const MemberAreaDashboard = () => {
           // Check if any product associated with a package in this checkout is one of the module products
           const packages = (checkout.form_fields as FormFields)?.packages;
           if (packages && Array.isArray(packages)) {
-            packages.forEach((pkg: PackageConfig) => { // Explicitly type pkg as PackageConfig
+            packages.forEach((pkg: PackageConfig) => {
               if (pkg.associatedProductIds && Array.isArray(pkg.associatedProductIds)) {
                 pkg.associatedProductIds.forEach(associatedProductId => {
                   if (uniqueModuleProductIds.includes(associatedProductId)) {
@@ -212,8 +212,8 @@ const MemberAreaDashboard = () => {
   const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
   const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
-  const checkmarkBgColor = currentSettings.colors?.checkmark_background || 'hsl(var(--member-area-checkmark-bg))'; // Definido aqui
-  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))'; // Definido aqui
+  const checkmarkBgColor = currentSettings.colors?.checkmark_background || 'hsl(var(--member-area-checkmark-bg))';
+  const checkmarkIconColor = currentSettings.colors?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
   const userInitial = userName.charAt(0).toUpperCase();
@@ -337,19 +337,19 @@ const MemberAreaDashboard = () => {
                       {module.description}
                     </p>
                     {isLocked ? (
-                      <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 rounded-xl">
-                          <Lock className="h-12 w-12 text-white mb-4" />
-                          <p className="text-white text-lg font-semibold text-center mb-4">
+                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-xl text-white space-y-3"> {/* Aumentado opacidade para 70 e adicionado space-y-3 */}
+                          <Lock className="h-12 w-12 mb-2" /> {/* Removido mb-4, ajustado para mb-2 */}
+                          <p className="text-lg font-semibold text-center"> {/* Removido mb-4 */}
                               Módulo Bloqueado
                           </p>
                           {finalCheckoutLink ? (
-                              <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}>
+                              <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} className="mt-2"> {/* Adicionado mt-2 */}
                                   <Link to={finalCheckoutLink}>
                                       Comprar Acesso <ArrowRight className="h-4 w-4 ml-2" />
                                   </Link>
                               </Button>
                           ) : (
-                              <p className="text-white text-sm text-center">
+                              <p className="text-sm text-center mt-2"> {/* Adicionado mt-2 */}
                                   Produto associado não encontrado ou sem checkout.
                               </p>
                           )}
