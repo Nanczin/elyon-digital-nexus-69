@@ -61,7 +61,7 @@ const AdminCheckouts = () => {
   const getInitialFormData = useCallback(() => {
     const initial: any = { // Use 'any' temporarily for easier merging, will be typed later
       name: '', // Este campo é para o nome do checkout no formulário, não é salvo diretamente na tabela 'checkouts'
-      selectedProduct: '',
+      // selectedProduct: '', // REMOVIDO: Produto base agora é definido por pacote
       layout: 'horizontal' as string,
       form_fields: { // Corresponde à coluna 'form_fields' na tabela 'checkouts'
         requireName: true,
@@ -208,7 +208,7 @@ const AdminCheckouts = () => {
 
     return deepMerge(initial, { // Usar deepMerge para garantir que todos os campos padrão estejam presentes
       name: checkout.name || checkout.products?.name || '', // Carregar o novo campo 'name'
-      selectedProduct: checkout.product_id || '',
+      // selectedProduct: checkout.product_id || '', // REMOVIDO: Produto base agora é definido por pacote
       layout: 'horizontal', // Layout fixo como 'horizontal'
       form_fields: { // Mapear para a nova estrutura aninhada
         requireName: checkout.form_fields?.requireName ?? true,
@@ -625,10 +625,11 @@ const AdminCheckouts = () => {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkoutData.selectedProduct) {
+    // NEW VALIDATION: Ensure at least one package exists
+    if (!checkoutData.form_fields.packages || checkoutData.form_fields.packages.length === 0) {
       toast({
         title: "Erro",
-        description: "Selecione um produto base",
+        description: "Adicione pelo menos um pacote ao checkout.",
         variant: "destructive"
       });
       return;
@@ -682,7 +683,8 @@ const AdminCheckouts = () => {
         user_id: user?.id, // Adicionar user_id
         member_area_id: checkoutData.member_area_id || null, // Adicionar member_area_id
         name: checkoutData.name, // Salvar o novo campo 'name'
-        product_id: checkoutData.selectedProduct,
+        // product_id agora é derivado do primeiro pacote
+        product_id: checkoutData.form_fields.packages[0]?.associatedProductId || checkoutData.selectedProduct || '', // Use associatedProductId of first package, fallback to selectedProduct
         price: Math.round(checkoutData.form_fields.packages[0]?.price * 100) || 0, // Aplicar Math.round
         promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null, // Aplicar Math.round
         form_fields: {
@@ -882,7 +884,8 @@ const AdminCheckouts = () => {
                         Associe este checkout a uma área de membros específica.
                       </p>
                     </div>
-                    <div className="space-y-2">
+                    {/* REMOVIDO: Produto Base agora é definido por pacote */}
+                    {/* <div className="space-y-2">
                       <Label htmlFor="selectedProduct">Produto Base</Label>
                       <Select value={checkoutData.selectedProduct} onValueChange={value => handleInputChange('selectedProduct', value)}>
                         <SelectTrigger>
@@ -897,7 +900,7 @@ const AdminCheckouts = () => {
                       <p className="text-xs text-muted-foreground">
                         Se selecionado, os order bumps do produto serão carregados automaticamente
                       </p>
-                    </div>
+                    </div> */}
                     
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome do Checkout *</Label>
