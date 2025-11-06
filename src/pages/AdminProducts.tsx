@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Package, Upload, Link, Image, DollarSign, Trash2, Edit, MoreVertical, MonitorDot } from 'lucide-react';
+import { Plus, Package, Upload, Link, Image, DollarSign, Trash2, Edit, MoreVertical, MonitorDot, XCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
