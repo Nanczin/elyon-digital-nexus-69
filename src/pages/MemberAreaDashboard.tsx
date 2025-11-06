@@ -308,7 +308,7 @@ const MemberAreaDashboard = () => {
               return (
                 <Card 
                   key={module.id} 
-                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative ${isLocked ? 'opacity-50 grayscale' : ''}`} // Aplicar opacidade e tons de cinza aqui
+                  className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl relative`} {/* Removed grayscale and opacity from here */}
                   style={{ backgroundColor: cardBackground }}
                 >
                   <div className="relative aspect-video w-full bg-gray-200 h-48">
@@ -316,7 +316,7 @@ const MemberAreaDashboard = () => {
                       <img 
                         src={module.banner_url} 
                         alt={module.title} 
-                        className="w-full h-full object-cover" // Remover blur da imagem
+                        className={`w-full h-full object-cover ${isLocked ? 'grayscale brightness-50' : ''}`} {/* Apply grayscale and brightness to image */}
                       />
                     )}
                     {/* Placeholder para o badge de concluído */}
@@ -338,7 +338,8 @@ const MemberAreaDashboard = () => {
                     </p>
                     
                     {isLocked ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 rounded-xl text-center z-10">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10"
+                           style={{ backgroundColor: `${cardBackground}E0` }}> {/* Use cardBackground with 80% opacity */}
                           <Lock className="h-12 w-12 mb-4" style={{ color: primaryColor }} /> {/* Aplicar primaryColor ao ícone */}
                           <p className="text-lg font-semibold mb-4" style={{ color: primaryColor }}> {/* Aplicar primaryColor ao título */}
                               Módulo Bloqueado
