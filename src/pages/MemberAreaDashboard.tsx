@@ -71,7 +71,7 @@ const MemberAreaDashboard = () => {
         setSettings(getDefaultSettings(memberAreaId));
       }
 
-      // 3. Check if user has access to this specific member area
+      // 3. Check if user has access to this specific member area (profile.member_area_id)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('member_area_id')
@@ -86,27 +86,23 @@ const MemberAreaDashboard = () => {
       }
       setHasAccess(true);
 
-      // 4. Fetch modules the user has access to (or all modules if not restricted by product_id)
-      const { data: modulesData, error: modulesError } = await supabase
+      // 4. Fetch ALL published modules for this member area (regardless of individual member_access)
+      const { data: allPublishedModulesData, error: allPublishedModulesError } = await supabase
         .from('modules')
-        .select(`
-          *,
-          member_access!inner(user_id, is_active)
-        `)
+        .select('*')
         .eq('member_area_id', memberAreaId)
         .eq('status', 'published')
-        .eq('member_access.user_id', user.id)
-        .eq('member_access.is_active', true)
         .order('order_index', { ascending: true });
 
-      if (modulesError) {
-        console.error('Error fetching user modules:', modulesError);
-        toast({ title: "Erro", description: "Falha ao carregar seus módulos.", variant: "destructive" });
+      if (allPublishedModulesError) {
+        console.error('Error fetching all published modules:', allPublishedModulesError);
+        toast({ title: "Erro", description: "Falha ao carregar módulos.", variant: "destructive" });
+        setModules([]);
       } else {
-        setModules(modulesData || []);
+        setModules(allPublishedModulesData || []);
       }
 
-      // 5. Fetch user's product access
+      // 5. Fetch user's product access (from product_access table)
       const { data: accessData, error: accessError } = await supabase
         .from('product_access')
         .select('product_id')
@@ -117,7 +113,7 @@ const MemberAreaDashboard = () => {
       console.log('MEMBER_AREA_DASHBOARD_DEBUG: User has access to products:', accessedProductIds);
 
       // 6. Fetch checkout links for products associated with modules
-      const moduleProductIds = modulesData?.map(m => m.product_id).filter(Boolean) as string[] || [];
+      const moduleProductIds = allPublishedModulesData?.map(m => m.product_id).filter(Boolean) as string[] || [];
       const uniqueModuleProductIds = [...new Set(moduleProductIds)];
       const checkoutLinksMap: Record<string, string> = {};
 
