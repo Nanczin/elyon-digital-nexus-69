@@ -2,9 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom"; // Importar Outlet
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { MemberAreaAuthProvider } from "@/hooks/useMemberAreaAuth"; // Importar o novo provedor
+import { MemberAreaAuthProvider } from "@/hooks/useMemberAreaAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
@@ -24,38 +24,25 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
-// Novas páginas da área de membros
 import AdminContent from "./pages/AdminContent";
 import AdminMembers from "./pages/AdminMembers";
 import AdminDesign from "./pages/AdminDesign";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCommunity from "./pages/AdminCommunity";
 import AdminMemberAreas from "./pages/AdminMemberAreas";
-import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails"; // Importar a nova página de detalhes
-import MemberAreaLogin from "./pages/MemberAreaLogin"; // Importar a nova página de login da área de membros
-import MemberAreaDashboard from "./pages/MemberAreaDashboard"; // Importar a nova página de dashboard da área de membros
-import MemberAreaModuleDetails from "./pages/MemberAreaModuleDetails"; // Importar a nova página de detalhes do módulo
-import MemberAreaLesson from "./pages/MemberAreaLesson"; // Importar a nova página de aula
-import AuthForgotPassword from "./pages/AuthForgotPassword"; // Importar a nova página de recuperação de senha
-import AuthUpdatePassword from "./pages/AuthUpdatePassword"; // Importar a nova página de atualização de senha
-// import { useGlobalPlatformSettings } from "./hooks/useGlobalPlatformSettings"; // Importar o novo hook
-// import { useEffect } from "react";
-
+import AdminMemberAreaDetails from "./pages/AdminMemberAreaDetails";
+import MemberAreaLogin from "./pages/MemberAreaLogin";
+import MemberAreaDashboard from "./pages/MemberAreaDashboard";
+import MemberAreaModuleDetails from "./pages/MemberAreaModuleDetails";
+import MemberAreaLesson from "./pages/MemberAreaLesson";
+import AuthForgotPassword from "./pages/AuthForgotPassword";
+import AuthUpdatePassword from "./pages/AuthUpdatePassword";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  // const { globalFontFamily } = useGlobalPlatformSettings(); // Removido daqui
-
-  // useEffect(() => {
-  //   if (globalFontFamily) {
-  //     // Aplica a fonte ao elemento raiz (<html>) para que afete todo o documento
-  //     document.documentElement.style.setProperty('--global-font-family', globalFontFamily);
-  //   }
-  // }, [globalFontFamily]);
-
   return (
-    <AuthProvider> {/* AuthProvider agora envolve todos os outros provedores */}
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system" storageKey="elyon-ui-theme">
           <BrowserRouter>
@@ -84,7 +71,7 @@ const App = () => {
                     <Route path="/admin/member-areas" element={<AdminMemberAreas />} />
                     <Route path="/admin/member-areas/:memberAreaId" element={<AdminMemberAreaDetails />}>
                       <Route path="content" element={<AdminContent />} />
-                      <Route path="products" element={<div />} />
+                      <Route path="products" element={<Outlet />} />
                       <Route path="members" element={<AdminMembers />} />
                       <Route path="design" element={<AdminDesign />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
@@ -102,13 +89,13 @@ const App = () => {
                   </Route>
 
                   {/* Rotas públicas da Área de Membros (NÃO usam o Layout principal) */}
-                  <Route element={<MemberAreaAuthProvider> <Outlet /> </MemberAreaAuthProvider>}> {/* Envolver com o novo provedor */}
+                  <Route element={<MemberAreaAuthProvider> <Outlet /> </MemberAreaAuthProvider>}>
                     <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
-                    <Route path="/membros/:memberAreaId/forgot-password" element={<AuthForgotPassword />} /> {/* Nova rota de recuperação de senha */}
-                    <Route path="/membros/:memberAreaId/update-password" element={<AuthUpdatePassword />} /> {/* Nova rota de atualização de senha */}
+                    <Route path="/membros/:memberAreaId/forgot-password" element={<AuthForgotPassword />} />
+                    <Route path="/membros/:memberAreaId/update-password" element={<AuthUpdatePassword />} />
                     <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
-                    <Route path="/membros/:memberAreaId/modules/:moduleId" element={<MemberAreaModuleDetails />} /> {/* Nova rota para detalhes do módulo */}
-                    <Route path="/membros/:memberAreaId/modules/:moduleId/lessons/:lessonId" element={<MemberAreaLesson />} /> {/* Nova rota para a aula */}
+                    <Route path="/membros/:memberAreaId/modules/:moduleId" element={<MemberAreaModuleDetails />} />
+                    <Route path="/membros/:memberAreaId/modules/:moduleId/lessons/:lessonId" element={<MemberAreaLesson />} />
                   </Route>
                 </Routes>
               
