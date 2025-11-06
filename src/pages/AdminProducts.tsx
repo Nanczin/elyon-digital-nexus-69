@@ -110,7 +110,7 @@ const AdminProducts = () => {
 
     try {
       console.log(`ADMIN_PRODUCTS_DEBUG: Chamando supabase.storage.from('products').upload para ${filePath}`);
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage // Capturar data e error
         .from('products')
         .upload(filePath, file);
 
@@ -118,8 +118,8 @@ const AdminProducts = () => {
         console.error(`ADMIN_PRODUCTS_DEBUG: ERRO NO UPLOAD DO ARQUIVO ${file.name}:`, uploadError);
         throw uploadError;
       }
+      console.log(`ADMIN_PRODUCTS_DEBUG: Upload concluído. Dados do upload:`, uploadData); // Log do retorno do upload
 
-      console(`ADMIN_PRODUCTS_DEBUG: Upload de ${file.name} concluído. Obtendo URL pública.`);
       const { data } = supabase.storage
         .from('products')
         .getPublicUrl(filePath);
@@ -492,10 +492,7 @@ const AdminProducts = () => {
         })
         .eq('id', editingProduct.id);
 
-      if (error) {
-        console.error('ADMIN_PRODUCTS_DEBUG: ERRO AO ATUALIZAR PRODUTO NO DB:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Sucesso",
@@ -528,7 +525,7 @@ const AdminProducts = () => {
 
       fetchProducts();
     } catch (error: any) {
-      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao atualizar produto (catch block):', error);
+      console.error('ADMIN_PRODUCTS_DEBUG: Erro ao atualizar produto:', error);
       toast({
         title: "Erro",
         description: error.message || "Não foi possível atualizar o produto",
