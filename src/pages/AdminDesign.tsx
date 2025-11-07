@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Palette, Image, Type, Save, RotateCcw } from 'lucide-react';
+import { Palette, Image, Type, Save, RotateCcw, Mail } from 'lucide-react'; // Added Mail icon
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { deepMerge } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import MemberAreaPreviewContent from '@/components/member-area/MemberAreaPreviewContent';
 import { Tables } from '@/integrations/supabase/types';
 import { getDefaultSettings, PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada e tipos
+import { Separator } from '@/components/ui/separator'; // Import Separator
 
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
@@ -149,6 +150,8 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
         login_subtitle: settings.login_subtitle,
         global_font_family: settings.global_font_family,
         colors: settings.colors,
+        password_reset_subject: settings.password_reset_subject, // NEW
+        password_reset_body: settings.password_reset_body,       // NEW
       };
 
       const { error } = await supabase
@@ -262,6 +265,44 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
                   </div>
                 </div>
               ))}
+            </div>
+
+            <Separator /> {/* NEW: Separator for email templates */}
+
+            <h3 className="font-semibold mt-6 text-base sm:text-lg flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Templates de E-mail
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Personalize os e-mails transacionais da sua área de membros.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="passwordResetSubject">Assunto do E-mail de Redefinição de Senha</Label>
+                <Input 
+                  id="passwordResetSubject" 
+                  value={settings.password_reset_subject || ''} 
+                  onChange={e => handleInputChange('password_reset_subject', e.target.value)} 
+                  placeholder="Redefina sua senha da Área de Membros" 
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use `{`{customer_name}`}` e `{`{member_area_name}`}` para personalizar.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passwordResetBody">Corpo do E-mail de Redefinição de Senha</Label>
+                <Textarea 
+                  id="passwordResetBody" 
+                  value={settings.password_reset_body || ''} 
+                  onChange={e => handleInputChange('password_reset_body', e.target.value)} 
+                  placeholder="Olá {customer_name},\n\nClique no link para redefinir sua senha: {password_reset_link}" 
+                  rows={8}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use `{`{customer_name}`}`, `{`{member_area_name}`}` e `{`{password_reset_link}`}` para personalizar.
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">

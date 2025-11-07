@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient';
-import { supabase } from '@/integrations/supabase/client';
+import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient'; // Keep for potential future direct auth calls
+import { supabase } from '@/integrations/supabase/client'; // Use main supabase client for Edge Function invocation
 import { PlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
 import { deepMerge } from '@/lib/utils';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
@@ -62,14 +62,26 @@ const AuthForgotPassword = () => {
     }
 
     try {
-      const redirectTo = `${window.location.origin}/membros/${memberAreaId}/update-password`;
-      
-      const { error } = await memberAreaSupabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectTo,
-      });
+      // Chamar a nova Edge Function para enviar o e-mail de redefinição personalizado
+      const { data, error } = await supabase.functions.invoke(
+        'send-password-reset-email',
+        {
+          body: {
+            email,
+            memberAreaId,
+          },
+          method: 'POST',
+        }
+      );
 
       if (error) {
-        throw error;
+        console.error('Error invoking send-password-reset-email Edge Function:', error);
+        throw new Error(error.message || 'Erro ao invocar função de envio de e-mail de redefinição.');
+      }
+
+      if (!data?.success) {
+        console.error('Edge Function returned error:', data?.error);
+        throw new Error(data?.error || 'Falha na Edge Function ao enviar e-mail de redefinição.');
       }
 
       setEmailSent(true);

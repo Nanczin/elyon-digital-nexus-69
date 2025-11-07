@@ -23,6 +23,8 @@ export interface PlatformColors {
 // Extend Tables<'platform_settings'> to use the specific PlatformColors type
 export type PlatformSettings = Omit<Tables<'platform_settings'>, 'colors'> & {
   colors: PlatformColors | null;
+  password_reset_subject: string; // NEW
+  password_reset_body: string;   // NEW
 };
 
 const DEFAULT_FONT_FAMILY = 'Inter, sans-serif';
@@ -51,6 +53,8 @@ export const getDefaultSettings = (memberAreaId: string | null, userId: string |
   },
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  password_reset_subject: 'Redefina sua senha da Área de Membros Elyon Digital', // NEW DEFAULT
+  password_reset_body: 'Olá {customer_name},\n\nRecebemos uma solicitação para redefinir a senha da sua conta na Área de Membros {member_area_name}.\n\nPara redefinir sua senha, clique no link abaixo:\n{password_reset_link}\n\nSe você não solicitou esta redefinição, por favor, ignore este e-mail.\n\nAtenciosamente,\nEquipe {member_area_name}', // NEW DEFAULT
 });
 
 export const useGlobalPlatformSettings = () => {
