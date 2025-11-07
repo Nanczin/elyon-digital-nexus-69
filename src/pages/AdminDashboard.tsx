@@ -26,6 +26,10 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user && isAdmin) {
       loadDashboardStats();
+    } else if (!user || !isAdmin) {
+      // Se não for admin ou não estiver logado, garantir que o loadingStats seja false
+      // para que o Navigate possa agir ou a mensagem de permissão seja exibida.
+      setLoadingStats(false);
     }
   }, [user, isAdmin]);
 
@@ -82,6 +86,8 @@ const AdminDashboard = () => {
 
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+      // IMPORTANTE: Definir loadingStats como false mesmo em caso de erro
+      // para que a UI não fique travada no estado de carregamento.
     } finally {
       setLoadingStats(false);
     }
