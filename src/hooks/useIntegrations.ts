@@ -92,7 +92,16 @@ export const useIntegrations = () => {
 
         // Carregar a nova estrutura simplificada do smtp_config
         // Adicionar verificação para garantir que não é um array antes de fazer o cast
-        setEmailConfig(data.smtp_config && typeof data.smtp_config === 'object' && !Array.isArray(data.smtp_config) && Object.keys(data.smtp_config).length > 0 ? (data.smtp_config as unknown as SimplifiedEmailConfig) : null);
+        setEmailConfig(
+          data.smtp_config && 
+          typeof data.smtp_config === 'object' && 
+          data.smtp_config !== null && 
+          'email' in data.smtp_config && 
+          'appPassword' in data.smtp_config && 
+          'displayName' in data.smtp_config
+            ? (data.smtp_config as unknown as SimplifiedEmailConfig) 
+            : null
+        );
       }
     } catch (error) {
       console.error('Erro ao carregar integrações:', error);
@@ -213,10 +222,10 @@ export const useIntegrations = () => {
   };
 
   // Lógica atualizada para verificar se a configuração de e-mail está ativa
-  const isEmailConfigured = emailConfig && 
+  const isEmailConfigured = !!(emailConfig && 
                              emailConfig.email && 
                              emailConfig.appPassword && 
-                             emailConfig.displayName;
+                             emailConfig.displayName);
 
   return {
     mercadoPagoAccounts,
