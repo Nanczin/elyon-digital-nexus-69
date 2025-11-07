@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
 import { getDefaultSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Import PlatformColors
-import LessonComments from '@/components/member-area/LessonComments'; // Import LessonComments
+// import LessonComments from '@/components/member-area/LessonComments'; // Removed: LessonComments is not used here
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -328,10 +328,10 @@ const MemberAreaModuleDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Lesson Comments Section */}
-        <div className="mt-8">
+        {/* Lesson Comments Section - Removed from this page */}
+        {/* <div className="mt-8">
           <LessonComments lessonId={lessonId || ''} memberAreaId={memberAreaId || ''} />
-        </div>
+        </div> */}
       </div>
     </div>
   );
