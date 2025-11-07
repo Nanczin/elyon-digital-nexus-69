@@ -58,7 +58,8 @@ export interface CheckoutData {
     description?: string; // A descrição principal do checkout vive aqui
     gradientColor?: string;
     highlightColor?: string;
-    logo_url?: string | null; // NOVO: Adicionado logo_url
+    logo_url?: string | null; // Adicionado logo_url
+    banner_url?: string | null; // NOVO: Adicionado banner_url
   };
   timer?: {
     enabled?: boolean;
@@ -79,6 +80,7 @@ export interface CheckoutData {
     file_url?: string | null; // Adicionado
   };
   user_id?: string | null; // Adicionado
+  activeIntegrations?: string[]; // NOVO: Para exibir integrações ativas no checkout
 }
 
 export interface CustomerData {

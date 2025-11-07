@@ -60,6 +60,8 @@ const AdminCheckouts = () => {
   const [checkoutDeliverableFile, setCheckoutDeliverableFile] = useState<File | null>(null);
   // NEW: State to manage file upload for checkout logo
   const [checkoutLogoFile, setCheckoutLogoFile] = useState<File | null>(null);
+  // NEW: State to manage file upload for checkout banner
+  const [checkoutBannerFile, setCheckoutBannerFile] = useState<File | null>(null);
 
   // Refatorado initialFormData para ser uma função que retorna um novo objeto
   const getInitialFormData = useCallback(() => {
@@ -125,6 +127,7 @@ const AdminCheckouts = () => {
         gradientColor: '#60a5fa',
         highlightColor: '#3b82f6',
         logo_url: null, // NEW: Add logo_url to initial state
+        banner_url: null, // NEW: Add banner_url to initial state
       },
       integrations: {
         selectedMercadoPagoAccount: '',
@@ -149,7 +152,8 @@ const AdminCheckouts = () => {
         logo_url: null,
         member_area_link: null,
         file_url: null,
-      }
+      },
+      activeIntegrations: [] as string[], // NEW: Initialize activeIntegrations
     };
     // Deep clone the initial object to ensure a fresh start every time
     return JSON.parse(JSON.stringify(initial));
@@ -209,10 +213,19 @@ const AdminCheckouts = () => {
     }
     // NEW: Set checkoutLogoFile to null when loading original data
     setCheckoutLogoFile(null);
+    // NEW: Set checkoutBannerFile to null when loading original data
+    setCheckoutBannerFile(null);
 
     // Determine the main product details for the checkout (used for preview and default values)
     const mainProductId = packagesConfig[0]?.associatedProductIds?.[0] || checkout.product_id;
     const mainProductDetails = products.find(p => p.id === mainProductId) || null;
+
+    // Determine active integrations for display
+    const activeIntegrations: string[] = [];
+    if (checkout.integrations?.selectedMercadoPagoAccount) activeIntegrations.push('Mercado Pago');
+    if (checkout.integrations?.selectedMetaPixel) activeIntegrations.push('Meta Pixel');
+    if (checkout.integrations?.selectedEmailAccount) activeIntegrations.push('Email SMTP');
+    if (checkout.member_area_id) activeIntegrations.push('Área de Membros'); // Assuming member area association implies integration
 
     return deepMerge(initial, {
       name: checkout.name || checkout.products?.name || '',
@@ -250,6 +263,7 @@ const AdminCheckouts = () => {
         description: checkout.styles?.description || checkout.products?.description || initial.styles.description,
         headlineText: checkout.styles?.headlineText || checkout.products?.name || initial.styles.headlineText,
         logo_url: checkout.styles?.logo_url || null, // NEW: Load existing logo URL
+        banner_url: checkout.styles?.banner_url || null, // NEW: Load existing banner URL
       },
       timer: checkout.timer || initial.timer,
       member_area_id: checkout.member_area_id || null,
@@ -262,6 +276,7 @@ const AdminCheckouts = () => {
         member_area_link: mainProductDetails.member_area_link,
         file_url: mainProductDetails.file_url,
       } : initial.products, // Fallback to initial.products if no mainProductDetails
+      activeIntegrations: activeIntegrations, // NEW: Set active integrations
     });
   }, [getInitialFormData, products]);
 
@@ -421,6 +436,7 @@ const AdminCheckouts = () => {
       clearSavedData();
       setCheckoutDeliverableFile(null);
       setCheckoutLogoFile(null); // NEW: Reset logo file
+      setCheckoutBannerFile(null); // NEW: Reset banner file
       
       toast({
         title: "Dados recarregados",
@@ -431,6 +447,7 @@ const AdminCheckouts = () => {
       clearSavedData();
       setCheckoutDeliverableFile(null);
       setCheckoutLogoFile(null); // NEW: Reset logo file
+      setCheckoutBannerFile(null); // NEW: Reset banner file
       toast({
         title: "Formulário limpo",
         description: "Formulário resetado para valores padrão"
@@ -447,6 +464,7 @@ const AdminCheckouts = () => {
     // Limpar os arquivos selecionados localmente ao iniciar a edição
     setCheckoutDeliverableFile(null);
     setCheckoutLogoFile(null); // NEW: Clear logo file
+    setCheckoutBannerFile(null); // NEW: Clear banner file
 
     setIsDialogOpen(true);
   };
@@ -505,6 +523,14 @@ const AdminCheckouts = () => {
     setCheckoutLogoFile(file);
     if (file) {
       handleInputChange('styles.logo_url', null); // Clear existing URL if new file is selected
+    }
+  };
+
+  // NEW: Handler for checkout banner file change
+  const handleCheckoutBannerFileChange = (file: File | null) => {
+    setCheckoutBannerFile(file);
+    if (file) {
+      handleInputChange('styles.banner_url', null); // Clear existing URL if new file is selected
     }
   };
 
@@ -677,6 +703,21 @@ const AdminCheckouts = () => {
         logo_url: URL.createObjectURL(checkoutLogoFile) // Use object URL for local preview
       };
     }
+    // NEW: Handle checkout banner file upload for preview
+    if (checkoutBannerFile) {
+      previewData.styles = {
+        ...previewData.styles,
+        banner_url: URL.createObjectURL(checkoutBannerFile) // Use object URL for local preview
+      };
+    }
+
+    // Determine active integrations for preview
+    const activeIntegrations: string[] = [];
+    if (previewData.integrations?.selectedMercadoPagoAccount) activeIntegrations.push('Mercado Pago');
+    if (previewData.integrations?.selectedMetaPixel) activeIntegrations.push('Meta Pixel');
+    if (previewData.integrations?.selectedEmailAccount) activeIntegrations.push('Email SMTP');
+    if (previewData.member_area_id) activeIntegrations.push('Área de Membros');
+    previewData.activeIntegrations = activeIntegrations;
 
 
     localStorage.setItem('checkout-preview-draft', JSON.stringify(previewData));
@@ -728,6 +769,12 @@ const AdminCheckouts = () => {
         console.log('ADMIN_CHECKOUTS_DEBUG: Uploading checkout logo file:', checkoutLogoFile.name);
         finalLogoUrl = await uploadFile(checkoutLogoFile, 'checkout-logos');
       }
+      // NEW: Handle checkout banner upload
+      let finalBannerUrl = checkoutData.styles?.banner_url || null;
+      if (checkoutBannerFile) {
+        console.log('ADMIN_CHECKOUTS_DEBUG: Uploading checkout banner file:', checkoutBannerFile.name);
+        finalBannerUrl = await uploadFile(checkoutBannerFile, 'checkout-banners');
+      }
 
 
       const checkoutPayload = {
@@ -756,6 +803,7 @@ const AdminCheckouts = () => {
         styles: {
           ...checkoutData.styles,
           logo_url: finalLogoUrl, // NEW: Save final logo URL
+          banner_url: finalBannerUrl, // NEW: Save final banner URL
         },
         layout: 'horizontal',
         support_contact: checkoutData.support_contact,
@@ -789,6 +837,7 @@ const AdminCheckouts = () => {
       clearSavedData();
       setCheckoutDeliverableFile(null);
       setCheckoutLogoFile(null); // NEW: Clear logo file
+      setCheckoutBannerFile(null); // NEW: Clear banner file
       fetchCheckouts();
     } catch (error: any) {
       console.error('ADMIN_CHECKOUTS_DEBUG: Detailed error saving checkout:', error);
@@ -1603,6 +1652,50 @@ const AdminCheckouts = () => {
                       )}
                       <p className="text-xs text-muted-foreground">
                         Este logo será exibido no cabeçalho do seu checkout.
+                      </p>
+                    </div>
+
+                    {/* NEW: Checkout Banner Upload */}
+                    <div className="space-y-2">
+                      <Label htmlFor="checkoutBanner">Banner do Checkout (Opcional)</Label>
+                      <Input 
+                        id="checkoutBanner" 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => handleCheckoutBannerFileChange(e.target.files?.[0] || null)} 
+                      />
+                      {checkoutBannerFile && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <ImageIcon className="h-4 w-4" />
+                          <span>Novo banner selecionado: {checkoutBannerFile.name}</span>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleCheckoutBannerFileChange(null)}
+                            className="h-6 px-2 text-destructive hover:text-destructive"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" /> Remover
+                          </Button>
+                        </div>
+                      )}
+                      {checkoutData.styles?.banner_url && !checkoutBannerFile && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <ImageIcon className="h-4 w-4" />
+                          <span>Banner atual: <a href={checkoutData.styles.banner_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleInputChange('styles.banner_url', null)}
+                            className="h-6 px-2 text-destructive hover:text-destructive"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" /> Remover
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Este banner será exibido no topo do seu checkout.
                       </p>
                     </div>
                   </div>

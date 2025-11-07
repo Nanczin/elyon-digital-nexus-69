@@ -11,6 +11,7 @@ import { getOrderBumpPrefix } from '@/utils/orderBumpUtils';
 import { processHeadlineText, formatCurrency } from '@/utils/textFormatting';
 import PackageSelector from './PackageSelector';
 import SecuritySection from './SecuritySection';
+import ActiveIntegrationsDisplay from './ActiveIntegrationsDisplay'; // NEW: Import ActiveIntegrationsDisplay
 import { useState } from 'react';
 
 
@@ -45,6 +46,17 @@ const VerticalLayout = ({
         
         {/* Seção 1: Cabeçalho e Introdução */}
         <div className="text-center mb-12">
+          {/* NEW: Display checkout banner if available */}
+          {checkout.styles?.banner_url && (
+            <div className="flex justify-center mb-6 sm:mb-8">
+              <img 
+                src={checkout.styles.banner_url} 
+                alt={checkout.products.name}
+                className="w-full max-h-64 object-cover rounded-lg animate-fade-in"
+              />
+            </div>
+          )}
+
           {/* Logotipo/Título */}
           {/* NEW: Display checkout logo if available, otherwise fallback to product logo */}
           {(checkout.styles?.logo_url || checkout.products.logo_url) && (
@@ -280,6 +292,11 @@ const VerticalLayout = ({
           primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
         />
 
+        {/* NEW: Active Integrations Display */}
+        <ActiveIntegrationsDisplay 
+          activeIntegrations={checkout.activeIntegrations || []} 
+          primaryColor={primaryColor} 
+        />
       </div>
     </div>
   );

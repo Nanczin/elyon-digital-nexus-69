@@ -14,6 +14,7 @@ import SecuritySection from './SecuritySection';
 import CountdownTimer from './CountdownTimer';
 import { CreditCardForm } from './CreditCardForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ActiveIntegrationsDisplay from './ActiveIntegrationsDisplay'; // NEW: Import ActiveIntegrationsDisplay
 import { useState } from 'react';
 
 
@@ -65,6 +66,17 @@ const MosaicLayout = ({
 
       {/* Header centralizado */}
       <div className="text-center space-y-4 sm:space-y-6 py-8 sm:py-12 mb-8 sm:mb-12">
+        {/* NEW: Display checkout banner if available */}
+        {checkout.styles?.banner_url && (
+          <div className="flex justify-center mb-6 sm:mb-8">
+            <img 
+              src={checkout.styles.banner_url} 
+              alt={checkout.products.name}
+              className="w-full max-h-64 object-cover rounded-lg animate-fade-in"
+            />
+          </div>
+        )}
+
         {/* NEW: Display checkout logo if available */}
         {checkout.styles?.logo_url && (
           <div className="flex justify-center mb-6 sm:mb-8">
@@ -416,23 +428,24 @@ const MosaicLayout = ({
                 </span>
               </div>
 
-                {checkout.support_contact && (
-                  <div className="text-center text-xs sm:text-sm text-gray-600 mt-2">
-                    Dúvidas? Entre em contato: {checkout.support_contact.whatsapp || checkout.support_contact.email}
-                  </div>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
-        {/* Seção de Segurança */}
-        <div className="mt-8 sm:mt-16">
-          <SecuritySection 
-            supportEmail={checkout.support_contact?.email} 
-            primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
-          />
-        </div>
+      {/* Seção de Segurança */}
+      <div className="mt-8 sm:mt-16">
+        <SecuritySection 
+          supportEmail={checkout.support_contact?.email} 
+          primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
+        />
+      </div>
+
+      {/* NEW: Active Integrations Display */}
+      <ActiveIntegrationsDisplay 
+        activeIntegrations={checkout.activeIntegrations || []} 
+        primaryColor={primaryColor} 
+      />
     </div>
   );
 };
