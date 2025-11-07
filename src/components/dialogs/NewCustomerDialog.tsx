@@ -92,8 +92,10 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="text-sm sm:text-base"> {/* Ajustado text size */}
-          <UserPlus className="mr-2 h-4 w-4" />
-          Novo Cliente
+          <span>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
