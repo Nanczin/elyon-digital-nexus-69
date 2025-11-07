@@ -22,7 +22,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
   const [password, setPassword] = useState('');
   const [generatePassword, setGeneratePassword] = useState(false);
   const [isActive, setIsActive] = useState(member?.status === 'active');
-  const [selectedModules, setSelectedModules] = useState<string[]>(member?.access_modules?.map((ma: any) => ma.module_id) || []);
+  // Ajustado para ler de member.member_access
+  const [selectedModules, setSelectedModules] = useState<string[]>(member?.member_access?.map((ma: any) => ma.module_id) || []);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user: adminUser } = useAuth(); // Obter refreshUserSession
@@ -32,20 +33,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
       setName(member.name);
       setEmail(member.email);
       setIsActive(member.status === 'active');
-      // Fetch member_access for this member
-      const fetchMemberAccess = async () => {
-        const { data, error } = await supabase
-          .from('member_access')
-          .select('module_id')
-          .eq('user_id', member.user_id)
-          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
-        if (error) {
-          console.error('Error fetching member access:', error);
-        } else {
-          setSelectedModules(data?.map(ma => ma.module_id) || []);
-        }
-      };
-      fetchMemberAccess();
+      // Ajustado para ler de member.member_access
+      setSelectedModules(member?.member_access?.map((ma: any) => ma.module_id) || []);
     } else {
       setName('');
       setEmail('');
@@ -253,9 +242,13 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
   const fetchMembers = async () => {
     setLoadingMembers(true);
+    // Modificado para incluir os acessos aos módulos
     const { data, error } = await supabase
       .from('profiles')
-      .select(`*`) // Simplified select to avoid nested RLS issues for now
+      .select(`
+        *,
+        member_access(module_id)
+      `) 
       .eq('member_area_id', currentMemberAreaId) // Filter by memberAreaId
       .order('created_at', { ascending: false });
     
