@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Adicionado AvatarImage
 import { Link } from 'react-router-dom'; // Import Link
 
 interface MemberAreaPreviewContentProps {
@@ -96,6 +96,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
         </div>
         <Button onClick={onLogout} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full">
           <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200">
+            <AvatarImage src={undefined} alt={userName} /> {/* Corrigido: user não está disponível aqui */}
             <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold">
               {userInitial}
             </AvatarFallback>
@@ -128,7 +129,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                     <img 
                       src={module.banner_url} 
                       alt={module.title} 
-                      className={`w-full h-full object-cover ${module.isCompleted ? '' : 'grayscale brightness-50'}`} 
+                      className={`w-full h-full object-contain ${module.isCompleted ? '' : 'grayscale brightness-50'}`} 
                     />
                   )}
                   {module.isCompleted && (
