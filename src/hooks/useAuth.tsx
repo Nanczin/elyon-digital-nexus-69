@@ -140,8 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context as AuthContextType; // Adicionar type assertion aqui
+  // Não é mais necessário verificar 'undefined' aqui, pois o createContext agora tem um valor padrão.
+  // Se o contexto for acessado fora do provedor, ele terá o valor padrão.
+  return context;
 }
