@@ -32,11 +32,14 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { email, memberAreaId }: PasswordResetRequest = await req.json();
-    console.log('SEND_PASSWORD_RESET_EMAIL_DEBUG: Dados recebidos:', { email, memberAreaId });
+    const requestBody = await req.json(); // Log the full request body
+    console.log('SEND_PASSWORD_RESET_EMAIL_DEBUG: Corpo da requisição recebido:', JSON.stringify(requestBody, null, 2));
+
+    const { email, memberAreaId }: PasswordResetRequest = requestBody;
+    console.log('SEND_PASSWORD_RESET_EMAIL_DEBUG: Dados desestruturados:', { email, memberAreaId });
 
     if (!email || !memberAreaId) {
-      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Dados incompletos:', { email, memberAreaId });
+      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Dados incompletos ou e-mail vazio após desestruturação:', { email, memberAreaId });
       return new Response(
         JSON.stringify({ success: false, error: 'E-mail e ID da área de membros são obrigatórios.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
