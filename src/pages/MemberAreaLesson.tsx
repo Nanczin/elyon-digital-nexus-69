@@ -11,8 +11,8 @@ import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
-import LessonComments from '@/components/member-area/LessonComments';
-import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
+import { getDefaultSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada e PlatformColors
+import LessonComments from '@/components/member-area/LessonComments'; // Import LessonComments
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -27,7 +27,7 @@ const MemberAreaLesson = () => {
   const [loading, setLoading] = useState(true);
   const [memberArea, setMemberArea] = useState<MemberArea | null>(null);
   const [module, setModule] = useState<Module | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lesson, setLesson] = useState<Lesson | null>(null); // State for the current lesson
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
 
@@ -65,7 +65,7 @@ const MemberAreaLesson = () => {
       if (settingsError && settingsError.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', settingsError);
       } else if (settingsData) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), settingsData as Partial<PlatformSettings>));
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<PlatformSettings>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
@@ -138,15 +138,15 @@ const MemberAreaLesson = () => {
     }
   }, [user, authLoading, fetchLessonContent, toast]);
 
-  const renderLessonContent = (lesson: Lesson) => {
-    if (!lesson.content_url && !lesson.text_content) {
+  const renderLessonContent = (currentLesson: Lesson) => {
+    if (!currentLesson.content_url && !currentLesson.text_content) {
       return <p className="text-muted-foreground text-sm">Nenhum conteúdo para esta aula.</p>;
     }
 
-    switch (lesson.content_type) {
+    switch (currentLesson.content_type) {
       case 'video_link':
-        const youtubeMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
-        const vimeoMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
+        const youtubeMatch = currentLesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
+        const vimeoMatch = currentLesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
 
         if (youtubeMatch && youtubeMatch[1]) {
           return (
@@ -157,7 +157,7 @@ const MemberAreaLesson = () => {
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title={lesson.title}
+                title={currentLesson.title}
               ></iframe>
             </div>
           );
@@ -170,7 +170,7 @@ const MemberAreaLesson = () => {
                 frameBorder="0"
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
-                title={lesson.title}
+                title={currentLesson.title}
               ></iframe>
             </div>
           );
@@ -180,7 +180,7 @@ const MemberAreaLesson = () => {
       case 'video_upload':
         return (
           <video controls className="w-full h-auto rounded-lg">
-            <source src={lesson.content_url || ''} type="video/mp4" />
+            <source src={currentLesson.content_url || ''} type="video/mp4" />
             Seu navegador não suporta a tag de vídeo.
           </video>
         );
@@ -190,20 +190,20 @@ const MemberAreaLesson = () => {
           <div className="relative w-full" style={{ paddingTop: '100%' }}>
             <iframe
               className="absolute top-0 left-0 w-full h-full rounded-lg"
-              src={lesson.content_url || ''}
+              src={currentLesson.content_url || ''}
               frameBorder="0"
-              title={lesson.title}
+              title={currentLesson.title}
             ></iframe>
           </div>
         );
 
       case 'image_upload':
         return (
-          <img src={lesson.content_url || ''} alt={lesson.title} className="w-full h-auto object-contain rounded-lg" />
+          <img src={currentLesson.content_url || ''} alt={currentLesson.title} className="w-full h-auto object-contain rounded-lg" />
         );
 
       case 'text_content':
-        return <div dangerouslySetInnerHTML={{ __html: lesson.text_content || '' }} className="prose prose-lg max-w-none" style={{ color: currentSettings.colors?.text_cards || 'hsl(var(--member-area-text-dark))' }} />;
+        return <div dangerouslySetInnerHTML={{ __html: currentLesson.text_content || '' }} className="prose prose-lg max-w-none" style={{ color: (currentSettings.colors as PlatformColors)?.text_cards || 'hsl(var(--member-area-text-dark))' }} />;
 
       default:
         return <p className="text-muted-foreground text-sm">Tipo de conteúdo desconhecido.</p>;
@@ -260,9 +260,10 @@ const MemberAreaLesson = () => {
   }
 
   const currentSettings = settings || getDefaultSettings(memberAreaId || null);
-  const textColor = currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))';
-  const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
-  const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';
+  const primaryColor = (currentSettings.colors as PlatformColors)?.button_background || 'hsl(var(--member-area-primary))';
+  const textColor = (currentSettings.colors as PlatformColors)?.text_primary || 'hsl(var(--member-area-text-dark))';
+  const secondaryTextColor = (currentSettings.colors as PlatformColors)?.text_secondary || 'hsl(var(--member-area-text-muted))';
+  const cardBackground = (currentSettings.colors as PlatformColors)?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
@@ -273,7 +274,7 @@ const MemberAreaLesson = () => {
     <div 
       className="w-full min-h-screen flex flex-col" 
       style={{ 
-        backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
+        backgroundColor: (currentSettings.colors as PlatformColors)?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: fontFamily 
       }}
     >
@@ -281,14 +282,18 @@ const MemberAreaLesson = () => {
       <header 
         className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b" 
         style={{ 
-          backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
-          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
-          color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
+          backgroundColor: (currentSettings.colors as PlatformColors)?.background_login || 'hsl(var(--member-area-background))',
+          borderColor: (currentSettings.colors as PlatformColors)?.header_border || 'hsl(var(--member-area-header-border))',
+          color: (currentSettings.colors as PlatformColors)?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
         <div className="flex items-center space-x-3">
           {currentSettings.logo_url ? (
-            <img src={currentSettings.logo_url} alt={memberArea?.name || "Logo da Plataforma"} className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
+            <img 
+              src={currentSettings.logo_url} 
+              alt={memberArea?.name || "Logo da Plataforma"} 
+              className="h-12 w-12 sm:h-16 sm:w-16 object-contain"
+            />
           ) : (
             <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200">
               <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold">

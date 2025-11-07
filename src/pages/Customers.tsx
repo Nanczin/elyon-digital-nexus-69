@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Users, UserPlus, Mail, Phone, Trash2 } from 'lucide-react';
 import { NewCustomerDialog } from '@/components/dialogs/NewCustomerDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDistanceToNow } => 'date-fns';
+import { formatDistanceToNow } from 'date-fns'; // Corrected import
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 

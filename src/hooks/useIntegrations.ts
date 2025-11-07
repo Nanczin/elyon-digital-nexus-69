@@ -91,7 +91,8 @@ export const useIntegrations = () => {
         } : null);
 
         // Carregar a nova estrutura simplificada do smtp_config
-        setEmailConfig(data.smtp_config && typeof data.smtp_config === 'object' && Object.keys(data.smtp_config).length > 0 ? data.smtp_config as SimplifiedEmailConfig : null);
+        // Adicionar verificação para garantir que não é um array antes de fazer o cast
+        setEmailConfig(data.smtp_config && typeof data.smtp_config === 'object' && !Array.isArray(data.smtp_config) && Object.keys(data.smtp_config).length > 0 ? (data.smtp_config as unknown as SimplifiedEmailConfig) : null);
       }
     } catch (error) {
       console.error('Erro ao carregar integrações:', error);

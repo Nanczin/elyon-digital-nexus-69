@@ -11,7 +11,7 @@ import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
-import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
+import { getDefaultSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Import PlatformColors
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -64,7 +64,7 @@ const MemberAreaModuleDetails = () => {
       if (settingsError && settingsError.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', settingsError);
       } else if (settingsData) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), settingsData as Partial<PlatformSettings>));
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<PlatformSettings>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
@@ -185,10 +185,10 @@ const MemberAreaModuleDetails = () => {
   }
 
   const currentSettings = settings || getDefaultSettings(memberAreaId || null);
-  const primaryColor = currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))';
-  const textColor = currentSettings.colors?.text_primary || 'hsl(var(--member-area-text-dark))';
-  const secondaryTextColor = currentSettings.colors?.text_secondary || 'hsl(var(--member-area-text-muted))';
-  const cardBackground = currentSettings.colors?.card_login || 'hsl(var(--member-area-card-background))';
+  const primaryColor = (currentSettings.colors as PlatformColors)?.button_background || 'hsl(var(--member-area-primary))';
+  const textColor = (currentSettings.colors as PlatformColors)?.text_primary || 'hsl(var(--member-area-text-dark))';
+  const secondaryTextColor = (currentSettings.colors as PlatformColors)?.text_secondary || 'hsl(var(--member-area-text-muted))';
+  const cardBackground = (currentSettings.colors as PlatformColors)?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
@@ -199,7 +199,7 @@ const MemberAreaModuleDetails = () => {
     <div 
       className="w-full min-h-screen flex flex-col" 
       style={{ 
-        backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
+        backgroundColor: (currentSettings.colors as PlatformColors)?.background_login || 'hsl(var(--member-area-background))',
         fontFamily: fontFamily 
       }}
     >
@@ -207,14 +207,18 @@ const MemberAreaModuleDetails = () => {
       <header 
         className="flex items-center justify-between h-[72px] px-4 sm:px-8 py-4 border-b" 
         style={{ 
-          backgroundColor: currentSettings.colors?.background_login || 'hsl(var(--member-area-background))',
-          borderColor: currentSettings.colors?.header_border || 'hsl(var(--member-area-header-border))',
-          color: currentSettings.colors?.text_header || 'hsl(var(--member-area-text-dark))'
+          backgroundColor: (currentSettings.colors as PlatformColors)?.background_login || 'hsl(var(--member-area-background))',
+          borderColor: (currentSettings.colors as PlatformColors)?.header_border || 'hsl(var(--member-area-header-border))',
+          color: (currentSettings.colors as PlatformColors)?.text_header || 'hsl(var(--member-area-text-dark))'
         }}
       >
         <div className="flex items-center space-x-3">
           {currentSettings.logo_url ? (
-            <img src={currentSettings.logo_url} alt={memberArea?.name || "Logo da Plataforma"} className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
+            <img 
+              src={currentSettings.logo_url} 
+              alt={memberArea?.name || "Logo da Plataforma"} 
+              className="h-12 w-12 sm:h-16 sm:w-16 object-contain"
+            />
           ) : (
             <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border border-gray-200">
               <AvatarFallback className="bg-white text-memberArea-text-dark text-lg sm:text-xl font-semibold">
