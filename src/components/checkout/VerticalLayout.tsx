@@ -39,75 +39,48 @@ const VerticalLayout = ({
     setSelectedPackage?.(packageId);
   };
 
-  const bannerFeatures = checkout.extra_content?.banner_features || [];
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-8">
         
-        {/* Seção 1: Cabeçalho e Introdução / Banner Section */}
-        <div 
-          className="relative w-full overflow-hidden rounded-2xl shadow-xl mb-12"
-          style={{ 
-            backgroundImage: checkout.styles?.banner_url ? `url(${checkout.styles.banner_url})` : 'none',
-            backgroundColor: checkout.styles?.banner_background_color || '#2A2A2A',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            minHeight: '250px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '2rem',
-          }}
-        >
-          {/* Overlay para escurecer a imagem de fundo se houver */}
+        {/* Seção 1: Cabeçalho e Introdução */}
+        <div className="text-center mb-12">
+          {/* NEW: Display checkout banner if available */}
           {checkout.styles?.banner_url && (
-            <div className="absolute inset-0 bg-black opacity-50 rounded-2xl"></div>
+            <div className="flex justify-center mb-6 sm:mb-8">
+              <img 
+                src={checkout.styles.banner_url} 
+                alt={checkout.products.name}
+                className="w-full max-h-64 object-cover rounded-lg animate-fade-in"
+              />
+            </div>
           )}
 
-          <div className="relative z-10 text-center w-full max-w-4xl mx-auto">
-            {/* Logo do Checkout */}
-            {checkout.styles?.logo_url && (
-              <div className="flex justify-center mb-6">
-                <img 
-                  src={checkout.styles.logo_url} 
-                  alt={checkout.products.name}
-                  className="h-20 mx-auto"
-                />
-              </div>
-            )}
-            
-            {/* Título Principal */}
-            {headlineText && (
-              <h1 className="text-4xl md:text-5xl font-sans font-bold mb-4 text-white">
-                {processHeadlineText(headlineText, checkout.styles?.highlightColor || primaryColor)}
-              </h1>
-            )}
-            
-            {/* Subtítulo */}
-            {description && (
-              <p className="text-lg text-white font-sans max-w-2xl mx-auto mb-8">
-                {description}
-              </p>
-            )}
-
-            {/* Banner Feature Cards */}
-            {bannerFeatures.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                {bannerFeatures.map(feature => (
-                  <div 
-                    key={feature.id} 
-                    className="p-4 rounded-lg text-white text-left shadow-md"
-                    style={{ backgroundColor: checkout.styles?.banner_feature_card_color || '#facc15' }}
-                  >
-                    <h4 className="font-semibold text-lg">{feature.title}</h4>
-                    <p className="text-sm">{feature.description}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Logotipo/Título */}
+          {/* NEW: Display checkout logo if available, otherwise fallback to product logo */}
+          {(checkout.styles?.logo_url || checkout.products.logo_url) && (
+            <div className="mb-6">
+              <img 
+                src={checkout.styles?.logo_url || checkout.products.logo_url} 
+                alt={checkout.products.name}
+                className="h-20 mx-auto"
+              />
+            </div>
+          )}
+          
+          {/* Título Principal */}
+          {headlineText && (
+            <h1 className="text-4xl md:text-5xl font-sans font-bold mb-4" style={{ color: headlineColor }}>
+              {processHeadlineText(headlineText, checkout.styles?.highlightColor || primaryColor)}
+            </h1>
+          )}
+          
+          {/* Subtítulo */}
+          {description && (
+            <p className="text-lg text-muted-foreground font-sans max-w-2xl mx-auto">
+              {description}
+            </p>
+          )}
         </div>
 
         {/* Seção 2: Campos de Dados */}

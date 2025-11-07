@@ -40,13 +40,6 @@ export interface FormFields {
   reservedRights?: ReservedRightsConfig; // Adicionado
 }
 
-// NEW: Interface for banner feature cards
-export interface BannerFeatureCard {
-  id: number;
-  title: string;
-  description: string;
-}
-
 export interface CheckoutData {
   id: string;
   product_id: string; // This will now represent the *default* product if no package is selected, or the primary product.
@@ -67,8 +60,6 @@ export interface CheckoutData {
     highlightColor?: string;
     logo_url?: string | null; // Adicionado logo_url
     banner_url?: string | null; // NOVO: Adicionado banner_url
-    banner_background_color?: string; // NEW: Background color for the banner section
-    banner_feature_card_color?: string; // NEW: Background color for feature cards
   };
   timer?: {
     enabled?: boolean;
@@ -78,9 +69,7 @@ export interface CheckoutData {
   };
   support_contact: any;
   integrations: any;
-  extra_content?: {
-    banner_features?: BannerFeatureCard[]; // NEW: Banner feature cards
-  };
+  extra_content?: any; // Novo campo para conteúdo extra
   products: { // This refers to the `checkouts.product_id`
     id: string;
     name: string;

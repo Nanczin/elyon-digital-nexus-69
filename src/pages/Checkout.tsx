@@ -180,7 +180,7 @@ const Checkout = () => {
         payment_methods: data.payment_methods as PaymentMethods || {},
         order_bumps: orderBumpsWithProducts,
         styles: data.styles as CheckoutData['styles'] || {},
-        extra_content: data.extra_content as CheckoutData['extra_content'] || {}, // Corrected cast
+        extra_content: data.extra_content || {},
         support_contact: data.support_contact || {},
         integrations: data.integrations || {},
         timer: data.timer as CheckoutData['timer'] || undefined,

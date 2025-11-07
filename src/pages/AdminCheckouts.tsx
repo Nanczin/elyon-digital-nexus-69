@@ -22,7 +22,7 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables, CheckoutIntegrationsConfig, BannerFeatureCard } from '@/integrations/supabase/types';
+import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables, CheckoutIntegrationsConfig } from '@/integrations/supabase/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { setNestedValue, deepMerge } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -129,8 +129,6 @@ const AdminCheckouts = () => {
         highlightColor: '#3b82f6',
         logo_url: null, // NEW: Add logo_url to initial state
         banner_url: null, // NEW: Add banner_url to initial state
-        banner_background_color: '#2A2A2A', // NEW: Default banner background color
-        banner_feature_card_color: '#facc15', // NEW: Default banner feature card color
       },
       integrations: {
         selectedMercadoPagoAccount: '',
@@ -155,14 +153,6 @@ const AdminCheckouts = () => {
         logo_url: null,
         member_area_link: null,
         file_url: null,
-      },
-      extra_content: { // NEW: Add extra_content with banner_features
-        banner_features: [
-          { id: 1, title: 'Suporte online', description: 'de segunda à segunda.' },
-          { id: 2, title: 'Sem contas hackeadas', description: 'apenas contas reais.' },
-          { id: 3, title: 'Devolvemos o dinheiro', description: 'ou trocamos o ativo caso não funcionar.' },
-          { id: 4, title: 'Entrega automática 24h', description: 'via e-mail e whatsapp.' },
-        ] as BannerFeatureCard[],
       },
     };
     // Deep clone the initial object to ensure a fresh start every time
@@ -267,8 +257,6 @@ const AdminCheckouts = () => {
         headlineText: checkout.styles?.headlineText || checkout.products?.name || initial.styles.headlineText,
         logo_url: checkout.styles?.logo_url || null, // NEW: Load existing logo URL
         banner_url: checkout.styles?.banner_url || null, // NEW: Load existing banner URL
-        banner_background_color: checkout.styles?.banner_background_color || initial.styles.banner_background_color, // NEW: Load banner background color
-        banner_feature_card_color: checkout.styles?.banner_feature_card_color || initial.styles.banner_feature_card_color, // NEW: Load banner feature card color
       },
       timer: checkout.timer || initial.timer,
       member_area_id: checkout.member_area_id || null,
@@ -281,11 +269,6 @@ const AdminCheckouts = () => {
         member_area_link: mainProductDetails.member_area_link,
         file_url: mainProductDetails.file_url,
       } : initial.products, // Fallback to initial.products if no mainProductDetails
-      extra_content: {
-        ...initial.extra_content,
-        ...(checkout.extra_content || {}),
-        banner_features: Array.isArray(checkout.extra_content?.banner_features) ? checkout.extra_content.banner_features : initial.extra_content.banner_features,
-      },
     });
   }, [getInitialFormData, products]);
 
@@ -381,7 +364,7 @@ const AdminCheckouts = () => {
         if (integrationsConfig?.selectedMercadoPagoAccount) activeIntegrations.push('Mercado Pago');
         if (integrationsConfig?.selectedMetaPixel) activeIntegrations.push('Meta Pixel');
         if (integrationsConfig?.selectedEmailAccount) activeIntegrations.push('Email SMTP');
-        if (integrationsConfig?.utmify_code) activeIntegrations.push('UTMify'); // Check global UTMify config
+        if (utmifyConfig?.apiKey) activeIntegrations.push('UTMify'); // Check global UTMify config
         if (chk.member_area_id) activeIntegrations.push('Área de Membros');
 
         return {
@@ -823,16 +806,11 @@ const AdminCheckouts = () => {
           ...checkoutData.styles,
           logo_url: finalLogoUrl, // NEW: Save final logo URL
           banner_url: finalBannerUrl, // NEW: Save final banner URL
-          banner_background_color: checkoutData.styles?.banner_background_color, // NEW: Save banner background color
-          banner_feature_card_color: checkoutData.styles?.banner_feature_card_color, // NEW: Save banner feature card color
         },
         layout: 'horizontal',
         support_contact: checkoutData.support_contact,
         integrations: checkoutData.integrations,
-        timer: checkoutData.timer || null,
-        extra_content: { // NEW: Save extra_content
-          banner_features: checkoutData.extra_content?.banner_features,
-        },
+        timer: checkoutData.timer || null
       };
 
       console.log('ADMIN_CHECKOUTS_DEBUG: Final checkoutPayload before DB operation:', JSON.stringify(checkoutPayload, null, 2));
@@ -887,28 +865,6 @@ const AdminCheckouts = () => {
       default: return null;
     }
   };
-
-  const addBannerFeature = () => {
-    const newFeatures = [...(checkoutData.extra_content?.banner_features || []), {
-      id: Date.now(),
-      title: 'Novo Recurso',
-      description: 'Descrição do recurso.'
-    }];
-    handleInputChange('extra_content.banner_features', newFeatures);
-  };
-
-  const removeBannerFeature = (id: number) => {
-    const newFeatures = (checkoutData.extra_content?.banner_features || []).filter((feature: BannerFeatureCard) => feature.id !== id);
-    handleInputChange('extra_content.banner_features', newFeatures);
-  };
-
-  const updateBannerFeature = (id: number, field: keyof BannerFeatureCard, value: string) => {
-    const newFeatures = (checkoutData.extra_content?.banner_features || []).map((feature: BannerFeatureCard) => 
-      feature.id === id ? { ...feature, [field]: value } : feature
-    );
-    handleInputChange('extra_content.banner_features', newFeatures);
-  };
-
 
   return (
     <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
@@ -1755,63 +1711,6 @@ const AdminCheckouts = () => {
                       <p className="text-xs text-muted-foreground">
                         Este banner será exibido no topo do seu checkout.
                       </p>
-                    </div>
-
-                    <Separator />
-
-                    {/* NEW: Banner Background Color */}
-                    <div className="space-y-2">
-                      <Label>Cor de Fundo do Banner</Label>
-                      <div className="flex gap-2">
-                        <Input type="color" value={checkoutData.styles.banner_background_color || '#2A2A2A'} onChange={e => handleInputChange('styles.banner_background_color', e.target.value)} className="w-16 h-10 p-1" />
-                        <Input type="text" value={checkoutData.styles.banner_background_color || '#2A2A2A'} onChange={e => handleInputChange('styles.banner_background_color', e.target.value)} placeholder="#2A2A2A" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Cor de fundo para a seção do banner (onde ficam os cartões de recursos).
-                      </p>
-                    </div>
-
-                    {/* NEW: Banner Feature Card Color */}
-                    <div className="space-y-2">
-                      <Label>Cor dos Cartões de Recurso do Banner</Label>
-                      <div className="flex gap-2">
-                        <Input type="color" value={checkoutData.styles.banner_feature_card_color || '#facc15'} onChange={e => handleInputChange('styles.banner_feature_card_color', e.target.value)} className="w-16 h-10 p-1" />
-                        <Input type="text" value={checkoutData.styles.banner_feature_card_color || '#facc15'} onChange={e => handleInputChange('styles.banner_feature_card_color', e.target.value)} placeholder="#facc15" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Cor de fundo para os cartões de recursos exibidos no banner.
-                      </p>
-                    </div>
-
-                    <Separator />
-
-                    {/* NEW: Banner Feature Cards */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Cartões de Recurso do Banner</h3>
-                        <Button type="button" onClick={addBannerFeature} size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Adicionar Cartão
-                        </Button>
-                      </div>
-                      {(checkoutData.extra_content?.banner_features || []).map((feature: BannerFeatureCard, index: number) => (
-                        <Card key={feature.id} className="p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-semibold">Cartão {index + 1}</h4>
-                            <Button type="button" variant="destructive" size="sm" onClick={() => removeBannerFeature(feature.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Título</Label>
-                            <Input value={feature.title} onChange={e => updateBannerFeature(feature.id, 'title', e.target.value)} placeholder="Ex: Suporte online" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Descrição</Label>
-                            <Textarea value={feature.description} onChange={e => updateBannerFeature(feature.id, 'description', e.target.value)} placeholder="Ex: de segunda à segunda." rows={2} />
-                          </div>
-                        </Card>
-                      ))}
                     </div>
                   </div>
                   <Separator />
