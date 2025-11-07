@@ -356,7 +356,7 @@ const MemberAreaDashboard = () => {
                 className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl`}
                 style={{ backgroundColor: cardBackground, color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200">
+                <div className="relative aspect-video w-full bg-gray-200 h-56 sm:h-72">
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -386,16 +386,38 @@ const MemberAreaDashboard = () => {
                     {module.description}
                   </p>
                   
-                  <Button 
-                    className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base"
-                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
-                    asChild
-                  >
-                    <Link to={`/membros/${memberArea?.id}/modules/${module.id}`}>
-                      Acessar Módulo <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  </CardContent>
+                  {hasUserAccess ? (
+                    <Button 
+                      className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base"
+                      style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                      asChild
+                    >
+                      <Link to={`/membros/${memberArea?.id}/modules/${module.id}`}>
+                        Acessar Módulo <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  ) : (
+                    moduleCheckoutLink ? (
+                      <Button 
+                        className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors duration-300 text-sm sm:text-base"
+                        style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                        asChild
+                      >
+                        <Link to={moduleCheckoutLink}>
+                          Comprar Acesso <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold text-sm sm:text-base"
+                        variant="outline"
+                        disabled
+                      >
+                        Acesso Bloqueado <Lock className="h-4 w-4 ml-2" />
+                      </Button>
+                    )
+                  )}
+                </CardContent>
               </Card>
             );
           })}
