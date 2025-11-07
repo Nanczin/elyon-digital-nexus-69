@@ -58,7 +58,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data: settingsData, error } = await supabase // Renamed data to settingsData
       .from('platform_settings')
       .select('*')
       .eq('member_area_id', currentMemberAreaId)
@@ -67,8 +67,8 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
     if (error && error.code !== 'PGRST116') {
       toast({ title: "Erro", description: "Falha ao carregar configurações de design.", variant: "destructive" });
       console.error(error);
-    } else if (data) {
-      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...data, colors: data.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
+    } else if (settingsData) {
+      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
     } else {
       setSettings(getDefaultSettings(currentMemberAreaId!, user?.id || null));
     }

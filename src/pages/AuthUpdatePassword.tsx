@@ -33,7 +33,7 @@ const AuthUpdatePassword = () => {
         setLoadingSettings(false);
         return;
       }
-      const { data, error } = await supabase
+      const { data: settingsData, error } = await supabase // Renamed data to settingsData
         .from('platform_settings')
         .select('*')
         .eq('member_area_id', memberAreaId)
@@ -41,8 +41,8 @@ const AuthUpdatePassword = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', error);
-      } else if (data) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...data, colors: data.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>));
+      } else if (settingsData) {
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
