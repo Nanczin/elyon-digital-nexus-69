@@ -92,6 +92,8 @@ const App = () => {
                   <Route element={<MemberAreaAuthProvider> <Outlet /> </MemberAreaAuthProvider>}>
                     <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
                     <Route path="/membros/:memberAreaId/forgot-password" element={<AuthForgotPassword />} />
+                    {/* Nova rota para a página de redefinição de senha */}
+                    <Route path="/reset-password" element={<AuthUpdatePassword />} />
                     <Route path="/membros/:memberAreaId/update-password" element={<AuthUpdatePassword />} />
                     <Route path="/membros/:memberAreaId" element={<MemberAreaDashboard />} />
                     <Route path="/membros/:memberAreaId/modules/:moduleId" element={<MemberAreaModuleDetails />} />
