@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { MemberAreaAuthProvider } from "@/hooks/useMemberAreaAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
@@ -37,6 +36,7 @@ import MemberAreaModuleDetails from "./pages/MemberAreaModuleDetails";
 import MemberAreaLesson from "./pages/MemberAreaLesson";
 import AuthForgotPassword from "./pages/AuthForgotPassword";
 import AuthUpdatePassword from "./pages/AuthUpdatePassword";
+import MemberAreaLayout from "./components/member-area/MemberAreaLayout"; // Importar o novo layout
 
 const queryClient = new QueryClient();
 
@@ -89,7 +89,8 @@ const App = () => {
                   </Route>
 
                   {/* Rotas públicas da Área de Membros (NÃO usam o Layout principal) */}
-                  <Route element={<MemberAreaAuthProvider> <Outlet /> </MemberAreaAuthProvider>}>
+                  {/* Agora usando o MemberAreaLayout para encapsular o MemberAreaAuthProvider */}
+                  <Route element={<MemberAreaLayout />}>
                     <Route path="/membros/:memberAreaId/login" element={<MemberAreaLogin />} />
                     <Route path="/membros/:memberAreaId/forgot-password" element={<AuthForgotPassword />} />
                     {/* Nova rota para a página de redefinição de senha */}
