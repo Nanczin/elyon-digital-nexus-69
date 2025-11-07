@@ -392,7 +392,7 @@ export type Database = {
           smtp_config: Json | null
           updated_at: string
           user_id: string
-          utmify_code: string | null // Added utmify_code
+          utmify_code: string | null
         }
         Insert: {
           created_at?: string
@@ -403,7 +403,7 @@ export type Database = {
           smtp_config?: Json | null
           updated_at?: string
           user_id: string
-          utmify_code?: string | null // Added utmify_code
+          utmify_code?: string | null
         }
         Update: {
           created_at?: string
@@ -414,7 +414,7 @@ export type Database = {
           smtp_config?: Json | null
           updated_at?: string
           user_id?: string
-          utmify_code?: string | null // Added utmify_code
+          utmify_code?: string | null
         }
         Relationships: [
           {
@@ -1416,7 +1416,8 @@ export type Database = {
         Update: {
           amount?: number
           checkout_id?: string | null
-          commission_at?: string
+          commission_amount?: number | null
+          created_at?: string
           customer_id?: string | null
           id?: string
           net_amount?: number | null

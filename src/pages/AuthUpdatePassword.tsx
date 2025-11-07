@@ -42,7 +42,7 @@ const AuthUpdatePassword = () => {
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', error);
       } else if (settingsData) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>));
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<PlatformSettings>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }

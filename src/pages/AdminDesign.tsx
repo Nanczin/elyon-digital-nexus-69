@@ -68,7 +68,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
       toast({ title: "Erro", description: "Falha ao carregar configurações de design.", variant: "destructive" });
       console.error(error);
     } else if (settingsData) {
-      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
+      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<PlatformSettings>));
     } else {
       setSettings(getDefaultSettings(currentMemberAreaId!, user?.id || null));
     }
@@ -156,7 +156,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
 
       const { error } = await supabase
         .from('platform_settings')
-        .upsert(payload as TablesUpdate<'platform_settings'>, { onConflict: 'member_area_id' });
+        .upsert(payload, { onConflict: 'member_area_id' });
 
       if (error) throw error;
 
