@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams, Link } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -55,26 +55,50 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
     setLoading(true);
     try {
       if (member) {
-        // Update existing member using Edge Function
-        const { data, error: edgeFunctionError } = await supabase.functions.invoke('update-member-profile', {
-          body: {
-            userId: member.user_id,
-            name,
-            status: isActive ? 'active' : 'inactive',
-            memberAreaId,
-            selectedModules,
-          },
-          method: 'POST',
-        });
+        // Update existing member
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ name, status: isActive ? 'active' : 'inactive' })
+          .eq('user_id', member.user_id);
+        if (profileError) throw profileError;
 
-        if (edgeFunctionError) {
-          console.error('Error invoking update-member-profile Edge Function:', edgeFunctionError);
-          throw new Error(edgeFunctionError.message || 'Erro ao invocar função de atualização de membro.');
-        }
+        // Update auth.users.user_metadata
+        const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+          member.user_id,
+          {
+            user_metadata: { 
+              name, 
+              first_name: name.split(' ')[0], 
+              last_name: name.split(' ').slice(1).join(' ') || '',
+              member_area_id: memberAreaId, // Garantir que member_area_id esteja no metadata
+              status: isActive ? 'active' : 'inactive'
+            }
+          }
+        );
+        if (authUpdateError) console.error('Error updating auth.users user_metadata:', authUpdateError);
 
-        if (!data?.success) {
-          console.error('Edge Function returned error:', data?.error);
-          throw new Error(data?.error || 'Falha na Edge Function ao atualizar membro.');
+
+        // Update member_access
+        // First, delete all existing access for this user in this member area
+        const { error: deleteAccessError } = await supabase
+          .from('member_access')
+          .delete()
+          .eq('user_id', member.user_id)
+          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
+        if (deleteAccessError) throw deleteAccessError;
+
+        // Then, insert new access records for this member area
+        const accessInserts = selectedModules.map(moduleId => ({
+          user_id: member.user_id,
+          module_id: moduleId,
+          is_active: true,
+          member_area_id: memberAreaId, // Ensure member_area_id is set
+        }));
+        if (accessInserts.length > 0) {
+          const { error: insertAccessError } = await supabase
+            .from('member_access')
+            .insert(accessInserts);
+          if (insertAccessError) throw insertAccessError;
         }
 
         toast({ title: "Sucesso", description: "Membro atualizado com sucesso!" });
@@ -124,6 +148,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
       }
       
+      // await refreshUserSession(); // REMOVIDO: refreshUserSession não está disponível em useAuth
       onSave();
       onClose();
     } catch (error: any) {
@@ -138,9 +163,6 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle className="text-lg sm:text-xl">{member ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle>
-        <DialogDescription>
-          {member ? 'Atualize as informações e os acessos deste membro.' : 'Crie uma nova conta de membro e defina seus acessos aos módulos.'}
-        </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
         <div className="space-y-2">
