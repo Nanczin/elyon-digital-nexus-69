@@ -313,7 +313,7 @@ const MemberAreaDashboard = () => {
             return (
               <Card 
                 key={module.id} 
-                className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl ${!hasUserAccess ? 'opacity-70 grayscale' : ''}`}
+                className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl`}
                 style={{ backgroundColor: cardBackground, color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}
               >
                 <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48">
