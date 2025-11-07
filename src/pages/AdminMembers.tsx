@@ -109,14 +109,7 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
 
         if (edgeFunctionError) {
           console.error('Error invoking create-member-user Edge Function:', edgeFunctionError);
-          // Check for specific status code from Edge Function
-          if (edgeFunctionError.status === 409) { // 409 Conflict for email_exists
-            toast({ title: "Erro", description: "Este e-mail já está cadastrado.", variant: "destructive" });
-          } else if (edgeFunctionError.status === 400) { // 400 Bad Request for password length
-            toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
-          } else {
-            toast({ title: "Erro", description: edgeFunctionError.message || 'Erro ao invocar função de criação de membro.', variant: "destructive" });
-          }
+          toast({ title: "Erro", description: edgeFunctionError.message || 'Erro ao invocar função de criação de membro.', variant: "destructive" });
           setLoading(false);
           return;
         }
