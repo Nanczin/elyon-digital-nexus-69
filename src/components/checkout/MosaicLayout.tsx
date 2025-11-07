@@ -46,6 +46,9 @@ const MosaicLayout = ({
   const handlePackageSelect = (packageId: number) => {
     setSelectedPackage?.(packageId);
   };
+
+  const bannerFeatures = checkout.extra_content?.banner_features || [];
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Countdown Timer */}
@@ -63,37 +66,64 @@ const MosaicLayout = ({
         );
       })()}
 
-      {/* Header centralizado */}
-      <div className="text-center space-y-4 sm:space-y-6 py-8 sm:py-12 mb-8 sm:mb-12">
-        {/* NEW: Display checkout banner if available */}
+      {/* Header centralizado / Banner Section */}
+      <div 
+        className="relative w-full overflow-hidden rounded-2xl shadow-xl"
+        style={{ 
+          backgroundImage: checkout.styles?.banner_url ? `url(${checkout.styles.banner_url})` : 'none',
+          backgroundColor: checkout.styles?.banner_background_color || '#2A2A2A',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          minHeight: '250px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+        }}
+      >
+        {/* Overlay para escurecer a imagem de fundo se houver */}
         {checkout.styles?.banner_url && (
-          <div className="flex justify-center mb-6 sm:mb-8">
-            <img 
-              src={checkout.styles.banner_url} 
-              alt={checkout.products.name}
-              className="w-full max-h-64 object-cover rounded-lg animate-fade-in"
-            />
-          </div>
+          <div className="absolute inset-0 bg-black opacity-50 rounded-2xl"></div>
         )}
 
-        {/* NEW: Display checkout logo if available */}
-        {checkout.styles?.logo_url && (
-          <div className="flex justify-center mb-6 sm:mb-8">
-            <img 
-              src={checkout.styles.logo_url} 
-              alt={checkout.products.name}
-              className="h-24 sm:h-32 lg:h-40 w-auto object-contain animate-fade-in hover-scale"
-            />
-          </div>
-        )}
-        <div className="space-y-4 sm:space-y-6">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold animate-fade-in leading-tight" style={{ color: headlineColor }}>
+        <div className="relative z-10 text-center w-full max-w-4xl mx-auto">
+          {/* Logo do Checkout */}
+          {checkout.styles?.logo_url && (
+            <div className="flex justify-center mb-6">
+              <img 
+                src={checkout.styles.logo_url} 
+                alt={checkout.products.name}
+                className="h-24 sm:h-32 w-auto object-contain animate-fade-in hover-scale"
+              />
+            </div>
+          )}
+          
+          {/* Título Principal */}
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold animate-fade-in leading-tight text-white mb-4">
             {processHeadlineText(headlineText, checkout.styles?.highlightColor || primaryColor)}
           </h1>
           
-          <p className="text-base sm:text-lg lg:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed animate-fade-in">
+          {/* Descrição */}
+          <p className="text-base sm:text-lg lg:text-xl text-white max-w-4xl mx-auto leading-relaxed animate-fade-in mb-8">
             {description}
           </p>
+
+          {/* Banner Feature Cards */}
+          {bannerFeatures.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+              {bannerFeatures.map(feature => (
+                <div 
+                  key={feature.id} 
+                  className="p-4 rounded-lg text-white text-left shadow-md"
+                  style={{ backgroundColor: checkout.styles?.banner_feature_card_color || '#facc15' }}
+                >
+                  <h4 className="font-semibold text-lg">{feature.title}</h4>
+                  <p className="text-sm">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
@@ -339,76 +369,107 @@ const MosaicLayout = ({
             </div>
 
             {/* Section 5: Resumo do pedido */}
-            <div className="bg-white rounded-lg border p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">Resumo do Pedido</h2>
+            <div className="space-y-4 sm:space-y-6 bg-gray-50 p-4 sm:p-8 rounded-xl border-2">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Resumo do Pedido</h2>
               
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-700">Pacote Completo</span>
-                  <span className="font-semibold text-gray-800">
-                    {formatCurrency(checkout.promotional_price || checkout.price)}
-                  </span>
-                </div>
-                
-                {selectedOrderBumps.map(bumpId => {
-                  const bump = checkout.order_bumps.find(b => b.id === bumpId);
-                  if (!bump) return null;
+              <div className="space-y-2 sm:space-y-3">
+                {(() => {
+                  const packages = (checkout.form_fields as any)?.packages;
+                  if (packages && packages.length > 0) {
+                    const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
+                    if (selectedPkg) {
+                      return (
+                        <div className="flex justify-between text-sm sm:text-base">
+                          <span className="text-gray-700">Pacote Completo</span>
+                          <span className="font-semibold text-gray-800">
+                            {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price))}
+                          </span>
+                        </div>
+                      );
+                    }
+                  }
                   return (
-                    <div key={bumpId} className="flex justify-between">
-                      <span className="text-gray-600">{bump.product?.name || 'Complemento'}</span>
-                      <span className="text-gray-600">+ {formatCurrency(bump.price)}</span>
+                    <div className="flex justify-between text-sm sm:text-base">
+                      <span className="text-gray-700">Pacote Completo</span>
+                      <span className="font-semibold text-gray-800">
+                        {formatCurrency(checkout.promotional_price || checkout.price)}
+                      </span>
                     </div>
                   );
+                })()}
+
+                {selectedOrderBumps.map(bumpId => {
+                  const bump = checkout.order_bumps.find(b => b.id === bumpId);
+                  if (bump && bump.enabled) {
+                    const productName = bump.product?.name || 'Produto adicional';
+                    const prefix = getOrderBumpPrefix(productName);
+                    return (
+                      <div key={bumpId} className="flex justify-between text-sm sm:text-base">
+                        <span className="text-gray-600">{productName}</span>
+                        <span className="text-gray-600">
+                          + {formatCurrency(bump.price)}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
                 })}
               </div>
-              
-              <div className="border-t pt-4 mt-6">
-                <div className="flex justify-between text-2xl font-bold mb-6">
+
+              <div className="border-t-2 pt-4 sm:pt-6 mt-4 sm:mt-6">
+                <div className="flex justify-between text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-8">
                   <span className="text-gray-800">Total a pagar</span>
                   <span className="text-gray-800">
                     {formatCurrency(calculateTotal())}
                   </span>
                 </div>
-
-                <form onSubmit={handleSubmit} className="mt-6">
-                  <button
-                    type="submit"
-                    disabled={processing}
-                    className="w-full py-4 text-white font-bold text-lg rounded-lg transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 group"
-                    style={{
-                      background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
-                      boxShadow: `0 4px 15px ${primaryColor}33`
-                    }}
-                  >
-                    <span>{processing ? 'Processando...' : 'Finalizar Compra Agora'}</span>
-                    {!processing && (
-                      <svg 
-                        className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    )}
-                  </button>
-                  
-                  <div className="text-center text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
-                    <Shield className="h-4 w-4 text-green-500" />
-                    Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.
-                  </div>
-                </form>
               </div>
-            </div>
 
-            {/* Seção de Segurança */}
-            <SecuritySection 
-              supportEmail={checkout.support_contact?.email} 
-              primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
-            />
+              <button
+                type="submit"
+                disabled={processing}
+                className="w-full py-3 sm:py-4 text-white font-bold text-lg sm:text-xl lg:text-2xl rounded-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-3 group shadow-xl"
+                style={{
+                  background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
+                  boxShadow: `0 8px 25px ${primaryColor}40`
+                }}
+              >
+                <span>{processing ? 'Processando...' : 'Finalizar Compra Agora'}</span>
+                {!processing && (
+                  <svg 
+                    className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:translate-x-1" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                )}
+              </button>
+
+              <div className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                <span className="text-center">
+                  {selectedPaymentMethod === 'pix' 
+                    ? 'Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.'
+                    : selectedPaymentMethod === 'creditCard'
+                      ? 'Pagamento via Cartão de Crédito processado pelo Mercado Pago. Ambiente 100% seguro.'
+                      : 'Pagamento processado pelo Mercado Pago. Ambiente 100% seguro.'}
+                </span>
+              </div>
+
+            </div>
           </form>
         </CardContent>
       </Card>
+
+      {/* Seção de Segurança */}
+      <div className="mt-8 sm:mt-16">
+        <SecuritySection 
+          supportEmail={checkout.support_contact?.email} 
+          primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
+        />
+      </div>
     </div>
   );
 };

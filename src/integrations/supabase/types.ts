@@ -1732,10 +1732,18 @@ export interface FormFields {
   reservedRights?: ReservedRightsConfig;
 }
 
+// NEW: Interface for banner feature cards
+export interface BannerFeatureCard {
+  id: number;
+  title: string;
+  description: string;
+}
+
 // NEW: Interface for the integrations column in the checkouts table
 export interface CheckoutIntegrationsConfig {
   selectedMercadoPagoAccount?: string | null;
   selectedMetaPixel?: string | null;
   selectedEmailAccount?: string | null;
+  utmify_code?: string | null; // NEW: Add utmify_code
   // Add other integration fields as needed
 }
