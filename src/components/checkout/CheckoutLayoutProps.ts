@@ -58,6 +58,7 @@ export interface CheckoutData {
     description?: string; // A descrição principal do checkout vive aqui
     gradientColor?: string;
     highlightColor?: string;
+    logo_url?: string | null; // NOVO: Adicionado logo_url
   };
   timer?: {
     enabled?: boolean;

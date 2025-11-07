@@ -71,10 +71,11 @@ const HorizontalLayout = ({
 
       {/* Product Header */}
       <div className="text-center space-y-4 sm:space-y-6 py-8 sm:py-12 mb-8 sm:mb-12">
-        {checkout.products.logo_url && (
+        {/* NEW: Display checkout logo if available */}
+        {checkout.styles?.logo_url && (
           <div className="flex justify-center mb-6 sm:mb-8">
             <img 
-              src={checkout.products.logo_url} 
+              src={checkout.styles.logo_url} 
               alt={checkout.products.name}
               className="h-24 sm:h-32 lg:h-40 w-auto object-contain animate-fade-in hover-scale"
             />
@@ -325,7 +326,7 @@ const HorizontalLayout = ({
                     <div
                       onClick={() => setSelectedPaymentMethod('creditCard')}
                       className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedPaymentMethod === 'creditCard' ? 'border-current shadow-lg' : 'border-gray-200'
+                        selectedPaymentMethod === 'creditCard' ? 'border-current' : 'border-gray-200'
                       }`}
                       style={{ borderColor: selectedPaymentMethod === 'creditCard' ? primaryColor : undefined }}
                     >

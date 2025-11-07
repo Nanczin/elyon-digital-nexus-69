@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,10 +46,11 @@ const VerticalLayout = ({
         {/* Seção 1: Cabeçalho e Introdução */}
         <div className="text-center mb-12">
           {/* Logotipo/Título */}
-          {checkout.products.logo_url && (
+          {/* NEW: Display checkout logo if available, otherwise fallback to product logo */}
+          {(checkout.styles?.logo_url || checkout.products.logo_url) && (
             <div className="mb-6">
               <img 
-                src={checkout.products.logo_url} 
+                src={checkout.styles?.logo_url || checkout.products.logo_url} 
                 alt={checkout.products.name}
                 className="h-20 mx-auto"
               />
@@ -239,7 +239,7 @@ const VerticalLayout = ({
             <div className="flex justify-between text-2xl font-bold mb-6">
               <span className="text-gray-800">Total a pagar</span>
               <span className="text-gray-800">
-                {formatCurrency(calculateTotal() * 100)}
+                {formatCurrency(calculateTotal())}
               </span>
             </div>
 

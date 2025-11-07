@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown, Eye } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown, Eye, Image as ImageIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +58,8 @@ const AdminCheckouts = () => {
   
   // State to manage file upload for checkout-level deliverable
   const [checkoutDeliverableFile, setCheckoutDeliverableFile] = useState<File | null>(null);
+  // NEW: State to manage file upload for checkout logo
+  const [checkoutLogoFile, setCheckoutLogoFile] = useState<File | null>(null);
 
   // Refatorado initialFormData para ser uma função que retorna um novo objeto
   const getInitialFormData = useCallback(() => {
@@ -121,7 +123,8 @@ const AdminCheckouts = () => {
         headlineColor: '#000000',
         description: 'Desbloqueie seu potencial com nosso produto exclusivo.',
         gradientColor: '#60a5fa',
-        highlightColor: '#3b82f6'
+        highlightColor: '#3b82f6',
+        logo_url: null, // NEW: Add logo_url to initial state
       },
       integrations: {
         selectedMercadoPagoAccount: '',
@@ -204,6 +207,8 @@ const AdminCheckouts = () => {
     if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
       setCheckoutDeliverableFile(null);
     }
+    // NEW: Set checkoutLogoFile to null when loading original data
+    setCheckoutLogoFile(null);
 
     // Determine the main product details for the checkout (used for preview and default values)
     const mainProductId = packagesConfig[0]?.associatedProductIds?.[0] || checkout.product_id;
@@ -244,6 +249,7 @@ const AdminCheckouts = () => {
         ...checkout.styles,
         description: checkout.styles?.description || checkout.products?.description || initial.styles.description,
         headlineText: checkout.styles?.headlineText || checkout.products?.name || initial.styles.headlineText,
+        logo_url: checkout.styles?.logo_url || null, // NEW: Load existing logo URL
       },
       timer: checkout.timer || initial.timer,
       member_area_id: checkout.member_area_id || null,
@@ -392,7 +398,7 @@ const AdminCheckouts = () => {
     const filePath = `${folder}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('products')
+      .from('products') // Using 'products' bucket for now, could be 'checkouts'
       .upload(filePath, file);
 
     if (uploadError) {
@@ -401,7 +407,7 @@ const AdminCheckouts = () => {
     }
 
     const { data } = supabase.storage
-      .from('products')
+      .from('products') // Using 'products' bucket for now
       .getPublicUrl(filePath);
 
     console.log(`[AdminCheckouts] File uploaded successfully: ${data.publicUrl}`);
@@ -414,6 +420,7 @@ const AdminCheckouts = () => {
       loadData(originalData);
       clearSavedData();
       setCheckoutDeliverableFile(null);
+      setCheckoutLogoFile(null); // NEW: Reset logo file
       
       toast({
         title: "Dados recarregados",
@@ -423,6 +430,7 @@ const AdminCheckouts = () => {
       loadData(getInitialFormData());
       clearSavedData();
       setCheckoutDeliverableFile(null);
+      setCheckoutLogoFile(null); // NEW: Reset logo file
       toast({
         title: "Formulário limpo",
         description: "Formulário resetado para valores padrão"
@@ -438,6 +446,7 @@ const AdminCheckouts = () => {
     
     // Limpar os arquivos selecionados localmente ao iniciar a edição
     setCheckoutDeliverableFile(null);
+    setCheckoutLogoFile(null); // NEW: Clear logo file
 
     setIsDialogOpen(true);
   };
@@ -488,6 +497,14 @@ const AdminCheckouts = () => {
     if (file) {
       handleInputChange('form_fields.deliverable.link', null);
       handleInputChange('form_fields.deliverable.fileUrl', null);
+    }
+  };
+
+  // NEW: Handler for checkout logo file change
+  const handleCheckoutLogoFileChange = (file: File | null) => {
+    setCheckoutLogoFile(file);
+    if (file) {
+      handleInputChange('styles.logo_url', null); // Clear existing URL if new file is selected
     }
   };
 
@@ -653,6 +670,14 @@ const AdminCheckouts = () => {
         description: `Arquivo: ${checkoutDeliverableFile.name} (apenas nome para preview)`
       };
     }
+    // NEW: Handle checkout logo file upload for preview
+    if (checkoutLogoFile) {
+      previewData.styles = {
+        ...previewData.styles,
+        logo_url: URL.createObjectURL(checkoutLogoFile) // Use object URL for local preview
+      };
+    }
+
 
     localStorage.setItem('checkout-preview-draft', JSON.stringify(previewData));
     window.open('/checkout/preview', '_blank');
@@ -697,6 +722,14 @@ const AdminCheckouts = () => {
         finalCheckoutDeliverable.link = null;
       }
 
+      // NEW: Handle checkout logo upload
+      let finalLogoUrl = checkoutData.styles?.logo_url || null;
+      if (checkoutLogoFile) {
+        console.log('ADMIN_CHECKOUTS_DEBUG: Uploading checkout logo file:', checkoutLogoFile.name);
+        finalLogoUrl = await uploadFile(checkoutLogoFile, 'checkout-logos');
+      }
+
+
       const checkoutPayload = {
         user_id: user?.id,
         member_area_id: checkoutData.member_area_id || null,
@@ -720,7 +753,10 @@ const AdminCheckouts = () => {
           price: Math.round(bump.price * 100),
           originalPrice: Math.round((bump.originalPrice || 0) * 100)
         })),
-        styles: checkoutData.styles,
+        styles: {
+          ...checkoutData.styles,
+          logo_url: finalLogoUrl, // NEW: Save final logo URL
+        },
         layout: 'horizontal',
         support_contact: checkoutData.support_contact,
         integrations: checkoutData.integrations,
@@ -752,6 +788,7 @@ const AdminCheckouts = () => {
       setEditingCheckout(null);
       clearSavedData();
       setCheckoutDeliverableFile(null);
+      setCheckoutLogoFile(null); // NEW: Clear logo file
       fetchCheckouts();
     } catch (error: any) {
       console.error('ADMIN_CHECKOUTS_DEBUG: Detailed error saving checkout:', error);
@@ -1523,6 +1560,50 @@ const AdminCheckouts = () => {
                     <div className="space-y-2">
                       <Label>Texto do Título</Label>
                       <Textarea value={checkoutData.styles.headlineText || ''} onChange={e => handleInputChange('styles.headlineText', e.target.value)} placeholder="Sua transformação começa agora!" rows={2} />
+                    </div>
+
+                    {/* NEW: Checkout Logo Upload */}
+                    <div className="space-y-2">
+                      <Label htmlFor="checkoutLogo">Logo do Checkout (Opcional)</Label>
+                      <Input 
+                        id="checkoutLogo" 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => handleCheckoutLogoFileChange(e.target.files?.[0] || null)} 
+                      />
+                      {checkoutLogoFile && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <ImageIcon className="h-4 w-4" />
+                          <span>Novo logo selecionado: {checkoutLogoFile.name}</span>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleCheckoutLogoFileChange(null)}
+                            className="h-6 px-2 text-destructive hover:text-destructive"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" /> Remover
+                          </Button>
+                        </div>
+                      )}
+                      {checkoutData.styles?.logo_url && !checkoutLogoFile && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <ImageIcon className="h-4 w-4" />
+                          <span>Logo atual: <a href={checkoutData.styles.logo_url} target="_blank" rel="noopener noreferrer" className="underline">Ver</a></span>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleInputChange('styles.logo_url', null)}
+                            className="h-6 px-2 text-destructive hover:text-destructive"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" /> Remover
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Este logo será exibido no cabeçalho do seu checkout.
+                      </p>
                     </div>
                   </div>
                   <Separator />
