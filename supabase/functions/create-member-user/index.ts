@@ -1,4 +1,6 @@
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+// @ts-ignore
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -24,7 +26,9 @@ serve(async (req) => {
   }
 
   try {
+    // @ts-ignore
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    // @ts-ignore
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -60,7 +64,7 @@ serve(async (req) => {
       let errorMessage = authError.message || 'Falha ao criar usuário.';
 
       // Tratamento de erro específico para e-mail duplicado
-      if (authError.message.includes('duplicate key value violates unique constraint "users_email_key"')) {
+      if (authError.message.includes('duplicate key value violates unique constraint "users_email_key"') || authError.message.includes('A user with this email address has already been registered')) {
         statusCode = 409; // Conflict
         errorMessage = 'Este e-mail já está cadastrado.';
       } else if (authError.message.includes('Password should be at least 6 characters')) {
