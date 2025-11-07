@@ -96,7 +96,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
         </div>
         <Button onClick={onLogout} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full">
           <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200">
-            <AvatarImage src={undefined} alt={userName} /> {/* Corrigido: user não está disponível aqui */}
+            <AvatarImage src={undefined} alt={userName} />
             <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold">
               {userInitial}
             </AvatarFallback>
@@ -124,7 +124,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-48 sm:h-64"> {/* Aumentado o tamanho aqui */}
+                <div className="relative aspect-video w-full bg-gray-200 h-56 sm:h-72"> {/* Aumentado o tamanho aqui */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -141,7 +141,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]">
+                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col flex-1"> {/* Alterado para flex-1 */}
                   <h3 className="text-lg sm:text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}>
                     {module.title}
                   </h3>

@@ -995,7 +995,10 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                     ) : (
                       modules.map(module => (
                         <SelectItem key={module.id} value={module.id}>
-                          {module.title}
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4" />
+                            {module.title} {/* Corrigido de module.name para module.title */}
+                          </div>
                         </SelectItem>
                       ))
                     )}
