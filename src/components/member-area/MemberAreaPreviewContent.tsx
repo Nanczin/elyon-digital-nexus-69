@@ -105,7 +105,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-2 sm:space-y-3"> {/* Ajustado o espaçamento aqui */}
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6">
         <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}>
           Olá, {userName}!
         </h1>
@@ -124,7 +124,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200">
+                <div className="relative aspect-video w-full bg-gray-200"> {/* Alterado para aspect-video e removido h-XX */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
