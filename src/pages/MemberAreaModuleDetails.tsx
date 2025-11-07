@@ -29,6 +29,7 @@ const MemberAreaModuleDetails = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
+  const [userLessonCompletions, setUserLessonCompletions] = useState<Set<string>>(new Set()); // NEW: State for lesson completions
 
   const fetchModuleAndLessons = useCallback(async () => {
     if (!memberAreaId || !moduleId || !user?.id) {
@@ -104,7 +105,7 @@ const MemberAreaModuleDetails = () => {
       // 5. Fetch Lessons for this module
       const { data: lessonsData, error: lessonsError } = await supabase
         .from('lessons')
-        .select('*')
+        .select('*') // Fetch all columns
         .eq('module_id', moduleId)
         .eq('status', 'published')
         .order('order_index', { ascending: true });
@@ -115,6 +116,15 @@ const MemberAreaModuleDetails = () => {
       } else {
         setLessons(lessonsData || []);
       }
+
+      // NEW: 6. Fetch all lesson completions for the current user in this member area
+      const { data: completionsData, error: completionsError } = await supabase
+        .from('lesson_completions')
+        .select('lesson_id')
+        .eq('user_id', user.id);
+      
+      if (completionsError) console.error('Error fetching user lesson completions:', completionsError);
+      setUserLessonCompletions(new Set(completionsData?.map(c => c.lesson_id) || []));
 
     } catch (error: any) {
       console.error('Error in MemberAreaModuleDetails:', error);
@@ -190,6 +200,8 @@ const MemberAreaModuleDetails = () => {
   const secondaryTextColor = (currentSettings.colors as PlatformColors)?.text_secondary || 'hsl(var(--member-area-text-muted))';
   const cardBackground = (currentSettings.colors as PlatformColors)?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
+  const checkmarkBgColor = (currentSettings.colors as PlatformColors)?.checkmark_background || 'hsl(var(--member-area-checkmark-background))';
+  const checkmarkIconColor = (currentSettings.colors as PlatformColors)?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))';
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
   const userInitial = userName.charAt(0).toUpperCase();
@@ -258,7 +270,7 @@ const MemberAreaModuleDetails = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full">
         <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base">
-          <Link to={`/membros/${memberAreaId}`}>
+          <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o painel
           </Link>
         </Button>
@@ -280,28 +292,36 @@ const MemberAreaModuleDetails = () => {
               <p className="text-muted-foreground text-sm sm:text-base">Nenhuma aula disponível neste módulo ainda.</p>
             ) : (
               <div className="space-y-3 sm:space-y-4">
-                {lessons.map((lesson) => (
-                  <Card key={lesson.id} className="border-l-4" style={{ borderColor: primaryColor }}>
-                    <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                      <div className="flex items-center space-x-3 sm:space-x-4">
-                        <Video className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: primaryColor }} />
-                        <div className="flex-1 flex flex-col min-w-0">
-                          <h4 className="font-semibold text-base sm:text-lg truncate" style={{ color: textColor }}>{lesson.title}</h4>
-                          {lesson.description?.trim() && (
-                            <p className="text-xs sm:text-sm truncate" style={{ color: secondaryTextColor}}>
-                              {lesson.description.trim()}
-                            </p>
-                          )}
+                {lessons.map((lesson) => {
+                  const isLessonCompleted = userLessonCompletions.has(lesson.id); // NEW: Check completion status
+                  return (
+                    <Card key={lesson.id} className="border-l-4" style={{ borderColor: primaryColor }}>
+                      <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <Video className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: primaryColor }} />
+                          <div className="flex-1 flex flex-col min-w-0">
+                            <h4 className="font-semibold text-base sm:text-lg truncate" style={{ color: textColor }}>
+                              {lesson.title}
+                              {isLessonCompleted && ( // NEW: Display checkmark if completed
+                                <Check className="ml-2 h-4 w-4 inline-block" style={{ color: checkmarkIconColor }} />
+                              )}
+                            </h4>
+                            {lesson.description?.trim() && (
+                              <p className="text-xs sm:text-sm truncate" style={{ color: secondaryTextColor}}>
+                                {lesson.description.trim()}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} className="w-full sm:w-auto text-sm sm:text-base">
-                        <Link to={`/membros/${memberAreaId}/modules/${moduleId}/lessons/${lesson.id}`}>
-                          Acessar Aula
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <Button asChild style={{ backgroundColor: primaryColor, color: '#FFFFFF' }} className="w-full sm:w-auto text-sm sm:text-base">
+                          <Link to={`/membros/${memberAreaId}/modules/${moduleId}/lessons/${lesson.id}`}>
+                            Acessar Aula
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </CardContent>

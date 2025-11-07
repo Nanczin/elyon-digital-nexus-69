@@ -5,7 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Video, Clock, FileText, ImageIcon, Settings, LogOut } from 'lucide-react';
+import { ArrowLeft, BookOpen, Video, Clock, FileText, ImageIcon, Settings, LogOut, Check, CheckCircle2 } from 'lucide-react'; // Adicionado CheckCircle2
 import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,6 +30,7 @@ const MemberAreaLesson = () => {
   const [lesson, setLesson] = useState<Lesson | null>(null); // State for the current lesson
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isLessonCompleted, setIsLessonCompleted] = useState(false); // NEW: State for lesson completion
 
   const fetchLessonContent = useCallback(async () => {
     if (!memberAreaId || !moduleId || !lessonId || !user?.id) {
@@ -119,6 +120,17 @@ const MemberAreaLesson = () => {
       }
       setLesson(lessonData);
 
+      // NEW: 6. Check if lesson is completed by the user
+      const { data: completionData, error: completionError } = await supabase
+        .from('lesson_completions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('lesson_id', lessonId)
+        .maybeSingle();
+
+      if (completionError) console.error('Error fetching lesson completion status:', completionError);
+      setIsLessonCompleted(!!completionData);
+
     } catch (error: any) {
       console.error('Error in MemberAreaLesson:', error);
       toast({ title: "Erro", description: error.message || "Ocorreu um erro ao carregar a aula.", variant: "destructive" });
@@ -137,6 +149,44 @@ const MemberAreaLesson = () => {
       fetchLessonContent();
     }
   }, [user, authLoading, fetchLessonContent, toast]);
+
+  const handleToggleLessonCompletion = async () => {
+    if (!user || !lessonId) return;
+
+    setLoading(true);
+    try {
+      if (isLessonCompleted) {
+        // Mark as incomplete
+        const { error } = await supabase
+          .from('lesson_completions')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('lesson_id', lessonId);
+
+        if (error) throw error;
+        setIsLessonCompleted(false);
+        toast({ title: "Aula Desmarcada", description: "A aula foi desmarcada como concluída.", variant: "default" });
+      } else {
+        // Mark as complete
+        const { error } = await supabase
+          .from('lesson_completions')
+          .insert({
+            user_id: user.id,
+            lesson_id: lessonId,
+            completed_at: new Date().toISOString(),
+          });
+
+        if (error) throw error;
+        setIsLessonCompleted(true);
+        toast({ title: "Aula Concluída! 🎉", description: "Parabéns! Você concluiu esta aula.", variant: "default" });
+      }
+    } catch (error: any) {
+      console.error('Error toggling lesson completion:', error);
+      toast({ title: "Erro", description: error.message || "Não foi possível atualizar o status da aula.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderLessonContent = (currentLesson: Lesson) => {
     if (!currentLesson.content_url && !currentLesson.text_content) {
@@ -265,6 +315,9 @@ const MemberAreaLesson = () => {
   const secondaryTextColor = (currentSettings.colors as PlatformColors)?.text_secondary || 'hsl(var(--member-area-text-muted))';
   const cardBackground = (currentSettings.colors as PlatformColors)?.card_login || 'hsl(var(--member-area-card-background))';
   const fontFamily = currentSettings.global_font_family || 'Nunito';
+  const checkmarkBgColor = (currentSettings.colors as PlatformColors)?.checkmark_background || 'hsl(var(--member-area-checkmark-background))';
+  const checkmarkIconColor = (currentSettings.colors as PlatformColors)?.checkmark_icon || 'hsl(var(--member-area-checkmark-icon))';
+
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Membro';
   const userInitial = userName.charAt(0).toUpperCase();
@@ -351,6 +404,32 @@ const MemberAreaLesson = () => {
           </CardHeader>
           <CardContent className="px-0">
             {renderLessonContent(lesson)}
+            
+            {/* NEW: Mark as Complete Button */}
+            <div className="mt-8 text-center">
+              <Button
+                onClick={handleToggleLessonCompletion}
+                disabled={loading}
+                className="w-full sm:w-auto text-sm sm:text-base"
+                style={{ 
+                  backgroundColor: isLessonCompleted ? checkmarkBgColor : primaryColor,
+                  color: isLessonCompleted ? checkmarkIconColor : '#FFFFFF',
+                  borderColor: isLessonCompleted ? checkmarkIconColor : 'transparent',
+                  borderWidth: isLessonCompleted ? '1px' : '0px',
+                  transition: 'all 0.2s ease-in-out'
+                }}
+              >
+                {isLessonCompleted ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Aula Concluída!
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" /> Marcar como Concluída
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

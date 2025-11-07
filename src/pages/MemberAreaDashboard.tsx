@@ -34,6 +34,8 @@ const MemberAreaDashboard = () => {
   const [userProductAccessIds, setUserProductAccessIds] = useState<string[]>([]);
   const [userModuleAccessIds, setUserModuleAccessIds] = useState<string[]>([]); // NEW: State for direct module access
   const [productCheckoutLinks, setProductCheckoutLinks] = useState<Record<string, string>>({});
+  const [userLessonCompletions, setUserLessonCompletions] = useState<Set<string>>(new Set()); // NEW: State for lesson completions
+  const [moduleLessonsMap, setModuleLessonsMap] = useState<Map<string, Set<string>>>(new Map()); // NEW: Map to store lessons per module
 
   const fetchMemberAreaAndContent = useCallback(async () => {
     if (!memberAreaId || !user?.id) {
@@ -92,7 +94,7 @@ const MemberAreaDashboard = () => {
       // 4. Fetch ALL published modules for this member area
       const { data: allPublishedModulesData, error: allPublishedModulesError } = await supabase
         .from('modules')
-        .select('*')
+        .select('*') // Fetch all columns
         .eq('member_area_id', memberAreaId)
         .eq('status', 'published')
         .order('order_index', { ascending: true });
@@ -127,8 +129,40 @@ const MemberAreaDashboard = () => {
       setUserModuleAccessIds(accessedModuleIds);
       console.log('MEMBER_AREA_DASHBOARD_DEBUG: User has direct access to modules:', accessedModuleIds);
 
+      // NEW: 6. Fetch all lessons for all published modules in this member area
+      const allModuleIds = allPublishedModulesData?.map(m => m.id) || [];
+      if (allModuleIds.length > 0) {
+        const { data: allLessonsData, error: allLessonsError } = await supabase
+          .from('lessons')
+          .select('id, module_id')
+          .in('module_id', allModuleIds)
+          .eq('status', 'published');
+        
+        if (allLessonsError) {
+          console.error('Error fetching all lessons for modules:', allLessonsError);
+        } else {
+          const newModuleLessonsMap = new Map<string, Set<string>>();
+          allLessonsData?.forEach(lesson => {
+            if (!newModuleLessonsMap.has(lesson.module_id)) {
+              newModuleLessonsMap.set(lesson.module_id, new Set());
+            }
+            newModuleLessonsMap.get(lesson.module_id)?.add(lesson.id);
+          });
+          setModuleLessonsMap(newModuleLessonsMap);
+        }
+      }
 
-      // 6. Fetch checkout links for products associated with modules
+      // NEW: 7. Fetch all lesson completions for the current user
+      const { data: completionsData, error: completionsError } = await supabase
+        .from('lesson_completions')
+        .select('lesson_id')
+        .eq('user_id', user.id);
+      
+      if (completionsError) console.error('Error fetching user lesson completions:', completionsError);
+      setUserLessonCompletions(new Set(completionsData?.map(c => c.lesson_id) || []));
+
+
+      // 8. Fetch checkout links for products associated with modules
       const uniqueModuleProductIds = [...new Set(allPublishedModulesData?.map(m => m.product_id).filter(Boolean))] as string[];
       const checkoutLinksMap: Record<string, string> = {};
 
@@ -307,7 +341,13 @@ const MemberAreaDashboard = () => {
           {modules.map((module) => {
             // Acesso via produto associado OU acesso direto ao módulo
             const hasUserAccess = (module.product_id && userProductAccessIds.includes(module.product_id)) || userModuleAccessIds.includes(module.id);
-            const isCompleted = hasUserAccess; // For now, completion is tied to access
+            
+            // NEW: Determine if module is completed (all its published lessons are completed)
+            const moduleLessons = moduleLessonsMap.get(module.id);
+            const isModuleCompleted = moduleLessons 
+              ? Array.from(moduleLessons).every(lessonId => userLessonCompletions.has(lessonId))
+              : false;
+
             const moduleCheckoutLink = module.checkout_link || (module.product_id ? productCheckoutLinks[module.product_id] : null);
 
             return (
@@ -324,7 +364,7 @@ const MemberAreaDashboard = () => {
                       className={`w-full h-full object-cover ${!hasUserAccess ? 'grayscale brightness-50' : ''}`} 
                     />
                   )}
-                  {isCompleted && (
+                  {isModuleCompleted && ( // NEW: Display checkmark if module is completed
                     <div 
                       className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full"
                       style={{ backgroundColor: checkmarkBgColor }}
