@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Adicionado AvatarImage
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom'; // Import Link
 
 interface MemberAreaPreviewContentProps {
@@ -124,12 +124,12 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-40 sm:h-56"> {/* Aumentado o tamanho aqui */}
+                <div className="relative aspect-video w-full bg-gray-200 h-48 sm:h-64"> {/* Aumentado o tamanho aqui */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
                       alt={module.title} 
-                      className={`w-full h-full object-contain ${module.isCompleted ? '' : 'grayscale brightness-50'}`} 
+                      className={`w-full h-full object-cover ${module.isCompleted ? '' : 'grayscale brightness-50'}`} 
                     />
                   )}
                   {module.isCompleted && (

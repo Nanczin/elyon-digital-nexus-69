@@ -356,12 +356,12 @@ const MemberAreaDashboard = () => {
                 className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl`}
                 style={{ backgroundColor: cardBackground, color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-40 sm:h-56">
+                <div className="relative aspect-video w-full bg-gray-200 h-48 sm:h-64">
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
                       alt={module.title} 
-                      className={`w-full h-full object-contain ${!hasUserAccess ? 'grayscale brightness-50' : ''}`} 
+                      className={`w-full h-full object-cover ${!hasUserAccess ? 'grayscale brightness-50' : ''}`} 
                     />
                   )}
                   {isModuleCompleted && ( // NEW: Display checkmark if module is completed

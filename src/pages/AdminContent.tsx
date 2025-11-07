@@ -544,7 +544,7 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
                 <img 
                   src={module.banner_url} 
                   alt={module.title}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
             )}
