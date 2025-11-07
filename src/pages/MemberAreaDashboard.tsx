@@ -219,7 +219,7 @@ const MemberAreaDashboard = () => {
       }
       fetchMemberAreaAndContent();
     }
-  }, [user, user?.updated_at, authLoading, fetchMemberAreaAndContent, toast]);
+  }, [user, authLoading, fetchMemberAreaAndContent, toast]);
 
   if (authLoading || loading) {
     return (
@@ -326,9 +326,9 @@ const MemberAreaDashboard = () => {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6">
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-2 sm:space-y-3"> {/* Ajustado o espaçamento aqui */}
         <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}>
-          Olá, {userName}
+          Olá, {userName}!
         </h1>
         <p className="text-lg sm:text-xl" style={{ color: secondaryTextColor }}>
           Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
@@ -386,38 +386,16 @@ const MemberAreaDashboard = () => {
                     {module.description}
                   </p>
                   
-                  {hasUserAccess ? (
-                    <Button 
-                      className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base"
-                      style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
-                      asChild
-                    >
-                      <Link to={`/membros/${memberArea?.id}/modules/${module.id}`}>
-                        Acessar Módulo <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  ) : (
-                    moduleCheckoutLink ? (
-                      <Button 
-                        className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors duration-300 text-sm sm:text-base"
-                        style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
-                        asChild
-                      >
-                        <Link to={moduleCheckoutLink}>
-                          Comprar Acesso <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    ) : (
-                      <Button 
-                        className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold text-sm sm:text-base"
-                        variant="outline"
-                        disabled
-                      >
-                        Acesso Bloqueado <Lock className="h-4 w-4 ml-2" />
-                      </Button>
-                    )
-                  )}
-                </CardContent>
+                  <Button 
+                    className="w-full h-10 sm:h-12 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-memberArea-primary-hover transition-colors duration-300 text-sm sm:text-base"
+                    style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
+                    asChild
+                  >
+                    <Link to={`/membros/${memberArea?.id}/modules/${module.id}`}>
+                      Acessar Módulo <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  </CardContent>
               </Card>
             );
           })}
