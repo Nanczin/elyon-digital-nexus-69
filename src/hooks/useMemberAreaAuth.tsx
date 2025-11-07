@@ -83,11 +83,14 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
   };
 
   const signOut = async () => {
+    console.log('MEMBER_AREA_AUTH_DEBUG: Attempting to sign out from member area...');
     await memberAreaSupabase.auth.signOut();
+    localStorage.removeItem('sb-member-area-session'); // Limpar explicitamente a sessão da área de membros
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado da área de membros.",
     });
+    console.log('MEMBER_AREA_AUTH_DEBUG: Sign out completed. Local storage cleared for member area session.');
   };
 
   const refreshUserSession = async () => {

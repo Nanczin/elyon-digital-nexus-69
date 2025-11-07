@@ -138,12 +138,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('AUTH_DEBUG: Attempting to sign out...');
     await supabase.auth.signOut();
+    localStorage.removeItem('sb-main-session'); // Limpar explicitamente a sessão principal
     setIsAdmin(false);
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
+    console.log('AUTH_DEBUG: Sign out completed. Local storage cleared for main session.');
   };
 
   const value = {
