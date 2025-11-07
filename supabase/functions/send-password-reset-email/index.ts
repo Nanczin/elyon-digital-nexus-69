@@ -1,6 +1,6 @@
-// @deno-types="https://deno.land/std@0.190.0/http/server.d.ts"
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-// @deno-types="https://esm.sh/@supabase/supabase-js@2.45.0/dist/index.d.ts"
+// @ts-ignore
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 // Declare Deno namespace to resolve 'Cannot find name Deno' errors
@@ -51,12 +51,17 @@ serve(async (req) => {
       .eq('member_area_id', memberAreaId)
       .maybeSingle();
 
-    if (settingsError || !platformSettings) {
-      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Erro ao buscar configurações da plataforma ou não encontrado:', settingsError);
-      // Se não encontrar configurações, usar defaults e tentar enviar com o SMTP do admin principal (se houver)
-      // Ou, para simplificar, retornar erro se não houver configurações específicas.
+    if (settingsError) {
+      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Erro ao buscar configurações da plataforma:', settingsError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Configurações da área de membros não encontradas para enviar e-mail personalizado.' }),
+        JSON.stringify({ success: false, error: `Erro ao buscar configurações da área de membros: ${settingsError.message}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    if (!platformSettings) {
+      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Configurações da plataforma não encontradas para memberAreaId:', memberAreaId);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Configurações da área de membros não encontradas para enviar e-mail personalizado. Verifique se a área de membros existe e tem configurações de design salvas.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
@@ -67,10 +72,10 @@ serve(async (req) => {
     const customBodyTemplate = platformSettings.password_reset_body || 'Olá {customer_name},\n\nRecebemos uma solicitação para redefinir a senha da sua conta na Área de Membros {member_area_name}.\n\nPara redefinir sua senha, clique no link abaixo:\n{password_reset_link}\n\nSe você não solicitou esta redefinição, por favor, ignore este e-mail.\n\nAtenciosamente,\nEquipe {member_area_name}';
 
     if (!sellerUserId) {
-      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: User ID do proprietário da área de membros não encontrado nas configurações.');
+      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: User ID do proprietário da área de membros não encontrado nas configurações. platformSettings.user_id:', sellerUserId);
       return new Response(
-        JSON.stringify({ success: false, error: 'ID do proprietário da área de membros não configurado para envio de e-mail.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ success: false, error: 'ID do proprietário da área de membros não configurado nas configurações de design. Não é possível enviar e-mail personalizado.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 } // Changed to 400 as it's a configuration issue
       );
     }
 
@@ -81,8 +86,8 @@ serve(async (req) => {
       .eq('id', memberAreaId)
       .maybeSingle();
 
-    if (memberAreaError || !memberArea) {
-      console.warn('SEND_PASSWORD_RESET_EMAIL_DEBUG: Não foi possível buscar o nome da área de membros. Usando fallback.');
+    if (memberAreaError) {
+      console.warn('SEND_PASSWORD_RESET_EMAIL_DEBUG: Erro ao buscar o nome da área de membros:', memberAreaError);
     }
     const memberAreaName = memberArea?.name || 'Elyon Digital';
 
@@ -98,16 +103,18 @@ serve(async (req) => {
 
     if (generateLinkError) {
       console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Erro ao gerar link de redefinição de senha:', generateLinkError);
+      // Retornar 400 se o usuário não existir ou 500 para outros erros
+      const statusCode = generateLinkError.message.includes('User not found') ? 400 : 500;
       return new Response(
         JSON.stringify({ success: false, error: generateLinkError.message || 'Falha ao gerar link de redefinição de senha.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: statusCode }
       );
     }
     const passwordResetLink = properties?.action_link;
     if (!passwordResetLink) {
-      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Link de redefinição de senha não gerado.');
+      console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Link de redefinição de senha não gerado (properties.action_link é nulo).');
       return new Response(
-        JSON.stringify({ success: false, error: 'Link de redefinição de senha não gerado.' }),
+        JSON.stringify({ success: false, error: 'Link de redefinição de senha não gerado. Verifique se o e-mail está correto.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
@@ -146,7 +153,7 @@ serve(async (req) => {
     if (emailSendError) {
       console.error('SEND_PASSWORD_RESET_EMAIL_DEBUG: Erro ao invocar send-transactional-email:', emailSendError);
       return new Response(
-        JSON.stringify({ success: false, error: emailSendError.message || 'Erro ao enviar e-mail de redefinição de senha.' }),
+        JSON.stringify({ success: false, error: `Erro ao enviar e-mail de redefinição de senha: ${emailSendError.message}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
