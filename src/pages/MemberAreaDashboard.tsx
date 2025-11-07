@@ -356,7 +356,7 @@ const MemberAreaDashboard = () => {
                 className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl`}
                 style={{ backgroundColor: cardBackground, color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-56 sm:h-72">
+                <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48">
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -378,7 +378,7 @@ const MemberAreaDashboard = () => {
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col flex-1">
+                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]">
                   <h3 className="text-lg sm:text-xl font-bold" style={{ color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}>
                     {module.title}
                   </h3>

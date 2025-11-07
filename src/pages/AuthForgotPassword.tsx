@@ -76,30 +76,31 @@ const AuthForgotPassword = () => {
     try {
       // Chamar a nova Edge Function para enviar o e-mail de redefinição personalizado
       const { data, error } = await supabase.functions.invoke(
-        'send-password-reset', // Nome da Edge Function corrigido
+        'send-password-reset-email',
         {
-          body: { email: trimmedEmail },
+          body: {
+            email: trimmedEmail, // Use the trimmed email
+            memberAreaId,
+          },
           method: 'POST',
         }
       );
 
       if (error) {
-        console.error('Error invoking send-password-reset Edge Function:', error);
+        console.error('Error invoking send-password-reset-email Edge Function:', error);
         throw new Error(error.message || 'Erro ao invocar função de envio de e-mail de redefinição.');
       }
 
-      // A Edge Function agora retorna uma string de texto em caso de sucesso/erro
-      // Precisamos verificar o status da resposta para determinar o sucesso
-      if (data === "Link de redefinição enviado com sucesso!") {
-        setEmailSent(true);
-        toast({
-          title: "E-mail enviado!",
-          description: "Verifique sua caixa de entrada para o link de redefinição de senha.",
-        });
-      } else {
-        // Se a resposta não for a mensagem de sucesso esperada, trate como erro
-        throw new Error(data || 'Erro desconhecido ao enviar e-mail de redefinição.');
+      if (!data?.success) {
+        console.error('Edge Function returned error:', data?.error);
+        throw new Error(data?.error || 'Falha na Edge Function ao enviar e-mail de redefinição.');
       }
+
+      setEmailSent(true);
+      toast({
+        title: "E-mail enviado!",
+        description: "Verifique sua caixa de entrada para o link de redefinição de senha.",
+      });
     } catch (error: any) {
       console.error('Error sending password reset email:', error);
       toast({
@@ -165,7 +166,7 @@ const AuthForgotPassword = () => {
                 className="w-full"
                 style={{ backgroundColor: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))', color: '#FFFFFF' }}
               >
-                Voltar para o Login
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Login
               </Button>
             </div>
           ) : (
@@ -197,7 +198,7 @@ const AuthForgotPassword = () => {
           {!emailSent && (
             <div className="mt-6 text-center">
               <Link to={`/membros/${memberAreaId}/login`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))' }}>
-                Voltar para o Login
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Login
               </Link>
             </div>
           )}
