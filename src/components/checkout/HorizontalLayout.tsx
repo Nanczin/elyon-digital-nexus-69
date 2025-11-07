@@ -301,109 +301,78 @@ const HorizontalLayout = ({
             )}
 
             {/* Seção 5: Resumo e Finalização */}
-            <div className="space-y-4 sm:space-y-6 bg-gray-50 p-4 sm:p-8 rounded-xl border-2">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Resumo do Pedido</h2>
+            <div className="bg-white rounded-lg border p-6 mb-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Resumo do Pedido</h2>
               
-              <div className="space-y-2 sm:space-y-3">
-                {(() => {
-                  const packages = (checkout.form_fields as any)?.packages;
-                  if (packages && packages.length > 0) {
-                    const selectedPkg = packages.find((pkg: any) => pkg.id === selectedPackage);
-                    if (selectedPkg) {
-                      return (
-                        <div className="flex justify-between text-sm sm:text-base">
-                          <span className="text-gray-700">Pacote Completo</span>
-                          <span className="font-semibold text-gray-800">
-                            {formatCurrency(selectedPkg.price || (checkout.promotional_price || checkout.price))}
-                          </span>
-                        </div>
-                      );
-                    }
-                  }
-                  return (
-                    <div className="flex justify-between text-sm sm:text-base">
-                      <span className="text-gray-700">Pacote Completo</span>
-                      <span className="font-semibold text-gray-800">
-                        {formatCurrency(checkout.promotional_price || checkout.price)}
-                      </span>
-                    </div>
-                  );
-                })()}
-
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-700">Pacote Completo</span>
+                  <span className="font-semibold text-gray-800">
+                    {formatCurrency(checkout.promotional_price || checkout.price)}
+                  </span>
+                </div>
+                
                 {selectedOrderBumps.map(bumpId => {
                   const bump = checkout.order_bumps.find(b => b.id === bumpId);
-                  if (bump && bump.enabled) {
-                    const productName = bump.product?.name || 'Produto adicional';
-                    const prefix = getOrderBumpPrefix(productName);
-                    return (
-                      <div key={bumpId} className="flex justify-between text-sm sm:text-base">
-                        <span className="text-gray-600">{productName}</span>
-                        <span className="text-gray-600">
-                          + {formatCurrency(bump.price)}
-                        </span>
-                      </div>
-                    );
-                  }
-                  return null;
+                  if (!bump) return null;
+                  return (
+                    <div key={bumpId} className="flex justify-between">
+                      <span className="text-gray-600">{bump.product?.name || 'Complemento'}</span>
+                      <span className="text-gray-600">+ {formatCurrency(bump.price)}</span>
+                    </div>
+                  );
                 })}
               </div>
-
-              <div className="border-t-2 pt-4 sm:pt-6 mt-4 sm:mt-6">
-                <div className="flex justify-between text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-8">
+              
+              <div className="border-t pt-4 mt-6">
+                <div className="flex justify-between text-2xl font-bold mb-6">
                   <span className="text-gray-800">Total a pagar</span>
                   <span className="text-gray-800">
                     {formatCurrency(calculateTotal())}
                   </span>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={processing}
-                className="w-full py-3 sm:py-4 text-white font-bold text-lg sm:text-xl lg:text-2xl rounded-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-3 group shadow-xl"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
-                  boxShadow: `0 8px 25px ${primaryColor}40`
-                }}
-              >
-                <span>{processing ? 'Processando...' : 'Finalizar Compra Agora'}</span>
-                {!processing && (
-                  <svg 
-                    className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:translate-x-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                <form onSubmit={handleSubmit} className="mt-6">
+                  <button
+                    type="submit"
+                    disabled={processing}
+                    className="w-full py-4 text-white font-bold text-lg rounded-lg transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 group"
+                    style={{
+                      background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
+                      boxShadow: `0 4px 15px ${primaryColor}33`
+                    }}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                )}
-              </button>
-
-              <div className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
-                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
-                <span className="text-center">
-                  {selectedPaymentMethod === 'pix' 
-                    ? 'Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.'
-                    : selectedPaymentMethod === 'creditCard'
-                      ? 'Pagamento via Cartão de Crédito processado pelo Mercado Pago. Ambiente 100% seguro.'
-                      : 'Pagamento processado pelo Mercado Pago. Ambiente 100% seguro.'}
-                </span>
+                    <span>{processing ? 'Processando...' : 'Finalizar Compra Agora'}</span>
+                    {!processing && (
+                      <svg 
+                        className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    )}
+                  </button>
+                  
+                  <div className="text-center text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
+                    <Shield className="h-4 w-4 text-green-500" />
+                    Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.
+                  </div>
+                </form>
               </div>
-
             </div>
+
+            {/* Seção de Segurança */}
+            <SecuritySection 
+              supportEmail={checkout.support_contact?.email} 
+              primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
+            />
           </form>
         </CardContent>
       </Card>
-
-      {/* Seção de Segurança */}
-      <div className="mt-8 sm:mt-16">
-        <SecuritySection 
-          supportEmail={checkout.support_contact?.email} 
-          primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
-        />
-      </div>
     </div>
   );
 };
 
-export default AdminCheckouts;
+export default HorizontalLayout;
