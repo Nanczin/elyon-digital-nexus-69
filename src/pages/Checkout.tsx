@@ -311,11 +311,6 @@ const Checkout = () => {
       return false;
     }
     
-    if (selectedPaymentMethod === 'creditCard' && !customerData.cpf.trim()) {
-      toast({ title: "Erro", description: "Informe o CPF para pagamento com cartão de crédito", variant: "destructive" });
-      return false;
-    }
-    
     if (!selectedPaymentMethod) {
       toast({ title: "Erro", description: "Selecione uma forma de pagamento", variant: "destructive" });
       return false;

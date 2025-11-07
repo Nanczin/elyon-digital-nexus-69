@@ -261,7 +261,7 @@ export type Database = {
           extra_content: Json | null
           form_fields: Json | null
           id: string
-          integrations: Json | null
+          integrations: CheckoutIntegrationsConfig | null // Alterado para o novo tipo
           layout: string
           member_area_id: string | null
           name: string | null
@@ -281,7 +281,7 @@ export type Database = {
           extra_content?: Json | null
           form_fields?: Json | null
           id?: string
-          integrations?: Json | null
+          integrations?: CheckoutIntegrationsConfig | null // Alterado para o novo tipo
           layout?: string
           member_area_id?: string | null
           name?: string | null
@@ -301,7 +301,7 @@ export type Database = {
           extra_content?: Json | null
           form_fields?: Json | null
           id?: string
-          integrations?: Json | null
+          integrations?: CheckoutIntegrationsConfig | null // Alterado para o novo tipo
           layout?: string
           member_area_id?: string | null
           name?: string | null
@@ -711,7 +711,7 @@ export type Database = {
       modules: {
         Row: {
           banner_url: string | null
-          checkout_link: string | null // NEW FIELD
+          checkout_link: string | null
           created_at: string
           description: string | null
           id: string
@@ -725,7 +725,7 @@ export type Database = {
         }
         Insert: {
           banner_url?: string | null
-          checkout_link?: string | null // NEW FIELD
+          checkout_link?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -739,7 +739,7 @@ export type Database = {
         }
         Update: {
           banner_url?: string | null
-          checkout_link?: string | null // NEW FIELD
+          checkout_link?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1730,4 +1730,12 @@ export interface FormFields {
   transactionalEmailBody?: string;
   guarantee?: GuaranteeConfig;
   reservedRights?: ReservedRightsConfig;
+}
+
+// NEW: Interface for the integrations column in the checkouts table
+export interface CheckoutIntegrationsConfig {
+  selectedMercadoPagoAccount?: string | null;
+  selectedMetaPixel?: string | null;
+  selectedEmailAccount?: string | null;
+  // Add other integration fields as needed
 }

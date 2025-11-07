@@ -80,7 +80,6 @@ export interface CheckoutData {
     file_url?: string | null; // Adicionado
   };
   user_id?: string | null; // Adicionado
-  activeIntegrations?: string[]; // NOVO: Para exibir integrações ativas no checkout
 }
 
 export interface CustomerData {

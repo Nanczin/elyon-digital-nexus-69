@@ -14,7 +14,6 @@ import SecuritySection from './SecuritySection';
 import CountdownTimer from './CountdownTimer';
 import { CreditCardForm } from './CreditCardForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ActiveIntegrationsDisplay from './ActiveIntegrationsDisplay'; // NEW: Import ActiveIntegrationsDisplay
 import { useState } from 'react';
 
 
@@ -373,12 +372,13 @@ const MosaicLayout = ({
                   const bump = checkout.order_bumps.find(b => b.id === bumpId);
                   if (bump && bump.enabled) {
                     const productName = bump.product?.name || 'Produto adicional';
+                    const prefix = getOrderBumpPrefix(productName);
                     return (
                       <div key={bumpId} className="flex justify-between text-sm sm:text-base">
                         <span className="text-gray-600">{productName}</span>
-                      <span className="text-gray-600">
-                        + {formatCurrency(bump.price)}
-                      </span>
+                        <span className="text-gray-600">
+                          + {formatCurrency(bump.price)}
+                        </span>
                       </div>
                     );
                   }
@@ -440,14 +440,8 @@ const MosaicLayout = ({
           primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
         />
       </div>
-
-      {/* NEW: Active Integrations Display */}
-      <ActiveIntegrationsDisplay 
-        activeIntegrations={checkout.activeIntegrations || []} 
-        primaryColor={primaryColor} 
-      />
     </div>
   );
 };
 
-export default MosaicLayout;
+export default AdminCheckouts;

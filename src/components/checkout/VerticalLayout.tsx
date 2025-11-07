@@ -11,7 +11,6 @@ import { getOrderBumpPrefix } from '@/utils/orderBumpUtils';
 import { processHeadlineText, formatCurrency } from '@/utils/textFormatting';
 import PackageSelector from './PackageSelector';
 import SecuritySection from './SecuritySection';
-import ActiveIntegrationsDisplay from './ActiveIntegrationsDisplay'; // NEW: Import ActiveIntegrationsDisplay
 import { useState } from 'react';
 
 
@@ -290,12 +289,6 @@ const VerticalLayout = ({
         <SecuritySection 
           supportEmail={checkout.support_contact?.email} 
           primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
-        />
-
-        {/* NEW: Active Integrations Display */}
-        <ActiveIntegrationsDisplay 
-          activeIntegrations={checkout.activeIntegrations || []} 
-          primaryColor={primaryColor} 
         />
       </div>
     </div>

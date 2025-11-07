@@ -15,7 +15,6 @@ import SecuritySection from './SecuritySection';
 import CountdownTimer from './CountdownTimer';
 import { CreditCardForm } from './CreditCardForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ActiveIntegrationsDisplay from './ActiveIntegrationsDisplay'; // NEW: Import ActiveIntegrationsDisplay
 
 import { useState } from 'react';
 
@@ -301,82 +300,7 @@ const HorizontalLayout = ({
               </div>
             )}
 
-            {/* Section 4: Método de Pagamento */}
-            <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Forma de Pagamento</h2>
-              
-              <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-8">
-                {checkout.payment_methods?.pix && (
-                  <div
-                    onClick={() => setSelectedPaymentMethod('pix')}
-                    className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      selectedPaymentMethod === 'pix' ? 'border-current shadow-lg' : 'border-gray-200'
-                    }`}
-                    style={{ borderColor: selectedPaymentMethod === 'pix' ? primaryColor : undefined }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedPaymentMethod === 'pix' ? 'border-current' : 'border-gray-300'
-                      }`} style={{ borderColor: selectedPaymentMethod === 'pix' ? primaryColor : undefined }}>
-                        {selectedPaymentMethod === 'pix' && (
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }}></div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <QrCode className="h-5 w-5" />
-                          <span className="font-semibold text-sm sm:text-base">PIX</span>
-                        </div>
-                        <p className="text-xs sm:text-sm text-gray-600">Aprovação instantânea</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {checkout.payment_methods?.creditCard && (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div
-                      onClick={() => setSelectedPaymentMethod('creditCard')}
-                      className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedPaymentMethod === 'creditCard' ? 'border-current' : 'border-gray-200'
-                      }`}
-                      style={{ borderColor: selectedPaymentMethod === 'creditCard' ? primaryColor : undefined }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          selectedPaymentMethod === 'creditCard' ? 'border-current' : 'border-gray-300'
-                        }`} style={{ borderColor: selectedPaymentMethod === 'creditCard' ? primaryColor : undefined }}>
-                          {selectedPaymentMethod === 'creditCard' && (
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }}></div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-5 w-5" />
-                            <span className="font-semibold text-sm sm:text-base">Cartão de Crédito</span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600">Parcelamento em até 12x sem juros</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {selectedPaymentMethod === 'creditCard' && (
-                      <CreditCardForm
-                        onCardDataChange={setCardData}
-                        primaryColor={primaryColor}
-                        textColor={textColor}
-                        maxInstallments={checkout.payment_methods?.maxInstallments || 12}
-                        installmentsWithInterest={checkout.payment_methods?.installmentsWithInterest || false}
-                        totalAmount={calculateTotal()}
-                        mpPublicKey={mpPublicKey}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Section 5: Resumo do pedido */}
+            {/* Seção 5: Resumo e Finalização */}
             <div className="space-y-4 sm:space-y-6 bg-gray-50 p-4 sm:p-8 rounded-xl border-2">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Resumo do Pedido</h2>
               
@@ -478,14 +402,8 @@ const HorizontalLayout = ({
           primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
         />
       </div>
-
-      {/* NEW: Active Integrations Display */}
-      <ActiveIntegrationsDisplay 
-        activeIntegrations={checkout.activeIntegrations || []} 
-        primaryColor={primaryColor} 
-      />
     </div>
   );
 };
 
-export default HorizontalLayout;
+export default AdminCheckouts;
