@@ -28,6 +28,13 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
         console.log('MEMBER_AREA_AUTH_DEBUG: onAuthStateChange event:', event);
         setSession(session);
         setUser(session?.user ?? null);
+
+        if (event === 'SIGNED_OUT') {
+          console.log('MEMBER_AREA_AUTH_DEBUG: SIGNED_OUT event detected. Resetting states.');
+          setUser(null);
+          setSession(null);
+        }
+        
         setLoading(false);
         console.log('MEMBER_AREA_AUTH_DEBUG: Auth loading set to false from onAuthStateChange. Current user:', session?.user?.email);
       }
@@ -86,11 +93,16 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
     console.log('MEMBER_AREA_AUTH_DEBUG: Attempting to sign out from member area...');
     await memberAreaSupabase.auth.signOut();
     localStorage.removeItem('sb-member-area-session'); // Limpar explicitamente a sessão da área de membros
+    
+    // Limpeza explícita do estado do React
+    setUser(null);
+    setSession(null);
+
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado da área de membros.",
     });
-    console.log('MEMBER_AREA_AUTH_DEBUG: Sign out completed. Local storage cleared for member area session.');
+    console.log('MEMBER_AREA_AUTH_DEBUG: Sign out completed. Local storage cleared and React states reset.');
   };
 
   const refreshUserSession = async () => {

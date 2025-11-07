@@ -35,12 +35,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        if (event === 'SIGNED_OUT') {
+          console.log('AUTH_DEBUG: SIGNED_OUT event detected. Resetting states.');
+          setUser(null);
+          setSession(null);
+          setIsAdmin(false);
+        } else if (session?.user) {
           console.log('AUTH_DEBUG: User session changed:', event, 'User ID:', session.user.id);
           await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
-          console.log('AUTH_DEBUG: User signed out or no session, isAdmin set to false.');
+          console.log('AUTH_DEBUG: No user session, isAdmin set to false.');
         }
         
         setLoading(false);
@@ -141,12 +146,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AUTH_DEBUG: Attempting to sign out...');
     await supabase.auth.signOut();
     localStorage.removeItem('sb-main-session'); // Limpar explicitamente a sessão principal
+    
+    // Limpeza explícita do estado do React
+    setUser(null);
+    setSession(null);
     setIsAdmin(false);
+
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
-    console.log('AUTH_DEBUG: Sign out completed. Local storage cleared for main session.');
+    console.log('AUTH_DEBUG: Sign out completed. Local storage cleared and React states reset.');
   };
 
   const value = {
