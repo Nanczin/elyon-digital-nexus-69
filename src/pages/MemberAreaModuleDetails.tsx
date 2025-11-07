@@ -143,7 +143,7 @@ const MemberAreaModuleDetails = () => {
       }
       fetchModuleAndLessons();
     }
-  }, [user, authLoading, fetchModuleAndLessons, toast]);
+  }, [user, user?.updated_at, authLoading, fetchModuleAndLessons, toast]);
 
   if (authLoading || loading) {
     return (

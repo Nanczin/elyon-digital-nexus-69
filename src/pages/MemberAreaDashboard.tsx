@@ -219,7 +219,7 @@ const MemberAreaDashboard = () => {
       }
       fetchMemberAreaAndContent();
     }
-  }, [user, authLoading, fetchMemberAreaAndContent, toast]);
+  }, [user, user?.updated_at, authLoading, fetchMemberAreaAndContent, toast]);
 
   if (authLoading || loading) {
     return (
@@ -328,7 +328,7 @@ const MemberAreaDashboard = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6">
         <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}>
-          Olá, {userName}!
+          Olá, {userName}
         </h1>
         <p className="text-lg sm:text-xl" style={{ color: secondaryTextColor }}>
           Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
@@ -356,7 +356,7 @@ const MemberAreaDashboard = () => {
                 className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl`}
                 style={{ backgroundColor: cardBackground, color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48">
+                <div className="relative aspect-video w-full bg-gray-200">
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -378,7 +378,7 @@ const MemberAreaDashboard = () => {
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]">
+                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col flex-1">
                   <h3 className="text-lg sm:text-xl font-bold" style={{ color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}>
                     {module.title}
                   </h3>

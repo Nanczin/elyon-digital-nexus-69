@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom'; // Import Link
 
 interface MemberAreaPreviewContentProps {
@@ -96,6 +96,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
         </div>
         <Button onClick={onLogout} variant="ghost" size="sm" className="p-0 h-auto w-auto rounded-full">
           <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-gray-200">
+            <AvatarImage src={undefined} alt={userName} />
             <AvatarFallback className="bg-white text-memberArea-text-dark text-sm sm:text-base font-semibold">
               {userInitial}
             </AvatarFallback>
@@ -123,7 +124,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-32 sm:h-48">
+                <div className="relative aspect-video w-full bg-gray-200"> {/* Alterado para aspect-video e removido h-XX */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -140,7 +141,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col h-[calc(100%-8rem)] sm:h-[calc(100%-12rem)]">
+                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col flex-1">
                   <h3 className="text-lg sm:text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}>
                     {module.title}
                   </h3>

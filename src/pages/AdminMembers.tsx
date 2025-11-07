@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useParams, Link } from 'react-router-dom'; // Import useParams
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -22,7 +22,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
   const [password, setPassword] = useState('');
   const [generatePassword, setGeneratePassword] = useState(false);
   const [isActive, setIsActive] = useState(member?.status === 'active');
-  const [selectedModules, setSelectedModules] = useState<string[]>(member?.access_modules?.map((ma: any) => ma.module_id) || []);
+  // Ajustado para ler de member.member_access
+  const [selectedModules, setSelectedModules] = useState<string[]>(member?.member_access?.map((ma: any) => ma.module_id) || []);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user: adminUser } = useAuth(); // Obter refreshUserSession
@@ -32,20 +33,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
       setName(member.name);
       setEmail(member.email);
       setIsActive(member.status === 'active');
-      // Fetch member_access for this member
-      const fetchMemberAccess = async () => {
-        const { data, error } = await supabase
-          .from('member_access')
-          .select('module_id')
-          .eq('user_id', member.user_id)
-          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
-        if (error) {
-          console.error('Error fetching member access:', error);
-        } else {
-          setSelectedModules(data?.map(ma => ma.module_id) || []);
-        }
-      };
-      fetchMemberAccess();
+      // Ajustado para ler de member.member_access
+      setSelectedModules(member?.member_access?.map((ma: any) => ma.module_id) || []);
     } else {
       setName('');
       setEmail('');
@@ -66,50 +55,26 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
     setLoading(true);
     try {
       if (member) {
-        // Update existing member
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ name, status: isActive ? 'active' : 'inactive' })
-          .eq('user_id', member.user_id);
-        if (profileError) throw profileError;
+        // Update existing member using Edge Function
+        const { data, error: edgeFunctionError } = await supabase.functions.invoke('update-member-profile', {
+          body: {
+            userId: member.user_id,
+            name,
+            status: isActive ? 'active' : 'inactive',
+            memberAreaId,
+            selectedModules,
+          },
+          method: 'POST',
+        });
 
-        // Update auth.users.user_metadata
-        const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
-          member.user_id,
-          {
-            user_metadata: { 
-              name, 
-              first_name: name.split(' ')[0], 
-              last_name: name.split(' ').slice(1).join(' ') || '',
-              member_area_id: memberAreaId, // Garantir que member_area_id esteja no metadata
-              status: isActive ? 'active' : 'inactive'
-            }
-          }
-        );
-        if (authUpdateError) console.error('Error updating auth.users user_metadata:', authUpdateError);
+        if (edgeFunctionError) {
+          console.error('Error invoking update-member-profile Edge Function:', edgeFunctionError);
+          throw new Error(edgeFunctionError.message || 'Erro ao invocar função de atualização de membro.');
+        }
 
-
-        // Update member_access
-        // First, delete all existing access for this user in this member area
-        const { error: deleteAccessError } = await supabase
-          .from('member_access')
-          .delete()
-          .eq('user_id', member.user_id)
-          .eq('member_area_id', memberAreaId); // Filter by memberAreaId
-        if (deleteAccessError) throw deleteAccessError;
-
-        // Then, insert new access records for this member area
-        const accessInserts = selectedModules.map(moduleId => ({
-          user_id: member.user_id,
-          module_id: moduleId,
-          is_active: true,
-          member_area_id: memberAreaId, // Ensure member_area_id is set
-        }));
-        if (accessInserts.length > 0) {
-          const { error: insertAccessError } = await supabase
-            .from('member_access')
-            .insert(accessInserts);
-          if (insertAccessError) throw insertAccessError;
+        if (!data?.success) {
+          console.error('Edge Function returned error:', data?.error);
+          throw new Error(data?.error || 'Falha na Edge Function ao atualizar membro.');
         }
 
         toast({ title: "Sucesso", description: "Membro atualizado com sucesso!" });
@@ -144,7 +109,14 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
 
         if (edgeFunctionError) {
           console.error('Error invoking create-member-user Edge Function:', edgeFunctionError);
-          toast({ title: "Erro", description: edgeFunctionError.message || 'Erro ao invocar função de criação de membro.', variant: "destructive" });
+          // Check for specific status code from Edge Function
+          if (edgeFunctionError.status === 409) { // 409 Conflict for email_exists
+            toast({ title: "Erro", description: "Este e-mail já está cadastrado.", variant: "destructive" });
+          } else if (edgeFunctionError.status === 400) { // 400 Bad Request for password length
+            toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+          } else {
+            toast({ title: "Erro", description: edgeFunctionError.message || 'Erro ao invocar função de criação de membro.', variant: "destructive" });
+          }
           setLoading(false);
           return;
         }
@@ -159,7 +131,6 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
         toast({ title: "Sucesso", description: "Novo membro adicionado com sucesso!" });
       }
       
-      // await refreshUserSession(); // REMOVIDO: refreshUserSession não está disponível em useAuth
       onSave();
       onClose();
     } catch (error: any) {
@@ -174,6 +145,9 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle className="text-lg sm:text-xl">{member ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle>
+        <DialogDescription>
+          {member ? 'Atualize as informações e os acessos deste membro.' : 'Crie uma nova conta de membro e defina seus acessos aos módulos.'}
+        </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
         <div className="space-y-2">
@@ -253,9 +227,13 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
 
   const fetchMembers = async () => {
     setLoadingMembers(true);
+    // Modificado para incluir os acessos aos módulos
     const { data, error } = await supabase
       .from('profiles')
-      .select(`*`) // Simplified select to avoid nested RLS issues for now
+      .select(`
+        *,
+        member_access(module_id)
+      `) 
       .eq('member_area_id', currentMemberAreaId) // Filter by memberAreaId
       .order('created_at', { ascending: false });
     

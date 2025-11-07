@@ -540,10 +540,10 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
         <Card key={module.id}>
           <CardContent className="p-4">
             {module.banner_url && (
-              <div className="aspect-video mb-3 rounded-lg overflow-hidden">
+              <div className="relative aspect-video w-full bg-gray-200"> {/* Alterado para aspect-video e removido h-XX */}
                 <img 
                   src={module.banner_url} 
-                  alt={module.title}
+                  alt={module.title} 
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -995,7 +995,10 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                     ) : (
                       modules.map(module => (
                         <SelectItem key={module.id} value={module.id}>
-                          {module.title}
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4" />
+                            {module.title}
+                          </div>
                         </SelectItem>
                       ))
                     )}
