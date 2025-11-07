@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     console.log('AUTH_DEBUG: Attempting to sign out...');
     await supabase.auth.signOut();
-    localStorage.removeItem('sb-main-session'); // Limpar explicitamente a sessão principal
+    localStorage.removeItem('supabase.auth.token'); // Limpar explicitamente a chave padrão do Supabase
     
     // Limpeza explícita do estado do React
     setUser(null);

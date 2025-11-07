@@ -8,7 +8,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Este cliente é exclusivo para a área de membros, usando uma chave de armazenamento diferente.
 export const memberAreaSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storageKey: 'sb-member-area-session', // Chave de armazenamento diferente e única
+    // storageKey: 'sb-member-area-session', // Removido para usar a chave padrão do Supabase
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,

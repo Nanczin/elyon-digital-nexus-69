@@ -10,7 +10,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storageKey: 'sb-main-session', // Chave de armazenamento explícita para o cliente principal
+    // storageKey: 'sb-main-session', // Removido para usar a chave padrão do Supabase
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
