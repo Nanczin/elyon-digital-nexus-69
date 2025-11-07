@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { PlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
+import { PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
 import { deepMerge } from '@/lib/utils';
 import { useMemberAreaAuth } from '@/hooks/useMemberAreaAuth';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
+import { Tables } from '@/integrations/supabase/types';
 
 const MemberAreaLogin = () => {
   const { memberAreaId } = useParams<{ memberAreaId: string }>();

@@ -8,9 +8,10 @@ import { Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient';
 import { supabase } from '@/integrations/supabase/client';
-import { PlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
+import { PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
 import { deepMerge } from '@/lib/utils';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
+import { Tables } from '@/integrations/supabase/types';
 
 const AuthUpdatePassword = () => {
   const [searchParams] = useSearchParams();
@@ -41,7 +42,7 @@ const AuthUpdatePassword = () => {
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', error);
       } else if (data) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), data as Partial<PlatformSettings>));
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...data, colors: data.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>));
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }

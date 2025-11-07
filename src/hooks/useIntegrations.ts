@@ -142,7 +142,7 @@ export const useIntegrations = () => {
       }
 
       if (updates.emailConfig !== undefined) {
-        integrationData.smtp_config = updates.emailConfig as Json || null; // Salvar a nova estrutura
+        integrationData.smtp_config = updates.emailConfig as unknown as Json || null; // Cast to unknown first
         setEmailConfig(updates.emailConfig);
       }
 

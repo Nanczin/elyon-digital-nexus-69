@@ -8,7 +8,7 @@ import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient'; // Keep for potential future direct auth calls
 import { supabase } from '@/integrations/supabase/client'; // Use main supabase client for Edge Function invocation
-import { PlatformSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
+import { PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar o tipo correto
 import { deepMerge } from '@/lib/utils';
 import { getDefaultSettings } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada
 import { Tables } from '@/integrations/supabase/types';

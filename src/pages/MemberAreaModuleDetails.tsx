@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ProfileSettingsDialog from '@/components/member-area/ProfileSettingsDialog';
 import { getDefaultSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Import PlatformColors
+import LessonComments from '@/components/member-area/LessonComments'; // Import LessonComments
 
 type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
@@ -88,7 +89,7 @@ const MemberAreaModuleDetails = () => {
       // 4. Fetch Module details
       const { data: moduleData, error: moduleError } = await supabase
         .from('modules')
-        .select('*') // Select all columns
+        .select('*')
         .eq('id', moduleId)
         .eq('member_area_id', memberAreaId)
         .eq('status', 'published')
@@ -105,7 +106,7 @@ const MemberAreaModuleDetails = () => {
       // 5. Fetch Lessons for this module
       const { data: lessonsData, error: lessonsError } = await supabase
         .from('lessons')
-        .select('*') // Fetch all columns
+        .select('*')
         .eq('module_id', moduleId)
         .eq('status', 'published')
         .order('order_index', { ascending: true });
@@ -270,8 +271,8 @@ const MemberAreaModuleDetails = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full">
         <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base">
-          <Link to={`/membros/${memberAreaId}`}> {/* Corrected link path */}
-            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o painel
+          <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}> {/* Corrected link path */}
+            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o módulo
           </Link>
         </Button>
 

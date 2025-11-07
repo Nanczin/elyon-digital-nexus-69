@@ -252,12 +252,12 @@ const AdminCheckouts = () => {
       order_bumps: orderBumpsInReais,
       integrations: {
         ...initial.integrations,
-        ...(checkout.integrations as Json || {}), // Cast to Json before spreading
+        ...(checkout.integrations as object || {}), // Cast to object before spreading
         selectedEmailAccount: (checkout.integrations as CheckoutIntegrationsConfig)?.selectedEmailAccount || '',
       },
       support_contact: checkout.support_contact || initial.support_contact,
       styles: {
-        ...(checkout.styles as Json || {}), // Cast to Json before spreading
+        ...(checkout.styles as object || {}), // Cast to object before spreading
         description: (checkout.styles as any)?.description || checkout.products?.description || initial.styles.description,
         headlineText: (checkout.styles as any)?.headlineText || checkout.products?.name || initial.styles.headlineText,
         logo_url: (checkout.styles as any)?.logo_url || null, // NEW: Load existing logo URL

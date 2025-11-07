@@ -144,12 +144,12 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
 
       const payload: TablesInsert<'platform_settings'> = {
         user_id: user?.id || null,
-        member_area_id: currentMemberAreaId!,
+        member_area_id: currentMemberAreaId!, // Ensure member_area_id is not null
         logo_url: newLogoUrl,
         login_title: settings.login_title,
         login_subtitle: settings.login_subtitle,
         global_font_family: settings.global_font_family,
-        colors: settings.colors as Json,
+        colors: settings.colors as Json, // Cast to Json
         password_reset_subject: settings.password_reset_subject, // NEW
         password_reset_body: settings.password_reset_body,       // NEW
       };
