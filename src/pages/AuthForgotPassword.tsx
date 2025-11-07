@@ -166,7 +166,7 @@ const AuthForgotPassword = () => {
                 className="w-full"
                 style={{ backgroundColor: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))', color: '#FFFFFF' }}
               >
-                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Login
+                Voltar para o Login
               </Button>
             </div>
           ) : (
@@ -198,7 +198,7 @@ const AuthForgotPassword = () => {
           {!emailSent && (
             <div className="mt-6 text-center">
               <Link to={`/membros/${memberAreaId}/login`} className="hover:underline font-medium" style={{ color: currentSettings.colors?.button_background || 'hsl(var(--member-area-primary))' }}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Login
+                Voltar para o Login
               </Link>
             </div>
           )}
