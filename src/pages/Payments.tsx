@@ -92,7 +92,7 @@ const Payments = () => {
     }
   };
 
-  if (loading || loadingPayments) {
+  if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
 
@@ -102,6 +102,10 @@ const Payments = () => {
 
   if (!isAdmin) {
     return <Navigate to="/" replace />;
+  }
+
+  if (loadingPayments) {
+    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
 
   return (
