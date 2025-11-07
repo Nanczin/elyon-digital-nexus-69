@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-// import { useNavigate } from 'react-router-dom'; // REMOVIDO: useNavigate não deve ser usado aqui
 
 interface AuthContextType {
   user: User | null;
@@ -21,43 +20,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  // const navigate = useNavigate(); // REMOVIDO: useNavigate não deve ser usado aqui
 
   useEffect(() => {
-    // Set up auth state listener
+    const checkAdminStatus = async (userId: string) => {
+      try {
+        const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
+        if (error) {
+          console.error('AUTH_DEBUG: Error checking admin status via RPC:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data || false);
+          console.log('AUTH_DEBUG: isAdmin status from RPC for user', userId, ':', data);
+        }
+      } catch (error) {
+        console.error('AUTH_DEBUG: Exception checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Check if user is admin when session changes
         if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data } = await supabase.rpc('is_admin');
-              setIsAdmin(data || false);
-            } catch (error) {
-              console.error('Error checking admin status:', error);
-              setIsAdmin(false);
-            }
-          }, 0);
+          console.log('AUTH_DEBUG: User session changed:', event, 'User ID:', session.user.id);
+          await checkAdminStatus(session.user.id); // Check admin status immediately
         } else {
           setIsAdmin(false);
+          console.log('AUTH_DEBUG: User signed out or no session, isAdmin set to false.');
         }
         
         setLoading(false);
+        console.log('AUTH_DEBUG: Auth loading set to false. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Initial session check
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        console.log('AUTH_DEBUG: Initial session found for user:', session.user.id);
+        await checkAdminStatus(session.user.id); // Check admin status immediately
+      } else {
+        setIsAdmin(false);
+        console.log('AUTH_DEBUG: No initial session, isAdmin set to false.');
+      }
       setLoading(false);
+      console.log('AUTH_DEBUG: Initial auth loading set to false. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // No dependencies that would cause re-runs on state changes within this effect.
 
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -118,7 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
-    // navigate('/'); // REMOVIDO: A navegação será feita no componente Layout
   };
 
   const value = {
