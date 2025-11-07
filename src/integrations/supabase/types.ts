@@ -414,7 +414,6 @@ export type Database = {
           smtp_config?: Json | null
           updated_at?: string
           user_id?: string
-          utmify_code?: string | null
         }
         Relationships: [
           {
@@ -1596,4 +1595,20 @@ export interface EmailConfig {
   port?: string;
   secure?: boolean;
   provider?: string; // e.g., 'Gmail', 'Custom SMTP'
+  [key: string]: any; // Add index signature for Json compatibility
+}
+
+export interface PlatformColors {
+  background_login?: string;
+  card_login?: string;
+  header_background?: string;
+  header_border?: string;
+  button_background?: string;
+  text_primary?: string;
+  text_header?: string;
+  text_cards?: string;
+  text_secondary?: string;
+  checkmark_background?: string;
+  checkmark_icon?: string;
+  [key: string]: string | undefined; // Add index signature for Json compatibility
 }

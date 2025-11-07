@@ -66,7 +66,7 @@ const MemberAreaModuleDetails = () => {
       if (settingsError && settingsError.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', settingsError);
       } else if (settingsData) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...data, colors: data.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }

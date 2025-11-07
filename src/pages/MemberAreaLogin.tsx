@@ -55,7 +55,7 @@ const MemberAreaLogin = () => {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('member_area_id')
-          .eq('user_id', user.id)
+          .eq('user.id', user.id)
           .maybeSingle();
 
         if (profileError) {
