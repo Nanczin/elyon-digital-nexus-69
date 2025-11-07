@@ -94,6 +94,7 @@ serve(async (req) => {
     // 3. Gerar o link de redefinição de senha
     const redirectTo = `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback?memberAreaId=${memberAreaId}`; // Pass memberAreaId to callback
     console.log('SEND_PASSWORD_RESET_EMAIL_DEBUG: RedirectTo para generateLink:', redirectTo);
+    console.log('SEND_PASSWORD_RESET_EMAIL_DEBUG: Email sendo passado para generateLink:', email); // NEW LOG
 
     const { data: { user, properties }, error: generateLinkError } = await supabase.auth.admin.generateLink(
       'password_reset',

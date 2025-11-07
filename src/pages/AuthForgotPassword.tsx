@@ -51,6 +51,18 @@ const AuthForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
 
+    const trimmedEmail = email.trim(); // Trim the email input
+
+    if (!trimmedEmail) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira seu endereço de e-mail.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     if (!memberAreaId) {
       toast({
         title: "Erro",
@@ -67,7 +79,7 @@ const AuthForgotPassword = () => {
         'send-password-reset-email',
         {
           body: {
-            email,
+            email: trimmedEmail, // Use the trimmed email
             memberAreaId,
           },
           method: 'POST',
