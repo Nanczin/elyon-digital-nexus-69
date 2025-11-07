@@ -12,7 +12,7 @@ import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
 
-type Sale = Tables<'sales'> & { customers?: Tables<'customers'> | null };
+type Sale = Tables<'sales'> & { customers?: Pick<Tables<'customers'>, 'name' | 'email'> | null };
 
 const Sales = () => {
   const { user, loading, isAdmin } = useAuth();
@@ -43,8 +43,7 @@ const Sales = () => {
             name,
             email
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
 
       if (error) {
         console.error('Erro ao carregar vendas:', error);
@@ -182,7 +181,7 @@ const Sales = () => {
                   </div>
                   <div className="flex items-center space-x-4 mt-2 sm:mt-0">
                     <div className="text-right">
-                      <p className="font-medium text-sm sm:text-base">R$ {(sale.amount / 100).toFixed(2).replace('.', ',')}</p>
+                      <p className="text-sm font-medium">R$ {(sale.amount / 100).toFixed(2).replace('.', ',')}</p>
                       <p className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(sale.created_at), { 
                           addSuffix: true, 

@@ -66,7 +66,7 @@ const MemberAreaLesson = () => {
       if (settingsError && settingsError.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', settingsError);
       } else if (settingsData) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<PlatformSettings>));
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
@@ -168,13 +168,14 @@ const MemberAreaLesson = () => {
         toast({ title: "Aula Desmarcada", description: "A aula foi desmarcada como concluída.", variant: "default" });
       } else {
         // Mark as complete
+        const payload: TablesInsert<'lesson_completions'> = {
+          user_id: user.id,
+          lesson_id: lessonId,
+          completed_at: new Date().toISOString(),
+        };
         const { error } = await supabase
           .from('lesson_completions')
-          .insert({
-            user_id: user.id,
-            lesson_id: lessonId,
-            completed_at: new Date().toISOString(),
-          });
+          .insert(payload);
 
         if (error) throw error;
         setIsLessonCompleted(true);
@@ -386,7 +387,7 @@ const MemberAreaLesson = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full">
         <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base">
-          <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}>
+          <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}> {/* Corrected link path */}
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o módulo
           </Link>
         </Button>

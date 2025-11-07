@@ -65,7 +65,7 @@ const MemberAreaModuleDetails = () => {
       if (settingsError && settingsError.code !== 'PGRST116') {
         console.error('Error fetching platform settings:', settingsError);
       } else if (settingsData) {
-        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<PlatformSettings>));
+        setSettings(deepMerge(getDefaultSettings(memberAreaId), { ...settingsData, colors: settingsData.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
       } else {
         setSettings(getDefaultSettings(memberAreaId));
       }
@@ -88,7 +88,7 @@ const MemberAreaModuleDetails = () => {
       // 4. Fetch Module details
       const { data: moduleData, error: moduleError } = await supabase
         .from('modules')
-        .select('*')
+        .select('*') // Select all columns
         .eq('id', moduleId)
         .eq('member_area_id', memberAreaId)
         .eq('status', 'published')
@@ -326,6 +326,11 @@ const MemberAreaModuleDetails = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Lesson Comments Section */}
+        <div className="mt-8">
+          <LessonComments lessonId={lessonId || ''} memberAreaId={memberAreaId || ''} />
+        </div>
       </div>
     </div>
   );

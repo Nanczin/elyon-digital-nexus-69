@@ -12,6 +12,7 @@ import { memberAreaSupabase } from '@/integrations/supabase/memberAreaClient';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 interface Comment {
   id: string;
@@ -45,6 +46,7 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    console.log('LESSON_COMMENTS_DEBUG: Fetching comments for lessonId:', lessonId);
     fetchComments();
     
     // Realtime listener for new comments
@@ -111,13 +113,15 @@ const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
 
     setSubmitting(true);
     try {
+      const payload: TablesInsert<'lesson_comments'> = {
+        lesson_id: lessonId,
+        user_id: user.id,
+        content: newComment.trim(),
+      };
+
       const { error } = await memberAreaSupabase
         .from('lesson_comments')
-        .insert({
-          lesson_id: lessonId,
-          user_id: user.id,
-          content: newComment.trim(),
-        });
+        .insert(payload);
 
       if (error) throw error;
 

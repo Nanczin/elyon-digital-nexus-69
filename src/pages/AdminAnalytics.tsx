@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast'; // Import useToast
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'; // Import recharts components
 import { format, subDays } from 'date-fns'; // Import date-fns utilities
 import { ptBR } from 'date-fns/locale'; // Import locale for date-fns
+import { Tables } from '@/integrations/supabase/types';
 
 interface AnalyticsStats {
   totalMembers: number;

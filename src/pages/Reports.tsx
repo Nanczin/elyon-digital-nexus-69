@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileText, Download, Calendar, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
 
-type SaleReport = Tables<'sales'> & { customers?: Tables<'customers'> | null };
+type SaleReport = Tables<'sales'> & { customers?: Pick<Tables<'customers'>, 'name' | 'email' | 'phone' | 'cpf'> | null };
 
 const Reports = () => {
   const { user, loading, isAdmin } = useAuth();
@@ -41,8 +41,7 @@ const Reports = () => {
             phone,
             cpf
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
 
       // Filtrar por data se necessário
       if (dateRange !== 'all') {

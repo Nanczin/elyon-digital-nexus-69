@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { deepMerge } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MemberAreaPreviewContent from '@/components/member-area/MemberAreaPreviewContent';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types';
 import { getDefaultSettings, PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada e tipos
 import { Separator } from '@/components/ui/separator'; // Import Separator
 

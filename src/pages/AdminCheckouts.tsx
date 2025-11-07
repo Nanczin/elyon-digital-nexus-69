@@ -22,7 +22,7 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables, CheckoutIntegrationsConfig, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables, CheckoutIntegrationsConfig, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { setNestedValue, deepMerge } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,7 +32,11 @@ import { cn } from '@/lib/utils';
 
 type MemberArea = Tables<'member_areas'>;
 type Product = Tables<'products'>;
-type Checkout = Tables<'checkouts'> & { products?: Tables<'products'> | null, member_areas?: Tables<'member_areas'> | null };
+type Checkout = Tables<'checkouts'> & { 
+  products?: Tables<'products'> | null, 
+  member_areas?: Tables<'member_areas'> | null,
+  activeIntegrations?: string[]; // Add activeIntegrations to Checkout type
+};
 
 
 const AdminCheckouts = () => {
@@ -248,12 +252,12 @@ const AdminCheckouts = () => {
       order_bumps: orderBumpsInReais,
       integrations: {
         ...initial.integrations,
-        ...(checkout.integrations || {}),
+        ...(checkout.integrations as Json || {}), // Cast to Json before spreading
         selectedEmailAccount: (checkout.integrations as CheckoutIntegrationsConfig)?.selectedEmailAccount || '',
       },
       support_contact: checkout.support_contact || initial.support_contact,
       styles: {
-        ...checkout.styles,
+        ...(checkout.styles as Json || {}), // Cast to Json before spreading
         description: (checkout.styles as any)?.description || checkout.products?.description || initial.styles.description,
         headlineText: (checkout.styles as any)?.headlineText || checkout.products?.name || initial.styles.headlineText,
         logo_url: (checkout.styles as any)?.logo_url || null, // NEW: Load existing logo URL
@@ -661,7 +665,7 @@ const AdminCheckouts = () => {
       
       const orderBumps = checkoutData.order_bumps.map((bump: any) => bump.id === bumpId ? {
         ...bump,
-        price: discountedPriceInReraias,
+        price: discountedPriceInReais, // Fixed typo here
         originalPrice: priceInReais,
         selectedProduct: product.id
       } : bump);

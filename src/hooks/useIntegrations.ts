@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { EmailConfig, Tables } from '@/integrations/supabase/types'; // Importar a interface EmailConfig e Tables
+import { EmailConfig, Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types'; // Importar a interface EmailConfig e Tables
 
 interface MercadoPagoAccount {
   id: string;

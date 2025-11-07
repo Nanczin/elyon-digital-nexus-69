@@ -261,7 +261,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
       toast({ title: "Erro", description: "Falha ao carregar módulos para permissões.", variant: "destructive" });
       console.error(error);
     } else {
-      setModules(data || []);
+      setModules(data as Module[] || []);
     }
   };
 

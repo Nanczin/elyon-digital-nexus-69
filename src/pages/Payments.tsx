@@ -7,7 +7,7 @@ import { CreditCard, Receipt, DollarSign, Calendar, TrendingUp } from 'lucide-re
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Tables } from '@/integrations/supabase/types';
+import { Tables, Json } from '@/integrations/supabase/types';
 
 type Payment = Tables<'payments'>;
 
@@ -212,10 +212,10 @@ const Payments = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="font-medium text-sm sm:text-base">
-                        {payment.metadata?.customer_data?.name || 'Cliente'}
+                        {(payment.metadata as any)?.customer_data?.name || 'Cliente'}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {payment.metadata?.customer_data?.email || 'Email não informado'}
+                        {(payment.metadata as any)?.customer_data?.email || 'Email não informado'}
                       </p>
                       <div className="flex flex-wrap items-center space-x-2 text-xs text-muted-foreground">
                         <span>{getPaymentMethodLabel(payment.payment_method)}</span>

@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Users, UserPlus, Mail, Phone, Trash2 } from 'lucide-react';
 import { NewCustomerDialog } from '@/components/dialogs/NewCustomerDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDistanceToNow } from 'date-fns'; // Corrected import
+import { formatDistanceToNow, startOfMonth } from 'date-fns'; // Corrected import
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
@@ -52,7 +52,7 @@ const Customers = () => {
       // Calcular estatísticas
       const total = data?.length || 0;
       const active = (data as Customer[] | null)?.filter(c => c.status === 'active').length || 0;
-      const newThisMonth = (data as Customer[] | null)?.filter(c => new Date(c.created_at) >= startOfMonth).length || 0;
+      const newThisMonth = (data as Customer[] | null)?.filter(c => new Date(c.created_at) >= startOfMonth(new Date())).length || 0;
       
       setStats({ total, active, newThisMonth });
       
