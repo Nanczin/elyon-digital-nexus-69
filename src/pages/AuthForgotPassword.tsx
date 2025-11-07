@@ -76,7 +76,7 @@ const AuthForgotPassword = () => {
     try {
       // Chamar a nova Edge Function para enviar o e-mail de redefinição personalizado
       const { data, error } = await supabase.functions.invoke(
-        'send-password-reset', // Nome da Edge Function
+        'send-password-reset', // Nome da Edge Function corrigido
         {
           body: { email: trimmedEmail },
           method: 'POST',
