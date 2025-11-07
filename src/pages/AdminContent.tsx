@@ -87,6 +87,7 @@ const ModuleFormDialog = ({
       setBannerUrl('');
       setStatus(false);
       setCurrentMemberAreaId(selectedMemberAreaId || '');
+      setBannerUrl(''); // Reset banner URL
       setSelectedProductId(null); // Resetar produto associado
       setCheckoutLink(''); // NOVO: Resetar link de checkout
     }
@@ -540,7 +541,7 @@ const ModulesList = ({ memberAreaId, onEditModule, onModuleDeleted, products }: 
         <Card key={module.id}>
           <CardContent className="p-4">
             {module.banner_url && (
-              <div className="aspect-video mb-3 rounded-lg overflow-hidden">
+              <div className="aspect-video mb-3 rounded-lg overflow-hidden h-64 sm:h-80 lg:h-96">
                 <img 
                   src={module.banner_url} 
                   alt={module.title}
@@ -997,7 +998,7 @@ const AdminContent = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                         <SelectItem key={module.id} value={module.id}>
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4" />
-                            {module.title} {/* Corrigido de module.name para module.title */}
+                            {module.title}
                           </div>
                         </SelectItem>
                       ))

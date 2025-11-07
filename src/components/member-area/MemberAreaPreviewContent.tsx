@@ -124,7 +124,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-56 sm:h-72"> {/* Aumentado o tamanho aqui */}
+                <div className="relative aspect-video w-full bg-gray-200 h-64 sm:h-80 lg:h-96"> {/* Aumentado o tamanho aqui */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
@@ -141,7 +141,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                     </div>
                   )}
                 </div>
-                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col flex-1"> {/* Alterado para flex-1 */}
+                <CardContent className="p-4 sm:p-6 space-y-2 sm:space-y-4 flex flex-col flex-1">
                   <h3 className="text-lg sm:text-xl font-bold" style={{ color: settings.colors?.text_cards || textColor }}>
                     {module.title}
                   </h3>

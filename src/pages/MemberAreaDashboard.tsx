@@ -356,7 +356,7 @@ const MemberAreaDashboard = () => {
                 className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl`}
                 style={{ backgroundColor: cardBackground, color: (currentSettings.colors as PlatformColors)?.text_cards || textColor }}
               >
-                <div className="relative aspect-video w-full bg-gray-200 h-56 sm:h-72">
+                <div className="relative aspect-video w-full bg-gray-200 h-64 sm:h-80 lg:h-96">
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
