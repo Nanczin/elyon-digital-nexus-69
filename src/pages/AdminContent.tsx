@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
+import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Importar Collapsible
@@ -115,7 +115,7 @@ const ModuleFormDialog = ({
         finalBannerUrl = await uploadFile(bannerFile, 'module-banners');
       }
 
-      const payload = {
+      const payload: TablesInsert<'modules'> = {
         user_id: user.id,
         member_area_id: currentMemberAreaId,
         title,
@@ -130,7 +130,7 @@ const ModuleFormDialog = ({
       if (editingModule) {
         const { error } = await supabase
           .from('modules')
-          .update(payload)
+          .update(payload as TablesUpdate<'modules'>) // Cast to Update type
           .eq('id', editingModule.id);
         if (error) throw error;
         toast({ title: "Sucesso", description: "Módulo atualizado!" });
@@ -341,7 +341,7 @@ const LessonFormDialog = ({
         return;
       }
 
-      const payload = {
+      const payload: TablesInsert<'lessons'> = {
         module_id: moduleId,
         title,
         description: description.trim(), // Apply trim here
@@ -356,7 +356,7 @@ const LessonFormDialog = ({
       if (editingLesson) {
         const { error } = await supabase
           .from('lessons')
-          .update(payload)
+          .update(payload as TablesUpdate<'lessons'>) // Cast to Update type
           .eq('id', editingLesson.id);
         if (error) throw error;
         toast({ title: "Sucesso", description: "Aula atualizada!" });
@@ -668,16 +668,16 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
     });
   };
 
-  const renderLessonContent = (lesson: Lesson) => {
-    if (!lesson.content_url && !lesson.text_content) {
+  const renderLessonContent = (currentLesson: Lesson) => {
+    if (!currentLesson.content_url && !currentLesson.text_content) {
       return <p className="text-muted-foreground text-sm">Nenhum conteúdo para esta aula.</p>;
     }
 
-    switch (lesson.content_type) {
+    switch (currentLesson.content_type) {
       case 'video_link':
         // Embed YouTube/Vimeo links
-        const youtubeMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
-        const vimeoMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
+        const youtubeMatch = currentLesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
+        const vimeoMatch = currentLesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
 
         if (youtubeMatch && youtubeMatch[1]) {
           return (
@@ -688,7 +688,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title={lesson.title}
+                title={currentLesson.title}
               ></iframe>
             </div>
           );
@@ -701,7 +701,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
                 frameBorder="0"
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
-                title={lesson.title}
+                title={currentLesson.title}
               ></iframe>
             </div>
           );
@@ -711,7 +711,7 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
       case 'video_upload':
         return (
           <video controls className="w-full h-auto rounded-lg">
-            <source src={lesson.content_url || ''} type="video/mp4" />
+            <source src={currentLesson.content_url || ''} type="video/mp4" />
             Seu navegador não suporta a tag de vídeo.
           </video>
         );
@@ -721,20 +721,20 @@ const LessonsList = ({ moduleId, onEditLesson, onLessonDeleted }: { moduleId: st
           <div className="relative w-full" style={{ paddingTop: '100%' }}> {/* 1:1 aspect ratio for PDF */}
             <iframe
               className="absolute top-0 left-0 w-full h-full rounded-lg"
-              src={lesson.content_url || ''}
+              src={currentLesson.content_url || ''}
               frameBorder="0"
-              title={lesson.title}
+              title={currentLesson.title}
             ></iframe>
           </div>
         );
 
       case 'image_upload':
         return (
-          <img src={lesson.content_url || ''} alt={lesson.title} className="w-full h-auto object-contain rounded-lg" />
+          <img src={currentLesson.content_url || ''} alt={currentLesson.title} className="w-full h-auto object-contain rounded-lg" />
         );
 
       case 'text_content':
-        return <div dangerouslySetInnerHTML={{ __html: lesson.text_content || '' }} className="prose prose-sm max-w-none" />;
+        return <div dangerouslySetInnerHTML={{ __html: currentLesson.text_content || '' }} className="prose prose-sm max-w-none" />;
 
       default:
         return <p className="text-muted-foreground text-sm">Tipo de conteúdo desconhecido.</p>;

@@ -10,24 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
 
-interface SaleReport {
-  id: string;
-  created_at: string;
-  product_name: string;
-  amount: number;
-  net_amount: number;
-  commission_amount: number;
-  payment_method: string;
-  status: string;
-  order_bumps: any;
-  customers?: {
-    name: string;
-    email: string;
-    phone?: string;
-    cpf?: string;
-  };
-}
+type SaleReport = Tables<'sales'> & { customers?: Tables<'customers'> | null };
 
 const Reports = () => {
   const { user, loading, isAdmin } = useAuth();

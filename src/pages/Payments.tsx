@@ -7,16 +7,9 @@ import { CreditCard, Receipt, DollarSign, Calendar, TrendingUp } from 'lucide-re
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Payment {
-  id: string;
-  amount: number;
-  status: string;
-  payment_method: string;
-  created_at: string;
-  mp_payment_status?: string;
-  metadata: any;
-}
+type Payment = Tables<'payments'>;
 
 const Payments = () => {
   const { user, loading, isAdmin } = useAuth();
@@ -56,9 +49,9 @@ const Payments = () => {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       
       const total = data?.length || 0;
-      const completed = data?.filter(p => p.status === 'completed').length || 0;
-      const totalAmount = data?.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0) || 0;
-      const thisMonth = data?.filter(p => 
+      const completed = (data as Payment[] | null)?.filter(p => p.status === 'completed').length || 0;
+      const totalAmount = (data as Payment[] | null)?.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0) || 0;
+      const thisMonth = (data as Payment[] | null)?.filter(p => 
         p.status === 'completed' && new Date(p.created_at) >= startOfMonth
       ).reduce((sum, p) => sum + p.amount, 0) || 0;
       

@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { deepMerge } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MemberAreaPreviewContent from '@/components/member-area/MemberAreaPreviewContent';
-import { Tables } from '@/integrations/supabase/types';
+import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { getDefaultSettings, PlatformSettings, PlatformColors } from '@/hooks/useGlobalPlatformSettings'; // Importar a função centralizada e tipos
 import { Separator } from '@/components/ui/separator'; // Import Separator
 
@@ -68,7 +68,7 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
       toast({ title: "Erro", description: "Falha ao carregar configurações de design.", variant: "destructive" });
       console.error(error);
     } else if (data) {
-      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...data, colors: data.colors as PlatformColors | null } as Partial<PlatformSettings>));
+      setSettings(deepMerge(getDefaultSettings(currentMemberAreaId!, user?.id || null), { ...data, colors: data.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>) as PlatformSettings);
     } else {
       setSettings(getDefaultSettings(currentMemberAreaId!, user?.id || null));
     }
@@ -142,21 +142,21 @@ const AdminDesign = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: string
         newLogoUrl = await uploadFile(logoFile, 'platform-logos');
       }
 
-      const payload = {
-        user_id: user?.id,
-        member_area_id: currentMemberAreaId,
+      const payload: TablesInsert<'platform_settings'> = {
+        user_id: user?.id || null,
+        member_area_id: currentMemberAreaId!,
         logo_url: newLogoUrl,
         login_title: settings.login_title,
         login_subtitle: settings.login_subtitle,
         global_font_family: settings.global_font_family,
-        colors: settings.colors,
+        colors: settings.colors as Json,
         password_reset_subject: settings.password_reset_subject, // NEW
         password_reset_body: settings.password_reset_body,       // NEW
       };
 
       const { error } = await supabase
         .from('platform_settings')
-        .upsert(payload, { onConflict: 'member_area_id' });
+        .upsert(payload as TablesUpdate<'platform_settings'>, { onConflict: 'member_area_id' });
 
       if (error) throw error;
 

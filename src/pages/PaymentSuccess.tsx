@@ -12,7 +12,7 @@ import nubankLogo from '@/assets/banks/nubank-logo.png';
 import itauLogo from '@/assets/banks/itau-logo.png';
 import bradescoLogo from '@/assets/banks/bradesco-logo.png';
 import santanderLogo from '@/assets/banks/santander-logo.png';
-import { DeliverableConfig, FormFields, PackageConfig } from '@/integrations/supabase/types';
+import { DeliverableConfig, FormFields, PackageConfig, Tables } from '@/integrations/supabase/types';
 import { CheckoutData } from '@/components/checkout/CheckoutLayoutProps';
 
 const PaymentSuccess = () => {
@@ -75,7 +75,7 @@ const PaymentSuccess = () => {
 
   const fetchAndVerifyPayment = async (mpIdToCheck: string) => {
     console.log('PAYMENT_SUCCESS_DEBUG: 7. Starting fetchAndVerifyPayment for MP ID:', mpIdToCheck);
-    let fetchedPaymentFromDb: any = null;
+    let fetchedPaymentFromDb: Tables<'payments'> | null = null;
 
     try {
       console.log('PAYMENT_SUCCESS_DEBUG: 9. Invoking verify-mercado-pago-payment for MP ID:', mpIdToCheck);
@@ -129,9 +129,9 @@ const PaymentSuccess = () => {
 
     if (fetchedPaymentFromDb) {
       console.log('PAYMENT_SUCCESS_DEBUG: 20. Processing fetchedPaymentFromDb for product/deliverable data.');
-      const currentProduct = fetchedPaymentFromDb.checkouts?.products as CheckoutData['products'] || null;
+      const currentProduct = (fetchedPaymentFromDb.metadata as any)?.checkouts?.products as CheckoutData['products'] || null;
       const emailTransactionalDeliverableLink = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.deliverableLink || null;
-      const currentCheckoutDeliverableConfig = fetchedPaymentFromDb.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
+      const currentCheckoutDeliverableConfig = (fetchedPaymentFromDb.metadata as any)?.checkouts?.form_fields?.deliverable as DeliverableConfig || null;
       const currentSendTransactionalEmail = (fetchedPaymentFromDb.metadata as any)?.email_transactional_data?.sendTransactionalEmail ?? true;
       
       // Get package-specific deliverable from fetched payment // REMOVIDO

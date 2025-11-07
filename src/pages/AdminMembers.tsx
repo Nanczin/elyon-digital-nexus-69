@@ -14,9 +14,13 @@ import { UserPlus, Users, Lock, Unlock, Copy, ExternalLink, Trash2, Edit } from 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+
+type Profile = Tables<'profiles'> & { member_access?: { module_id: string }[] | null };
+type Module = Tables<'modules'>;
 
 // Componente para adicionar/editar membro
-const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { member?: any, onSave: () => void, modules: any[], memberAreaId: string, onClose: () => void }) => {
+const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { member?: Profile, onSave: () => void, modules: Module[], memberAreaId: string, onClose: () => void }) => {
   const [name, setName] = useState(member?.name || '');
   const [email, setEmail] = useState(member?.email || '');
   const [password, setPassword] = useState('');
@@ -30,8 +34,8 @@ const MemberFormDialog = ({ member, onSave, modules, memberAreaId, onClose }: { 
 
   useEffect(() => {
     if (member) {
-      setName(member.name);
-      setEmail(member.email);
+      setName(member.name || '');
+      setEmail(member.email || '');
       setIsActive(member.status === 'active');
       // Ajustado para ler de member.member_access
       setSelectedModules(member?.member_access?.map((ma: any) => ma.module_id) || []);
@@ -211,10 +215,10 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
   const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
   const currentMemberAreaId = propMemberAreaId || urlMemberAreaId;
 
-  const [members, setMembers] = useState<any[]>([]);
-  const [modules, setModules] = useState<any[]>([]);
+  const [members, setMembers] = useState<Profile[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
-  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [editingMember, setEditingMember] = useState<Profile | null>(null);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -287,7 +291,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
     }
   };
 
-  const handleEditMember = (member: any) => {
+  const handleEditMember = (member: Profile) => {
     setEditingMember(member);
     setIsFormDialogOpen(true);
   };
@@ -363,7 +367,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
           ) : (
             <div className="space-y-4">
               {members.map(member => (
-                <div key={member.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-3 sm:gap-0">
+                <div key={member.user_id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-3 sm:gap-0">
                   <div className="flex items-center space-x-3 sm:space-x-4">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={member.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.name}`} />
@@ -399,7 +403,7 @@ const AdminMembers = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: strin
                         </AlertDialogHeader>
                         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
                           <AlertDialogCancel className="text-xs sm:text-sm">Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteMember(member.user_id, member.name)} className="text-xs sm:text-sm">
+                          <AlertDialogAction onClick={() => handleDeleteMember(member.user_id, member.name || 'Membro')} className="text-xs sm:text-sm">
                             Excluir
                           </AlertDialogAction>
                         </AlertDialogFooter>

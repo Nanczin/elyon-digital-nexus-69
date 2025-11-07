@@ -4,6 +4,12 @@ import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingCart, Users, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
+
+// Define types for fetched data
+type Sale = Tables<'sales'> & { customers?: Tables<'customers'> | null };
+type Customer = Tables<'customers'>;
+type Checkout = Tables<'checkouts'>;
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -12,8 +18,8 @@ const AdminDashboard = () => {
     approvedSales: 0,
     totalCustomers: 0,
     totalCheckouts: 0,
-    recentSales: [] as any[],
-    topProducts: [] as any[]
+    recentSales: [] as Sale[],
+    topProducts: [] as { name: string; count: number; revenue: number }[]
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -42,16 +48,16 @@ const AdminDashboard = () => {
         .from('checkouts')
         .select('id');
 
-      const totalRevenue = salesData?.reduce((sum, sale) => sum + sale.amount, 0) || 0;
-      const approvedSales = salesData?.filter(sale => sale.status === 'completed').length || 0;
+      const totalRevenue = (salesData as Sale[] | null)?.reduce((sum, sale) => sum + sale.amount, 0) || 0;
+      const approvedSales = (salesData as Sale[] | null)?.filter(sale => sale.status === 'completed').length || 0;
       const totalCustomers = customersData?.length || 0;
       const totalCheckouts = checkoutsData?.length || 0;
 
       // Vendas recentes (últimas 5)
-      const recentSales = salesData?.slice(0, 5) || [];
+      const recentSales = (salesData as Sale[] | null)?.slice(0, 5) || [];
 
       // Produtos mais vendidos
-      const productSales = salesData?.reduce((acc, sale) => {
+      const productSales = (salesData as Sale[] | null)?.reduce((acc, sale) => {
         const productName = sale.product_name;
         if (!acc[productName]) {
           acc[productName] = { name: productName, count: 0, revenue: 0 };

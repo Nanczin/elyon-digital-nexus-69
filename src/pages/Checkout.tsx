@@ -9,7 +9,7 @@ import HorizontalLayout from '@/components/checkout/HorizontalLayout';
 import MosaicLayout from '@/components/checkout/MosaicLayout';
 import { createCardToken } from '@mercadopago/sdk-react';
 import { toCents } from '@/utils/textFormatting';
-import { DeliverableConfig, FormFields, PackageConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
+import { DeliverableConfig, FormFields, PackageConfig, Tables } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
 
 const Checkout = () => {
   const { checkoutId } = useParams();
@@ -526,7 +526,7 @@ const Checkout = () => {
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Não foi possível processar o pedido",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setProcessing(false);

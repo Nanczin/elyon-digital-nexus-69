@@ -15,6 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkAdminStatus = async (userId: string) => {
       try {
+        // Correctly type the RPC call for 'is_admin'
         const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
         if (error) {
           console.error('AUTH_DEBUG: Error checking admin status via RPC:', error);

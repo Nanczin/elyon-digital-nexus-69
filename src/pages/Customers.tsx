@@ -12,19 +12,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns'; // Corrected import
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  cpf?: string;
-  created_at: string;
-  last_purchase?: string;
-  total_spent: number;
-  purchase_count: number;
-  status: string;
-}
+type Customer = Tables<'customers'>;
 
 const Customers = () => {
   const { user, loading, isAdmin } = useAuth();
@@ -60,12 +50,9 @@ const Customers = () => {
       setCustomers(data || []);
       
       // Calcular estatísticas
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
       const total = data?.length || 0;
-      const active = data?.filter(c => c.status === 'active').length || 0;
-      const newThisMonth = data?.filter(c => new Date(c.created_at) >= startOfMonth).length || 0;
+      const active = (data as Customer[] | null)?.filter(c => c.status === 'active').length || 0;
+      const newThisMonth = (data as Customer[] | null)?.filter(c => new Date(c.created_at) >= startOfMonth).length || 0;
       
       setStats({ total, active, newThisMonth });
       

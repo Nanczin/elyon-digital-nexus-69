@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { EmailConfig as SimplifiedEmailConfig } from '@/integrations/supabase/types'; // Importar a interface simplificada
+import { EmailConfig, Tables } from '@/integrations/supabase/types'; // Importar a interface EmailConfig e Tables
 
 interface MercadoPagoAccount {
   id: string;
@@ -27,12 +27,14 @@ interface UTMifyConfig {
   customDomain?: string;
 }
 
+type IntegrationRow = Tables<'integrations'>;
+
 export const useIntegrations = () => {
   const { user } = useAuth();
   const [mercadoPagoAccounts, setMercadoPagoAccounts] = useState<MercadoPagoAccount[]>([]);
   const [metaPixels, setMetaPixels] = useState<MetaPixel[]>([]);
   const [utmifyConfig, setUtmifyConfig] = useState<UTMifyConfig | null>(null);
-  const [emailConfig, setEmailConfig] = useState<SimplifiedEmailConfig | null>(null); // Usar a interface simplificada
+  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null); // Usar a interface simplificada
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export const useIntegrations = () => {
           'email' in data.smtp_config && 
           'appPassword' in data.smtp_config && 
           'displayName' in data.smtp_config
-            ? (data.smtp_config as unknown as SimplifiedEmailConfig) 
+            ? (data.smtp_config as unknown as EmailConfig) 
             : null
         );
       }
@@ -114,12 +116,12 @@ export const useIntegrations = () => {
     mercadoPagoAccounts: MercadoPagoAccount[];
     metaPixels: MetaPixel[];
     utmifyConfig: UTMifyConfig | null;
-    emailConfig: SimplifiedEmailConfig | null; // Usar a interface simplificada
+    emailConfig: EmailConfig | null; // Usar a interface simplificada
   }>) => {
     if (!user) return;
 
     try {
-      const integrationData: any = {};
+      const integrationData: TablesUpdate<'integrations'> = {};
 
       if (updates.mercadoPagoAccounts !== undefined) {
         const account = updates.mercadoPagoAccounts[0];
@@ -140,7 +142,7 @@ export const useIntegrations = () => {
       }
 
       if (updates.emailConfig !== undefined) {
-        integrationData.smtp_config = updates.emailConfig || {}; // Salvar a nova estrutura
+        integrationData.smtp_config = updates.emailConfig as Json || null; // Salvar a nova estrutura
         setEmailConfig(updates.emailConfig);
       }
 
@@ -169,7 +171,7 @@ export const useIntegrations = () => {
           .insert({
             user_id: user.id,
             ...integrationData
-          });
+          } as TablesInsert<'integrations'>); // Cast to Insert type
 
         if (error) {
           console.error('Erro ao criar integrações:', error);

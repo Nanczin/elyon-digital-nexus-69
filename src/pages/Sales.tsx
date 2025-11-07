@@ -10,21 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Sale {
-  id: string;
-  customer_id: string;
-  product_name: string;
-  amount: number;
-  created_at: string;
-  status: string;
-  payment_method: string;
-  net_amount: number;
-  customers?: {
-    name: string;
-    email: string;
-  };
-}
+type Sale = Tables<'sales'> & { customers?: Tables<'customers'> | null };
 
 const Sales = () => {
   const { user, loading, isAdmin } = useAuth();
@@ -71,8 +59,8 @@ const Sales = () => {
       setSales(data || []);
       
       // Calcular estatísticas
-      const totalRevenue = data?.reduce((sum, sale) => sum + sale.amount, 0) || 0;
-      const salesCount = data?.length || 0;
+      const totalRevenue = (data as Sale[] | null)?.reduce((sum, sale) => sum + sale.amount, 0) || 0;
+      const salesCount = (data as Sale[] | null)?.length || 0;
       const averageTicket = salesCount > 0 ? Math.round(totalRevenue / salesCount) : 0;
       
       setStats({ totalRevenue, salesCount, averageTicket });

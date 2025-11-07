@@ -22,7 +22,7 @@ import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables, CheckoutIntegrationsConfig } from '@/integrations/supabase/types';
+import { DeliverableConfig, FormFields, PackageConfig, GuaranteeConfig, ReservedRightsConfig, Tables, CheckoutIntegrationsConfig, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { setNestedValue, deepMerge } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,6 +32,8 @@ import { cn } from '@/lib/utils';
 
 type MemberArea = Tables<'member_areas'>;
 type Product = Tables<'products'>;
+type Checkout = Tables<'checkouts'> & { products?: Tables<'products'> | null, member_areas?: Tables<'member_areas'> | null };
+
 
 const AdminCheckouts = () => {
   const {
@@ -51,8 +53,8 @@ const AdminCheckouts = () => {
   } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingCheckout, setEditingCheckout] = useState<any>(null);
-  const [checkouts, setCheckouts] = useState<any[]>([]);
+  const [editingCheckout, setEditingCheckout] = useState<Checkout | null>(null);
+  const [checkouts, setCheckouts] = useState<Checkout[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
   const [currentTab, setCurrentTab] = useState('basic');
@@ -144,7 +146,6 @@ const AdminCheckouts = () => {
         color: '#dc2626',
         text: 'Oferta por tempo limitado'
       },
-      member_area_id: '' as string | null,
       products: { // Default product structure for preview
         id: '',
         name: '',
@@ -180,7 +181,7 @@ const AdminCheckouts = () => {
     showToast: false
   });
   
-  const loadOriginalCheckoutData = useCallback((checkout: any) => {
+  const loadOriginalCheckoutData = useCallback((checkout: Checkout) => {
     const initial = getInitialFormData();
 
     // Convert prices from cents to reais
@@ -188,7 +189,7 @@ const AdminCheckouts = () => {
     const promotionalPriceInReais = checkout.promotional_price ? checkout.promotional_price / 100 : 0;
     
     // Convert order bumps from cents to reais
-    const orderBumpsInReais = Array.isArray(checkout.order_bumps) ? checkout.order_bumps.map((bump: any) => ({
+    const orderBumpsInReais = Array.isArray(checkout.order_bumps) ? (checkout.order_bumps as any[]).map((bump: any) => ({
       ...bump,
       price: bump.price !== undefined && bump.price !== null ? bump.price / 100 : 0, // Default to 0 if not explicitly set
       originalPrice: bump.originalPrice !== undefined && bump.originalPrice !== null ? bump.originalPrice / 100 : 0, // Default to 0 if not explicitly set
@@ -208,7 +209,7 @@ const AdminCheckouts = () => {
     })) : initial.form_fields.packages;
 
     // Definir o arquivo selecionado localmente se houver um fileUrl existente
-    if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
+    if ((checkout.form_fields as FormFields)?.deliverable?.fileUrl && (checkout.form_fields as FormFields)?.deliverable?.type === 'upload') {
       setCheckoutDeliverableFile(null);
     }
     // NEW: Set checkoutLogoFile to null when loading original data
@@ -222,41 +223,41 @@ const AdminCheckouts = () => {
 
     return deepMerge(initial, {
       name: checkout.name || checkout.products?.name || '',
-      layout: 'horizontal',
+      layout: checkout.layout || 'horizontal',
       form_fields: {
-        requireName: checkout.form_fields?.requireName ?? true,
-        requireCpf: checkout.form_fields?.requireCpf ?? true,
-        requirePhone: checkout.form_fields?.requirePhone ?? true,
-        requireEmail: checkout.form_fields?.requireEmail ?? true,
-        requireEmailConfirm: checkout.form_fields?.requireEmailConfirm ?? true,
+        requireName: (checkout.form_fields as FormFields)?.requireName ?? true,
+        requireCpf: (checkout.form_fields as FormFields)?.requireCpf ?? true,
+        requirePhone: (checkout.form_fields as FormFields)?.requirePhone ?? true,
+        requireEmail: (checkout.form_fields as FormFields)?.requireEmail ?? true,
+        requireEmailConfirm: (checkout.form_fields as FormFields)?.requireEmailConfirm ?? true,
         packages: packagesConfig,
-        guarantee: (checkout.form_fields?.guarantee as GuaranteeConfig) || initial.form_fields.guarantee,
-        reservedRights: (checkout.form_fields?.reservedRights as ReservedRightsConfig) || initial.form_fields.reservedRights,
+        guarantee: ((checkout.form_fields as FormFields)?.guarantee as GuaranteeConfig) || initial.form_fields.guarantee,
+        reservedRights: ((checkout.form_fields as FormFields)?.reservedRights as ReservedRightsConfig) || initial.form_fields.reservedRights,
         deliverable: {
-          type: checkout.form_fields?.deliverable?.type || 'none',
-          link: checkout.form_fields?.deliverable?.link || null,
-          fileUrl: checkout.form_fields?.deliverable?.fileUrl || null,
-          name: checkout.form_fields?.deliverable?.name || null,
-          description: checkout.form_fields?.deliverable?.description || null
+          type: (checkout.form_fields as FormFields)?.deliverable?.type || 'none',
+          link: (checkout.form_fields as FormFields)?.deliverable?.link || null,
+          fileUrl: (checkout.form_fields as FormFields)?.deliverable?.fileUrl || null,
+          name: (checkout.form_fields as FormFields)?.deliverable?.name || null,
+          description: (checkout.form_fields as FormFields)?.deliverable?.description || null
         },
-        sendTransactionalEmail: checkout.form_fields?.sendTransactionalEmail ?? true,
-        transactionalEmailSubject: checkout.form_fields?.transactionalEmailSubject || initial.form_fields.transactionalEmailSubject,
-        transactionalEmailBody: checkout.form_fields?.transactionalEmailBody || initial.form_fields.transactionalEmailBody,
+        sendTransactionalEmail: (checkout.form_fields as FormFields)?.sendTransactionalEmail ?? true,
+        transactionalEmailSubject: (checkout.form_fields as FormFields)?.transactionalEmailSubject || initial.form_fields.transactionalEmailSubject,
+        transactionalEmailBody: (checkout.form_fields as FormFields)?.transactionalEmailBody || initial.form_fields.transactionalEmailBody,
       },
       payment_methods: checkout.payment_methods || initial.payment_methods,
       order_bumps: orderBumpsInReais,
       integrations: {
         ...initial.integrations,
         ...(checkout.integrations || {}),
-        selectedEmailAccount: checkout.integrations?.selectedEmailAccount || '',
+        selectedEmailAccount: (checkout.integrations as CheckoutIntegrationsConfig)?.selectedEmailAccount || '',
       },
       support_contact: checkout.support_contact || initial.support_contact,
       styles: {
         ...checkout.styles,
-        description: checkout.styles?.description || checkout.products?.description || initial.styles.description,
-        headlineText: checkout.styles?.headlineText || checkout.products?.name || initial.styles.headlineText,
-        logo_url: checkout.styles?.logo_url || null, // NEW: Load existing logo URL
-        banner_url: checkout.styles?.banner_url || null, // NEW: Load existing banner URL
+        description: (checkout.styles as any)?.description || checkout.products?.description || initial.styles.description,
+        headlineText: (checkout.styles as any)?.headlineText || checkout.products?.name || initial.styles.headlineText,
+        logo_url: (checkout.styles as any)?.logo_url || null, // NEW: Load existing logo URL
+        banner_url: (checkout.styles as any)?.banner_url || null, // NEW: Load existing banner URL
       },
       timer: checkout.timer || initial.timer,
       member_area_id: checkout.member_area_id || null,
@@ -373,7 +374,7 @@ const AdminCheckouts = () => {
         };
       }) || [];
 
-      setCheckouts(processedCheckouts);
+      setCheckouts(processedCheckouts as Checkout[]);
     } catch (error) {
       console.error('Erro ao carregar checkouts:', error);
       toast({
@@ -465,7 +466,7 @@ const AdminCheckouts = () => {
       });
     }
   };
-  const handleEdit = (checkout: any) => {
+  const handleEdit = (checkout: Checkout) => {
     setEditingCheckout(checkout);
     
     // Atualizar a chave do auto-save para o checkout específico
@@ -559,7 +560,7 @@ const AdminCheckouts = () => {
     handleInputChange('form_fields.packages', newPackages);
   };
   const removePackage = (id: number) => {
-    const newPackages = checkoutData.form_fields.packages.filter(pkg => pkg.id !== id);
+    const newPackages = checkoutData.form_fields.packages.filter((pkg: PackageConfig) => pkg.id !== id);
     if (newPackages.length === 0) {
       toast({ title: "Erro", description: "Deve haver pelo menos um pacote.", variant: "destructive" });
       return;
@@ -621,20 +622,20 @@ const AdminCheckouts = () => {
     handleInputChange('order_bumps', newOrderBumps);
   };
   const removeOrderBump = (id: number) => {
-    const newOrderBumps = checkoutData.order_bumps.filter(bump => bump.id !== id);
+    const newOrderBumps = checkoutData.order_bumps.filter((bump: any) => bump.id !== id);
     handleInputChange('order_bumps', newOrderBumps);
   };
   const updateOrderBump = (id: number, field: string, value: any) => {
-    const orderBumps = checkoutData.order_bumps.map(bump => bump.id === id ? {
+    const orderBumps = checkoutData.order_bumps.map((bump: any) => bump.id === id ? {
       ...bump,
       [field]: value
     } : bump);
     handleInputChange('order_bumps', orderBumps);
   };
-  const loadProductAsOrderBump = (bumpId: number, productData: any) => {
+  const loadProductAsOrderBump = (bumpId: number, productData: string) => {
     if (productData === 'manual') {
       // Reset to manual configuration
-      const orderBumps = checkoutData.order_bumps.map(bump => bump.id === bumpId ? {
+      const orderBumps = checkoutData.order_bumps.map((bump: any) => bump.id === bumpId ? {
         ...bump,
         price: 0,
         originalPrice: 0,
@@ -658,9 +659,9 @@ const AdminCheckouts = () => {
         discountedPrice: discountedPriceInReais
       });
       
-      const orderBumps = checkoutData.order_bumps.map(bump => bump.id === bumpId ? {
+      const orderBumps = checkoutData.order_bumps.map((bump: any) => bump.id === bumpId ? {
         ...bump,
-        price: discountedPriceInReais,
+        price: discountedPriceInReraias,
         originalPrice: priceInReais,
         selectedProduct: product.id
       } : bump);
@@ -779,17 +780,17 @@ const AdminCheckouts = () => {
       }
 
 
-      const checkoutPayload = {
-        user_id: user?.id,
+      const checkoutPayload: TablesInsert<'checkouts'> = {
+        user_id: user?.id || null,
         member_area_id: checkoutData.member_area_id || null,
         name: checkoutData.name,
         // product_id agora é derivado do primeiro pacote
-        product_id: checkoutData.form_fields.packages[0]?.associatedProductIds?.[0] || null,
+        product_id: checkoutData.form_fields.packages[0]?.associatedProductIds?.[0] || '', // Must be non-null string
         price: Math.round(checkoutData.form_fields.packages[0]?.price * 100) || 0,
         promotional_price: checkoutData.form_fields.packages[0]?.originalPrice ? Math.round(checkoutData.form_fields.packages[0].originalPrice * 100) : null,
         form_fields: {
           ...checkoutData.form_fields,
-          packages: checkoutData.form_fields.packages.map(pkg => ({
+          packages: checkoutData.form_fields.packages.map((pkg: PackageConfig) => ({
             ...pkg,
             price: Math.round(pkg.price * 100),
             originalPrice: Math.round((pkg.originalPrice || 0) * 100)
@@ -797,7 +798,7 @@ const AdminCheckouts = () => {
           deliverable: finalCheckoutDeliverable
         },
         payment_methods: checkoutData.payment_methods,
-        order_bumps: checkoutData.order_bumps.map(bump => ({
+        order_bumps: checkoutData.order_bumps.map((bump: any) => ({
           ...bump,
           price: Math.round(bump.price * 100),
           originalPrice: Math.round((bump.originalPrice || 0) * 100)
@@ -807,7 +808,7 @@ const AdminCheckouts = () => {
           logo_url: finalLogoUrl, // NEW: Save final logo URL
           banner_url: finalBannerUrl, // NEW: Save final banner URL
         },
-        layout: 'horizontal',
+        layout: checkoutData.layout,
         support_contact: checkoutData.support_contact,
         integrations: checkoutData.integrations,
         timer: checkoutData.timer || null
@@ -1217,7 +1218,7 @@ const AdminCheckouts = () => {
                     </Button>
                   </div>
                   
-                  {checkoutData.order_bumps.map((bump, index) => (
+                  {checkoutData.order_bumps.map((bump: any, index: number) => (
                     <Card key={bump.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold flex items-center gap-2">
@@ -2026,9 +2027,9 @@ const AdminCheckouts = () => {
                           </DropdownMenu>
                         </div>
                         <p className="text-muted-foreground text-xs sm:text-sm mb-2 line-clamp-2">
-                          {checkout.styles?.description || checkout.products?.description || 'Nenhuma descrição'}
+                          {(checkout.styles as any)?.description || checkout.products?.description || 'Nenhuma descrição'}
                         </p>
-                        {checkout.member_area_id && checkout.member_areas?.name && (
+                        {checkout.member_areas?.name && (
                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
                              <MonitorDot className="h-3 w-3" />
                              <span>Área: {checkout.member_areas.name}</span>

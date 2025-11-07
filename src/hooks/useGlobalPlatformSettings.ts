@@ -90,9 +90,9 @@ export const useGlobalPlatformSettings = () => {
         // Explicitly cast data.colors to PlatformColors
         const mergedData = deepMerge(
           getDefaultSettings(currentMemberAreaId),
-          { ...data, colors: data.colors as PlatformColors | null } as Partial<PlatformSettings>
+          { ...data, colors: data.colors as PlatformColors | null } as Partial<Tables<'platform_settings'>>
         );
-        setSettings(mergedData);
+        setSettings(mergedData as PlatformSettings);
       } else {
         setSettings(getDefaultSettings(currentMemberAreaId)); // Use default if no settings found
       }

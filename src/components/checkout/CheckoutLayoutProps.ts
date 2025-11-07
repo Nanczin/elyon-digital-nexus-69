@@ -1,6 +1,6 @@
 // Shared types for checkout layouts
 import { CardData } from './CreditCardForm';
-import { DeliverableConfig, PackageConfig, GuaranteeConfig, ReservedRightsConfig } from '@/integrations/supabase/types'; // Importar DeliverableConfig e os novos tipos
+import { DeliverableConfig, PackageConfig, GuaranteeConfig, ReservedRightsConfig, FormFields as SupabaseFormFields } from '@/integrations/supabase/types'; // Importar DeliverableConfig e os novos tipos
 
 export interface OrderBump {
   id: number;
@@ -12,8 +12,8 @@ export interface OrderBump {
     id: string;
     name: string;
     description: string;
-    banner_url: string;
-    logo_url: string;
+    banner_url: string | null;
+    logo_url: string | null;
   } | null;
 }
 
@@ -25,19 +25,8 @@ export interface PaymentMethods {
 }
 
 // Atualizado para usar os tipos aninhados
-export interface FormFields {
-  requireName?: boolean;
-  requireEmail?: boolean;
-  requireEmailConfirm?: boolean;
-  requirePhone?: boolean;
-  requireCpf?: boolean;
-  packages?: PackageConfig[]; // Usar o novo tipo PackageConfig
-  deliverable?: DeliverableConfig; // Usar o tipo DeliverableConfig (this is the checkout-level deliverable)
-  sendTransactionalEmail?: boolean; // Adicionado para controlar o envio de e-mail transacional
-  transactionalEmailSubject?: string; // Novo campo para o assunto do e-mail
-  transactionalEmailBody?: string; // Novo campo para o corpo do e-mail
-  guarantee?: GuaranteeConfig; // Adicionado
-  reservedRights?: ReservedRightsConfig; // Adicionado
+export interface FormFields extends SupabaseFormFields {
+  // All fields are now inherited from SupabaseFormFields
 }
 
 export interface CheckoutData {
@@ -74,8 +63,8 @@ export interface CheckoutData {
     id: string;
     name: string;
     description: string;
-    banner_url: string;
-    logo_url: string;
+    banner_url: string | null;
+    logo_url: string | null;
     member_area_link?: string | null; // Adicionado
     file_url?: string | null; // Adicionado
   };

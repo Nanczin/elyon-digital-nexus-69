@@ -22,6 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { TablesInsert } from '@/integrations/supabase/types';
 
 const customerSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -54,15 +55,17 @@ export function NewCustomerDialog({ onCustomerCreated }: NewCustomerDialogProps)
   const onSubmit = async (data: CustomerForm) => {
     setLoading(true);
     try {
+      const customerPayload: TablesInsert<'customers'> = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        cpf: data.cpf || null,
+        status: 'active'
+      };
+
       const { error } = await supabase
         .from('customers')
-        .insert([{
-          name: data.name,
-          email: data.email,
-          phone: data.phone || null,
-          cpf: data.cpf || null,
-          status: 'active'
-        }]);
+        .insert([customerPayload]);
 
       if (error) {
         throw error;
