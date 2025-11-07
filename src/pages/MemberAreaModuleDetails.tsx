@@ -270,7 +270,7 @@ const MemberAreaModuleDetails = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 max-w-6xl mx-auto w-full">
         <Button variant="ghost" asChild className="mb-4 sm:mb-8 -ml-2 sm:-ml-4 text-sm sm:text-base">
-          <Link to={`/membros/${memberAreaId}/modules/${moduleId}`}>
+          <Link to={`/membros/${memberAreaId}`}> {/* Corrected link path */}
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o painel
           </Link>
         </Button>
