@@ -326,7 +326,7 @@ const MemberAreaDashboard = () => {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6">
+      <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-2 sm:space-y-3"> {/* Ajustado o espaçamento aqui */}
         <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}>
           Olá, {userName}!
         </h1>
