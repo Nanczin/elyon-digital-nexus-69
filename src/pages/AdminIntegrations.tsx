@@ -70,15 +70,15 @@ const AdminIntegrations = () => {
   ];
 
   return (
-    <div className="container mx-auto p-4 sm:p-6"> {/* Ajustado padding */}
-      <div className="mb-6 sm:mb-8"> {/* Ajustado margin-bottom */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Integrações</h1> {/* Ajustado text size */}
-        <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
+    <div className="container mx-auto p-4 sm:p-6">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Integrações</h1>
+        <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
           Configure as integrações externas da sua plataforma
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"> {/* Ajustado gap */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {integrations.map((integration) => {
           const IconComponent = integration.icon;
           const ConfigComponent = integration.component;
@@ -87,25 +87,25 @@ const AdminIntegrations = () => {
           return (
             <Card key={integration.name}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl"> {/* Ajustado text size e gap */}
-                  <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg"> {/* Ajustado padding */}
-                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> {/* Ajustado icon size */}
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+                  <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   {integration.name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-3 sm:mb-4 text-sm sm:text-base"> {/* Ajustado margin-bottom e text size */}
+                <p className="text-muted-foreground mb-3 sm:mb-4 text-sm sm:text-base">
                   {integration.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm text-muted-foreground"> {/* Ajustado text size */}
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     Status: <span className={status === 'Configurado' ? 'text-green-600' : 'text-orange-600'}>
                       {status}
                     </span>
                   </span>
                   <ConfigComponent>
-                    <Button variant="outline" size="sm" className="text-xs sm:text-sm"> {/* Ajustado text size */}
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                       Configurar
                     </Button>
                   </ConfigComponent>

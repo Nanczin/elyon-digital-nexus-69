@@ -414,7 +414,6 @@ export type Database = {
           smtp_config?: Json | null
           updated_at?: string
           user_id?: string
-          utmify_code?: string | null
         }
         Relationships: [
           {
@@ -1694,7 +1693,6 @@ export interface PackageConfig {
   originalPrice: number; // in Reais
   mostSold?: boolean;
   associatedProductIds?: string[] | null; // Changed to array
-  // deliverable?: DeliverableConfig; // New: Package-specific deliverable
 }
 
 export interface GuaranteeConfig {

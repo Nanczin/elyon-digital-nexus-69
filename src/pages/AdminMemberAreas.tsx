@@ -180,11 +180,11 @@ const AdminMemberAreas = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6"> {/* Ajustado padding */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4"> {/* Ajustado flex e gap */}
+    <div className="container mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Minhas Áreas de Membros</h1> {/* Ajustado text size */}
-          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base"> {/* Ajustado text size */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Minhas Áreas de Membros</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             Crie e gerencie suas áreas de membros personalizadas
           </p>
         </div>
@@ -201,13 +201,13 @@ const AdminMemberAreas = () => {
             <Button onClick={() => {
               setEditingArea(null);
               setFormData({ name: '', slug: '', description: '', logo_url: '', primary_color: '#3b82f6', logoFile: null });
-            }} className="w-full sm:w-auto text-sm sm:text-base"> {/* Ajustado largura do botão */}
+            }} className="w-full sm:w-auto text-sm sm:text-base">
               <Plus className="mr-2 h-4 w-4" /> Nova Área de Membros
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">{editingArea ? 'Editar Área de Membros' : 'Criar Nova Área de Membros'}</DialogTitle> {/* Ajustado text size */}
+              <DialogTitle className="text-lg sm:text-xl">{editingArea ? 'Editar Área de Membros' : 'Criar Nova Área de Membros'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -261,11 +261,11 @@ const AdminMemberAreas = () => {
                   <Input type="text" value={formData.primary_color} onChange={(e) => handleInputChange('primary_color', e.target.value)} placeholder="#3b82f6" className="flex-1" />
                 </div>
               </div>
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3"> {/* Ajustado flex e gap */}
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto"> {/* Ajustado largura do botão */}
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isSaving} className="w-full sm:w-auto"> {/* Ajustado largura do botão */}
+                <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
                   {isSaving ? 'Salvando...' : 'Salvar Área'}
                 </Button>
               </div>
@@ -276,14 +276,14 @@ const AdminMemberAreas = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Suas Áreas de Membros ({memberAreas.length})</CardTitle> {/* Ajustado text size */}
+          <CardTitle className="text-lg sm:text-xl">Suas Áreas de Membros ({memberAreas.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {memberAreas.length === 0 ? (
             <div className="text-center py-8">
-              <MonitorDot className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" /> {/* Ajustado icon size */}
-              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhuma área de membros criada</h3> {/* Ajustado text size */}
-              <p className="text-muted-foreground text-sm sm:text-base"> {/* Ajustado text size */}
+              <MonitorDot className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhuma área de membros criada</h3>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Comece criando sua primeira área de membros personalizada.
               </p>
             </div>

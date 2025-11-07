@@ -212,15 +212,15 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
   if (!stats) return <p>Nenhum dado de analytics disponível.</p>;
 
   return (
-    <div className="p-4 sm:p-6"> {/* Ajustado padding */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"> {/* Ajustado gap e margin-bottom */}
+    <div className="p-4 sm:p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Membros</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.totalMembers}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalMembers}</div>
             <p className="text-xs text-muted-foreground">
               {stats.activeMembers} ativos
             </p>
@@ -233,7 +233,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <Users className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.activeMembers}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.activeMembers}</div>
             <p className="text-xs text-muted-foreground">
               Membros com status 'ativo'
             </p>
@@ -246,7 +246,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.totalModules}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalModules}</div>
             <p className="text-xs text-muted-foreground">
               Módulos criados (rascunho + publicado)
             </p>
@@ -259,7 +259,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <CheckCircle2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.publishedModules}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.publishedModules}</div>
             <p className="text-xs text-muted-foreground">
               Módulos visíveis para membros
             </p>
@@ -272,7 +272,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <Video className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.totalLessons}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalLessons}</div>
             <p className="text-xs text-muted-foreground">
               Aulas criadas (rascunho + publicado)
             </p>
@@ -285,7 +285,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <CheckCircle2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.publishedLessons}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.publishedLessons}</div>
             <p className="text-xs text-muted-foreground">
               Aulas visíveis para membros
             </p>
@@ -298,7 +298,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.avgLessonsPerModule}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.avgLessonsPerModule}</div>
             <p className="text-xs text-muted-foreground">
               Aulas por módulo em média
             </p>
@@ -311,7 +311,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.avgLessonCompletionRate}%</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.avgLessonCompletionRate}%</div>
             <p className="text-xs text-muted-foreground">
               Taxa média de conclusão
             </p>
@@ -324,7 +324,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.totalCommunityComments}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalCommunityComments}</div>
             <p className="text-xs text-muted-foreground">
               Total de comentários em aulas
             </p>
@@ -337,7 +337,7 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.avgCommentsPerLesson}</div> {/* Ajustado text size */}
+            <div className="text-xl sm:text-2xl font-bold">{stats.avgCommentsPerLesson}</div>
             <p className="text-xs text-muted-foreground">
               Comentários por aula em média
             </p>
@@ -346,16 +346,16 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
       </div>
 
       {/* Gráficos de engajamento */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"> {/* Ajustado gap */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Novos Membros (Últimos 30 dias)</CardTitle> {/* Ajustado text size */}
+            <CardTitle className="text-lg sm:text-xl">Novos Membros (Últimos 30 dias)</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={membersGrowthData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => window.innerWidth < 768 ? value.split('/')[0] : value} /> {/* Formato de data responsivo */}
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => window.innerWidth < 768 ? value.split('/')[0] : value} />
                 <YAxis stroke="hsl(var(--muted-foreground))" />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem' }}
@@ -370,13 +370,13 @@ const AdminAnalytics = ({ memberAreaId: propMemberAreaId }: { memberAreaId?: str
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Conclusão de Aulas (Últimos 30 dias)</CardTitle> {/* Ajustado text size */}
+            <CardTitle className="text-lg sm:text-xl">Conclusão de Aulas (Últimos 30 dias)</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lessonCompletionsTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => window.innerWidth < 768 ? value.split('/')[0] : value} /> {/* Formato de data responsivo */}
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => window.innerWidth < 768 ? value.split('/')[0] : value} />
                 <YAxis stroke="hsl(var(--muted-foreground))" />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem' }}
