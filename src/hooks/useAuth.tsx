@@ -13,21 +13,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('AUTH_DEBUG: AuthProvider useEffect started.');
 
-    const checkAdminStatus = async (userId: string) => {
-      try {
-        // Correctly type the RPC call for 'is_admin'
-        const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
-        if (error) {
-          console.error('AUTH_DEBUG: Error checking admin status via RPC:', error);
+    const checkAdminStatusAndSetLoading = async (userId: string | null) => {
+      if (userId) {
+        try {
+          const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
+          if (error) {
+            console.error('AUTH_DEBUG: Error checking admin status via RPC:', error);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(data || false);
+            console.log('AUTH_DEBUG: isAdmin status from RPC for user', userId, ':', data);
+          }
+        } catch (error) {
+          console.error('AUTH_DEBUG: Exception checking admin status:', error);
           setIsAdmin(false);
-        } else {
-          setIsAdmin(data || false);
-          console.log('AUTH_DEBUG: isAdmin status from RPC for user', userId, ':', data);
         }
-      } catch (error) {
-        console.error('AUTH_DEBUG: Exception checking admin status:', error);
+      } else {
         setIsAdmin(false);
+        console.log('AUTH_DEBUG: No user ID, isAdmin set to false.');
       }
+      setLoading(false); // Set loading to false AFTER admin status is determined
+      console.log('AUTH_DEBUG: Auth loading set to false. Final isAdmin state updated.');
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -41,53 +47,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setSession(null);
           setIsAdmin(false);
+          setLoading(false); // Also set loading to false on sign out
         } else if (session?.user) {
           console.log('AUTH_DEBUG: User session changed:', event, 'User ID:', session.user.id);
-          await checkAdminStatus(session.user.id);
+          await checkAdminStatusAndSetLoading(session.user.id); // Aguardar aqui
         } else {
-          setIsAdmin(false);
-          console.log('AUTH_DEBUG: No user session, isAdmin set to false.');
+          await checkAdminStatusAndSetLoading(null); // Sem usuário, definir isAdmin como false e loading como false
         }
-        
-        setLoading(false);
-        console.log('AUTH_DEBUG: Auth loading set to false from onAuthStateChange. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
       }
     );
 
-    // Initial session check
+    // Verificação de sessão inicial
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
         console.log('AUTH_DEBUG: Initial getSession resolved.');
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('AUTH_DEBUG: Initial session found for user:', session.user.id);
-          await checkAdminStatus(session.user.id);
-        } else {
-          setIsAdmin(false);
-          console.log('AUTH_DEBUG: No initial session, isAdmin set to false.');
-        }
-        setLoading(false);
-        console.log('AUTH_DEBUG: Initial auth loading set to false from getSession. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
+        await checkAdminStatusAndSetLoading(session?.user?.id || null); // Aguardar aqui
       })
       .catch((error) => {
         console.error('AUTH_DEBUG: Error during initial getSession:', error);
-        setLoading(false); // Ensure loading is false even on error
-        setIsAdmin(false); // Ensure isAdmin is false on error
+        setLoading(false); // Garantir que loading seja false mesmo em erro
+        setIsAdmin(false); // Garantir que isAdmin seja false em erro
       });
 
-    // Fallback timeout to ensure loading state resolves (for diagnostic purposes)
+    // Timeout de fallback para garantir que o estado de carregamento seja resolvido
     const fallbackTimeout = setTimeout(() => {
-      if (loading) { // Only set to false if still true
+      if (loading) { // Apenas definir como false se ainda for true
         console.warn('AUTH_DEBUG: Fallback timeout triggered. Setting loading to false.');
         setLoading(false);
       }
-    }, 10000); // 10 seconds timeout
+    }, 10000); // 10 segundos de timeout
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(fallbackTimeout); // Clear fallback on unmount
+      clearTimeout(fallbackTimeout); // Limpar fallback ao desmontar
     };
   }, []);
 
