@@ -92,7 +92,7 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
   const signOut = async () => {
     console.log('MEMBER_AREA_AUTH_DEBUG: Attempting to sign out from member area...');
     await memberAreaSupabase.auth.signOut();
-    localStorage.removeItem('supabase.auth.token'); // Limpar explicitamente a chave padrão do Supabase
+    localStorage.removeItem('sb-member-area-session');
     
     // Limpeza explícita do estado do React
     setUser(null);
