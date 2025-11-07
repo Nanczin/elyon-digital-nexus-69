@@ -328,7 +328,7 @@ const MemberAreaDashboard = () => {
       {/* Conteúdo Principal */}
       <div className="flex-1 px-4 sm:px-8 py-8 sm:py-16 text-center space-y-4 sm:space-y-6">
         <h1 className="text-3xl sm:text-5xl font-bold" style={{ color: textColor }}>
-          Olá, {userName}!
+          Olá,{userName}!
         </h1>
         <p className="text-lg sm:text-xl" style={{ color: secondaryTextColor }}>
           Bem-vindo(a) à sua área de membros. Escolha um módulo para começar.
