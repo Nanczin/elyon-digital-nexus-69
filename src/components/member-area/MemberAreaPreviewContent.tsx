@@ -124,7 +124,7 @@ const MemberAreaPreviewContent: React.FC<MemberAreaPreviewContentProps> = ({ set
                 className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl"
                 style={{ backgroundColor: cardBackground, color: settings.colors?.text_cards || textColor }}
               >
-                <div className="relative aspect-[9/16] w-full bg-gray-200"> {/* Alterado para aspect-[9/16] e removido h-XX */}
+                <div className="relative aspect-video w-full bg-gray-200"> {/* Alterado para aspect-video e removido h-XX */}
                   {module.banner_url && (
                     <img 
                       src={module.banner_url} 
