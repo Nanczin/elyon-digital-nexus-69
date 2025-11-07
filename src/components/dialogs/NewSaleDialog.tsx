@@ -77,16 +77,16 @@ export function NewSaleDialog({ onSaleCreated }: NewSaleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="text-sm sm:text-base"> {/* Ajustado text size */}
+        <Button className="text-sm sm:text-base">
           <span>
             <ShoppingCart className="mr-2 h-4 w-4" />
             Nova Venda
           </span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] mx-2 sm:mx-auto"> {/* Ajustado max-w- e adicionado mx-2 sm:mx-auto */}
+      <DialogContent className="sm:max-w-[425px] mx-2 sm:mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Registrar Nova Venda</DialogTitle> {/* Ajustado text size */}
+          <DialogTitle className="text-lg sm:text-xl">Registrar Nova Venda</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -95,11 +95,11 @@ export function NewSaleDialog({ onSaleCreated }: NewSaleDialogProps) {
               name="customer_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Nome do Cliente</FormLabel> {/* Ajustado text size */}
+                  <FormLabel className="text-sm">Nome do Cliente</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome completo" {...field} className="text-sm" /> {/* Ajustado text size */}
+                    <Input placeholder="Nome completo" {...field} className="text-sm" />
                   </FormControl>
-                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -109,11 +109,11 @@ export function NewSaleDialog({ onSaleCreated }: NewSaleDialogProps) {
               name="customer_email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Email do Cliente</FormLabel> {/* Ajustado text size */}
+                  <FormLabel className="text-sm">Email do Cliente</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="email@exemplo.com" {...field} className="text-sm" /> {/* Ajustado text size */}
+                    <Input type="email" placeholder="email@exemplo.com" {...field} className="text-sm" />
                   </FormControl>
-                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -123,11 +123,11 @@ export function NewSaleDialog({ onSaleCreated }: NewSaleDialogProps) {
               name="product"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Produto</FormLabel> {/* Ajustado text size */}
+                  <FormLabel className="text-sm">Produto</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome do produto" {...field} className="text-sm" /> {/* Ajustado text size */}
+                    <Input placeholder="Nome do produto" {...field} className="text-sm" />
                   </FormControl>
-                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -137,11 +137,11 @@ export function NewSaleDialog({ onSaleCreated }: NewSaleDialogProps) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Valor (R$)</FormLabel> {/* Ajustado text size */}
+                  <FormLabel className="text-sm">Valor (R$)</FormLabel>
                   <FormControl>
-                    <Input placeholder="0,00" {...field} className="text-sm" /> {/* Ajustado text size */}
+                    <Input placeholder="0,00" {...field} className="text-sm" />
                   </FormControl>
-                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -151,30 +151,30 @@ export function NewSaleDialog({ onSaleCreated }: NewSaleDialogProps) {
               name="payment_method"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Método de Pagamento</FormLabel> {/* Ajustado text size */}
+                  <FormLabel className="text-sm">Método de Pagamento</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="text-sm"> {/* Ajustado text size */}
+                      <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Selecione o método" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="pix" className="text-sm">PIX</SelectItem> {/* Ajustado text size */}
-                      <SelectItem value="credit_card" className="text-sm">Cartão de Crédito</SelectItem> {/* Ajustado text size */}
-                      <SelectItem value="debit_card" className="text-sm">Cartão de Débito</SelectItem> {/* Ajustado text size */}
-                      <SelectItem value="boleto" className="text-sm">Boleto</SelectItem> {/* Ajustado text size */}
+                      <SelectItem value="pix" className="text-sm">PIX</SelectItem>
+                      <SelectItem value="credit_card" className="text-sm">Cartão de Crédito</SelectItem>
+                      <SelectItem value="debit_card" className="text-sm">Cartão de Débito</SelectItem>
+                      <SelectItem value="boleto" className="text-sm">Boleto</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage className="text-xs" /> {/* Ajustado text size */}
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
             
-            <div className="flex flex-col-reverse sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2"> {/* Ajustado flex e space-y */}
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto text-sm"> {/* Ajustado w, text size */}
+            <div className="flex flex-col-reverse sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto text-sm">
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto text-sm"> {/* Ajustado w, text size */}
+              <Button type="submit" className="w-full sm:w-auto text-sm">
                 Registrar Venda
               </Button>
             </div>

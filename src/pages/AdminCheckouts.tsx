@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -138,6 +138,15 @@ const AdminCheckouts = () => {
         text: 'Oferta por tempo limitado'
       },
       member_area_id: '' as string | null,
+      products: { // Default product structure for preview
+        id: '',
+        name: '',
+        description: '',
+        banner_url: null,
+        logo_url: null,
+        member_area_link: null,
+        file_url: null,
+      }
     };
     // Deep clone the initial object to ensure a fresh start every time
     return JSON.parse(JSON.stringify(initial));
@@ -174,8 +183,8 @@ const AdminCheckouts = () => {
     // Convert order bumps from cents to reais
     const orderBumpsInReais = Array.isArray(checkout.order_bumps) ? checkout.order_bumps.map((bump: any) => ({
       ...bump,
-      price: bump.price ? bump.price / 100 : 0,
-      originalPrice: bump.originalPrice ? bump.originalPrice / 100 : 0,
+      price: bump.price !== undefined && bump.price !== null ? bump.price / 100 : 0, // Default to 0 if not explicitly set
+      originalPrice: bump.originalPrice !== undefined && bump.originalPrice !== null ? bump.originalPrice / 100 : 0, // Default to 0 if not explicitly set
       selectedProduct: bump.selectedProduct || ''
     })) : initial.order_bumps;
     
@@ -185,8 +194,8 @@ const AdminCheckouts = () => {
       name: pkg.name || '',
       description: pkg.description || '',
       topics: Array.isArray(pkg.topics) ? pkg.topics.filter((t: any) => typeof t === 'string') : [''],
-      price: pkg.price ? pkg.price / 100 : priceInReais,
-      originalPrice: pkg.originalPrice ? pkg.originalPrice / 100 : promotionalPriceInReais,
+      price: pkg.price !== undefined && pkg.price !== null ? pkg.price / 100 : 0, // Default to 0 if not explicitly set
+      originalPrice: pkg.originalPrice !== undefined && pkg.originalPrice !== null ? pkg.originalPrice / 100 : 0, // Default to 0 if not explicitly set
       mostSold: pkg.mostSold ?? false,
       associatedProductIds: Array.isArray(pkg.associatedProductIds) ? pkg.associatedProductIds : (pkg.associatedProductId ? [pkg.associatedProductId] : []),
     })) : initial.form_fields.packages;
@@ -195,6 +204,10 @@ const AdminCheckouts = () => {
     if (checkout.form_fields?.deliverable?.fileUrl && checkout.form_fields?.deliverable?.type === 'upload') {
       setCheckoutDeliverableFile(null);
     }
+
+    // Determine the main product details for the checkout (used for preview and default values)
+    const mainProductId = packagesConfig[0]?.associatedProductIds?.[0] || checkout.product_id;
+    const mainProductDetails = products.find(p => p.id === mainProductId) || null;
 
     return deepMerge(initial, {
       name: checkout.name || checkout.products?.name || '',
@@ -234,6 +247,15 @@ const AdminCheckouts = () => {
       },
       timer: checkout.timer || initial.timer,
       member_area_id: checkout.member_area_id || null,
+      products: mainProductDetails ? { // Populate products for the preview
+        id: mainProductDetails.id,
+        name: mainProductDetails.name,
+        description: mainProductDetails.description,
+        banner_url: mainProductDetails.banner_url,
+        logo_url: mainProductDetails.logo_url,
+        member_area_link: mainProductDetails.member_area_link,
+        file_url: mainProductDetails.file_url,
+      } : initial.products, // Fallback to initial.products if no mainProductDetails
     });
   }, [getInitialFormData, products]);
 
@@ -334,7 +356,7 @@ const AdminCheckouts = () => {
       const {
         data,
         error
-      } = await supabase.from('products').select('id, name, price, description, access_url, file_url, member_area_link').order('created_at', {
+      } = await supabase.from('products').select('id, name, price, description, banner_url, logo_url, access_url, file_url, member_area_link').order('created_at', {
         ascending: false
       });
       if (error) throw error;
@@ -591,6 +613,51 @@ const AdminCheckouts = () => {
       handleInputChange('order_bumps', orderBumps);
     }
   };
+
+  const handlePreview = () => {
+    // Deep clone checkoutData to avoid modifying the live state directly
+    let previewData = JSON.parse(JSON.stringify(checkoutData));
+
+    // 1. Hydrate order_bumps with product details
+    previewData.order_bumps = previewData.order_bumps.map((bump: any) => {
+      if (bump.selectedProduct) {
+        const productDetails = products.find(p => p.id === bump.selectedProduct);
+        return { ...bump, product: productDetails || null };
+      }
+      return { ...bump, product: null };
+    });
+
+    // 2. Hydrate packages with product details (if needed for display, though PackageSelector doesn't use it directly)
+    // PackageSelector uses pkg.name and pkg.description directly.
+    // If we want to show the associated product name in PackageSelector, we'd need to modify PackageSelector.tsx
+    // For now, let's ensure `products` field is set for the main checkout product.
+    const firstPackage = previewData.form_fields.packages[0];
+    const mainProductIdForPreview = firstPackage?.associatedProductIds?.[0] || null;
+    const mainProductDetailsForPreview = products.find(p => p.id === mainProductIdForPreview) || null;
+
+    previewData.products = mainProductDetailsForPreview ? {
+      id: mainProductDetailsForPreview.id,
+      name: mainProductDetailsForPreview.name,
+      description: mainProductDetailsForPreview.description,
+      banner_url: mainProductDetailsForPreview.banner_url,
+      logo_url: mainProductDetailsForPreview.logo_url,
+      member_area_link: mainProductDetailsForPreview.member_area_link,
+      file_url: mainProductDetailsForPreview.file_url,
+    } : previewData.products; // Fallback to existing if no associated product
+
+    // 3. Handle checkout-level deliverable file upload (for preview, just indicate type)
+    if (previewData.form_fields.deliverable?.type === 'upload' && checkoutDeliverableFile) {
+      previewData.form_fields.deliverable = {
+        ...previewData.form_fields.deliverable,
+        name: checkoutDeliverableFile.name,
+        description: `Arquivo: ${checkoutDeliverableFile.name} (apenas nome para preview)`
+      };
+    }
+
+    localStorage.setItem('checkout-preview-draft', JSON.stringify(previewData));
+    window.open('/checkout/preview', '_blank');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // NEW VALIDATION: Ensure at least one package exists
@@ -1664,6 +1731,15 @@ const AdminCheckouts = () => {
               </Tabs>
 
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePreview}
+                  className="text-sm"
+                >
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  Pré-visualizar
+                </Button>
                 <Button 
                   type="button" 
                   variant="outline" 

@@ -44,9 +44,58 @@ const Checkout = () => {
 
   useEffect(() => {
     if (checkoutId) {
-      fetchCheckout();
+      if (checkoutId === 'preview') {
+        loadPreviewCheckout();
+      } else {
+        fetchCheckout();
+      }
     }
   }, [checkoutId]);
+
+  const loadPreviewCheckout = async () => {
+    setLoading(true);
+    const previewDataString = localStorage.getItem('checkout-preview-draft');
+    if (previewDataString) {
+      try {
+        const previewData = JSON.parse(previewDataString);
+        console.log('CHECKOUT_FRONTEND_DEBUG: Loaded preview data from localStorage:', JSON.stringify(previewData, null, 2));
+
+        // The previewData already has prices in Reais from AdminCheckouts form state.
+        // `AdminCheckouts` `handlePreview` function already prepares `previewData.products` and `previewData.order_bumps[i].product`.
+        
+        setCheckout(previewData);
+
+        // Set initial payment method
+        if (previewData.payment_methods?.pix) {
+          setSelectedPaymentMethod('pix');
+        } else if (previewData.payment_methods?.creditCard) {
+          setSelectedPaymentMethod('creditCard');
+        }
+        setSelectedInstallments(previewData.payment_methods?.maxInstallments || 1);
+
+        // Fetch MP Public Key from the selected account in the draft
+        const selectedMpAccountId = previewData.integrations?.selectedMercadoPagoAccount;
+        if (selectedMpAccountId) {
+          const { data: mpConfig, error: mpConfigError } = await supabase
+            .from('integrations')
+            .select('mercado_pago_token_public')
+            .eq('user_id', previewData.user_id) // Use the user_id from the checkout draft
+            .maybeSingle();
+          if (mpConfigError) console.error('Error fetching MP public key for preview:', mpConfigError);
+          setMpPublicKey(mpConfig?.mercado_pago_token_public || null);
+        }
+
+      } catch (e) {
+        console.error('Error parsing preview data from localStorage:', e);
+        toast({ title: "Erro", description: "Não foi possível carregar o preview do checkout.", variant: "destructive" });
+        navigate('/');
+      }
+    } else {
+      toast({ title: "Erro", description: "Nenhum dado de preview encontrado.", variant: "destructive" });
+      navigate('/');
+    }
+    setLoading(false);
+  };
 
   const fetchCheckout = async () => {
     try {
