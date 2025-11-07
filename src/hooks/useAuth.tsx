@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { AuthContext, AuthContextType } from '@/contexts/AuthContext'; // Importar AuthContext e AuthContextType
+import { AuthContext, AuthContextType } from '@/contexts/AuthContext';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -11,6 +11,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    console.log('AUTH_DEBUG: AuthProvider useEffect started.');
+
     const checkAdminStatus = async (userId: string) => {
       try {
         const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
@@ -29,39 +31,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AUTH_DEBUG: onAuthStateChange event:', event);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           console.log('AUTH_DEBUG: User session changed:', event, 'User ID:', session.user.id);
-          await checkAdminStatus(session.user.id); // Check admin status immediately
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
           console.log('AUTH_DEBUG: User signed out or no session, isAdmin set to false.');
         }
         
         setLoading(false);
-        console.log('AUTH_DEBUG: Auth loading set to false. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
+        console.log('AUTH_DEBUG: Auth loading set to false from onAuthStateChange. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
       }
     );
 
     // Initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('AUTH_DEBUG: Initial session found for user:', session.user.id);
-        await checkAdminStatus(session.user.id); // Check admin status immediately
-      } else {
-        setIsAdmin(false);
-        console.log('AUTH_DEBUG: No initial session, isAdmin set to false.');
-      }
-      setLoading(false);
-      console.log('AUTH_DEBUG: Initial auth loading set to false. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
-    });
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        console.log('AUTH_DEBUG: Initial getSession resolved.');
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log('AUTH_DEBUG: Initial session found for user:', session.user.id);
+          await checkAdminStatus(session.user.id);
+        } else {
+          setIsAdmin(false);
+          console.log('AUTH_DEBUG: No initial session, isAdmin set to false.');
+        }
+        setLoading(false);
+        console.log('AUTH_DEBUG: Initial auth loading set to false from getSession. Current user:', session?.user?.email, 'Final isAdmin:', isAdmin);
+      })
+      .catch((error) => {
+        console.error('AUTH_DEBUG: Error during initial getSession:', error);
+        setLoading(false); // Ensure loading is false even on error
+        setIsAdmin(false); // Ensure isAdmin is false on error
+      });
 
-    return () => subscription.unsubscribe();
+    // Fallback timeout to ensure loading state resolves (for diagnostic purposes)
+    const fallbackTimeout = setTimeout(() => {
+      if (loading) { // Only set to false if still true
+        console.warn('AUTH_DEBUG: Fallback timeout triggered. Setting loading to false.');
+        setLoading(false);
+      }
+    }, 10000); // 10 seconds timeout
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(fallbackTimeout); // Clear fallback on unmount
+    };
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {

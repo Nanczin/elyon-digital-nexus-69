@@ -21,21 +21,43 @@ export function MemberAreaAuthProvider({ children }: { children: React.ReactNode
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('MEMBER_AREA_AUTH_DEBUG: MemberAreaAuthProvider useEffect started.');
+
     const { data: { subscription } } = memberAreaSupabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('MEMBER_AREA_AUTH_DEBUG: onAuthStateChange event:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        console.log('MEMBER_AREA_AUTH_DEBUG: Auth loading set to false from onAuthStateChange. Current user:', session?.user?.email);
       }
     );
 
-    memberAreaSupabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    memberAreaSupabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        console.log('MEMBER_AREA_AUTH_DEBUG: Initial getSession resolved.');
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        console.log('MEMBER_AREA_AUTH_DEBUG: Initial auth loading set to false from getSession. Current user:', session?.user?.email);
+      })
+      .catch((error) => {
+        console.error('MEMBER_AREA_AUTH_DEBUG: Error during initial getSession:', error);
+        setLoading(false); // Ensure loading is false even on error
+      });
 
-    return () => subscription.unsubscribe();
+    // Fallback timeout to ensure loading state resolves (for diagnostic purposes)
+    const fallbackTimeout = setTimeout(() => {
+      if (loading) { // Only set to false if still true
+        console.warn('MEMBER_AREA_AUTH_DEBUG: Fallback timeout triggered. Setting loading to false.');
+        setLoading(false);
+      }
+    }, 10000); // 10 seconds timeout
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(fallbackTimeout); // Clear fallback on unmount
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
