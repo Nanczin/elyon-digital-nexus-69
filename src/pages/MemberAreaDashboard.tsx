@@ -18,6 +18,7 @@ type PlatformSettings = Tables<'platform_settings'>;
 type MemberArea = Tables<'member_areas'>;
 type Module = Tables<'modules'>;
 type ProductAccess = Tables<'product_access'>;
+type MemberAccess = Tables<'member_access'>; // NEW: Import MemberAccess type
 type Checkout = Tables<'checkouts'>;
 
 const MemberAreaDashboard = () => {
@@ -31,6 +32,7 @@ const MemberAreaDashboard = () => {
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [userProductAccessIds, setUserProductAccessIds] = useState<string[]>([]);
+  const [userModuleAccessIds, setUserModuleAccessIds] = useState<string[]>([]); // NEW: State for direct module access
   const [productCheckoutLinks, setProductCheckoutLinks] = useState<Record<string, string>>({});
 
   const fetchMemberAreaAndContent = useCallback(async () => {
@@ -112,6 +114,19 @@ const MemberAreaDashboard = () => {
       const accessedProductIds = accessData?.map(a => a.product_id).filter(Boolean) as string[] || [];
       setUserProductAccessIds(accessedProductIds);
       console.log('MEMBER_AREA_DASHBOARD_DEBUG: User has access to products:', accessedProductIds);
+
+      // NEW 5.1. Fetch user's direct module access (from member_access table)
+      const { data: moduleAccessData, error: moduleAccessError } = await supabase
+        .from('member_access')
+        .select('module_id')
+        .eq('user_id', user.id)
+        .eq('member_area_id', memberAreaId)
+        .eq('is_active', true);
+      if (moduleAccessError) console.error('Error fetching direct module access:', moduleAccessError);
+      const accessedModuleIds = moduleAccessData?.map(ma => ma.module_id).filter(Boolean) as string[] || [];
+      setUserModuleAccessIds(accessedModuleIds);
+      console.log('MEMBER_AREA_DASHBOARD_DEBUG: User has direct access to modules:', accessedModuleIds);
+
 
       // 6. Fetch checkout links for products associated with modules
       const uniqueModuleProductIds = [...new Set(allPublishedModulesData?.map(m => m.product_id).filter(Boolean))] as string[];
@@ -290,9 +305,8 @@ const MemberAreaDashboard = () => {
             <p className="text-memberArea-text-muted text-sm sm:text-base">Nenhum módulo disponível para você ainda.</p>
           )}
           {modules.map((module) => {
-            const hasUserAccess = module.product_id 
-              ? userProductAccessIds.includes(module.product_id) 
-              : true; // If no product_id, assume access
+            // Acesso via produto associado OU acesso direto ao módulo
+            const hasUserAccess = (module.product_id && userProductAccessIds.includes(module.product_id)) || userModuleAccessIds.includes(module.id);
             const isCompleted = hasUserAccess; // For now, completion is tied to access
             const moduleCheckoutLink = module.checkout_link || (module.product_id ? productCheckoutLinks[module.product_id] : null);
 
