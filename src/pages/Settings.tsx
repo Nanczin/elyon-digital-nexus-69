@@ -45,6 +45,7 @@ const Settings = () => {
                   id="email"
                   value={user.email || ''}
                   disabled
+                  readOnly // Adicionado readOnly
                   className="bg-muted text-sm"
                 />
               </div>
@@ -54,6 +55,7 @@ const Settings = () => {
                   id="name"
                   placeholder="Seu nome completo"
                   value={user.user_metadata?.name || ''}
+                  readOnly // Adicionado readOnly
                   className="text-sm"
                 />
               </div>
