@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react'; // Importar useEffect
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,10 @@ const Index = () => {
     user,
     isAdmin
   } = useAuth();
+
+  useEffect(() => {
+    console.log('INDEX_PAGE_DEBUG: Index component rendered. User:', user?.email, 'isAdmin:', isAdmin);
+  }, [user, isAdmin]);
   
   const features = [{
     icon: Package,
