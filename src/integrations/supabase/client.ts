@@ -12,7 +12,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     storageKey: 'sb-admin-session',
     storage: localStorage,
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true, // Adicionado para melhor detecção de sessão em URLs de callback
   }
 });

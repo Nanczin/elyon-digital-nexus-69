@@ -41,6 +41,9 @@ import MemberAreaLayout from "./components/member-area/MemberAreaLayout"; // Imp
 const queryClient = new QueryClient();
 
 const App = () => {
+  // Limpa o console a cada recarregamento para facilitar a depuração
+  console.clear();
+
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>

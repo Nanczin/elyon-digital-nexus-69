@@ -3,14 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://jgmwbovvydimvnmmkfpy.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImV4cCI6MjA2ODE2NTc1Nn0.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbXdib3Z2eWRpbXZubW1rZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1ODk3NTYsImexdHAiOjIwNjgxNjU3NTZ9.-Ez2vpFaX8B8uD1bfbaCEt1-JkRYA8xZBGowhD8ts4k";
 
 // Este cliente é exclusivo para a área de membros, usando uma chave de armazenamento diferente.
 export const memberAreaSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storageKey: 'sb-member-area-session',
     storage: localStorage,
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true, // Adicionado para melhor detecção de sessão em URLs de callback
   }
 });

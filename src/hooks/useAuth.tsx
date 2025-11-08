@@ -14,6 +14,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AUTH_DEBUG: AuthProvider useEffect started.');
 
     const checkAdminStatusAndSetLoading = async (userId: string | null) => {
+      console.log('AUTH_DEBUG: checkAdminStatusAndSetLoading called with userId:', userId);
       if (userId) {
         try {
           const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('AUTH_DEBUG: onAuthStateChange event:', event);
+        console.log('AUTH_DEBUG: onAuthStateChange event:', event, 'Session:', session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Verificação de sessão inicial
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
-        console.log('AUTH_DEBUG: Initial getSession resolved.');
+        console.log('AUTH_DEBUG: Initial getSession resolved. Session:', session);
         setSession(session);
         setUser(session?.user ?? null);
         await checkAdminStatusAndSetLoading(session?.user?.id || null); // Aguardar aqui
