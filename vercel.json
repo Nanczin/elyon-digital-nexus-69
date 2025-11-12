@@ -1,0 +1,18 @@
+{
+  "installCommand": "npm install",
+  "build": {
+    "env": {
+      "NPM_RC_ARGS": "--no-frozen-lockfile"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/send-email",
+      "destination": "/api/send-email.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

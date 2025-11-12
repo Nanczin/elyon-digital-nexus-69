@@ -1,0 +1,10 @@
+project_id = "jgmwbovvydimvnmmkfpy"
+
+[functions.mercado-pago-webhook]
+verify_jwt = false
+
+[functions.verify-mercado-pago-payment]
+verify_jwt = false
+
+[functions.create-mercado-pago-payment]
+verify_jwt = false

@@ -1,0 +1,262 @@
+import React, { useState } from 'react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { formatTopicText } from '@/utils/textFormatting';
+import { Tables } from '@/integrations/supabase/types'; // Import Tables type
+
+interface Package {
+  id: number;
+  name: string;
+  description: string;
+  topics: string[];
+  price: number;
+  originalPrice: number;
+  mostSold?: boolean;
+  associatedProductIds?: string[]; // Corrected to string[]
+  product?: Tables<'products'> | null; // Add product details for display
+}
+
+interface PackageSelectorProps {
+  packages: Package[];
+  selectedPackage?: number;
+  onSelectPackage: (packageId: number) => void;
+  primaryColor: string;
+  textColor: string;
+  offerMode?: 'single' | 'multiple';
+}
+
+const PackageSelector: React.FC<PackageSelectorProps> = ({
+  packages,
+  selectedPackage,
+  onSelectPackage,
+  primaryColor,
+  textColor,
+  offerMode = 'multiple'
+}) => {
+  const [expandedPackages, setExpandedPackages] = useState<Set<number>>(() => new Set());
+
+  const toggleExpanded = (packageId: number) => {
+    const newExpanded = new Set(expandedPackages);
+    if (newExpanded.has(packageId)) {
+      newExpanded.delete(packageId);
+    } else {
+      newExpanded.add(packageId);
+    }
+    setExpandedPackages(newExpanded);
+  };
+
+  // Filtrar apenas pacotes com conteúdo válido, mas permitir pacotes em edição
+  const validPackages = packages.filter(pkg => {
+    // Se o pacote tem nome, sempre mostrar (está sendo editado)
+    if (pkg.name && pkg.name.trim()) return true;
+    
+    // Se não tem nome mas tem tópicos válidos, mostrar
+    if (pkg.topics && pkg.topics.length > 0 && pkg.topics.some(topic => topic.trim())) return true;
+    
+    // Se é um pacote vazio mas há apenas um pacote, mostrar (caso inicial)
+    if (packages.length === 1) return true;
+    
+    // Para múltiplos pacotes, mostrar se pelo menos tem ID (foi criado intencionalmente)
+    return pkg.id > 0;
+  });
+
+  console.log('PackageSelector Debug:', {
+    totalPackages: packages.length,
+    validPackages: validPackages.length,
+    packages: packages.map(pkg => ({
+      id: pkg.id,
+      name: pkg.name,
+      hasTopics: pkg.topics?.length > 0,
+      hasValidTopics: pkg.topics?.some(topic => topic.trim()),
+      associatedProductIds: pkg.associatedProductIds,
+      productName: pkg.product?.name
+    }))
+  });
+
+  if (validPackages.length === 0) return null;
+
+  // Se for modo single, não mostra o seletor de pacotes (já que só há um)
+  if (offerMode === 'single' && validPackages.length === 1) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-8">
+      
+      <RadioGroup 
+        value={selectedPackage?.toString()} 
+        onValueChange={(value) => {
+          console.log('RadioGroup onChange:', value, typeof value);
+          onSelectPackage(parseInt(value));
+        }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-start"
+      >
+        {validPackages.map((pkg) => {
+          const isSelected = selectedPackage === pkg.id;
+          
+          return (
+            <div 
+              key={pkg.id}
+              className={`relative cursor-pointer transition-all duration-300 rounded-2xl overflow-hidden ${
+                isSelected 
+                  ? 'scale-[1.02] shadow-2xl' 
+                  : 'hover:scale-[1.01] hover:shadow-xl'
+              }`}
+            >
+              <input
+                type="radio"
+                id={`package-${pkg.id}`}
+                name="package-selection"
+                value={pkg.id}
+                checked={isSelected}
+                onChange={() => onSelectPackage(pkg.id)}
+                className="sr-only"
+              />
+              <label 
+                htmlFor={`package-${pkg.id}`}
+                className={`relative rounded-2xl p-6 sm:p-8 bg-white backdrop-blur-sm transition-all duration-300 border-2 flex flex-col cursor-pointer block ${
+                  isSelected ? 'border-2 shadow-lg' : 'border-gray-100 hover:border-gray-200'
+                }`}
+                style={{
+                  borderColor: isSelected ? primaryColor : undefined,
+                  boxShadow: isSelected ? `0 20px 40px -12px ${primaryColor}20` : undefined
+                }}
+              >
+                {/* Badge destacado para pacote selecionado */}
+                {isSelected && (
+                  <div 
+                    className="absolute top-2 right-2 sm:top-4 sm:right-4 px-2 sm:px-3 py-1 rounded-lg text-white text-xs sm:text-sm font-medium"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Selecionado
+                  </div>
+                )}
+
+                {/* Badge "Mais Vendido" */}
+                {pkg.mostSold && !isSelected && (
+                  <div 
+                    className="absolute top-0 left-0 px-2 sm:px-3 py-1 rounded-br-xl rounded-tl-2xl text-white text-xs font-bold"
+                    style={{ backgroundColor: '#f59e0b' }}
+                  >
+                    🔥 MAIS VENDIDO
+                  </div>
+                )}
+
+                {/* Header com Radio Button visual e Nome */}
+                <div className="flex items-start gap-4 sm:gap-6 mb-4 sm:mb-8">
+                  <div className="mt-1 sm:mt-2">
+                    <div 
+                      className={`h-6 w-6 sm:h-7 sm:w-7 rounded-full border-2 flex items-center justify-center ${
+                        isSelected ? 'border-2' : 'border-gray-300'
+                      }`}
+                      style={{ borderColor: isSelected ? primaryColor : undefined }}
+                    >
+                      {isSelected && (
+                        <div 
+                          className="h-3 w-3 sm:h-4 sm:w-4 rounded-full"
+                          style={{ backgroundColor: primaryColor }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <span 
+                      className="text-xl sm:text-2xl font-bold block leading-tight"
+                      style={{ color: textColor }}
+                    >
+                      {pkg.name || `Pacote ${pkg.id}`}
+                    </span>
+                    {pkg.product?.name && pkg.product.name !== pkg.name && (
+                      <span className="text-xs sm:text-sm text-muted-foreground block mt-1">
+                        Produto: {pkg.product.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Preços */}
+                <div className="flex items-baseline gap-2 sm:gap-4 mb-4 sm:mb-8">
+                  <span 
+                    className="text-4xl sm:text-5xl font-black tracking-tight"
+                    style={{ color: primaryColor }}
+                  >
+                    R${pkg.price.toFixed(2).replace('.', ',')}
+                  </span>
+                  {pkg.originalPrice > 0 && pkg.originalPrice !== pkg.price && (
+                    <div className="flex flex-col gap-1 sm:gap-2">
+                      <span className="text-lg sm:text-xl text-gray-400 line-through">
+                        R${pkg.originalPrice.toFixed(2).replace('.', ',')}
+                      </span>
+                      <span 
+                        className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full text-white"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {Math.round((1 - pkg.price / pkg.originalPrice) * 100)}% OFF
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Descrição */}
+                {pkg.description && (
+                  <p className="text-sm sm:text-lg text-gray-600 mb-4 sm:mb-8 leading-relaxed">
+                    {pkg.description}
+                  </p>
+                )}
+                
+                {/* Botão "Ver o que está incluso" */}
+                {pkg.topics && pkg.topics.length > 0 && pkg.topics.some(topic => topic.trim()) && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleExpanded(pkg.id);
+                      }}
+                      className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base font-medium mb-4 sm:mb-8 transition-all duration-200 hover:opacity-70"
+                      style={{ color: primaryColor }}
+                    >
+                      Ver o que está incluso
+                      {expandedPackages.has(pkg.id) ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {/* Conteúdo expansível */}
+                    {expandedPackages.has(pkg.id) && (
+                      <div className="space-y-3 sm:space-y-4 animate-fade-in bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-gray-100">
+                        <ul className="space-y-3 sm:space-y-4">
+                          {pkg.topics.filter(topic => topic.trim()).map((topic, topicIndex) => (
+                            <li key={topicIndex} className="flex items-start gap-3 sm:gap-4">
+                              <div className="mt-1 flex-shrink-0 p-1.5 sm:p-2 rounded-full" style={{ backgroundColor: `${primaryColor}15` }}>
+                                <Check 
+                                  className="w-4 h-4 sm:w-5 sm:h-5"
+                                  style={{ color: primaryColor }}
+                                />
+                              </div>
+                              <span className="text-sm sm:text-lg leading-relaxed flex-1 font-medium text-gray-700">
+                                {formatTopicText(topic)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Spacer para ocupar o restante do espaço */}
+                <div className="flex-1"></div>
+              </label>
+            </div>
+          );
+        })}
+      </RadioGroup>
+    </div>
+  );
+};
+
+export default PackageSelector;

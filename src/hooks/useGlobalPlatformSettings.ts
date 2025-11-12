@@ -1,0 +1,114 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types';
+import { useLocation, useParams } from 'react-router-dom';
+import { deepMerge, safeJsonCast } from '@/lib/utils'; // Import safeJsonCast
+
+// Define a more specific type for colors to avoid Json type issues
+export interface PlatformColors {
+  background_login?: string;
+  card_login?: string;
+  header_background?: string;
+  header_border?: string;
+  button_background?: string;
+  text_primary?: string;
+  text_header?: string;
+  text_cards?: string;
+  text_secondary?: string;
+  checkmark_background?: string;
+  checkmark_icon?: string;
+  [key: string]: string | undefined; // Add index signature
+}
+
+// Extend Tables<'platform_settings'> to use the specific PlatformColors type
+export type PlatformSettings = Omit<Tables<'platform_settings'>, 'colors' | 'password_reset_subject' | 'password_reset_body'> & {
+  colors: PlatformColors | null;
+  password_reset_subject: string | null; // NEW
+  password_reset_body: string | null;   // NEW
+};
+
+const DEFAULT_FONT_FAMILY = 'Inter, sans-serif';
+
+// Function to generate default settings for a given memberAreaId
+export const getDefaultSettings = (memberAreaId: string | null, userId: string | null = null): PlatformSettings => ({
+  id: '00000000-0000-0000-0000-000000000001', // Default ID, will be replaced on insert
+  user_id: userId,
+  member_area_id: memberAreaId || '', // member_area_id is NOT nullable in DB
+  logo_url: null,
+  login_title: 'Bem-vindo à sua Área de Membros',
+  login_subtitle: 'Acesse seu conteúdo exclusivo',
+  global_font_family: 'Nunito', // Default font
+  colors: {
+    background_login: '#FAF6F3', // hsl(24 40% 97%)
+    card_login: '#FFFFFF',      // hsl(0 0% 100%)
+    header_background: '#FAF6F3', // Changed to match page background
+    header_border: 'transparent', // Changed to transparent
+    button_background: '#EBA9A4', // hsl(4 50% 78%)
+    text_primary: '#2A2A2A',    // hsl(0 0% 16%)
+    text_header: '#2A2A2A',     // hsl(0 0% 16%)
+    text_cards: '#2A2A2A',      // hsl(0 0% 16%)
+    text_secondary: '#676767',  // hsl(0 0% 40%)
+    checkmark_background: '#D1FAE5', // hsl(142 50% 89%)
+    checkmark_icon: '#63C68B',     // hsl(142 80% 40%)
+  },
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  password_reset_subject: 'Redefina sua senha da Área de Membros Elyon Digital', // NEW DEFAULT
+  password_reset_body: 'Olá {customer_name},\n\nRecebemos uma solicitação para redefinir a senha da sua conta na Área de Membros {member_area_name}.\n\nPara redefinir sua senha, clique no link abaixo:\n{password_reset_link}\n\nSe você não solicitou esta redefinição, por favor, ignore este e-mail.\n\nAtenciosamente,\nEquipe {member_area_name}', // NEW DEFAULT
+});
+
+export const useGlobalPlatformSettings = () => {
+  const location = useLocation();
+  const { memberAreaId: urlMemberAreaId } = useParams<{ memberAreaId: string }>();
+
+  const [settings, setSettings] = useState<PlatformSettings | null>(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  const fetchSettings = useCallback(async () => {
+    setLoadingSettings(true);
+    let currentMemberAreaId: string | null = null;
+
+    // Tenta extrair memberAreaId da URL para páginas de área de membros
+    if (location.pathname.startsWith('/membros/') && urlMemberAreaId) {
+      currentMemberAreaId = urlMemberAreaId;
+    } else if (location.pathname.startsWith('/admin/member-areas/') && urlMemberAreaId) {
+      // Também para páginas de administração de área de membros, para o preview
+      currentMemberAreaId = urlMemberAreaId;
+    }
+
+    if (currentMemberAreaId) {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('*')
+        .eq('member_area_id', currentMemberAreaId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao buscar configurações da plataforma:', error);
+        setSettings(getDefaultSettings(currentMemberAreaId)); // Fallback para defaults
+      } else if (data) {
+        // Explicitly cast data.colors to PlatformColors and ensure it's an object before merging
+        const mergedData = deepMerge(
+          getDefaultSettings(currentMemberAreaId),
+          { ...data, colors: safeJsonCast<PlatformColors>(data.colors) } as Partial<PlatformSettings>
+        );
+        setSettings(mergedData);
+      } else {
+        setSettings(getDefaultSettings(currentMemberAreaId)); // Use default if no settings found
+      }
+    } else {
+      // Para páginas públicas ou se nenhum memberAreaId na URL, usa o padrão global (sem member_area_id)
+      setSettings(getDefaultSettings('default_member_area_id')); // Pass a default ID for global settings
+    }
+    setLoadingSettings(false);
+  }, [location.pathname, urlMemberAreaId]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  return {
+    settings,
+    loadingSettings,
+  };
+};
