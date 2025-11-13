@@ -257,9 +257,28 @@ const MemberAreaDashboard = () => {
         )
         .subscribe();
 
+      // Setup real-time listener for modules changes so order updates reflect immediately
+      const modulesChannel = supabase
+        .channel(`modules_changes:${memberAreaId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'modules',
+            filter: `member_area_id=eq.${memberAreaId}`,
+          },
+          (payload) => {
+            console.log('MEMBER_AREA_DASHBOARD_DEBUG: Realtime modules change received:', payload);
+            fetchMemberAreaAndContent(); // Re-fetch modules and related data on change
+          }
+        )
+        .subscribe();
+
       return () => {
-        console.log('MEMBER_AREA_DASHBOARD_DEBUG: Unsubscribing from realtime channel.');
+        console.log('MEMBER_AREA_DASHBOARD_DEBUG: Unsubscribing from realtime channels.');
         supabase.removeChannel(channel);
+        supabase.removeChannel(modulesChannel);
       };
     }
   }, [user, authLoading, fetchMemberAreaAndContent, memberAreaId, toast]);

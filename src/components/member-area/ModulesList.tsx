@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
@@ -78,6 +78,52 @@ export const ModulesList: React.FC<ModulesListProps> = ({ memberAreaId, onEditMo
     }
   };
 
+  // Drag and drop refs and handlers
+  const dragItemIndex = useRef<number | null>(null);
+  const dragOverIndex = useRef<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    dragItemIndex.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', String(index)); } catch (err) { /* noop for some browsers */ }
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    dragOverIndex.current = index;
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragItemIndex.current;
+    const to = dragOverIndex.current;
+    if (from === null || to === null || from === to) return;
+
+    const newOrder = Array.from(modules);
+    const [moved] = newOrder.splice(from, 1);
+    newOrder.splice(to, 0, moved);
+
+    // Optimistic UI
+    setModules(newOrder);
+
+    // Persist order_index sequentially
+    try {
+      const updates = newOrder.map((mod, idx) => supabase.from('modules').update({ order_index: idx }).eq('id', mod.id));
+      const results = await Promise.all(updates);
+      const anyError = results.find(r => (r as any).error);
+      if (anyError) throw (anyError as any).error;
+      toast({ title: 'Ordem atualizada', description: 'A ordem dos módulos foi salva.' });
+    } catch (error: any) {
+      console.error('MODULES_LIST_DEBUG: Erro ao salvar nova ordem:', error);
+      toast({ title: 'Erro', description: 'Não foi possível salvar a nova ordem dos módulos.', variant: 'destructive' });
+      // revert
+      if (memberAreaId) fetchModules(memberAreaId);
+    } finally {
+      dragItemIndex.current = null;
+      dragOverIndex.current = null;
+    }
+  };
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Carregando módulos...</p>;
   }
@@ -96,8 +142,16 @@ export const ModulesList: React.FC<ModulesListProps> = ({ memberAreaId, onEditMo
 
   return (
     <div className="space-y-4">
-      {modules.map(module => (
-        <Card key={module.id}>
+      {modules.map((module, idx) => (
+        <Card
+          key={module.id}
+          draggable
+          onDragStart={(e) => handleDragStart(e, idx)}
+          onDragOver={(e) => handleDragOver(e, idx)}
+          onDrop={handleDrop}
+          onDragEnd={() => { dragItemIndex.current = null; dragOverIndex.current = null; }}
+          className="cursor-grab"
+        >
           <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-base sm:text-lg truncate">{module.title}</h3>
