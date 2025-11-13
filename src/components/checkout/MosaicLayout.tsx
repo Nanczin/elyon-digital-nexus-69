@@ -185,17 +185,25 @@ const MosaicLayout = ({
 
             {/* Section 2: Escolha seu pacote */}
             {(checkout.form_fields as any)?.packages && (checkout.form_fields as any).packages.length > 0 && (
-              <div className="space-y-4 sm:space-y-8">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2>
-                
-                <PackageSelector
-                  packages={(checkout.form_fields as any).packages}
-                  selectedPackage={selectedPackage}
-                  onSelectPackage={setSelectedPackage}
-                  primaryColor={primaryColor}
-                  textColor="#1f2937"
-                />
-              </div>
+              {(() => {
+                const offerMode = (checkout as any).offer_mode || (checkout as any).offerMode || 'multiple';
+                return (
+                  <div className={`space-y-4 sm:space-y-8 ${offerMode === 'single' ? '-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8' : ''}`}>
+                    {offerMode !== 'single' && (
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2>
+                    )}
+
+                    <PackageSelector
+                      packages={(checkout.form_fields as any).packages}
+                      selectedPackage={selectedPackage}
+                      onSelectPackage={handlePackageSelect}
+                      primaryColor={primaryColor}
+                      textColor="#1f2937"
+                      offerMode={offerMode as 'single' | 'multiple'}
+                    />
+                  </div>
+                );
+              })()}
             )}
 
             {/* Section 3: Turbine sua jornada */}

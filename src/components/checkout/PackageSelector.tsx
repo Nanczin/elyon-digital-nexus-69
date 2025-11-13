@@ -61,6 +61,7 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
   });
 
   console.log('PackageSelector Debug:', {
+    offerMode: offerMode,
     totalPackages: packages.length,
     validPackages: validPackages.length,
     packages: packages.map(pkg => ({
@@ -75,9 +76,48 @@ const PackageSelector: React.FC<PackageSelectorProps> = ({
 
   if (validPackages.length === 0) return null;
 
-  // Se for modo single, não mostra o seletor de pacotes (já que só há um)
-  if (offerMode === 'single' && validPackages.length === 1) {
-    return null;
+  // Se houver exatamente 1 pacote válido, mostrar no layout minimalista (forçar single quando aplicável)
+  if (validPackages.length === 1) {
+    const pkg = validPackages[0];
+    const isSelected = selectedPackage === pkg.id;
+
+    return (
+      <div className="w-full">
+        <label
+          htmlFor={`package-${pkg.id}`}
+          className={`flex items-start gap-3 border rounded-xl p-4 cursor-pointer shadow-sm bg-white transition-all w-full ${isSelected ? 'border-2' : ''}`}
+          style={{
+            borderColor: isSelected ? primaryColor : '#eeeeee',
+            backgroundColor: isSelected ? `${primaryColor}10` : '#FFFFFF',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+          }}
+          onClick={() => onSelectPackage(pkg.id)}
+        >
+          <input
+            id={`package-${pkg.id}`}
+            type="radio"
+            name="package-selection"
+            checked={isSelected}
+            onChange={() => onSelectPackage(pkg.id)}
+            className="hidden"
+          />
+
+          <div className="flex flex-col flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 text-base mb-1 truncate">{pkg.name || `Pacote ${pkg.id}`}</h3>
+            {pkg.description && (
+              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{pkg.description}</p>
+            )}
+
+              <div className="mt-1 text-sm flex items-center gap-2">
+              <span className="font-bold" style={{ color: primaryColor }}>R${pkg.price.toFixed(2).replace('.', ',')}</span>
+              {pkg.originalPrice > 0 && pkg.originalPrice !== pkg.price && (
+                <span className="line-through text-gray-400 text-xs">R${pkg.originalPrice.toFixed(2).replace('.', ',')}</span>
+              )}
+            </div>
+          </div>
+        </label>
+      </div>
+    );
   }
 
   return (

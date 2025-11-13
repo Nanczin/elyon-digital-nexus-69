@@ -5,6 +5,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useIntegrations } from '@/hooks/useIntegrations';
 
 import { Navigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -18,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown, Eye, Image as ImageIcon, Facebook, BarChart3 } from 'lucide-react';
+import { Plus, CreditCard, Package, Shield, FileText, DollarSign, Trash2, Edit, Smartphone, MoreVertical, Save, Link, ShoppingBag, Upload, XCircle, Mail, AlertTriangle, MonitorDot, Check as CheckIcon, ChevronsUpDown, Eye, Image as ImageIcon, Facebook, BarChart3, Copy } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -297,7 +298,15 @@ const AdminCheckouts = () => {
     const newKey = editingCheckout ? `checkout-edit-${editingCheckout.id}` : 'checkout-new';
     
     if (autoSaveKey !== newKey) {
+      console.log(`[AdminCheckouts] Changing autoSaveKey from ${autoSaveKey} to ${newKey}`);
       setAutoSaveKey(newKey);
+      // Force reload data when changing checkout
+      if (editingCheckout) {
+        const originalData = loadOriginalCheckoutData(editingCheckout);
+        loadData(originalData);
+      } else {
+        loadData(getInitialFormData());
+      }
     } else {
       // Only load data if the key is stable and we haven't loaded yet for this key
       if (!hasSavedData || (editingCheckout && !checkoutData.id)) { // Check if checkoutData.id is set for editing mode
@@ -506,6 +515,79 @@ const AdminCheckouts = () => {
       setIsSavingDialog(false); // Use isSavingDialog
     }
   };
+
+  const handleDuplicate = async (checkoutId: string) => {
+    try {
+      setIsSavingDialog(true);
+      
+      // Fetch the checkout to duplicate
+      const { data, error: fetchError } = await supabase
+        .from('checkouts')
+        .select('*')
+        .eq('id', checkoutId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Get all checkouts to find the highest number for this checkout
+      const { data: allCheckouts, error: listError } = await supabase
+        .from('checkouts')
+        .select('name')
+        .ilike('name', `${data.name}%`);
+
+      if (listError) throw listError;
+
+      // Find the highest number in existing copies
+      let maxNumber = 0;
+      const baseNamePattern = new RegExp(`^${data.name}\\s*\\((\\d+)\\)$`);
+      
+      allCheckouts?.forEach(checkout => {
+        const match = checkout.name.match(baseNamePattern);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNumber) maxNumber = num;
+        }
+      });
+
+      // Create new name with incremented number
+      const newNumber = maxNumber + 1;
+      const newName = `${data.name} (${newNumber})`;
+
+      // Create a new checkout with duplicated data
+      const newCheckout = {
+        ...data,
+        id: uuidv4(), // Generate new UUID
+        name: newName,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from('checkouts')
+        .insert([newCheckout])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Sucesso",
+        description: "Checkout duplicado com sucesso!"
+      });
+
+      fetchCheckouts();
+    } catch (error: any) {
+      console.error('Erro ao duplicar checkout:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível duplicar o checkout",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingDialog(false);
+    }
+  };
+
   if (authLoading) { // Only show loading if auth is still in progress
     return <div className="flex items-center justify-center min-h-screen">Carregando autenticação...</div>;
   }
@@ -671,6 +753,9 @@ const AdminCheckouts = () => {
 
   const handlePreview = () => {
     let previewData = JSON.parse(JSON.stringify(checkoutData));
+    
+    // Ensure offerMode is preserved for preview
+    previewData.offerMode = checkoutData.offerMode;
 
     // Ensure packages array exists and has at least one package for logic below
     if (!previewData.form_fields.packages || previewData.form_fields.packages.length === 0) {
@@ -835,6 +920,7 @@ const AdminCheckouts = () => {
         price: data.price / 100,
         promotional_price: data.promotional_price ? data.promotional_price / 100 : null,
         layout: data.layout || 'horizontal',
+        offerMode: data.offer_mode || 'single',
         form_fields: {
           ...formFieldsData,
           packages: packagesConfig,
@@ -1052,6 +1138,7 @@ const AdminCheckouts = () => {
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2 text-sm sm:text-base" size="sm" onClick={() => {
                  setEditingCheckout(null);
+                 clearSavedData();
               }}>
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Novo Checkout</span>
@@ -1065,6 +1152,14 @@ const AdminCheckouts = () => {
                     {editingCheckout ? 'Editar Checkout' : 'Criar Nova Página de Checkout'}
                     <Save className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                   </span>
+                  {editingCheckout && (editingCheckout.name || checkoutData.name) && (
+                    <>
+                      {console.log('DEBUG: editingCheckout.name:', editingCheckout.name, 'checkoutData.name:', checkoutData.name)}
+                      <span className="text-xs sm:text-sm text-blue-600 font-semibold truncate max-w-xs sm:max-w-md bg-blue-50 px-2 py-1 rounded">
+                        {editingCheckout.name || checkoutData.name}
+                      </span>
+                    </>
+                  )}
                   <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                     {hasSavedData && (
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
@@ -1113,7 +1208,7 @@ const AdminCheckouts = () => {
                       Cliente
                     </TabsTrigger>
                     <TabsTrigger value="packages" onClick={() => setCurrentTab('packages')} className="text-xs sm:text-sm py-2">
-                      Pacotes
+                      Oferta
                     </TabsTrigger>
                     <TabsTrigger value="bumps" onClick={() => setCurrentTab('bumps')} className="text-xs sm:text-sm py-2">
                       <span className="hidden sm:inline">Order Bumps</span>
@@ -1297,7 +1392,7 @@ const AdminCheckouts = () => {
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-6">
                       <h3 className="text-lg font-semibold">
-                        {checkoutData.offerMode === 'single' ? 'Configurar Pacote' : 'Pacotes'}
+                        {checkoutData.offerMode === 'single' ? 'Sua Oferta' : 'Pacotes'}
                       </h3>
                       {checkoutData.offerMode === 'multiple' && (
                         <Button type="button" onClick={addPackage} size="sm" className="w-full sm:w-auto">
@@ -1312,7 +1407,7 @@ const AdminCheckouts = () => {
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="font-semibold flex items-center gap-2">
                             <Package className="h-4 w-4" />
-                            {checkoutData.offerMode === 'single' ? 'Pacote Principal' : `Pacote ${index + 1}`}
+                            {checkoutData.offerMode === 'single' ? 'Detalhes da Oferta' : `Pacote ${index + 1}`}
                           </h4>
                           {checkoutData.offerMode === 'multiple' && checkoutData.form_fields.packages.length > 1 && (
                             <Button type="button" variant="destructive" size="sm" onClick={() => removePackage(pkg.id)}>
@@ -1323,8 +1418,8 @@ const AdminCheckouts = () => {
               
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div className="space-y-2">
-                            <Label>Nome do Pacote</Label>
-                             <Input value={pkg.name} onChange={e => updatePackage(pkg.id, 'name', e.target.value)} placeholder="Ex: Pacote Básico" />
+                            <Label>{checkoutData.offerMode === 'single' ? 'Nome da Oferta' : 'Nome do Pacote'}</Label>
+                             <Input value={pkg.name} onChange={e => updatePackage(pkg.id, 'name', e.target.value)} placeholder={checkoutData.offerMode === 'single' ? 'Ex: Acesso Completo' : 'Ex: Pacote Básico'} />
                           </div>
                           <div className="space-y-2">
                             <Label>Preço (R$)</Label>
@@ -1363,29 +1458,31 @@ const AdminCheckouts = () => {
                            <Textarea value={pkg.description} onChange={e => updatePackage(pkg.id, 'description', e.target.value)} placeholder="Descrição do pacote..." rows={3} />
                         </div>
                         
-                        <div className="space-y-2">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                            <Label>Tópicos do que será entregue</Label>
-                            <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage(pkg.id)} className="w-full sm:w-auto">
-                              <Plus className="h-4 w-4 mr-2" />
-                              Adicionar Tópico
-                            </Button>
-                          </div>
-                          
-                           {pkg.topics.map((topic, topicIndex) => (
-                             <div key={topicIndex} className="flex items-center gap-2">
-                                <Input value={topic} onChange={e => updatePackageTopic(pkg.id, topicIndex, e.target.value)} placeholder="Ex: Acesso vitalício: ao conteúdo" />
-                               {pkg.topics.length > 1 && (
-                                 <Button type="button" variant="destructive" size="sm" onClick={() => removeTopicFromPackage(pkg.id, topicIndex)}>
-                                   <Trash2 className="h-4 w-4" />
-                                 </Button>
-                               )}
+                        {checkoutData.offerMode !== 'single' && (
+                          <div className="space-y-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                              <Label>Tópicos do que será entregue</Label>
+                              <Button type="button" size="sm" variant="outline" onClick={() => addTopicToPackage(pkg.id)} className="w-full sm:w-auto">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Adicionar Tópico
+                              </Button>
+                            </div>
+                            
+                             {pkg.topics.map((topic, topicIndex) => (
+                               <div key={topicIndex} className="flex items-center gap-2">
+                                  <Input value={topic} onChange={e => updatePackageTopic(pkg.id, topicIndex, e.target.value)} placeholder="Ex: Acesso vitalício: ao conteúdo" />
+                                 {pkg.topics.length > 1 && (
+                                   <Button type="button" variant="destructive" size="sm" onClick={() => removeTopicFromPackage(pkg.id, topicIndex)}>
+                                     <Trash2 className="h-4 w-4" />
+                                   </Button>
+                                 )}
+                               </div>
+                             ))}
+                             <div className="text-xs text-muted-foreground mt-2">
+                               💡 O texto antes dos dois pontos (:) será destacado em negrito automaticamente
                              </div>
-                           ))}
-                           <div className="text-xs text-muted-foreground mt-2">
-                             💡 O texto antes dos dois pontos (:) será destacado em negrito automaticamente
-                           </div>
-                        </div>
+                          </div>
+                        )}
 
                         <Separator className="my-4" />
 
@@ -2231,6 +2328,10 @@ const AdminCheckouts = () => {
                               <DropdownMenuItem onClick={() => navigator.clipboard.writeText(`${window.location.origin}/checkout/${checkout.id}`)} className="text-xs sm:text-sm">
                                 <Link className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                                 Copiar Link
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDuplicate(checkout.id)} className="text-xs sm:text-sm">
+                                <Copy className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                                Duplicar
                               </DropdownMenuItem>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>

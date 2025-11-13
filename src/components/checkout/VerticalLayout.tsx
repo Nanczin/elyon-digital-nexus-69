@@ -26,6 +26,7 @@ const VerticalLayout = ({
   primaryColor,
   headlineText,
   headlineColor,
+  highlightColor,
   description,
   gradientColor,
   calculateTotal,
@@ -51,7 +52,7 @@ const VerticalLayout = ({
               <img 
                 src={checkout.styles.banner_url} 
                 alt={checkout.products.name}
-                className="w-full max-h-64 object-cover rounded-lg animate-fade-in"
+                className="w-full max-h-96 object-cover rounded-lg animate-fade-in"
               />
             </div>
           )}
@@ -63,7 +64,7 @@ const VerticalLayout = ({
               <img 
                 src={checkout.styles?.logo_url || checkout.products.logo_url} 
                 alt={checkout.products.name}
-                className="h-20 mx-auto"
+                className="h-40 mx-auto"
               />
             </div>
           )}
@@ -131,16 +132,28 @@ const VerticalLayout = ({
 
         {/* Seção 3: Opções de Seleção */}
         {(checkout.form_fields as any)?.packages && (checkout.form_fields as any).packages.length > 0 && (
-          <div className="bg-card rounded-lg border p-6 mb-8">
-            <h2 className="text-xl font-bold font-sans text-foreground mb-6">Escolha seu Pacote</h2>
-            <PackageSelector
-              packages={(checkout.form_fields as any).packages}
-              selectedPackage={selectedPackage}
-              onSelectPackage={handlePackageSelect}
-              primaryColor={primaryColor}
-              textColor={textColor}
-            />
-          </div>
+          (() => {
+            const offerMode = checkout.offerMode || (checkout as any).offer_mode || (checkout as any).offerMode || 'multiple';
+            console.log('[VerticalLayout] offerMode:', offerMode, 'checkout.offerMode:', checkout.offerMode, 'offer_mode:', (checkout as any).offer_mode);
+            return (
+              <div className={`bg-card rounded-lg border p-6 mb-8 ${offerMode === 'single' ? 'p-0 border-0 bg-transparent' : ''}`}>
+                {offerMode === 'single' && (
+                  <h2 className="text-xl font-bold font-sans text-foreground mb-6">O que você vai receber</h2>
+                )}
+                {offerMode !== 'single' && (
+                  <h2 className="text-xl font-bold font-sans text-foreground mb-6">Escolha seu Pacote</h2>
+                )}
+                <PackageSelector
+                  packages={(checkout.form_fields as any).packages}
+                  selectedPackage={selectedPackage}
+                  onSelectPackage={handlePackageSelect}
+                  primaryColor={primaryColor}
+                  textColor={textColor}
+                  offerMode={offerMode as 'single' | 'multiple'}
+                />
+              </div>
+            );
+          })()
         )}
 
         {/* Seção 4: Complementos Opcionais */}
@@ -228,10 +241,30 @@ const VerticalLayout = ({
           
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-700">Pacote Completo</span>
-              <span className="font-semibold text-gray-800">
-                {formatCurrency(checkout.promotional_price || checkout.price)}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-gray-700 font-medium">
+                  {checkout.form_fields?.packages && checkout.form_fields.packages.length > 0 && selectedPackage
+                    ? checkout.form_fields.packages.find(p => p.id === selectedPackage)?.name || checkout.products?.name || 'Produto'
+                    : checkout.products?.name || 'Produto'
+                  }
+                </span>
+              </div>
+              <div className="flex flex-col items-end">
+                {checkout.promotional_price && checkout.promotional_price < checkout.price ? (
+                  <>
+                    <span className="text-sm line-through text-gray-400">
+                      {formatCurrency(checkout.price)}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {formatCurrency(checkout.promotional_price)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-semibold text-gray-800">
+                    {formatCurrency(checkout.price)}
+                  </span>
+                )}
+              </div>
             </div>
             
             {selectedOrderBumps.map(bumpId => {

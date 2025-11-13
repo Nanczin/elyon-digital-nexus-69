@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { MemberAreaAuthProvider } from "@/hooks/useMemberAreaAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Layout from "@/layout/Layout"; // Importa o novo Layout
+import MemberAreaLayout from "@/layout/MemberAreaLayout"; // Importa o layout da área de membros
 import Home from "./pages/Home"; // Importa a Home renomeada
 import AuthLogin from "./pages/AuthLogin";
 import AuthRegister from "./pages/AuthRegister";
@@ -131,46 +131,6 @@ const router = createBrowserRouter([
         path: "auth/register",
         element: <AuthRegister />,
       },
-      // Rotas de Checkout e Sucesso de Pagamento que NÃO usam o Layout principal
-      {
-        path: "checkout/:checkoutId",
-        element: <Checkout />,
-      },
-      {
-        path: "payment-success",
-        element: <PaymentSuccess />,
-      },
-      // Rotas da Área de Membros (com MemberAreaAuthProvider)
-      {
-        path: "membros/:memberAreaId",
-        element: <MemberAreaAuthProvider><Outlet /></MemberAreaAuthProvider>, // Usa Outlet para as rotas aninhadas da área de membros
-        children: [
-          {
-            path: "login",
-            element: <MemberAreaLogin />,
-          },
-          {
-            path: "forgot-password",
-            element: <AuthForgotPassword />,
-          },
-          {
-            path: "update-password",
-            element: <AuthUpdatePassword />,
-          },
-          {
-            index: true, // Rota padrão para /membros/:memberAreaId
-            element: <MemberAreaDashboard />,
-          },
-          {
-            path: "modules/:moduleId",
-            element: <MemberAreaModuleDetails />,
-          },
-          {
-            path: "modules/:moduleId/lessons/:lessonId",
-            element: <MemberAreaLesson />,
-          },
-        ],
-      },
       {
         path: "reset-password", // Rota global para redefinição de senha
         element: <AuthUpdatePassword />,
@@ -179,6 +139,46 @@ const router = createBrowserRouter([
       {
         path: "*",
         element: <NotFound />,
+      },
+    ],
+  },
+  // Rotas de Checkout e Sucesso de Pagamento (FORA do Layout principal, sem sidebar/navbar)
+  {
+    path: "checkout/:checkoutId",
+    element: <Checkout />,
+  },
+  {
+    path: "payment-success",
+    element: <PaymentSuccess />,
+  },
+  // Rotas da Área de Membros (FORA do Layout principal, com MemberAreaLayout)
+  {
+    path: "membros/:memberAreaId",
+    element: <MemberAreaLayout />,
+    children: [
+      {
+        path: "login",
+        element: <MemberAreaLogin />,
+      },
+      {
+        path: "forgot-password",
+        element: <AuthForgotPassword />,
+      },
+      {
+        path: "update-password",
+        element: <AuthUpdatePassword />,
+      },
+      {
+        index: true, // Rota padrão para /membros/:memberAreaId
+        element: <MemberAreaDashboard />,
+      },
+      {
+        path: "modules/:moduleId",
+        element: <MemberAreaModuleDetails />,
+      },
+      {
+        path: "modules/:moduleId/lessons/:lessonId",
+        element: <MemberAreaLesson />,
       },
     ],
   },

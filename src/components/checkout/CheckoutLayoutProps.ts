@@ -102,6 +102,7 @@ export interface CheckoutLayoutProps {
   primaryColor: string;
   headlineText: string;
   headlineColor: string;
+  highlightColor: string;
   description: string;
   gradientColor: string;
   calculateTotal: () => number;

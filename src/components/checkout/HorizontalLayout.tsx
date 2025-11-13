@@ -30,6 +30,7 @@ const HorizontalLayout = ({
   primaryColor,
   headlineText,
   headlineColor,
+  highlightColor,
   description,
   gradientColor,
   calculateTotal,
@@ -77,7 +78,7 @@ const HorizontalLayout = ({
             <img 
               src={checkout.styles.banner_url} 
               alt={checkout.products.name}
-              className="w-full max-h-64 object-cover rounded-lg animate-fade-in"
+              className="w-full max-h-96 object-cover rounded-lg animate-fade-in"
             />
           </div>
         )}
@@ -88,7 +89,7 @@ const HorizontalLayout = ({
             <img 
               src={checkout.styles.logo_url} 
               alt={checkout.products.name}
-              className="h-24 sm:h-32 lg:h-40 w-auto object-contain animate-fade-in hover-scale"
+              className="h-32 sm:h-48 lg:h-64 w-auto object-contain animate-fade-in hover-scale"
             />
           </div>
         )}
@@ -191,18 +192,30 @@ const HorizontalLayout = ({
             </div>
 
             {/* Section 2: Escolha seu pacote */}
-            {(checkout.form_fields as any)?.packages && (checkout.form_fields as any).packages.length > 0 && (
-              <div className="space-y-4 sm:space-y-8">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2>
-                
-                <PackageSelector
-                  packages={(checkout.form_fields as any).packages}
-                  selectedPackage={selectedPackage}
-                  onSelectPackage={handlePackageSelect}
-                  primaryColor={primaryColor}
-                  textColor="#1f2937"
-                />
-              </div>
+      {(checkout.form_fields as any)?.packages && (checkout.form_fields as any).packages.length > 0 && (
+              (() => {
+                const offerMode = checkout.offerMode || (checkout as any).offer_mode || (checkout as any).offerMode || 'multiple';
+                console.log('[HorizontalLayout] offerMode:', offerMode, 'checkout.offerMode:', checkout.offerMode, 'offer_mode:', (checkout as any).offer_mode);
+                return (
+                  <div className={`space-y-4 sm:space-y-8 ${offerMode === 'single' ? '-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8' : ''}`}>
+                    {offerMode === 'single' && (
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">O que você vai receber</h2>
+                    )}
+                    {offerMode !== 'single' && (
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2>
+                    )}
+                    
+                    <PackageSelector
+                      packages={(checkout.form_fields as any).packages}
+                      selectedPackage={selectedPackage}
+                      onSelectPackage={handlePackageSelect}
+                      primaryColor={primaryColor}
+                      textColor="#1f2937"
+                      offerMode={offerMode as 'single' | 'multiple'}
+                    />
+                  </div>
+                );
+              })()
             )}
 
             {/* Section 3: Turbine sua jornada */}
@@ -306,10 +319,58 @@ const HorizontalLayout = ({
               
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-700">Pacote Completo</span>
-                  <span className="font-semibold text-gray-800">
-                    {formatCurrency(checkout.promotional_price || checkout.price)}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-700 font-medium">
+                      {(() => {
+                        const pkg = checkout.form_fields?.packages && checkout.form_fields.packages.length > 0
+                          ? checkout.form_fields.packages.find(p => p.id === selectedPackage)
+                          : null;
+                        return pkg?.name || checkout.products?.name || 'Produto';
+                      })()}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    {(() => {
+                      const pkg = checkout.form_fields?.packages && checkout.form_fields.packages.length > 0
+                        ? checkout.form_fields.packages.find(p => p.id === selectedPackage)
+                        : null;
+
+                      if (pkg) {
+                        return (
+                          <>
+                            {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                              <span className="text-sm line-through text-gray-400">
+                                {formatCurrency(pkg.originalPrice)}
+                              </span>
+                            )}
+                            <span className="font-semibold text-gray-800">
+                              {formatCurrency(pkg.price)}
+                            </span>
+                          </>
+                        );
+                      }
+
+                      // Fallback to checkout-level price
+                      if (checkout.promotional_price && checkout.promotional_price < checkout.price) {
+                        return (
+                          <>
+                            <span className="text-sm line-through text-gray-400">
+                              {formatCurrency(checkout.price)}
+                            </span>
+                            <span className="font-semibold text-gray-800">
+                              {formatCurrency(checkout.promotional_price)}
+                            </span>
+                          </>
+                        );
+                      }
+
+                      return (
+                        <span className="font-semibold text-gray-800">
+                          {formatCurrency(checkout.price)}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
                 
                 {selectedOrderBumps.map(bumpId => {

@@ -6,7 +6,6 @@ import { useCheckoutIntegrations } from '@/hooks/useCheckoutIntegrations';
 import { CheckoutData, CustomerData, OrderBump, PaymentMethods } from '@/components/checkout/CheckoutLayoutProps';
 import { CardData } from '@/components/checkout/CreditCardForm';
 import HorizontalLayout from '@/components/checkout/HorizontalLayout';
-import MosaicLayout from '@/components/checkout/MosaicLayout';
 import { createCardToken } from '@mercadopago/sdk-react';
 import { toCents } from '@/utils/textFormatting';
 import { DeliverableConfig, FormFields, PackageConfig, Tables } from '@/integrations/supabase/types'; // Importar DeliverableConfig e FormFields
@@ -60,6 +59,14 @@ const Checkout = () => {
         console.log('CHECKOUT_FRONTEND_DEBUG: Loaded preview data from localStorage:', JSON.stringify(previewData, null, 2));
         
         setCheckout(previewData);
+
+        // If preview has packages, ensure selectedPackage uses the first package id
+        const previewFirstPkgId = previewData.form_fields?.packages && previewData.form_fields.packages.length > 0
+          ? previewData.form_fields.packages[0].id
+          : undefined;
+        if (previewFirstPkgId !== undefined) {
+          setSelectedPackage(previewFirstPkgId);
+        }
 
         // Set initial payment method
         if (previewData.payment_methods?.pix) {
@@ -164,6 +171,14 @@ const Checkout = () => {
       console.log('Checkout Debug: Timer no objeto transformado:', transformedData.timer);
       
       setCheckout(transformedData);
+
+      // Ensure selectedPackage matches an existing package id (use first package if available)
+      const firstPkgId = transformedData.form_fields?.packages && transformedData.form_fields.packages.length > 0
+        ? transformedData.form_fields.packages[0].id
+        : undefined;
+      if (firstPkgId !== undefined) {
+        setSelectedPackage(firstPkgId);
+      }
 
       if (transformedData.payment_methods?.pix) {
         setSelectedPaymentMethod('pix');
@@ -573,6 +588,7 @@ const Checkout = () => {
     primaryColor,
     headlineText,
     headlineColor,
+    highlightColor,
     description,
     gradientColor,
     calculateTotal,
