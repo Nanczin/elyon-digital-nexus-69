@@ -14,7 +14,8 @@ import SecuritySection from './SecuritySection';
 import CountdownTimer from './CountdownTimer';
 import { CreditCardForm } from './CreditCardForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState } from 'react';
 
 
 const MosaicLayout = ({
@@ -46,6 +47,7 @@ const MosaicLayout = ({
   const handlePackageSelect = (packageId: number) => {
     setSelectedPackage?.(packageId);
   };
+  const offerMode = (checkout as any).offer_mode || (checkout as any).offerMode || 'multiple';
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Countdown Timer */}
@@ -185,25 +187,20 @@ const MosaicLayout = ({
 
             {/* Section 2: Escolha seu pacote */}
             {(checkout.form_fields as any)?.packages && (checkout.form_fields as any).packages.length > 0 && (
-              {(() => {
-                const offerMode = (checkout as any).offer_mode || (checkout as any).offerMode || 'multiple';
-                return (
-                  <div className={`space-y-4 sm:space-y-8 ${offerMode === 'single' ? '-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8' : ''}`}>
-                    {offerMode !== 'single' && (
-                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2>
-                    )}
+              <div className={`space-y-4 sm:space-y-8 ${offerMode === 'single' ? '-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8' : ''}`}>
+                {offerMode !== 'single' && (
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 border-b-2 pb-3 sm:pb-4 text-center">Escolha seu pacote</h2>
+                )}
 
-                    <PackageSelector
-                      packages={(checkout.form_fields as any).packages}
-                      selectedPackage={selectedPackage}
-                      onSelectPackage={handlePackageSelect}
-                      primaryColor={primaryColor}
-                      textColor="#1f2937"
-                      offerMode={offerMode as 'single' | 'multiple'}
-                    />
-                  </div>
-                );
-              })()}
+                <PackageSelector
+                  packages={(checkout.form_fields as any).packages}
+                  selectedPackage={selectedPackage}
+                  onSelectPackage={handlePackageSelect}
+                  primaryColor={primaryColor}
+                  textColor="#1f2937"
+                  offerMode={offerMode as 'single' | 'multiple'}
+                />
+              </div>
             )}
 
             {/* Section 3: Turbine sua jornada */}

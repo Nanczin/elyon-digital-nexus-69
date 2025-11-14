@@ -92,7 +92,7 @@ export const LessonsList: React.FC<LessonsListProps> = ({ moduleId, onEditLesson
     }
 
     switch (lesson.content_type) {
-      case 'video_link':
+      case 'video_link': {
         const youtubeMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
         const vimeoMatch = lesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
 
@@ -124,8 +124,7 @@ export const LessonsList: React.FC<LessonsListProps> = ({ moduleId, onEditLesson
           );
         }
         return <p className="text-red-500 text-sm">Link de vídeo inválido ou não suportado.</p>;
-
-      case 'video_upload':
+      }
         return (
           <video controls className="w-full h-auto rounded-lg">
             <source src={lesson.content_url || ''} type="video/mp4" />

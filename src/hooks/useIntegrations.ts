@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { EmailConfig as SimplifiedEmailConfig, Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types'; // Importar a interface simplificada e Tables

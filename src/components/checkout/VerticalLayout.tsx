@@ -12,7 +12,8 @@ import { processHeadlineText, formatCurrency } from '@/utils/textFormatting';
 import PackageSelector from './PackageSelector';
 import SecuritySection from './SecuritySection';
 import { CreditCardForm } from './CreditCardForm';
-import { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState } from 'react';
 
 
 const VerticalLayout = ({

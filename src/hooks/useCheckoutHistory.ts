@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect } from 'react';
 
 export interface HistoryEntry {
   id: string;

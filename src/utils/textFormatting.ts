@@ -50,7 +50,7 @@ export const formatTopicText = (topic: string): React.ReactNode => {
   if (!topic) return topic;
   
   // Remove números no início (ex: "1. ", "2. ", etc.)
-  let cleanTopic = topic.replace(/^\d+\.\s*/, '');
+  const cleanTopic = topic.replace(/^\d+\.\s*/, '');
   
   if (!cleanTopic.includes(':')) return cleanTopic;
   

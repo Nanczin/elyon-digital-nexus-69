@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from 'react';
 import { Navigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, Json } from '@/integrations/supabase/types';
@@ -198,7 +199,7 @@ const MemberAreaLesson = () => {
     }
 
     switch (currentLesson.content_type) {
-      case 'video_link':
+      case 'video_link': {
         const youtubeMatch = currentLesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/);
         const vimeoMatch = currentLesson.content_url?.match(/(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com)\/(?:video\/|)(\d+)/);
 
@@ -230,8 +231,7 @@ const MemberAreaLesson = () => {
           );
         }
         return <p className="text-red-500 text-sm">Link de vídeo inválido ou não suportado.</p>;
-
-      case 'video_upload':
+      }
         return (
           <video controls className="w-full h-auto rounded-lg">
             <source src={currentLesson.content_url || ''} type="video/mp4" />

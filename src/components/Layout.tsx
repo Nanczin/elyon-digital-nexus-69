@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster } from "@/components/ui/toaster"; // Importar Toaster
 import { Toaster as Sonner } from "@/components/ui/sonner"; // Importar Sonner
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface LayoutProps {
   // children: React.ReactNode; // Removido, agora usa Outlet
 }

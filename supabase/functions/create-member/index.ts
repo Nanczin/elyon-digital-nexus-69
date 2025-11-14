@@ -118,51 +118,104 @@ serve(async (req) => {
       passwordLength: password.length,
     });
 
-    // Create auth user
-    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: name,
-        force_password_change: forceChangePassword,
-      },
-    });
+    let userId: string | null = null;
+    let createdNewAuthUser = false;
+    try {
+      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: name,
+          force_password_change: forceChangePassword,
+        },
+      });
 
-    if (authError) {
-      console.error("CREATE_MEMBER_DEBUG: Auth user creation failed", authError);
-      throw new Error(`Failed to create auth user: ${authError.message}`);
+      if (authError) {
+        // If email already exists, we'll try to recover existing user id
+        console.error("CREATE_MEMBER_DEBUG: Auth user creation returned error", authError);
+        throw authError;
+      }
+
+      userId = authData.user.id;
+      createdNewAuthUser = true;
+      console.log("CREATE_MEMBER_DEBUG: Auth user created", { userId });
+    } catch (authErr: any) {
+      // Handle duplicate email: try to find existing member record with that email
+      const authMsg = authErr?.message || String(authErr);
+      console.warn('CREATE_MEMBER_DEBUG: auth.createUser failed, attempting fallback. Message:', authMsg);
+
+      if (authMsg && authMsg.toLowerCase().includes('duplicate')) {
+        // try to find existing member entry
+        try {
+          const { data: existingMember } = await supabase
+            .from('members')
+            .select('id, user_id')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (existingMember && existingMember.user_id) {
+            userId = existingMember.user_id;
+            console.log('CREATE_MEMBER_DEBUG: Found existing member record for email, using user_id', { userId, memberId: existingMember.id });
+          } else {
+            console.warn('CREATE_MEMBER_DEBUG: No member record found for duplicate email; cannot auto-create auth user.');
+            return new Response(JSON.stringify({ success: false, error: 'E-mail já cadastrado. Faça login ou recupere a senha.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 });
+          }
+        } catch (e) {
+          console.error('CREATE_MEMBER_DEBUG: Error while looking up existing member for duplicate email', e);
+          return new Response(JSON.stringify({ success: false, error: 'E-mail já cadastrado e não foi possível localizar usuário.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 });
+        }
+      } else {
+        console.error('CREATE_MEMBER_DEBUG: Unexpected auth error:', authErr);
+        return new Response(JSON.stringify({ success: false, error: authMsg || 'Falha ao criar usuário de autenticação.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
+      }
     }
-
-    const userId = authData.user.id;
-    console.log("CREATE_MEMBER_DEBUG: Auth user created", { userId });
 
     // Hash password for storage in members table
     const passwordHash = await hashPassword(password);
 
-    // Create member record
-    const { data: memberData, error: memberError } = await supabase
-      .from("members")
-      .insert({
-        user_id: userId,
-        name,
-        email,
-        password_hash: passwordHash,
-        checkout_id: checkoutId,
-        payment_id: paymentId,
-        plan_type: planType,
-        status: "active",
-      })
-      .select()
-      .single();
+    // Prepare memberId variable; if we found existing member earlier (duplicate email fallback)
+    // the variable may already be set. Otherwise, create a new member record.
+    let memberId: string | null = null;
 
-    if (memberError) {
-      console.error("CREATE_MEMBER_DEBUG: Member record creation failed", memberError);
-      throw new Error(`Failed to create member record: ${memberError.message}`);
+    if (!userId) {
+      throw new Error('User id not available to create member record');
     }
 
-    const memberId = memberData.id;
-    console.log("CREATE_MEMBER_DEBUG: Member record created", { memberId });
+    // Try to create member record only if we don't already have one
+    const { data: existingMemberCheck } = await supabase
+      .from('members')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingMemberCheck && existingMemberCheck.id) {
+      memberId = existingMemberCheck.id;
+      console.log('CREATE_MEMBER_DEBUG: Found existing member record, will reuse', { memberId });
+    } else {
+      const { data: memberData, error: memberError } = await supabase
+        .from("members")
+        .insert({
+          user_id: userId,
+          name,
+          email,
+          password_hash: passwordHash,
+          checkout_id: checkoutId,
+          payment_id: paymentId,
+          plan_type: planType,
+          status: "active",
+        })
+        .select()
+        .single();
+
+      if (memberError) {
+        console.error("CREATE_MEMBER_DEBUG: Member record creation failed", memberError);
+        throw new Error(`Failed to create member record: ${memberError.message}`);
+      }
+
+      memberId = memberData.id;
+      console.log("CREATE_MEMBER_DEBUG: Member record created", { memberId });
+    }
 
     // Grant access to products
     if (productIds && productIds.length > 0) {
@@ -174,7 +227,7 @@ serve(async (req) => {
 
       const { error: accessError } = await supabase
         .from("member_access")
-        .insert(memberAccessRecords);
+        .upsert(memberAccessRecords, { onConflict: 'member_id,product_id' });
 
       if (accessError) {
         console.error("CREATE_MEMBER_DEBUG: Failed to grant product access", accessError);
@@ -189,8 +242,8 @@ serve(async (req) => {
 
     const response: CreateMemberResponse = {
       success: true,
-      memberId,
-      userId,
+      memberId: memberId || undefined,
+      userId: userId || undefined,
       password,
       message: "Member created successfully",
     };

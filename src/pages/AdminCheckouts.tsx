@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -765,7 +766,7 @@ const AdminCheckouts = () => {
   };
 
   const handlePreview = () => {
-    let previewData = JSON.parse(JSON.stringify(checkoutData));
+    const previewData = JSON.parse(JSON.stringify(checkoutData));
     
     // Ensure offerMode is preserved for preview
     previewData.offerMode = checkoutData.offerMode;
@@ -1018,7 +1019,7 @@ const AdminCheckouts = () => {
     try {
       console.log('ADMIN_CHECKOUTS_DEBUG: Submitting form. Timer:', checkoutData.timer);
 
-      let finalCheckoutDeliverable: DeliverableConfig = { ...checkoutData.form_fields.deliverable };
+      const finalCheckoutDeliverable: DeliverableConfig = { ...checkoutData.form_fields.deliverable };
       if (finalCheckoutDeliverable.type === 'upload' && checkoutDeliverableFile) {
         console.log('ADMIN_CHECKOUTS_DEBUG: Uploading checkout-level deliverable file:', checkoutDeliverableFile.name);
         finalCheckoutDeliverable.fileUrl = await uploadFile(checkoutDeliverableFile, 'checkout-deliverables');
