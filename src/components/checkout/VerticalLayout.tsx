@@ -5,12 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Shield, CheckCircle, CreditCard, Star, Heart, ArrowRight, Clock } from 'lucide-react';
+import { Shield, CheckCircle, CreditCard, Star, Heart, ArrowRight, Clock, QrCode } from 'lucide-react';
 import { CheckoutLayoutProps } from './CheckoutLayoutProps';
 import { getOrderBumpPrefix } from '@/utils/orderBumpUtils';
 import { processHeadlineText, formatCurrency } from '@/utils/textFormatting';
 import PackageSelector from './PackageSelector';
 import SecuritySection from './SecuritySection';
+import { CreditCardForm } from './CreditCardForm';
 import { useState } from 'react';
 
 
@@ -43,7 +44,7 @@ const VerticalLayout = ({
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        
+        <form onSubmit={handleSubmit} className="space-y-8">
         {/* Seção 1: Cabeçalho e Introdução */}
         <div className="text-center mb-12">
           {/* NEW: Display checkout banner if available */}
@@ -97,7 +98,8 @@ const VerticalLayout = ({
                   placeholder="Digite seu nome completo"
                   value={customerData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="mt-1 bg-muted/30 border-border rounded-lg"
+                  className="mt-1 bg-muted/30 border-border rounded-lg h-9"
+                  required={(checkout.form_fields as any)?.requireName}
                 />
               </div>
             )}
@@ -110,7 +112,22 @@ const VerticalLayout = ({
                   placeholder="Digite seu melhor e-mail"
                   value={customerData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="mt-1 bg-muted/30 border-border rounded-lg"
+                  className="mt-1 bg-muted/30 border-border rounded-lg h-9"
+                  required={(checkout.form_fields as any)?.requireEmail}
+                />
+              </div>
+            )}
+
+            {(checkout.form_fields as any)?.requireEmailConfirm !== false && (
+              <div>
+                <Label className="text-foreground font-sans">Confirmar E-mail</Label>
+                <Input
+                  type="email"
+                  placeholder="Confirme seu e-mail"
+                  value={customerData.emailConfirm}
+                  onChange={(e) => handleInputChange('emailConfirm', e.target.value)}
+                  className="mt-1 bg-muted/30 border-border rounded-lg h-9"
+                  required={(checkout.form_fields as any)?.requireEmailConfirm}
                 />
               </div>
             )}
@@ -123,7 +140,22 @@ const VerticalLayout = ({
                   placeholder="(11) 99999-9999"
                   value={customerData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="mt-1 bg-muted/30 border-border rounded-lg"
+                  className="mt-1 bg-muted/30 border-border rounded-lg h-9"
+                  required={(checkout.form_fields as any)?.requirePhone}
+                />
+              </div>
+            )}
+
+            {(checkout.form_fields as any)?.requireCpf !== false && (
+              <div>
+                <Label className="text-foreground font-sans">CPF</Label>
+                <Input
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={customerData.cpf}
+                  onChange={(e) => handleInputChange('cpf', e.target.value)}
+                  className="mt-1 bg-muted/30 border-border rounded-lg h-9"
+                  required={(checkout.form_fields as any)?.requireCpf}
                 />
               </div>
             )}
@@ -235,7 +267,95 @@ const VerticalLayout = ({
           </div>
         )}
 
-        {/* Seção 5: Resumo e Finalização */}
+        {/* Seção 4: Escolha sua forma de pagamento */}
+        <div className="bg-card rounded-lg border p-6 mb-8">
+          <h2 className="text-xl font-bold font-sans text-foreground mb-6">Escolha sua forma de pagamento</h2>
+          
+          {(() => {
+            const hasOnlyPix = checkout.payment_methods?.pix && !checkout.payment_methods?.creditCard;
+            const hasOnlyCreditCard = !checkout.payment_methods?.pix && checkout.payment_methods?.creditCard;
+            const hasBoth = checkout.payment_methods?.pix && checkout.payment_methods?.creditCard;
+            
+            return (
+              <>
+                
+                <div className="space-y-4">
+                  {checkout.payment_methods?.pix && (
+                    <div
+                      onClick={() => setSelectedPaymentMethod('pix')}
+                      className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+                        selectedPaymentMethod === 'pix'
+                          ? 'border-pink-500 bg-pink-50'
+                          : 'border-border hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {hasBoth && (
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedPaymentMethod === 'pix' ? 'border-pink-500' : 'border-border'
+                          }`}>
+                            {selectedPaymentMethod === 'pix' && (
+                              <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+                            )}
+                          </div>
+                        )}
+                        <QrCode className="w-5 h-5" style={{ color: selectedPaymentMethod === 'pix' ? primaryColor : '#999' }} />
+                        <h3 className="font-bold text-foreground">PIX</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Pagamento instantâneo</p>
+                    </div>
+                  )}
+
+                  {checkout.payment_methods?.creditCard && (
+                    <div
+                      onClick={() => setSelectedPaymentMethod('creditCard')}
+                      className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${
+                        selectedPaymentMethod === 'creditCard'
+                          ? 'border-pink-500 bg-pink-50'
+                          : 'border-border hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {hasBoth && (
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedPaymentMethod === 'creditCard' ? 'border-pink-500' : 'border-border'
+                          }`}>
+                            {selectedPaymentMethod === 'creditCard' && (
+                              <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+                            )}
+                          </div>
+                        )}
+                        <CreditCard className="w-5 h-5" style={{ color: selectedPaymentMethod === 'creditCard' ? primaryColor : '#999' }} />
+                        <h3 className="font-bold text-foreground">Cartão de Crédito</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Parcelado</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+
+        {/* Seção 5: Dados do Cartão (se selecionado) */}
+        {selectedPaymentMethod === 'creditCard' && (
+          <div className="bg-card rounded-lg border p-6 mb-8">
+            <h2 className="text-xl font-bold font-sans text-foreground mb-6">Dados do cartão</h2>
+            
+            <CreditCardForm
+              onCardDataChange={setCardData}
+              primaryColor={primaryColor}
+              textColor={textColor}
+              maxInstallments={checkout.payment_methods?.maxInstallments || 12}
+              installmentsWithInterest={checkout.payment_methods?.installmentsWithInterest || false}
+              totalAmount={calculateTotal()}
+              useMPFields={!!mpPublicKey}
+              mpPublicKey={mpPublicKey}
+            />
+          </div>
+        )}
+
+        {/* Seção 6: Resumo e Finalização */}
         <div className="bg-white rounded-lg border p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-6">Resumo do Pedido</h2>
           
@@ -287,34 +407,32 @@ const VerticalLayout = ({
               </span>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-6">
-              <button
-                type="submit"
-                disabled={processing}
-                className="w-full py-4 text-white font-bold text-lg rounded-lg transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 group"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
-                  boxShadow: `0 4px 15px ${primaryColor}33`
-                }}
-              >
-                <span>{processing ? 'Processando...' : 'Finalizar Compra Agora'}</span>
-                {!processing && (
-                  <svg 
-                    className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                )}
-              </button>
-              
-              <div className="text-center text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
-                <Shield className="h-4 w-4 text-green-500" />
-                Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.
-              </div>
-            </form>
+            <button
+              type="submit"
+              disabled={processing}
+              className="w-full py-4 text-white font-bold text-lg rounded-lg transition-all duration-300 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 group"
+              style={{
+                background: `linear-gradient(135deg, ${primaryColor}, ${gradientColor}dd)`,
+                boxShadow: `0 4px 15px ${primaryColor}33`
+              }}
+            >
+              <span>{processing ? 'Processando...' : 'Finalizar Compra Agora'}</span>
+              {!processing && (
+                <svg 
+                  className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              )}
+            </button>
+            
+            <div className="text-center text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
+              <Shield className="h-4 w-4 text-green-500" />
+              Pagamento via PIX processado pelo Mercado Pago. Aprovação imediata e ambiente 100% seguro.
+            </div>
           </div>
         </div>
 
@@ -323,6 +441,7 @@ const VerticalLayout = ({
           supportEmail={checkout.support_contact?.email} 
           primaryColor={checkout.styles?.primaryColor || '#3b82f6'}
         />
+        </form>
       </div>
     </div>
   );

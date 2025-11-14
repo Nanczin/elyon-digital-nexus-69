@@ -209,23 +209,57 @@ async function processApprovedPayment(
 
   // Buscar produto no banco
   let produto = null;
+  let sellerUserId: string | null = null; // Para usar no send-transactional-email
+  
   if (produtoId) {
     const { data: produtoData, error: produtoError } = await supabase
-      .from('produtos_digitais')
+      .from('products')
       .select('*')
       .eq('id', produtoId)
-      .eq('is_active', true)
       .maybeSingle();
-    
+
     if (produtoError) {
-      console.error('❌ Erro ao buscar produto:', produtoError);
+      console.error('❌ Erro ao buscar produto em products:', produtoError);
     }
-    produto = produtoData;
+
+    // Normalizar campos para compatibilidade com o restante do código
+    if (produtoData) {
+      produto = {
+        id: produtoData.id,
+        nome: produtoData.name || produtoData.nome || 'Produto',
+        description: produtoData.description || produtoData.descricao || '',
+        member_area_id: produtoData.member_area_id || null,
+        user_id: produtoData.user_id || null, // ID do vendedor (proprietário do produto)
+        email_template: produtoData.email_template || '',
+        email_assunto: produtoData.email_subject || produtoData.email_assunto || `Seu acesso ao ${produtoData.name || 'produto'}`,
+        url_acesso: produtoData.access_url || produtoData.member_area_link || produtoData.access_link || '',
+        arquivo_url: produtoData.file_url || produtoData.arquivo_url || '',
+        instrucoes_acesso: produtoData.instructions || produtoData.instrucoes_acesso || '',
+        gerar_credenciais: produtoData.generate_credentials || produtoData.gerar_credenciais || false,
+        prazo_acesso: produtoData.access_duration_days || produtoData.prazo_acesso || null
+      };
+      sellerUserId = produtoData.user_id || null;
+    } else {
+      produto = null;
+    }
   }
 
   if (!produto) {
     console.error('❌ Produto não encontrado ou inativo:', produtoId);
     throw new Error('Produto não encontrado ou inativo no banco de dados');
+  }
+
+  // Se não encontrou o user_id no produto, tentar buscar pela member_area
+  if (!sellerUserId && produto.member_area_id) {
+    const { data: memberArea, error: memberAreaError } = await supabase
+      .from('member_areas')
+      .select('user_id')
+      .eq('id', produto.member_area_id)
+      .maybeSingle();
+
+    if (memberArea?.user_id) {
+      sellerUserId = memberArea.user_id;
+    }
   }
 
   // Gerar credenciais se necessário
@@ -277,8 +311,92 @@ async function processApprovedPayment(
 
   console.log('💾 Compra registrada:', compra.id);
 
+  // Tentar criar membro automaticamente na área de membros
+  try {
+    console.log('CREATE_MEMBER_DEBUG: Iniciando criação automática de membro para compra:', compra.id);
+
+    const memberAreaIds: string[] = [];
+    const productIds: string[] = [];
+
+    if (produto.member_area_id) {
+      memberAreaIds.push(produto.member_area_id);
+      productIds.push(produto.id);
+    }
+
+    // Buscar áreas de membros que tenham este produto em associated_products
+    try {
+      const { data: areas, error: areasErr } = await supabase
+        .from('member_areas')
+        .select('id')
+        .overlaps('associated_products', [produto.id]);
+
+      if (areasErr) console.error('CREATE_MEMBER_DEBUG: erro ao buscar member_areas por associated_products', areasErr);
+      if (areas && areas.length) {
+        areas.forEach((a: any) => { if (a?.id) memberAreaIds.push(a.id); });
+        if (!productIds.includes(produto.id)) {
+          productIds.push(produto.id);
+        }
+      }
+    } catch (e) {
+      console.error('CREATE_MEMBER_DEBUG: exceção ao buscar member_areas', e);
+    }
+
+    // Tornar única
+    const uniqueMemberAreaIds = Array.from(new Set(memberAreaIds));
+    const uniqueProductIds = Array.from(new Set(productIds));
+    let memberPassword: string | null = null;
+
+    if (uniqueMemberAreaIds.length > 0 && clienteEmail) {
+      for (const memberAreaId of uniqueMemberAreaIds) {
+        try {
+          // Chamar nova função create-member com configuração de senha
+          const { data: createRes, error: createErr } = await supabase.functions.invoke('create-member', {
+            body: {
+              name: clienteNome,
+              email: clienteEmail,
+              checkoutId: paymentDetails.external_reference, // ID do checkout
+              paymentId: paymentId,
+              planType: produto.nome || 'standard',
+              productIds: uniqueProductIds,
+              memberAreaId: memberAreaId
+            }
+          });
+
+          if (createErr) {
+            console.error('CREATE_MEMBER_DEBUG: create-member retornou erro:', createErr);
+            // Continuar com próxima área mesmo se houver erro
+            continue;
+          }
+
+          if (createRes?.success) {
+            console.log('CREATE_MEMBER_DEBUG: Membro criado com sucesso:', {
+              memberId: createRes.memberId,
+              userId: createRes.userId
+            });
+            // Capturar a senha retornada para enviar por email
+            if (createRes.password) {
+              memberPassword = createRes.password;
+            }
+          } else {
+            console.error('CREATE_MEMBER_DEBUG: create-member não retornou sucesso:', createRes?.error);
+          }
+
+        } catch (maErr) {
+          console.error('CREATE_MEMBER_DEBUG: erro ao invocar create-member', maErr);
+        }
+      }
+    } else {
+      console.log('CREATE_MEMBER_DEBUG: Nenhuma member area associada ao produto ou email do cliente ausente');
+    }
+
+    // Passar a senha do membro para o email
+    compra.memberPassword = memberPassword;
+  } catch (memberErr) {
+    console.error('CREATE_MEMBER_DEBUG: Erro no fluxo de criação automática de membro:', memberErr);
+  }
+
   // Enviar email com entregável
-  await sendDeliverableEmail(supabase, compra, produto);
+  await sendDeliverableEmail(supabase, compra, produto, sellerUserId);
 }
 
 // Registrar compra (mesmo se não aprovada)
@@ -306,51 +424,75 @@ async function registerPurchase(
     });
 }
 
-// Enviar email com entregável
+// Enviar email com entregável e senha de membro
 async function sendDeliverableEmail(
   supabase: any,
   compra: any,
-  produto: any
+  produto: any,
+  sellerUserId: string | null
 ): Promise<void> {
   console.log('📧 Enviando email de entrega para:', compra.cliente_email);
 
   try {
-    // Processar template do email
-    let htmlBody = produto.email_template
-      .replace(/{{nome}}/g, compra.cliente_nome)
-      .replace(/{{produto}}/g, produto.nome)
-      .replace(/{{email}}/g, compra.cliente_email)
-      .replace(/{{username}}/g, compra.username || compra.cliente_email)
-      .replace(/{{password}}/g, compra.password || 'N/A')
-      .replace(/{{url_acesso}}/g, produto.url_acesso || '#')
-      .replace(/{{arquivo_url}}/g, produto.arquivo_url || '#')
-      .replace(/{{instrucoes}}/g, produto.instrucoes_acesso || '');
+    // Se não temos o sellerUserId, não podemos usar send-transactional-email
+    if (!sellerUserId) {
+      console.warn('⚠️ Vendedor não identificado, email não será enviado. Certifique-se de que o produto possui user_id ou está associado a uma member_area com user_id.');
+      return;
+    }
 
-    // Chamar edge function de envio via Gmail
-    // NOTA: A função 'gmail-api-send' não está presente no codebase fornecido.
-    // Certifique-se de que esta função esteja implementada e configurada corretamente.
-    const { data: emailResult, error: emailError } = await supabase.functions.invoke('gmail-api-send', {
+    // Preparar corpo do email com a senha do membro
+    let emailSubject = produto.email_assunto || `Bem-vindo ao ${produto.nome}!`;
+    let emailBody = '';
+
+    if (compra.memberPassword) {
+      // Se o membro foi criado, enviar email com credenciais de acesso
+      emailBody = `
+        <h2>Bem-vindo, ${compra.cliente_nome}!</h2>
+        <p>Sua compra foi confirmada com sucesso! 🎉</p>
+        
+        <h3>Suas Credenciais de Acesso:</h3>
+        <p>
+          <strong>Email:</strong> ${compra.cliente_email}<br>
+          <strong>Senha:</strong> <code style="background: #f0f0f0; padding: 5px 10px; font-family: monospace;">${compra.memberPassword}</code>
+        </p>
+        
+        <p><a href="${produto.url_acesso || '#'}" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">Acessar Área de Membros</a></p>
+        
+        <hr>
+        <p><strong>Produto:</strong> ${produto.nome}</p>
+        ${produto.instrucoes_acesso ? `<p><strong>Instruções:</strong> ${produto.instrucoes_acesso}</p>` : ''}
+        
+        <p>Qualquer dúvida, entre em contato conosco!</p>
+      `;
+    } else {
+      // Se não foi criado membro (produto normal), usar template antigo
+      emailBody = produto.email_template
+        .replace(/{{nome}}/g, compra.cliente_nome)
+        .replace(/{{produto}}/g, produto.nome)
+        .replace(/{{email}}/g, compra.cliente_email)
+        .replace(/{{username}}/g, compra.username || compra.cliente_email)
+        .replace(/{{password}}/g, compra.password || 'N/A')
+        .replace(/{{url_acesso}}/g, produto.url_acesso || '#')
+        .replace(/{{arquivo_url}}/g, produto.arquivo_url || '#')
+        .replace(/{{instrucoes}}/g, produto.instrucoes_acesso || '');
+    }
+
+    // Chamar função de envio de email transacional
+    const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-transactional-email', {
       body: {
         to: compra.cliente_email,
-        subject: produto.email_assunto,
-        htmlBody: htmlBody,
-        fromName: 'Equipe de Suporte',
-        templateVars: {
-          nome: compra.cliente_nome,
-          produto: produto.nome,
-          username: compra.username || compra.cliente_email,
-          password: compra.password || '',
-          url_acesso: produto.url_acesso || '',
-          arquivo_url: produto.arquivo_url || ''
-        }
+        subject: emailSubject,
+        html: emailBody,
+        text: emailBody.replace(/<[^>]*>/g, ''), // Versão em texto puro
+        sellerUserId: sellerUserId
       }
     });
 
     if (emailError) {
-      throw new Error(`Erro ao invocar gmail-api-send: ${emailError.message}`);
+      throw new Error(`Erro ao invocar send-transactional-email: ${emailError.message}`);
     }
     if (!emailResult?.success) {
-      throw new Error(`Falha no envio de email via gmail-api-send: ${emailResult?.error || 'Erro desconhecido'}`);
+      throw new Error(`Falha no envio de email via send-transactional-email: ${emailResult?.error || 'Erro desconhecido'}`);
     }
 
     console.log('✅ Email enviado com sucesso');
@@ -373,7 +515,7 @@ async function sendDeliverableEmail(
         tipo: 'email',
         status: 'enviado',
         destinatario: compra.cliente_email,
-        assunto: produto.email_assunto
+        assunto: emailSubject
       });
 
   } catch (error: any) {
@@ -387,7 +529,7 @@ async function sendDeliverableEmail(
         tipo: 'email',
         status: 'falhou',
         destinatario: compra.cliente_email,
-        assunto: produto.email_assunto,
+        assunto: compra.email_assunto,
         erro_mensagem: error.message
       });
 

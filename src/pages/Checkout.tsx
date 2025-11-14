@@ -167,6 +167,8 @@ const Checkout = () => {
         user_id: data.user_id // Certifique-se de que user_id está sendo passado
       };
       
+      console.log('CHECKOUT_PAYMENT_METHODS_DEBUG: Raw data.payment_methods:', JSON.stringify(data.payment_methods, null, 2));
+      console.log('CHECKOUT_PAYMENT_METHODS_DEBUG: transformedData.payment_methods:', JSON.stringify(transformedData.payment_methods, null, 2));
       console.log('Checkout Debug: Timer carregado do banco:', data.timer);
       console.log('Checkout Debug: Timer no objeto transformado:', transformedData.timer);
       
@@ -340,8 +342,14 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('CHECKOUT_FRONTEND_DEBUG: handleSubmit called');
+    console.log('CHECKOUT_FRONTEND_DEBUG: checkoutId:', checkoutId);
+    console.log('CHECKOUT_FRONTEND_DEBUG: checkout data:', checkout);
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('CHECKOUT_FRONTEND_DEBUG: Form validation failed');
+      return;
+    }
     
     setProcessing(true);
     
@@ -416,9 +424,18 @@ const Checkout = () => {
         { body: paymentData }
       );
 
+      console.log('CHECKOUT_FRONTEND_DEBUG: MP Response:', JSON.stringify(mpResponse, null, 2));
+      console.log('CHECKOUT_FRONTEND_DEBUG: MP Error:', mpError);
+      console.log('CHECKOUT_FRONTEND_DEBUG: MP Error Status:', mpError?.status);
+      console.log('CHECKOUT_FRONTEND_DEBUG: MP Error Message:', mpError?.message);
+      console.log('CHECKOUT_FRONTEND_DEBUG: Full MP Error Object:', JSON.stringify(mpError, null, 2));
+
       if (mpError) {
         console.error('Checkout Debug: Erro na edge function:', mpError);
-        throw new Error(mpError.message || 'Erro ao processar pagamento');
+        // Se mpResponse tem conteúdo, tenta extrair mensagem de erro
+        const errorMessage = mpResponse?.error || mpError.message || 'Erro ao processar pagamento';
+        console.log('CHECKOUT_FRONTEND_DEBUG: Error message to show:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       if (!mpResponse?.success) {
@@ -506,9 +523,25 @@ const Checkout = () => {
 
     } catch (error) {
       console.error('Checkout Debug: Erro ao processar pedido:', error);
+      let errorDescription = "Não foi possível processar o pedido";
+      
+      if (error instanceof Error) {
+        errorDescription = error.message;
+        // Se for erro de Edge Function, tentar extrair mais detalhes
+        if (error.message.includes('non-2xx')) {
+          errorDescription = 'Erro na integração com Mercado Pago. Verifique se as credenciais foram configuradas corretamente.';
+        }
+        // Se for mode preview
+        if (error.message.includes('preview') || error.message.includes('modo preview')) {
+          errorDescription = '⚠️ Você está testando em modo PREVIEW. Para testar pagamentos reais, crie um checkout publicado e use o link de pagamento público.';
+        }
+      }
+      
+      console.error('CHECKOUT_FRONTEND_DEBUG: Final error description:', errorDescription);
+      
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível processar o pedido",
+        description: errorDescription,
         variant: "destructive"
       });
     } finally {

@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminProducts from "./pages/AdminProducts";
 import AdminCheckouts from "./pages/AdminCheckouts";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import DebugIntegrations from "./pages/DebugIntegrations";
 import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import Customers from "./pages/Customers";
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
       {
         path: "admin/integrations",
         element: <AdminIntegrations />,
+      },
+      {
+        path: "debug/integrations",
+        element: <DebugIntegrations />,
       },
       {
         path: "admin/member-areas",

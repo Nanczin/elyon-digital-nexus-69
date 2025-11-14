@@ -66,6 +66,16 @@ serve(async (req) => {
     console.log('CREATE_MP_PAYMENT_DEBUG: 2.1. emailMetadata.sendTransactionalEmail (from frontend):', emailMetadata?.sendTransactionalEmail);
     console.log('CREATE_MP_PAYMENT_DEBUG: 2.2. emailMetadata.sellerUserId (from frontend):', emailMetadata?.sellerUserId);
     console.log('CREATE_MP_PAYMENT_DEBUG: 2.3. purchasedProductIds (from frontend):', purchasedProductIds);
+    console.log('CREATE_MP_PAYMENT_DEBUG: 2.4. checkoutId received:', checkoutId);
+
+    // Validar se checkoutId é válido (não é "preview")
+    if (checkoutId === 'preview') {
+      console.error('CREATE_MP_PAYMENT_DEBUG: 5.0. Preview checkout detected - cannot process payment in preview mode');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não é possível processar pagamentos no modo preview. Por favor, use um checkout publicado.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
 
     // Aplicar a conversão robusta sugerida para o 'amount' (que está em centavos)

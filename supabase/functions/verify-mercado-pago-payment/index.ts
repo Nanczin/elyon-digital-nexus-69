@@ -133,37 +133,85 @@ serve(async (req) => {
                 userId = profileRow.user_id;
                 console.log('VERIFY_MP_DEBUG: Perfil encontrado, userId:', userId);
               } else {
-                // Se não encontrar perfil, criar um novo usuário auth.users e o trigger criará o perfil
-                console.log('VERIFY_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário auth.users...');
-                const customerName = existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente';
-                const customerPhone = existingPayment?.metadata?.customer_data?.phone || null;
-                const customerCpf = existingPayment?.metadata?.customer_data?.cpf || mpPayment?.payer?.identification?.number || null;
+                // Se não encontrar perfil, vamos tentar criar o usuário via Edge Function create-member-user
+                console.log('VERIFY_MP_DEBUG: Perfil não encontrado, tentando criar novo usuário via create-member-user...');
+
+                // Determinar um memberAreaId e módulos a partir dos produtos comprados para passar à função de criação
+                let firstMemberAreaId: string | null = null;
+                let firstSelectedModules: string[] = [];
+                try {
+                  const { data: memberAreasData, error: memberAreasError } = await supabase
+                    .from('member_areas')
+                    .select('id')
+                    .overlaps('associated_products', purchasedProductIds || []);
+
+                  if (memberAreasError) {
+                    console.error('VERIFY_MP_DEBUG: Erro ao buscar member_areas antes da criação de usuário:', memberAreasError);
+                  }
+                  if (memberAreasData && memberAreasData.length > 0) {
+                    firstMemberAreaId = memberAreasData[0].id;
+                    // Buscar módulos publicados para essa área
+                    const { data: modulesForArea, error: modulesErr } = await supabase
+                      .from('modules')
+                      .select('id')
+                      .eq('member_area_id', firstMemberAreaId)
+                      .eq('status', 'published');
+                    if (!modulesErr && modulesForArea) firstSelectedModules = modulesForArea.map((m: any) => m.id);
+                  }
+                } catch (e) {
+                  console.error('VERIFY_MP_DEBUG: exceção ao buscar member areas/modules antes da criação:', e);
+                }
 
                 // Gerar uma senha aleatória para o usuário
-                const generatedPassword = Math.random().toString(36).slice(-8); 
+                const generatedPassword = Math.random().toString(36).slice(-8);
 
-                const userMetadata = { 
-                  name: customerName,
-                  first_name: customerName.split(' ')[0],
-                  last_name: customerName.split(' ').slice(1).join(' ') || '',
-                  phone: customerPhone,
-                  cpf: customerCpf
-                };
-                console.log('VERIFY_MP_DEBUG: Attempting to create new auth.users user with email:', email, 'and user_metadata:', JSON.stringify(userMetadata));
+                try {
+                  const { data: createRes, error: createErr } = await supabase.functions.invoke('create-member-user', {
+                    body: {
+                      name: existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente',
+                      email,
+                      password: generatedPassword,
+                      memberAreaId: firstMemberAreaId,
+                      selectedModules: firstSelectedModules,
+                      isActive: true
+                    }
+                  });
 
-                const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
-                  email,
-                  password: generatedPassword, // Senha temporária
-                  email_confirm: true, // Confirmar email automaticamente
-                  user_metadata: userMetadata
-                });
-
-                if (userAuthErr) {
-                  console.error('VERIFY_MP_DEBUG: CRITICAL ERROR creating auth.users user:', userAuthErr.message, JSON.stringify(userAuthErr));
-                  // If user creation fails, userId remains null, which is handled by subsequent checks
-                } else {
-                  userId = newUserAuth?.user?.id || null;
-                  console.log('VERIFY_MP_DEBUG: Novo usuário auth.users criado, userId:', userId);
+                  if (createErr) {
+                    console.error('VERIFY_MP_DEBUG: create-member-user retornou erro:', createErr);
+                    // Se retorno indicar conflito (e-mail já existe), tentar buscar profile novamente
+                    const { data: pRow, error: pErr } = await supabase
+                      .from('profiles')
+                      .select('user_id')
+                      .eq('email', email)
+                      .maybeSingle();
+                    if (pErr) console.error('VERIFY_MP_DEBUG: Erro ao re-buscar profile após falha na criação:', pErr);
+                    userId = pRow?.user_id || null;
+                  } else {
+                    userId = createRes?.userId || (createRes && createRes.userId) || null;
+                    console.log('VERIFY_MP_DEBUG: create-member-user sucesso, userId:', userId);
+                  }
+                } catch (invokeErr) {
+                  console.error('VERIFY_MP_DEBUG: exceção ao invocar create-member-user:', invokeErr);
+                  // Fallback: tentar criar via admin.createUser
+                  try {
+                    const { data: newUserAuth, error: userAuthErr } = await supabase.auth.admin.createUser({
+                      email,
+                      password: generatedPassword,
+                      email_confirm: true,
+                      user_metadata: {
+                        name: existingPayment?.metadata?.customer_data?.name || mpPayment?.payer?.first_name || 'Cliente'
+                      }
+                    });
+                    if (!userAuthErr) {
+                      userId = newUserAuth?.user?.id || null;
+                      console.log('VERIFY_MP_DEBUG: Fallback admin.createUser sucesso, userId:', userId);
+                    } else {
+                      console.error('VERIFY_MP_DEBUG: Fallback admin.createUser falhou:', userAuthErr);
+                    }
+                  } catch (e2) {
+                    console.error('VERIFY_MP_DEBUG: exceção no fallback admin.createUser:', e2);
+                  }
                 }
               }
           }

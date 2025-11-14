@@ -182,6 +182,9 @@ const AdminCheckouts = () => {
   
   const loadOriginalCheckoutData = useCallback((checkout: Checkout) => {
     const initial = getInitialFormData();
+    
+    console.log('ADMIN_CHECKOUTS_DEBUG: loadOriginalCheckoutData called');
+    console.log('ADMIN_CHECKOUTS_DEBUG: checkout.payment_methods from DB:', JSON.stringify(checkout.payment_methods, null, 2));
 
     const priceInReais = checkout.price ? checkout.price / 100 : 0;
     const promotionalPriceInReais = checkout.promotional_price ? checkout.promotional_price / 100 : 0;
@@ -218,7 +221,7 @@ const AdminCheckouts = () => {
 
     const stylesFromCheckout = safeJsonCast<CheckoutStyles>(checkout.styles);
 
-    return deepMerge(initial, {
+    const mergedData = deepMerge(initial, {
       id: checkout.id, // Ensure ID is passed for editing
       name: checkout.name || checkout.products?.name || '',
       layout: checkout.layout || 'horizontal',
@@ -288,6 +291,9 @@ const AdminCheckouts = () => {
         member_area_id: null, // Required by Tables<'products'>
       },
     });
+
+    console.log('ADMIN_CHECKOUTS_DEBUG: After deepMerge, payment_methods:', JSON.stringify(mergedData.payment_methods, null, 2));
+    return mergedData;
   }, [getInitialFormData, products]);
 
 
@@ -601,10 +607,17 @@ const AdminCheckouts = () => {
   }
   const handleInputChange = (path: string, value: any) => {
     console.log(`[AdminCheckouts] handleInputChange: path=${path}, value=`, value);
+    if (path.startsWith('payment_methods')) {
+      console.log(`[AdminCheckouts] PAYMENT_METHODS_CHANGE: path=${path}, value=`, value);
+      console.log(`[AdminCheckouts] PAYMENT_METHODS_CHANGE: Current checkoutData.payment_methods BEFORE change:`, JSON.stringify(checkoutData.payment_methods, null, 2));
+    }
     setCheckoutData(prev => {
       const newState = setNestedValue(prev, path, value);
       console.log(`[AdminCheckouts] handleInputChange: Previous state reference:`, prev);
       console.log(`[AdminCheckouts] handleInputChange: New state reference:`, newState);
+      if (path.startsWith('payment_methods')) {
+        console.log(`[AdminCheckouts] PAYMENT_METHODS_CHANGE: New checkoutData.payment_methods AFTER change:`, JSON.stringify(newState.payment_methods, null, 2));
+      }
       return newState;
     });
   };
@@ -1065,12 +1078,15 @@ const AdminCheckouts = () => {
       };
 
       console.log('ADMIN_CHECKOUTS_DEBUG: Final checkoutPayload before DB operation:', JSON.stringify(checkoutPayload, null, 2));
+      console.log('ADMIN_CHECKOUTS_DEBUG: checkoutData.payment_methods BEFORE save:', JSON.stringify(checkoutData.payment_methods, null, 2));
+      console.log('ADMIN_CHECKOUTS_DEBUG: payload.payment_methods BEFORE save:', JSON.stringify(checkoutPayload.payment_methods, null, 2));
 
       if (editingCheckout) {
         const {
           error
         } = await supabase.from('checkouts').update(checkoutPayload as TablesUpdate<'checkouts'>).eq('id', editingCheckout.id);
         if (error) throw error;
+        console.log('ADMIN_CHECKOUTS_DEBUG: Checkout updated successfully! payment_methods saved:', JSON.stringify(checkoutPayload.payment_methods, null, 2));
         toast({
           title: "Sucesso",
           description: "Checkout atualizado!"
@@ -1080,6 +1096,7 @@ const AdminCheckouts = () => {
           error
         } = await supabase.from('checkouts').insert(checkoutPayload);
         if (error) throw error;
+        console.log('ADMIN_CHECKOUTS_DEBUG: Checkout inserted successfully! payment_methods saved:', JSON.stringify(checkoutPayload.payment_methods, null, 2));
         toast({
           title: "Sucesso",
           description: "Checkout criado!"
